@@ -46,15 +46,15 @@
   margin-top: 1px;
 }
 .cd-banner-info {
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
-  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+  background: var(--mix-accent-10);
+  border-color: var(--mix-accent-35);
 }
 .cd-banner-info > svg {
   color: var(--accent);
 }
 .cd-banner-danger {
-  background: color-mix(in srgb, var(--red) 12%, transparent);
-  border-color: color-mix(in srgb, var(--red) 55%, transparent);
+  background: var(--mix-red-12);
+  border-color: var(--mix-red-55);
 }
 .cd-banner-danger > svg,
 .cd-banner-danger div > strong:first-child {

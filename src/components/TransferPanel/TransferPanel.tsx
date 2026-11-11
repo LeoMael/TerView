@@ -1,7 +1,7 @@
 // Barra/panel de transferencias en la parte inferior. Controla su propia altura:
 // plegada (~34 px, una línea de resumen) o desplegada (~260 px, lista de lotes).
 // DUEÑO: agente Transferencias.
-import { memo, useEffect, useMemo, useState, type MouseEvent, type ReactNode } from "react";
+import { memo, useCallback, useEffect, useMemo, useState, type MouseEvent, type ReactNode } from "react";
 import {
   ArrowDown,
   ArrowUp,
@@ -167,7 +167,10 @@ export function TransferPanel() {
   // Velocidad/ETA siguen bajando si una transferencia se atasca.
   useEffect(() => {
     if (!anyRunning) return;
-    const t = setInterval(tickTransfers, 1000);
+    // Con la ventana minimizada u oculta no hace falta recalcular nada.
+    const t = setInterval(() => {
+      if (!document.hidden) tickTransfers();
+    }, 1000);
     return () => clearInterval(t);
   }, [anyRunning]);
 
@@ -309,6 +312,8 @@ function ExpandedView({ list, onCollapse }: { list: BatchSummary[]; onCollapse: 
   const tabs = useTabs((s) => s.tabs);
   const serverNames = useMemo(() => new Map(tabs.map((t) => [t.sessionId, t.title])), [tabs]);
   const [open, setOpen] = useState<Record<string, boolean>>({});
+  // Estable: así BatchRow (memo) solo se redibuja si cambia SU lote, no con cada progreso de otro.
+  const onToggle = useCallback((id: string) => setOpen((o) => ({ ...o, [id]: !o[id] })), []);
 
   const active = list.filter((b) => isActiveStatus(b.status));
   const paused = list.filter((b) => b.status === "paused");
@@ -366,7 +371,7 @@ function ExpandedView({ list, onCollapse }: { list: BatchSummary[]; onCollapse: 
               b={b}
               server={serverNames.get(b.sessionId) ?? "Conexión cerrada"}
               open={!!open[b.id]}
-              onToggle={() => setOpen((o) => ({ ...o, [b.id]: !o[b.id] }))}
+              onToggle={onToggle}
             />
           ))
         )}
@@ -407,7 +412,7 @@ const BatchRow = memo(function BatchRow({
   b: BatchSummary;
   server: string;
   open: boolean;
-  onToggle: () => void;
+  onToggle: (id: string) => void;
 }) {
   const active = isActiveStatus(b.status);
   const counted = b.total - b.canceled - b.skipped;
@@ -418,11 +423,11 @@ const BatchRow = memo(function BatchRow({
         role="button"
         tabIndex={0}
         aria-expanded={open}
-        onClick={onToggle}
+        onClick={() => onToggle(b.id)}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
-            onToggle();
+            onToggle(b.id);
           }
         }}
       >

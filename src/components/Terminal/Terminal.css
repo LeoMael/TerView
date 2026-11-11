@@ -152,10 +152,10 @@
   padding: 4px 10px;
   font-size: var(--fs-sm);
   color: var(--text);
-  background: color-mix(in srgb, var(--red) 22%, var(--surface));
-  border: 1px solid color-mix(in srgb, var(--red) 55%, transparent);
+  background: var(--mix-red-22-surface);
+  border: 1px solid var(--mix-red-55);
   border-radius: 999px;
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-sm);
   pointer-events: none;
   z-index: 5;
 }
@@ -175,8 +175,8 @@
 /* Reconectando: aviso discreto (no tapa la terminal). */
 .term-overlay.reconnecting {
   color: var(--text);
-  background: color-mix(in srgb, var(--yellow) 18%, var(--surface));
-  border-color: color-mix(in srgb, var(--yellow) 50%, transparent);
+  background: var(--mix-yellow-18-surface);
+  border-color: var(--mix-yellow-50);
 }
 .term-overlay.reconnecting svg {
   color: var(--yellow);
@@ -204,7 +204,7 @@
   background: var(--surface);
   border: 1px solid var(--border-strong);
   border-radius: 6px;
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-sm);
 }
 .term-search-icon {
   flex: none;
@@ -267,6 +267,6 @@
 }
 .term-search-case.on {
   color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 16%, transparent);
-  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  background: var(--mix-accent-16);
+  border-color: var(--mix-accent-45);
 }

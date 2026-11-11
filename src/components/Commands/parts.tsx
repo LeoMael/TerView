@@ -314,9 +314,13 @@ export function ResultView({
 }) {
   const { running, result, error } = state;
   const [elapsed, setElapsed] = useState(0);
+  const rootRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!running) return;
-    const t = setInterval(() => setElapsed(Date.now() - state.startedAt), 200);
+    // Solo se redibuja si se ve (pestaña oculta → offsetParent null).
+    const t = setInterval(() => {
+      if (rootRef.current?.offsetParent) setElapsed(Date.now() - state.startedAt);
+    }, 200);
     return () => clearInterval(t);
   }, [running, state.startedAt]);
 
@@ -333,7 +337,7 @@ export function ResultView({
 
   const ok = result && result.exitCode === 0 && !result.timedOut;
   return (
-    <div className={`cmd-result${fill ? " fill" : ""}`}>
+    <div ref={rootRef} className={`cmd-result${fill ? " fill" : ""}`}>
       <div className="cmd-result-head">
         <span className="section-label">Resultado</span>
         {running && (

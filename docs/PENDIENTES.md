@@ -240,7 +240,7 @@ Archivos: `src-tauri/src/storage/ssh_config.rs` (leer/escribir bloque), comandos
 | Fuente del editor | ✅ Ajuste propio. |
 | Duplicar servidor | ✅ Copia también la contraseña guardada. |
 | Logo e ícono | ✅ `docs/marca/`, ícono de la app generado. |
-| Instaladores | ✅ `.rpm`. ⏳ Falta `.deb` / `.AppImage` y firmar. |
+| Instaladores | ✅ `.rpm`, `.deb`, `.AppImage`, `.msi`, `-setup.exe` con GitHub Actions (v0.3.0). ⏳ Falta firmar (SmartScreen avisa). |
 | Arrastrar al sistema | ⏳ Arrastrar archivos **desde** el explorador al escritorio (necesita plugin de arrastre nativo). |
 | Exportar "Mis comandos" a archivo | ⏳ Hoy se copia al portapapeles; para guardar en archivo hace falta un comando del motor o `tauri-plugin-fs`. |
 | Alias de `~/.ssh/config` | ⏳ No se comprueba que el alias de TerView no choque con un `Host` escrito a mano. |
@@ -258,8 +258,8 @@ de Windows. Ventana: WebView2 (ya viene en Windows 10/11). `~/.ssh` = `C:\Users\
 Falta:
 | Tema | Detalle |
 |------|---------|
-| Compilar para Windows | No se puede desde Fedora (una librería de cifrado necesita compilar C para Windows). Opciones: compilar en una PC con Windows (`npm run tauri build` → `.msi` / `.exe`) o **GitHub Actions** con `tauri-action` (Linux + Windows + macOS automáticamente en cada versión). |
-| Agente SSH en Windows | Hoy da "no soportado". russh ya trae soporte: OpenSSH de Windows (`\\.\pipe\openssh-ssh-agent`) y Pageant (PuTTY). |
+| Compilar para Windows | ✅ Hecho en v0.3.0 con GitHub Actions (`.github/workflows/release.yml`); la CI compila y prueba también en Windows. Chequeo local posible con `cargo-zigbuild check --target x86_64-pc-windows-gnu`. Antes: no se podía desde Fedora (una librería de cifrado necesita compilar C para Windows). Opciones: compilar en una PC con Windows (`npm run tauri build` → `.msi` / `.exe`) o **GitHub Actions** con `tauri-action` (Linux + Windows + macOS automáticamente en cada versión). |
+| Agente SSH en Windows | ✅ Implementado en v0.3.0 (pipe de OpenSSH y Pageant), ⚠️ sin probar en un Windows real. Antes daba "no soportado". russh ya trae soporte: OpenSSH de Windows (`\\.\pipe\openssh-ssh-agent`) y Pageant (PuTTY). |
 | Probar en Windows | Rutas con `\`, arrastrar desde el Explorador de Windows, tema del sistema. |
 | Firmar el instalador | Sin firma, Windows SmartScreen muestra un aviso al instalar. |
 
@@ -297,6 +297,10 @@ Ordenadas por utilidad para el día a día:
 | 7 | [GitHub: Actions + conectar cuenta](#9-github) | Instaladores, versiones, llaves, despliegues |
 
 ### 8.1 Optimización / rendimiento
+
+**Hecho en v0.3.0:** carga bajo demanda (paquete inicial 914 → 362 KB), terminal WebGL, arreglo automático
+de WebKitGTK con NVIDIA, menos redibujados, `color-mix` precalculados. **Falta:** medir en la app real y
+el panel de diagnóstico.
 
 **Primero medir, luego cambiar.** Hay que saber *dónde* se siente lenta:
 al abrir la app, al conectar, al navegar carpetas, al escribir en la terminal, al cambiar de pestaña,

@@ -62,7 +62,6 @@
   content: "";
   position: absolute;
   background: transparent;
-  transition: background 0.12s;
   pointer-events: none;
 }
 .app-sep-v::after {
@@ -82,8 +81,9 @@
 .app-sep[data-separator="focus"]::after {
   background: var(--accent);
 }
+/* Pequeña espera al pasar el ratón (sin animar: cambia de golpe tras 0,15 s). */
 .app-sep[data-separator="hover"]::after {
-  transition-delay: 0.15s;
+  transition: background 0s 0.15s;
 }
 
 /* Agarradera "•••" en el centro del divisor */
@@ -98,7 +98,6 @@
   pointer-events: none;
   z-index: 1;
   opacity: 0.8;
-  transition: opacity 0.12s;
 }
 .app-sep-v .app-sep-grip {
   width: 5px;
@@ -115,4 +114,13 @@
 .app-sep[data-separator="hover"] .app-sep-grip,
 .app-sep[data-separator="active"] .app-sep-grip {
   opacity: 0;
+}
+
+/* Mientras carga el trozo de la vista de sesión (normalmente ya está precargado). */
+.app-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

@@ -1,6 +1,6 @@
 [package]
 name = "terview"
-version = "0.2.1"
+version = "0.3.0"
 description = "Cliente SSH/SFTP visual"
 authors = []
 edition = "2024"
@@ -36,6 +36,11 @@ walkdir = "2.5.0"
 log = "0.4.35"
 tokio-util = "0.7.20"
 tauri-plugin-clipboard-manager = "2.5.0"
+
+# Windows: aws-lc-sys (cripto de russh) necesita NASM para x86_64; con `prebuilt-nasm` usa los
+# objetos ya ensamblados que trae el crate, así el build de CI no depende de tener NASM instalado.
+[target.'cfg(windows)'.dependencies]
+aws-lc-sys = { version = "0.47", features = ["prebuilt-nasm"] }
 
 
 # Read the optimization guideline for more details: https://tauri.app/concept/size/#cargo-configuration

@@ -1,16 +1,14 @@
 // Estructura principal: barra lateral | (pestañas + sesión activa + transferencias).
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { Group, Panel, Separator, usePanelRef, type Layout, type LayoutChangedMeta } from "react-resizable-panels";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { DialogHost } from "./components/ui/dialogs";
 import { Toaster } from "./components/ui/Toaster";
 import { Sidebar } from "./components/Sidebar/Sidebar";
 import { TransferPanel } from "./components/TransferPanel/TransferPanel";
-import { ConnectDialogHost } from "./features/ConnectDialogs";
-import { SettingsDialog } from "./components/Settings/SettingsDialog";
-import { CommandPalette } from "./components/Commands/CommandPalette";
+import { ConnectDialogHost, ProjectEditorHost, ServerEditorHost } from "./features/ConnectDialogs";
+import { PaletteHost, PaletteView } from "./components/Commands/PaletteHost";
 import { initThemeSync } from "./components/Settings/theme";
-import { SessionView } from "./components/Session/SessionView";
 import { requestCloseTab } from "./components/Session/sessionState";
 import { TabBar } from "./components/Tabs/TabBar";
 import { Welcome, recordRecentServer } from "./components/Welcome/Welcome";
@@ -19,7 +17,30 @@ import { useProfiles } from "./stores/profiles";
 import { initTabsListeners, useTabs } from "./stores/tabs";
 import { initTransfersStore } from "./stores/transfers";
 import { useUi } from "./stores/ui";
+import { idleQueue, preloadable } from "./lib/lazy";
+import { isMac, isModKey } from "./lib/platform";
 import "./App.css";
+
+// Lo que no hace falta para la primera pantalla va en trozos aparte (arranque más rápido).
+// Se precargan en segundo plano cuando la ventana queda ociosa, así abrirlos no espera.
+const SessionView = preloadable(() => import("./components/Session/SessionView").then((m) => m.SessionView));
+const SettingsDialog = preloadable(() => import("./components/Settings/SettingsDialog").then((m) => m.SettingsDialog));
+
+function preloadInBackground() {
+  idleQueue([
+    () => SessionView.preload(),
+    () => SettingsDialog.preload(),
+    () => PaletteView.preload(),
+    async () => {
+      const m = await import("./components/Session/SessionView");
+      await m.CommandsPanel.preload();
+    },
+    () => Promise.all([ServerEditorHost.preload(), ProjectEditorHost.preload()]),
+    // Monaco (~4 MB) al final: abrir un archivo en el editor ya no tiene que esperar a cargarlo.
+    () => new Promise((r) => setTimeout(r, 1500)),
+    () => import("./components/Editor/RemoteEditor"),
+  ]);
+}
 
 let initialized = false;
 
@@ -65,14 +86,19 @@ function isInTerminal(e: KeyboardEvent) {
 function useGlobalShortcuts() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (!e.ctrlKey || e.altKey || e.metaKey) return;
+      if (e.altKey) return;
+      const key = e.key;
+      const switchTab = e.ctrlKey && !e.metaKey && (key === "Tab" || key === "PageDown" || key === "PageUp");
+      // Ctrl en Linux/Windows; ⌘ en macOS (cambiar de pestaña usa Ctrl en todos).
+      if (!switchTab && !isModKey(e)) return;
       if (document.querySelector(".modal-backdrop")) return; // hay un diálogo abierto
       const tabsState = useTabs.getState();
       const { tabs, activeTabId } = tabsState;
-      const key = e.key;
+      // En macOS ⌘W/⌘B no chocan con la shell; Ctrl+W/Ctrl+B en la terminal sí.
+      const shellOwnsKey = !isMac && isInTerminal(e);
 
       // Ctrl+Tab / Ctrl+Shift+Tab y Ctrl+RePág / Ctrl+AvPág: cambiar de pestaña.
-      if (key === "Tab" || key === "PageDown" || key === "PageUp") {
+      if (switchTab) {
         e.preventDefault();
         e.stopPropagation();
         if (tabs.length < 2) return;
@@ -91,13 +117,13 @@ function useGlobalShortcuts() {
         return;
       }
       // En la terminal, Ctrl+W y Ctrl+B pertenecen a la shell (borrar palabra, tmux…).
-      if (k === "w" && !isInTerminal(e)) {
+      if (k === "w" && !shellOwnsKey) {
         e.preventDefault();
         e.stopPropagation();
         if (activeTabId) void requestCloseTab(activeTabId);
         return;
       }
-      if (k === "b" && !isInTerminal(e)) {
+      if (k === "b" && !shellOwnsKey) {
         e.preventDefault();
         e.stopPropagation();
         useUi.getState().toggleSidebar();
@@ -186,9 +212,19 @@ function Shell() {
         <Panel id="main" minSize="40%" className="app-main" style={{ overflow: "hidden" }}>
           <TabBar />
           <div className="app-content">
-            {tabs.map((t) => (
-              <SessionView key={t.id} tab={t} active={t.id === activeId} />
-            ))}
+            {tabs.length > 0 && (
+              <Suspense
+                fallback={
+                  <div className="app-loading">
+                    <div className="spinner" />
+                  </div>
+                }
+              >
+                {tabs.map((t) => (
+                  <SessionView key={t.id} tab={t} active={t.id === activeId} />
+                ))}
+              </Suspense>
+            )}
             {tabs.length === 0 && <Welcome />}
           </div>
           <TransferPanel />
@@ -198,11 +234,25 @@ function Shell() {
   );
 }
 
+function SettingsHost() {
+  const open = useUi((s) => s.settingsOpen);
+  if (!open) return null;
+  return (
+    <Suspense fallback={null}>
+      <SettingsDialog />
+    </Suspense>
+  );
+}
+
 export default function App() {
   const loaded = useSettings((s) => s.loaded);
   initApp();
   useGlobalShortcuts();
   useWindowTitle();
+
+  useEffect(() => {
+    if (loaded) preloadInBackground();
+  }, [loaded]);
 
   return (
     <>
@@ -216,8 +266,8 @@ export default function App() {
       <DialogHost />
       <Toaster />
       <ConnectDialogHost />
-      <SettingsDialog />
-      <CommandPalette />
+      <SettingsHost />
+      <PaletteHost />
     </>
   );
 }

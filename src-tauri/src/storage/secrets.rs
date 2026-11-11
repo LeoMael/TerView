@@ -85,8 +85,14 @@ pub(crate) fn delete_secret_in(service: &str, user: &str) -> AppResult<()> {
     }
 }
 
+#[cfg(not(any(windows, target_os = "macos")))]
 const UNAVAILABLE: &str = "no hay un llavero del sistema disponible. Instala o activa GNOME Keyring, \
 KWallet u otro servicio compatible con Secret Service (o no marques «guardar en el llavero»).";
+#[cfg(windows)]
+const UNAVAILABLE: &str = "el Administrador de credenciales de Windows no está disponible \
+(o no marques «guardar en el llavero»).";
+#[cfg(target_os = "macos")]
+const UNAVAILABLE: &str = "el llavero de macOS no está disponible (o no marques «guardar en el llavero»).";
 
 fn map_err(err: KrError) -> AppError {
     let msg = match err {

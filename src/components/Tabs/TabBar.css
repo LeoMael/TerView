@@ -46,7 +46,7 @@
   transition: background 0.1s, color 0.1s;
 }
 .tabs-tab:hover {
-  background: color-mix(in srgb, var(--surface-2) 70%, transparent);
+  background: var(--mix-surface-2-70);
   color: var(--text);
 }
 .tabs-tab.active {
@@ -62,7 +62,7 @@
 .tabs-tab.dragging {
   opacity: 0.85;
   background: var(--surface-2);
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-sm);
   z-index: 2;
 }
 /* Franja de color del servidor */
@@ -101,25 +101,25 @@
 }
 .tabs-status.connected {
   background: var(--green);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--green) 20%, transparent);
+  box-shadow: 0 0 0 2px var(--mix-green-20);
 }
 .tabs-status.closed {
   background: var(--red);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--red) 20%, transparent);
+  box-shadow: 0 0 0 2px var(--mix-red-20);
 }
+/* Solo se anima la opacidad (la sombra animada se repintaba en cada fotograma). */
 .tabs-status.reconnecting {
   background: var(--yellow);
+  box-shadow: 0 0 0 2px var(--mix-yellow-25);
   animation: tabs-pulse 1.2s ease-in-out infinite;
 }
 @keyframes tabs-pulse {
   0%,
   100% {
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--yellow) 25%, transparent);
     opacity: 1;
   }
   50% {
-    box-shadow: 0 0 0 4px color-mix(in srgb, var(--yellow) 10%, transparent);
-    opacity: 0.55;
+    opacity: 0.5;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -138,7 +138,7 @@
 .tabs-tab.closed .tabs-title {
   color: var(--text-faint);
   text-decoration: line-through;
-  text-decoration-color: color-mix(in srgb, var(--red) 60%, transparent);
+  text-decoration-color: var(--mix-red-60);
 }
 .tabs-title {
   flex: 1;

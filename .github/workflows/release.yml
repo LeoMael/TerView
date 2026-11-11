@@ -1,0 +1,122 @@
+# Genera los instaladores de TerView y los adjunta a un Release en BORRADOR.
+#
+# Se dispara al subir una etiqueta de versión (git tag v0.3.0 && git push origin v0.3.0)
+# o a mano desde la pestaña Actions / `gh workflow run release.yml`.
+# La etiqueta del Release sale de la versión de src-tauri/tauri.conf.json (v__VERSION__),
+# así que antes de etiquetar hay que subir la versión en tauri.conf.json, Cargo.toml y package.json.
+#
+# Instaladores que produce:
+#   Linux   -> .deb, .rpm, .AppImage
+#   Windows -> .msi (WiX) y -setup.exe (NSIS)
+#   macOS   -> .dmg universal (Intel + Apple Silicon)
+# Un fallo en un sistema no cancela los demás (fail-fast: false).
+
+name: Publicar versión
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  instaladores:
+    name: Instaladores (${{ matrix.nombre }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - nombre: Linux
+            platform: ubuntu-22.04
+            args: ""
+          - nombre: Windows
+            platform: windows-latest
+            args: ""
+          - nombre: macOS
+            platform: macos-latest
+            args: "--target universal-apple-darwin"
+    runs-on: ${{ matrix.platform }}
+    env:
+      AWS_LC_SYS_PREBUILT_NASM: "1"
+
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v7
+
+      - name: Dependencias del sistema (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential pkg-config file \
+            libwebkit2gtk-4.1-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            libxdo-dev \
+            libssl-dev \
+            libdbus-1-dev \
+            patchelf \
+            rpm
+
+      # aws-lc-sys (cifrado de russh) ensambla código con NASM en Windows x86_64.
+      # Si este paso fallara, AWS_LC_SYS_PREBUILT_NASM=1 (en el env del trabajo) hace que use los
+      # objetos NASM precompilados que trae el propio crate.
+      - name: NASM (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/setup-nasm@v1
+        continue-on-error: true
+
+      - name: Node.js (LTS)
+        uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - name: Rust (estable)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          # En macOS se compila para Intel y Apple Silicon a la vez (binario universal).
+          targets: ${{ runner.os == 'macOS' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - name: Caché de Rust
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+          key: release-${{ matrix.platform }}
+
+      - name: Dependencias de npm
+        run: npm ci
+
+      - name: Compilar y publicar instaladores
+        uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: v__VERSION__
+          releaseName: TerView v__VERSION__
+          releaseBody: |
+            Novedades de esta versión: ver [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md).
+
+            **Instalación:** ver la sección [Instalación del README](https://github.com/${{ github.repository }}#instalación).
+
+            | Sistema | Archivo |
+            |---------|---------|
+            | Fedora / RHEL / openSUSE | `.rpm` |
+            | Debian / Ubuntu / Mint | `.deb` |
+            | Cualquier Linux | `.AppImage` |
+            | Windows 10 / 11 | `-setup.exe` (normal) o `.msi` (empresas / instalación silenciosa) |
+            | macOS (Intel y Apple Silicon) | `.dmg` |
+
+            Los instaladores de Windows y macOS aún no están firmados: Windows SmartScreen puede mostrar
+            "Windows protegió su PC" (*Más información → Ejecutar de todas formas*) y macOS puede pedir
+            abrir la app con clic derecho → *Abrir*.
+          releaseDraft: true
+          prerelease: false
+          args: ${{ matrix.args }}

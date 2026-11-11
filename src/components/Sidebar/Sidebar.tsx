@@ -1,6 +1,6 @@
 // Barra lateral: conexión rápida, proyectos (con marcadores) y servidores guardados.
 // DUEÑO: agente Almacenamiento/Sidebar. El ancho lo controla el padre.
-import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent } from "react";
 import {
   ChevronDown,
   ChevronRight,
@@ -33,8 +33,11 @@ import { profiles as profilesApi } from "../../api/profiles";
 import { connectToMany, connectToServer } from "../../features/connect";
 import { SbContextMenu, type MenuItem } from "./SbContextMenu";
 import { parseQuickConnect } from "./quickConnect";
-import { ImportSshConfigDialog } from "./ImportSshConfigDialog";
+import { preloadable } from "../../lib/lazy";
 import "./Sidebar.css";
+import { SSH_CONFIG_LABEL } from "../../lib/platform";
+
+const ImportSshConfigDialog = preloadable(() => import("./ImportSshConfigDialog").then((m) => m.ImportSshConfigDialog));
 
 const COLLAPSED_KEY = "terview.sidebar.collapsedProjects";
 
@@ -54,6 +57,12 @@ function writeCollapsed(v: Record<string, boolean>) {
   } catch {
     /* sin almacenamiento: no pasa nada */
   }
+}
+
+function connectedProfilesKey(tabs: readonly { status: string; profileId: string }[]): string {
+  const ids: string[] = [];
+  for (const t of tabs) if (t.status === "connected" && !ids.includes(t.profileId)) ids.push(t.profileId);
+  return ids.sort().join("\n");
 }
 
 function userHost(s: ServerProfile) {
@@ -78,7 +87,8 @@ export function Sidebar() {
   const loaded = useProfiles((s) => s.loaded);
   const load = useProfiles((s) => s.load);
   const connecting = useProfiles((s) => s.connecting);
-  const tabs = useTabs((s) => s.tabs);
+  // Solo la lista de servidores conectados (texto): cambiar de pestaña o reconectar no redibuja la barra.
+  const connectedKey = useTabs((s) => connectedProfilesKey(s.tabs));
   const openServerEditor = useUi((s) => s.openServerEditor);
   const openProjectEditor = useUi((s) => s.openProjectEditor);
   const openSettings = useUi((s) => s.openSettings);
@@ -96,11 +106,7 @@ export function Sidebar() {
     if (!loaded) void load();
   }, [loaded, load]);
 
-  const connected = useMemo(() => {
-    const set = new Set<string>();
-    for (const t of tabs) if (t.status === "connected") set.add(t.profileId);
-    return set;
-  }, [tabs]);
+  const connected = useMemo(() => new Set(connectedKey ? connectedKey.split("\n") : []), [connectedKey]);
 
   const serverById = useMemo(() => new Map(servers.map((s) => [s.id, s])), [servers]);
 
@@ -287,8 +293,8 @@ export function Sidebar() {
         { label: "Servidor", icon: <Server size={14} />, onClick: () => openServerEditor(null) },
         { label: "Proyecto", icon: <Layers size={14} />, onClick: () => openProjectEditor(null) },
         "separator",
-        { label: "Importar de ~/.ssh/config…", icon: <Download size={14} />, onClick: () => setImportOpen(true) },
-        { label: "Exportar a ~/.ssh/config", icon: <Upload size={14} />, onClick: () => void exportSshConfig() },
+        { label: `Importar de ${SSH_CONFIG_LABEL}…`, icon: <Download size={14} />, onClick: () => setImportOpen(true) },
+        { label: `Exportar a ${SSH_CONFIG_LABEL}`, icon: <Upload size={14} />, onClick: () => void exportSshConfig() },
       ],
     });
   };
@@ -300,7 +306,7 @@ export function Sidebar() {
         r.count === 1 ? `1 servidor exportado a ${r.path}` : `${r.count} servidores exportados a ${r.path}`,
       );
     } catch (e) {
-      toast.error("No se pudo exportar a ~/.ssh/config", e);
+      toast.error(`No se pudo exportar a ${SSH_CONFIG_LABEL}`, e);
     }
   };
 
@@ -479,7 +485,7 @@ export function Sidebar() {
         <div className="sb-header-actions">
           <button
             className="sb-new-btn"
-            title="Nuevo servidor o proyecto, importar o exportar ~/.ssh/config"
+            title={`Nuevo servidor o proyecto, importar o exportar ${SSH_CONFIG_LABEL}`}
             aria-haspopup="menu"
             onClick={(e) => openNewMenu(e.currentTarget)}
           >
@@ -542,7 +548,7 @@ export function Sidebar() {
             <Plus size={14} /> Añadir servidor
           </button>
           <button className="btn btn-sm" onClick={() => setImportOpen(true)}>
-            <Download size={14} /> Importar de ~/.ssh/config
+            <Download size={14} /> Importar de {SSH_CONFIG_LABEL}
           </button>
         </div>
       ) : (
@@ -594,7 +600,11 @@ export function Sidebar() {
         </div>
       )}
 
-      {importOpen && <ImportSshConfigDialog onClose={() => setImportOpen(false)} />}
+      {importOpen && (
+        <Suspense fallback={null}>
+          <ImportSshConfigDialog onClose={() => setImportOpen(false)} />
+        </Suspense>
+      )}
       {menu && <SbContextMenu x={menu.x} y={menu.y} items={menu.items} onClose={closeMenu} />}
     </aside>
   );

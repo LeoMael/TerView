@@ -1,5 +1,6 @@
 // Explorador de archivos remotos (SFTP). DUEÑO: agente SFTP/Explorador.
 import {
+  memo,
   useCallback,
   useEffect,
   useMemo,
@@ -43,6 +44,7 @@ import { clipboard } from "../../lib/clipboard";
 import { EV_TRANSFER_UPDATE, type FileEntry, type TransferJob } from "../../api/types";
 import { formatBytes } from "../../lib/format";
 import { basename, dirname, joinPath } from "../../lib/paths";
+import { localBasename } from "../../lib/platform";
 import { useSettings } from "../../stores/settings";
 import { useTabs } from "../../stores/tabs";
 import { toast } from "../../stores/toasts";
@@ -122,7 +124,13 @@ function sessionOnline(sessionId: string): boolean {
   return !t || t.status === "connected";
 }
 
-export function FileExplorer({ sessionId, initialPath, active, onOpenFile, onPathChange }: FileExplorerProps) {
+export const FileExplorer = memo(function FileExplorer({
+  sessionId,
+  initialPath,
+  active,
+  onOpenFile,
+  onPathChange,
+}: FileExplorerProps) {
   // Estado de la conexión (reconexión automática / cierre definitivo).
   const tabStatus = useTabs((s) => s.tabs.find((t) => t.sessionId === sessionId)?.status ?? "connected");
   const closedReason = useTabs((s) => s.tabs.find((t) => t.sessionId === sessionId)?.closedReason ?? null);
@@ -402,7 +410,9 @@ export function FileExplorer({ sessionId, initialPath, active, onOpenFile, onPat
     if (!paths.length || !dir) return;
     try {
       await transfers.upload(sessionId, paths, dir);
-      toast.info(`Subiendo ${plural(paths.length, "elemento", "elementos")}…`, `a ${dir}`);
+      // Rutas locales: pueden venir con "\" y letra de unidad (Windows).
+      const what = paths.length === 1 ? `«${localBasename(paths[0])}»` : plural(paths.length, "elemento", "elementos");
+      toast.info(`Subiendo ${what}…`, `a ${dir}`);
     } catch (err) {
       toast.error("No se pudo iniciar la subida", err);
     }
@@ -427,8 +437,10 @@ export function FileExplorer({ sessionId, initialPath, active, onOpenFile, onPat
       const res = await openDialog({ directory: true, multiple: false, title: "Descargar en…" });
       const dir = Array.isArray(res) ? res[0] : res;
       if (!dir) return;
+      // `dir` es una ruta LOCAL (en Windows "C:\Users\…"): se pasa tal cual al motor, sin unirle "/".
       await transfers.download(sessionId, list.map((e) => e.path), dir);
-      toast.info(`Descargando ${plural(list.length, "elemento", "elementos")}…`, `a ${dir}`);
+      const what = list.length === 1 ? `«${list[0].name}»` : plural(list.length, "elemento", "elementos");
+      toast.info(`Descargando ${what}…`, `a ${dir}`);
     } catch (err) {
       toast.error("No se pudo iniciar la descarga", err);
     } finally {
@@ -1075,4 +1087,4 @@ export function FileExplorer({ sessionId, initialPath, active, onOpenFile, onPat
       )}
     </div>
   );
-}
+});

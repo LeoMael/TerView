@@ -63,7 +63,7 @@
   background: var(--text-faint);
 }
 .tp-bar-queued > div {
-  background: color-mix(in srgb, var(--orange) 55%, var(--border-strong));
+  background: var(--mix-orange-55-border-strong);
 }
 
 /* ───────── Plegado (una línea) ───────── */
@@ -79,7 +79,7 @@
 }
 .tp-collapsed:hover,
 .tp-collapsed:focus-visible {
-  background: color-mix(in srgb, var(--surface-2) 60%, transparent);
+  background: var(--mix-surface-2-60);
 }
 .tp-c-title {
   display: inline-flex;
@@ -196,7 +196,7 @@
   border-bottom: 1px solid var(--border);
 }
 .tp-batch.tp-open {
-  background: color-mix(in srgb, var(--surface) 70%, transparent);
+  background: var(--mix-surface-70);
 }
 .tp-brow {
   display: flex;
@@ -296,19 +296,19 @@
 }
 .tp-badge-running {
   color: var(--orange);
-  background: color-mix(in srgb, var(--orange) 15%, transparent);
+  background: var(--mix-orange-15);
 }
 .tp-badge-done {
   color: var(--green);
-  background: color-mix(in srgb, var(--green) 14%, transparent);
+  background: var(--mix-green-14);
 }
 .tp-badge-error {
   color: var(--red);
-  background: color-mix(in srgb, var(--red) 14%, transparent);
+  background: var(--mix-red-14);
 }
 .tp-badge-queued {
   color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  background: var(--mix-accent-12);
 }
 
 /* Trabajos del lote */

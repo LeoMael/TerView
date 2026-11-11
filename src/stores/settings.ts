@@ -3,10 +3,15 @@ import { create } from "zustand";
 import { settingsApi } from "../api/profiles";
 import type { Settings } from "../api/types";
 
+/** Fuente monoespaciada por defecto: Linux (JetBrains/Fira/Noto), Windows (Cascadia Mono, Consolas), macOS (Menlo). */
+export const DEFAULT_MONO_FONT = "'JetBrains Mono', 'Fira Code', 'Noto Sans Mono', 'Cascadia Mono', Consolas, Menlo, monospace";
+/** Valor por defecto de versiones anteriores (sin fuentes de Windows/macOS): se actualiza al cargar. */
+const OLD_DEFAULT_MONO_FONT = "'JetBrains Mono', 'Fira Code', 'Noto Sans Mono', monospace";
+
 export const DEFAULT_SETTINGS: Settings = {
   theme: "dark",
   terminalFontSize: 14,
-  terminalFontFamily: "'JetBrains Mono', 'Fira Code', 'Noto Sans Mono', monospace",
+  terminalFontFamily: DEFAULT_MONO_FONT,
   transferConcurrency: 4,
   showHiddenFiles: false,
   confirmDelete: true,
@@ -16,7 +21,7 @@ export const DEFAULT_SETTINGS: Settings = {
   autoReconnect: true,
   reconnectAttempts: 5,
   editorFontSize: 14,
-  editorFontFamily: "'JetBrains Mono', 'Fira Code', 'Noto Sans Mono', monospace",
+  editorFontFamily: DEFAULT_MONO_FONT,
   sshConfigSync: false,
   transferConflict: "overwrite",
 };
@@ -38,8 +43,11 @@ export const useSettings = create<SettingsState>((set, get) => ({
   loaded: false,
   load: async () => {
     try {
-      const s = await settingsApi.load();
-      set({ settings: { ...DEFAULT_SETTINGS, ...s }, loaded: true });
+      const s: Settings = { ...DEFAULT_SETTINGS, ...(await settingsApi.load()) };
+      // El valor por defecto viejo acababa en «monospace» (Courier New en Windows): se completa.
+      if (s.terminalFontFamily === OLD_DEFAULT_MONO_FONT) s.terminalFontFamily = DEFAULT_MONO_FONT;
+      if (s.editorFontFamily === OLD_DEFAULT_MONO_FONT) s.editorFontFamily = DEFAULT_MONO_FONT;
+      set({ settings: s, loaded: true });
     } catch {
       set({ loaded: true });
     }

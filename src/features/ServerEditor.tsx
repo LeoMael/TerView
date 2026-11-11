@@ -10,6 +10,7 @@ import { useProfiles } from "../stores/profiles";
 import { useUi } from "../stores/ui";
 import { toast } from "../stores/toasts";
 import { ColorPicker } from "./ColorPicker";
+import { SSH_KEY_EXAMPLE } from "../lib/platform";
 
 export function ServerEditorHost() {
   const editor = useUi((s) => s.serverEditor);
@@ -287,7 +288,7 @@ function ServerEditor({ initial, onClose }: { initial: ServerProfile | null; onC
                   className="input mono cd-grow"
                   value={keyPath}
                   spellCheck={false}
-                  placeholder="~/.ssh/id_ed25519"
+                  placeholder={SSH_KEY_EXAMPLE}
                   onChange={(e) => {
                     setKeyPath(e.target.value);
                     clearErr("keyPath");

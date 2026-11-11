@@ -6,7 +6,7 @@
 //!   SettingsStore::load(), SettingsStore::get()
 //!   secrets::get_secret / set_secret / delete_secret
 
-mod fsutil;
+pub(crate) mod fsutil;
 pub mod secrets;
 pub mod ssh_config;
 #[cfg(test)]

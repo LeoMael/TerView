@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "TerView",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "identifier": "com.terview.app",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -30,12 +30,34 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "publisher": "LeoMael",
+    "copyright": "© 2026 LeoMael",
+    "homepage": "https://github.com/LeoMael/TerView",
+    "category": "DeveloperTool",
+    "shortDescription": "Cliente SSH/SFTP visual",
+    "longDescription": "TerView es un cliente SSH/SFTP de escritorio: terminal integrada, explorador y editor de archivos remotos, transferencias masivas, biblioteca de comandos y servidores y proyectos guardados, con reconexión automática y contraseñas en el llavero del sistema.",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "windows": {
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper",
+        "silent": true
+      },
+      "nsis": {
+        "installMode": "currentUser",
+        "languages": [
+          "Spanish"
+        ],
+        "displayLanguageSelector": false
+      },
+      "wix": {
+        "language": "es-ES"
+      }
+    }
   }
 }

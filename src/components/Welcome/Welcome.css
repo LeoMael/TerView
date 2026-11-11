@@ -55,12 +55,12 @@
 }
 .wl-server:hover:not(:disabled) {
   border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 7%, var(--surface-2));
+  background: var(--mix-accent-7-surface-2);
 }
 .wl-server:focus-visible {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent);
+  box-shadow: 0 0 0 2px var(--mix-accent-25);
 }
 .wl-server:disabled {
   cursor: default;
@@ -73,7 +73,7 @@
   width: 32px;
   height: 32px;
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  background: var(--mix-accent-12);
   color: var(--accent);
   flex: none;
 }

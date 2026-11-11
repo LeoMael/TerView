@@ -197,7 +197,7 @@ pub fn render_block(servers: &[ServerProfile], reset: bool) -> String {
         s.push_str(&format!("    User {}\n", cfg_value(&srv.username)));
         let key = srv.key_path.as_deref().map(str::trim).filter(|k| !k.is_empty());
         if let (AuthMethod::Key, Some(k)) = (srv.auth, key) {
-            s.push_str(&format!("    IdentityFile {}\n", cfg_value(k)));
+            s.push_str(&format!("    IdentityFile {}\n", cfg_value(&identity_path(k))));
         }
     }
     if reset {
@@ -262,6 +262,12 @@ fn fold_accent(c: char) -> char {
         'ý' | 'ÿ' => 'y',
         _ => c,
     }
+}
+
+/// Ruta de llave para `IdentityFile`. En Windows se escribe con `/`: OpenSSH trata la barra
+/// invertida como escape en algunos casos (`\\servidor` se rompería) y acepta `/` como separador.
+fn identity_path(k: &str) -> String {
+    if cfg!(windows) { k.replace('\\', "/") } else { k.to_string() }
 }
 
 /// Valor seguro para una línea de ssh_config: sin saltos ni comillas; entre comillas si tiene espacios.
@@ -512,6 +518,8 @@ fn expand_tilde(env: &SshEnv, p: &str) -> PathBuf {
         env.home.clone()
     } else if let Some(r) = p.strip_prefix("~/") {
         env.home.join(r)
+    } else if let Some(r) = p.strip_prefix("~\\").filter(|_| cfg!(windows)) {
+        env.home.join(r)
     } else {
         PathBuf::from(p)
     }
@@ -550,9 +558,13 @@ fn glob(pattern: &Path) -> Vec<PathBuf> {
     acc
 }
 
+/// `~/…` con `/` como separador (también en Windows, donde OpenSSH lo acepta).
 fn tildeify(env: &SshEnv, p: &Path) -> String {
     match p.strip_prefix(&env.home) {
-        Ok(rest) => format!("~/{}", rest.display()),
+        Ok(rest) => {
+            let parts: Vec<String> = rest.components().map(|c| c.as_os_str().to_string_lossy().into_owned()).collect();
+            format!("~/{}", parts.join("/"))
+        }
         Err(_) => p.display().to_string(),
     }
 }

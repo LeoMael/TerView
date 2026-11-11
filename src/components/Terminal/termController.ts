@@ -1,9 +1,11 @@
 // Controlador de una terminal: une una instancia de xterm.js con una shell remota.
 // Independiente de React: el componente solo lo crea, le pasa cambios y lo destruye.
 import { Terminal } from "@xterm/xterm";
+import "@xterm/xterm/css/xterm.css";
 import { FitAddon } from "@xterm/addon-fit";
 import { WebLinksAddon } from "@xterm/addon-web-links";
 import { SearchAddon, type ISearchResultChangeEvent } from "@xterm/addon-search";
+import { WebglAddon } from "@xterm/addon-webgl";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { terminal } from "../../api/terminal";
 import { errorMessage } from "../../api/core";
@@ -11,6 +13,7 @@ import { toast } from "../../stores/toasts";
 import { buildSearchDecorations, buildTermTheme, onAppThemeChange } from "./termTheme";
 import { ensureExitListener, onTerminalExit } from "./exitEvents";
 import { clipboard } from "../../lib/clipboard";
+import { getTerminalGpu, isWebglUnsupported, markWebglUnsupported, onTerminalGpuChange } from "./gpuPref";
 
 export type TermStatus = "opening" | "running" | "exited";
 /** Estado de la conexión SSH de la pestaña (de `useTabs`). */
@@ -35,6 +38,9 @@ export interface SearchResults {
 /** Si la shell termina sin código (posible caída de la conexión), se espera esto antes de
  *  decidir qué mensaje mostrar: el vigilante del motor detecta la caída en ~1,5 s. */
 const EXIT_GRACE_MS = 2500;
+
+/** Si el contexto WebGL se pierde más veces que esto, la terminal se queda con el dibujado normal. */
+const MAX_WEBGL_LOSSES = 2;
 
 const DIM = (s: string) => `\x1b[0m\x1b[2m${s}\x1b[0m`;
 const RED = (s: string) => `\x1b[0m\x1b[31m${s}\x1b[0m`;
@@ -69,6 +75,10 @@ export class TermController {
   private readonly ro: ResizeObserver;
   private readonly unTheme: () => void;
   private unExit: (() => void) | null = null;
+  private readonly unGpu: () => void;
+  /** Dibujado por GPU (null = dibujado normal por DOM). */
+  private webgl: WebglAddon | null = null;
+  private webglLosses = 0;
 
   constructor(host: HTMLElement, opts: TermControllerOptions) {
     this.host = host;
@@ -110,11 +120,51 @@ export class TermController {
     this.unTheme = onAppThemeChange(() => {
       if (!this.disposed) this.term.options.theme = buildTermTheme();
     });
+    this.unGpu = onTerminalGpuChange((on) => {
+      if (on) {
+        this.webglLosses = 0;
+        this.enableWebgl();
+      } else this.disableWebgl();
+    });
+    this.enableWebgl();
     // Cuando cargan las fuentes cambian las medidas de cada celda.
     document.fonts?.ready.then(() => this.fitNow()).catch(() => {});
 
     this.fitNow();
     void this.start();
+  }
+
+  // ───────── Dibujado por GPU (WebGL) ─────────
+
+  /** Activa el dibujado por GPU si está permitido y disponible; si falla, sigue con el normal (DOM). */
+  private enableWebgl() {
+    if (this.disposed || this.webgl) return;
+    if (!getTerminalGpu() || isWebglUnsupported() || this.webglLosses > MAX_WEBGL_LOSSES) return;
+    try {
+      const addon = new WebglAddon();
+      addon.onContextLoss(() => {
+        // La tarjeta gráfica se reinició o hay demasiados contextos abiertos: volver al dibujado normal.
+        this.webglLosses++;
+        this.disableWebgl();
+      });
+      this.term.loadAddon(addon);
+      this.webgl = addon;
+    } catch (e) {
+      console.warn("Terminal: sin aceleración por GPU, se usa el dibujado normal", e);
+      markWebglUnsupported();
+    }
+  }
+
+  private disableWebgl() {
+    const w = this.webgl;
+    if (!w) return;
+    this.webgl = null;
+    try {
+      w.dispose();
+    } catch {
+      /* ya estaba liberado */
+    }
+    if (!this.disposed) this.term.refresh(0, this.term.rows - 1);
   }
 
   // ───────── Ciclo de vida de la shell ─────────
@@ -390,6 +440,8 @@ export class TermController {
   show(focus: boolean) {
     requestAnimationFrame(() => {
       if (this.disposed) return;
+      // Si perdió el contexto GPU mientras estaba oculta, reintentar (con límite).
+      if (!this.webgl) this.enableWebgl();
       this.fitNow();
       if (focus) this.term.focus();
     });
@@ -419,6 +471,8 @@ export class TermController {
     this.cancelExitMessage();
     this.ro.disconnect();
     this.unTheme();
+    this.unGpu();
+    this.disableWebgl();
     this.unExit?.();
     if (this.termId) terminal.close(this.termId).catch(() => {});
     this.termId = null;

@@ -239,13 +239,13 @@
   background: var(--accent-bg);
 }
 .fx-row.cursor {
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent);
+  box-shadow: inset 0 0 0 1px var(--mix-accent-45);
 }
 .fx-root:not(:focus-within) .fx-row.cursor {
   box-shadow: none;
 }
 .fx-row.drop-target {
-  background: color-mix(in srgb, var(--orange) 18%, transparent);
+  background: var(--mix-orange-18);
   box-shadow: inset 0 0 0 1px var(--orange);
 }
 .fx-row.hidden-file .fx-name-text {
@@ -307,7 +307,7 @@
 }
 .fx-ic-folder {
   color: var(--yellow);
-  fill: color-mix(in srgb, var(--yellow) 25%, transparent);
+  fill: var(--mix-yellow-25);
 }
 .fx-ic-file,
 .fx-ic-text {
@@ -345,16 +345,18 @@
   position: absolute;
   top: 0;
   bottom: 0;
+  left: 0;
   width: 30%;
   background: var(--accent);
   animation: fx-load 1s ease-in-out infinite;
 }
+/* transform en vez de `left`: se mueve sin recalcular la maquetación en cada fotograma. */
 @keyframes fx-load {
   from {
-    left: -30%;
+    transform: translateX(-100%);
   }
   to {
-    left: 100%;
+    transform: translateX(333.33%);
   }
 }
 .fx-spin {
@@ -387,7 +389,7 @@
   inset: 4px;
   border: 2px dashed var(--orange);
   border-radius: var(--radius);
-  background: color-mix(in srgb, var(--orange) 6%, transparent);
+  background: var(--mix-orange-6);
   pointer-events: none;
   z-index: 4;
 }
@@ -507,7 +509,7 @@
   align-items: flex-start;
   justify-content: center;
   padding-top: 84px;
-  background: color-mix(in srgb, var(--surface) 55%, transparent);
+  background: var(--mix-surface-55);
   cursor: progress;
 }
 .fx-reconnecting-pill {
@@ -520,7 +522,7 @@
   background: var(--surface);
   color: var(--text-muted);
   font-size: 12px;
-  box-shadow: 0 2px 10px rgb(0 0 0 / 0.15);
+  box-shadow: var(--shadow-sm);
 }
 .fx-offline .fx-main {
   opacity: 0.75;

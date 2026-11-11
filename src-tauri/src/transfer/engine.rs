@@ -24,8 +24,8 @@ use tokio::sync::Notify;
 
 use super::copy::{self, CopyError, CopyResult, Ctrl, STOP_CANCEL, STOP_PAUSE};
 use super::paths::{
-    local_io_message, local_root_name, remote_basename, remote_join, remote_kind, remote_parent, safe_remote_name,
-    walk_local, RemoteKind,
+    local_file_name, local_io_message, local_name_key, local_root_name, numbered_name, remote_basename, remote_join,
+    remote_kind, remote_parent, safe_remote_name, walk_local, RemoteKind,
 };
 use super::policy::{decide, Conflict};
 use super::pool::{Chan, Lease, Pools};
@@ -816,7 +816,7 @@ impl Engine {
         if !safe_remote_name(&name) {
             name = "raiz".into();
         }
-        let local = local_dir.join(&name);
+        let local = local_dir.join(local_file_name(&name));
         let down = TransferDirection::Download;
         let walk_kind = Kind::Walk(WalkSpec::DownloadRoot {
             remote: remote.clone(),
@@ -911,12 +911,22 @@ impl Engine {
             };
             let mut jobs = Vec::new();
             let mut seen = HashSet::new();
+            // Nombres locales ya usados en esta carpeta: en Windows dos nombres remotos pueden
+            // acabar iguales (`a:b` y `a_b`, o `A.txt` y `a.txt`); el segundo se numera.
+            let mut used_local = HashSet::new();
             for f in entries {
                 if !safe_remote_name(&f.filename) || !seen.insert(f.filename.clone()) {
                     continue;
                 }
                 let rpath = remote_join(&r, &f.filename);
-                let lpath = l.join(&f.filename);
+                let base = local_file_name(&f.filename);
+                let mut lname = base.clone();
+                let mut n = 2;
+                while !used_local.insert(local_name_key(&lname)) {
+                    lname = numbered_name(&base, n);
+                    n += 1;
+                }
+                let lpath = l.join(&lname);
                 let frel = format!("{rel}/{}", f.filename);
                 let a = &f.attrs;
                 match remote_kind(a.permissions) {
@@ -1188,7 +1198,7 @@ impl Engine {
                 && let Ok(m) = tokio::fs::symlink_metadata(local).await
                 && m.file_type().is_symlink()
             {
-                tokio::fs::remove_file(local)
+                remove_link_or_file(local)
                     .await
                     .map_err(|e| CopyError::Fatal(local_io_message(&e)))?;
             }
@@ -1364,7 +1374,6 @@ async fn upload_link(
 }
 
 /// Recrea un enlace simbólico remoto en el equipo local (mismo objetivo).
-#[cfg(unix)]
 async fn download_link(
     chan: &Chan,
     remote: &str,
@@ -1387,23 +1396,93 @@ async fn download_link(
         if meta.is_dir() {
             return Err(CopyError::Fatal("Ya existe una carpeta con ese nombre (equipo local)".into()));
         }
-        tokio::fs::remove_file(local).await.map_err(lerr)?;
     } else if let Some(parent) = local.parent() {
         tokio::fs::create_dir_all(parent).await.map_err(lerr)?;
     }
-    tokio::fs::symlink(&target, local).await.map_err(lerr)?;
+    create_local_link(chan, remote, &target, local, dest.is_some()).await
+}
+
+#[cfg(unix)]
+async fn create_local_link(_chan: &Chan, _remote: &str, target: &str, local: &Path, replace: bool) -> CopyResult<Outcome> {
+    let lerr = |e: std::io::Error| CopyError::Fatal(local_io_message(&e));
+    if replace {
+        remove_link_or_file(local).await.map_err(lerr)?;
+    }
+    tokio::fs::symlink(target, local).await.map_err(lerr)?;
     Ok(Outcome::Copied(0))
 }
 
-#[cfg(not(unix))]
-async fn download_link(
-    _chan: &Chan,
-    _remote: &str,
-    _local: &Path,
-    _mtime: Option<u32>,
-    _policy: Conflict,
-    _check: bool,
-) -> CopyResult<Outcome> {
+/// Windows: crear enlaces simbólicos exige el Modo de desarrollador o permisos de administrador.
+/// Si no se puede, el elemento se omite con un aviso (la transferencia sigue) y el archivo que
+/// ocupara el nombre no se toca: el enlace se crea primero con un nombre temporal.
+#[cfg(windows)]
+async fn create_local_link(chan: &Chan, remote: &str, target: &str, local: &Path, replace: bool) -> CopyResult<Outcome> {
+    // Objetivo absoluto del servidor (`/usr/…`): no existe en este equipo.
+    if target.starts_with('/') {
+        return Ok(Outcome::Skipped(
+            "es un enlace simbólico a una ruta absoluta del servidor (no se puede recrear en Windows)".into(),
+        ));
+    }
+    let win_target = target.replace('/', "\\");
+    // Windows distingue enlaces a carpeta y a archivo: se mira a qué apunta en el servidor.
+    let is_dir = chan
+        .raw
+        .stat(remote.to_string())
+        .await
+        .is_ok_and(|a| remote_kind(a.attrs.permissions) == RemoteKind::Dir);
+    let tmp = if replace {
+        let name = local.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
+        local.with_file_name(format!(".{name}.terview-{}", uuid::Uuid::new_v4().simple()))
+    } else {
+        local.to_path_buf()
+    };
+    let made = if is_dir {
+        tokio::fs::symlink_dir(&win_target, &tmp).await
+    } else {
+        tokio::fs::symlink_file(&win_target, &tmp).await
+    };
+    if let Err(e) = made {
+        // ERROR_PRIVILEGE_NOT_HELD (1314) o acceso denegado: sin permiso para crear enlaces.
+        if e.raw_os_error() == Some(1314) || e.kind() == std::io::ErrorKind::PermissionDenied {
+            return Ok(Outcome::Skipped(
+                "es un enlace simbólico y Windows no permite crearlo sin el Modo de desarrollador o \
+                 permisos de administrador"
+                    .into(),
+            ));
+        }
+        return Err(CopyError::Fatal(local_io_message(&e)));
+    }
+    if replace {
+        let lerr = |e: std::io::Error| CopyError::Fatal(local_io_message(&e));
+        if let Err(e) = remove_link_or_file(local).await {
+            let _ = remove_link_or_file(&tmp).await;
+            return Err(lerr(e));
+        }
+        if let Err(e) = tokio::fs::rename(&tmp, local).await {
+            let _ = remove_link_or_file(&tmp).await;
+            return Err(lerr(e));
+        }
+    }
+    Ok(Outcome::Copied(0))
+}
+
+/// Borra un archivo o enlace simbólico local. En Windows los enlaces a carpeta se borran con
+/// `remove_dir` (sin tocar lo que hay dentro del objetivo); `remove_file` fallaría.
+async fn remove_link_or_file(path: &Path) -> std::io::Result<()> {
+    #[cfg(windows)]
+    {
+        use std::os::windows::fs::FileTypeExt;
+        if let Ok(m) = tokio::fs::symlink_metadata(path).await
+            && m.file_type().is_symlink_dir()
+        {
+            return tokio::fs::remove_dir(path).await;
+        }
+    }
+    tokio::fs::remove_file(path).await
+}
+
+#[cfg(not(any(unix, windows)))]
+async fn create_local_link(_chan: &Chan, _remote: &str, _target: &str, _local: &Path, _replace: bool) -> CopyResult<Outcome> {
     Ok(Outcome::Skipped("es un enlace simbólico (no admitido en este sistema)".into()))
 }
 

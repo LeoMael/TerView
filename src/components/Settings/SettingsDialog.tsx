@@ -18,12 +18,14 @@ import {
 } from "lucide-react";
 import { Modal } from "../ui/Modal";
 import { useUi } from "../../stores/ui";
-import { DEFAULT_SETTINGS, useSettings } from "../../stores/settings";
+import { DEFAULT_MONO_FONT, DEFAULT_SETTINGS, useSettings } from "../../stores/settings";
 import type { Settings } from "../../api/types";
 import { confirmDialog } from "../ui/dialogs";
 import { profiles } from "../../api/profiles";
 import { toast } from "../../stores/toasts";
+import { getTerminalGpu, setTerminalGpu } from "../Terminal/gpuPref";
 import "./SettingsDialog.css";
+import { SSH_CONFIG_LABEL } from "../../lib/platform";
 
 type SectionId = "appearance" | "terminal" | "connection" | "transfers" | "explorer" | "editor" | "servers";
 
@@ -38,7 +40,7 @@ const SECTIONS: { id: SectionId; label: string; icon: ReactNode }[] = [
 ];
 
 const FONT_PRESETS = [
-  "'JetBrains Mono', 'Fira Code', 'Noto Sans Mono', monospace",
+  DEFAULT_MONO_FONT,
   "'Fira Code', monospace",
   "'Cascadia Code', 'Cascadia Mono', monospace",
   "'Source Code Pro', monospace",
@@ -270,6 +272,8 @@ function Appearance() {
 function TerminalSection() {
   const [size, setSize] = useSetting("terminalFontSize");
   const [family, setFamily] = useSetting("terminalFontFamily");
+  // Se guarda en este equipo (localStorage), no en los ajustes del motor.
+  const [gpu, setGpu] = useState(getTerminalGpu);
   return (
     <>
       <h3 className="st-title">Terminal</h3>
@@ -278,6 +282,19 @@ function TerminalSection() {
       </Row>
       <Row label="Tipo de letra" hint="Lista de fuentes CSS; se usa la primera instalada.">
         <FontFamilyInput value={family} onChange={setFamily} fallback={DEFAULT_SETTINGS.terminalFontFamily} />
+      </Row>
+      <Row
+        label="Aceleración por GPU en la terminal"
+        hint="Dibuja la terminal con la tarjeta gráfica (WebGL): más fluida con mucha salida. Si ves fallos de dibujado, desactívala. Si no está disponible se usa el dibujado normal."
+      >
+        <Toggle
+          checked={gpu}
+          onChange={(v) => {
+            setGpu(v);
+            setTerminalGpu(v);
+          }}
+          label="Aceleración por GPU en la terminal"
+        />
       </Row>
       <div className="st-preview" style={{ fontFamily: family, fontSize: size }}>
         <span className="st-prompt">deploy@web-prod</span>:<span className="st-path">~/app</span>$ ls -la
@@ -421,7 +438,7 @@ function ServersSection() {
       );
       return true;
     } catch (e) {
-      toast.error("No se pudo exportar a ~/.ssh/config", e);
+      toast.error(`No se pudo exportar a ${SSH_CONFIG_LABEL}`, e);
       return false;
     } finally {
       setBusy(false);
@@ -440,12 +457,12 @@ function ServersSection() {
     <>
       <h3 className="st-title">Servidores</h3>
       <Row
-        label="Mantener ~/.ssh/config sincronizado"
-        hint="Tus servidores se escriben en un bloque marcado de ~/.ssh/config (el resto del archivo no se toca) y se actualizan al guardar o borrar. Así funcionan con «ssh», «scp», VS Code o Claude Code."
+        label={`Mantener ${SSH_CONFIG_LABEL} sincronizado`}
+        hint={`Tus servidores se escriben en un bloque marcado de ${SSH_CONFIG_LABEL} (el resto del archivo no se toca) y se actualizan al guardar o borrar. Así funcionan con «ssh», «scp», VS Code o Claude Code.`}
       >
-        <Toggle checked={sync} onChange={(v) => void onToggle(v)} label="Mantener ~/.ssh/config sincronizado" />
+        <Toggle checked={sync} onChange={(v) => void onToggle(v)} label={`Mantener ${SSH_CONFIG_LABEL} sincronizado`} />
       </Row>
-      <Row label="Exportar a ~/.ssh/config" hint="Escribe ahora el bloque de TerView. Se guarda una copia de seguridad la primera vez.">
+      <Row label={`Exportar a ${SSH_CONFIG_LABEL}`} hint="Escribe ahora el bloque de TerView. Se guarda una copia de seguridad la primera vez.">
         <button className="btn" onClick={() => void exportNow()} disabled={busy}>
           {busy ? <span className="spinner" /> : <FileOutput size={14} />} Exportar ahora
         </button>

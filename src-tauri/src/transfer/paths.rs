@@ -65,6 +65,75 @@ pub fn safe_remote_name(name: &str) -> bool {
     !name.is_empty() && name != "." && name != ".." && !name.contains('/') && !name.contains('\0')
 }
 
+/// Nombre con el que se guarda en el disco local un elemento remoto (ya validado con
+/// [`safe_remote_name`]). En Unix es el mismo; en Windows se adapta con [`windows_safe_name`].
+pub fn local_file_name(remote_name: &str) -> String {
+    if cfg!(windows) {
+        windows_safe_name(remote_name)
+    } else {
+        remote_name.to_string()
+    }
+}
+
+/// Nombres de dispositivo que Windows no deja usar como archivo (con cualquier extensión).
+const WINDOWS_RESERVED: &[&str] = &[
+    "CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9", "COM¹",
+    "COM²", "COM³", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9", "LPT¹", "LPT²", "LPT³",
+];
+
+/// Adapta un nombre a las reglas de Windows: `< > : " / \ | ? *` y los caracteres de control
+/// pasan a `_`, se quitan puntos y espacios finales, y a los nombres reservados (`CON`, `NUL`,
+/// `COM1`…, también con extensión: `nul.txt`) se les antepone `_`.
+pub fn windows_safe_name(name: &str) -> String {
+    let mut out: String = name
+        .chars()
+        .map(|c| match c {
+            '<' | '>' | ':' | '"' | '/' | '\\' | '|' | '?' | '*' => '_',
+            c if (c as u32) < 0x20 => '_',
+            c => c,
+        })
+        .collect();
+    let trimmed = out.trim_end_matches(['.', ' ']).len();
+    out.truncate(trimmed);
+    if out.is_empty() {
+        return "_".into();
+    }
+    let stem = out.split('.').next().unwrap_or("").trim_end_matches(' ');
+    if WINDOWS_RESERVED.iter().any(|r| r.eq_ignore_ascii_case(stem)) {
+        out.insert(0, '_');
+    }
+    out
+}
+
+/// Clave para detectar nombres repetidos en una carpeta local (Windows no distingue mayúsculas).
+pub fn local_name_key(name: &str) -> String {
+    if cfg!(windows) { name.to_lowercase() } else { name.to_string() }
+}
+
+/// `nombre (2).ext`, `nombre (3).ext`… para no pisar otro elemento con el mismo nombre local.
+pub fn numbered_name(name: &str, n: usize) -> String {
+    match name.rfind('.').filter(|&i| i > 0) {
+        Some(i) => format!("{} ({n}){}", &name[..i], &name[i..]),
+        None => format!("{name} ({n})"),
+    }
+}
+
+/// Objetivo de un enlace local, tal como se recrea en el servidor. En Windows los separadores
+/// pasan a `/`, y los objetivos absolutos (`C:\…`, `\\?\…`, uniones de carpeta) no tienen sentido
+/// en el servidor: `None`.
+pub fn link_target_for_remote(target: &str) -> Option<String> {
+    if !cfg!(windows) {
+        return Some(target.to_string());
+    }
+    let t = target.replace('\\', "/");
+    let bytes = t.as_bytes();
+    let drive = bytes.len() >= 2 && bytes[1] == b':' && bytes[0].is_ascii_alphabetic();
+    if drive || t.starts_with('/') {
+        return None;
+    }
+    Some(t)
+}
+
 /// Ruta relativa con `/` (componentes normales únicamente).
 pub fn rel_to_slash(rel: &Path) -> Option<String> {
     let mut parts = Vec::new();
@@ -154,13 +223,20 @@ pub fn walk_local(root: &Path) -> LocalPlan {
             });
         } else if ft.is_symlink() {
             match std::fs::read_link(entry.path()) {
-                Ok(t) => match t.to_str() {
-                    Some(target) if !target.is_empty() => plan.links.push(LocalLink {
-                        rel,
-                        path: entry.into_path(),
-                        target: target.to_string(),
-                    }),
-                    _ => plan
+                Ok(t) => match t.to_str().filter(|t| !t.is_empty()) {
+                    Some(target) => match link_target_for_remote(target) {
+                        Some(target) => plan.links.push(LocalLink {
+                            rel,
+                            path: entry.into_path(),
+                            target,
+                        }),
+                        None => plan.errors.push((
+                            rel,
+                            "El enlace apunta a una ruta absoluta de este equipo; no se puede recrear en el servidor (se omite)"
+                                .into(),
+                        )),
+                    },
+                    None => plan
                         .errors
                         .push((rel, "El destino del enlace simbólico no es un nombre válido".into())),
                 },
@@ -227,6 +303,32 @@ mod tests {
         assert_eq!(remote_kind(Some(0o140755)), RemoteKind::Other);
         assert_eq!(remote_kind(Some(0o644)), RemoteKind::Unknown);
         assert_eq!(remote_kind(None), RemoteKind::Unknown);
+    }
+
+    #[test]
+    fn windows_names() {
+        assert_eq!(windows_safe_name("informe.txt"), "informe.txt");
+        assert_eq!(windows_safe_name("a:b*c?.log"), "a_b_c_.log");
+        assert_eq!(windows_safe_name("x<y>|\"z\\w"), "x_y___z_w");
+        assert_eq!(windows_safe_name("tab\there"), "tab_here");
+        assert_eq!(windows_safe_name("final. . "), "final");
+        assert_eq!(windows_safe_name("..."), "_");
+        assert_eq!(windows_safe_name("CON"), "_CON");
+        assert_eq!(windows_safe_name("nul.txt"), "_nul.txt");
+        assert_eq!(windows_safe_name("Com1.tar.gz"), "_Com1.tar.gz");
+        assert_eq!(windows_safe_name("console.log"), "console.log");
+        assert_eq!(windows_safe_name("LPT10"), "LPT10");
+        assert_eq!(numbered_name("a.txt", 2), "a (2).txt");
+        assert_eq!(numbered_name(".bashrc", 2), ".bashrc (2)");
+        assert_eq!(numbered_name("carpeta", 3), "carpeta (3)");
+        if cfg!(windows) {
+            assert_eq!(local_file_name("a:b"), "a_b");
+            assert_eq!(link_target_for_remote(r"..\x\y").as_deref(), Some("../x/y"));
+            assert_eq!(link_target_for_remote(r"C:\x"), None);
+        } else {
+            assert_eq!(local_file_name("a:b"), "a:b");
+            assert_eq!(link_target_for_remote("/etc/hosts").as_deref(), Some("/etc/hosts"));
+        }
     }
 
     #[test]

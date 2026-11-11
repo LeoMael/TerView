@@ -2,6 +2,7 @@
 //! Archivo de BASE: los agentes no lo editan; los comandos ya están todos registrados.
 
 mod error;
+mod platform;
 mod sftp;
 mod snippets;
 mod ssh;
@@ -14,6 +15,7 @@ use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    platform::prepare_environment();
     tauri::Builder::default()
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .plugin(tauri_plugin_opener::init())

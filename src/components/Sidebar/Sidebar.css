@@ -91,7 +91,7 @@
 }
 .sb-input:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 22%, transparent);
+  box-shadow: 0 0 0 2px var(--mix-accent-22);
 }
 .sb-input-wrap.invalid .sb-input {
   border-color: var(--red);

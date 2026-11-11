@@ -1,4 +1,4 @@
-// Paleta global (Ctrl+Shift+P) sobre la pestaña activa. App la monta una vez; ella misma escucha el atajo.
+// Paleta global (Ctrl+Shift+P) sobre la pestaña activa. Se carga bajo demanda desde PaletteHost.
 //   Enter = ejecutar en la terminal · Alt+Enter = insertar · Ctrl+Enter = ejecutar y ver resultado aquí.
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, Search, TerminalSquare } from "lucide-react";
@@ -6,7 +6,7 @@ import { useProfiles } from "../../stores/profiles";
 import { useTabs } from "../../stores/tabs";
 import { toast } from "../../stores/toasts";
 import { CATEGORIES, type Distro } from "./catalog";
-import { OPEN_PALETTE_EVENT as OPEN_EVENT, captureBlockedReason, toTerminal, type RunMode } from "./actions";
+import { captureBlockedReason, toTerminal, type RunMode } from "./actions";
 import { CommandTags, HighlightedCommand, Preview, ResultView, VarField, initialValues, rememberValues } from "./parts";
 import { MY_CATEGORY, buildItems, getSessionInfo, searchItems, useSnippets, type CommandItem } from "./state";
 import { missingVars, parseVars, renderTemplate, varLabel } from "./template";
@@ -16,34 +16,9 @@ import "./Commands.css";
 const MAX_RESULTS = 80;
 const CAT_ORDER = new Map<string, number>([MY_CATEGORY, ...CATEGORIES].map((c, i) => [c, i]));
 
-export function CommandPalette() {
-  const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.shiftKey && !e.altKey && !e.metaKey && (e.key === "P" || e.key === "p" || e.code === "KeyP")) {
-        // Fase de captura: antes de que la terminal lo convierta en ^P.
-        e.preventDefault();
-        e.stopPropagation();
-        setOpen((o) => !o);
-      }
-    };
-    const onOpen = () => setOpen(true);
-    window.addEventListener("keydown", onKey, true);
-    window.addEventListener(OPEN_EVENT, onOpen);
-    return () => {
-      window.removeEventListener("keydown", onKey, true);
-      window.removeEventListener(OPEN_EVENT, onOpen);
-    };
-  }, []);
-
-  if (!open) return null;
-  return <PaletteView onClose={() => setOpen(false)} />;
-}
-
 type Phase = { kind: "list" } | { kind: "vars"; item: CommandItem; mode: RunMode } | { kind: "result"; item: CommandItem };
 
-function PaletteView({ onClose }: { onClose: () => void }) {
+export function PaletteView({ onClose }: { onClose: () => void }) {
   const tab = useTabs((s) => s.tabs.find((t) => t.id === s.activeTabId) ?? null);
   const mine = useSnippets((s) => s.list);
   const mineLoaded = useSnippets((s) => s.loaded);

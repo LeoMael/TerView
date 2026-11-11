@@ -1,0 +1,102 @@
+# Integración continua: en cada push o pull request a main comprueba que TerView compila y
+# pasa las pruebas en Linux y en Windows (así una rotura de Windows se ve en el mismo push).
+#
+#   Interfaz: tsc (tipos) + vite build
+#   Motor:    cargo clippy + cargo test --lib (las pruebas que necesitan servidor SSH son
+#             #[ignore] y no se ejecutan aquí)
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  comprobar:
+    name: Comprobar (${{ matrix.nombre }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - nombre: Linux
+            platform: ubuntu-22.04
+            # En Linux clippy hoy está limpio: cualquier aviso nuevo hace fallar la CI.
+            clippy_args: "-- -D warnings"
+          - nombre: Windows
+            platform: windows-latest
+            # En Windows los avisos se muestran pero no bloquean (código específico aún en pruebas).
+            clippy_args: ""
+    runs-on: ${{ matrix.platform }}
+    env:
+      CARGO_TERM_COLOR: always
+      # Respaldo si NASM no se instala: aws-lc-sys usa sus objetos NASM precompilados.
+      AWS_LC_SYS_PREBUILT_NASM: "1"
+
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v7
+
+      - name: Dependencias del sistema (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential pkg-config file \
+            libwebkit2gtk-4.1-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            libxdo-dev \
+            libssl-dev \
+            libdbus-1-dev
+
+      # aws-lc-sys (cifrado de russh) ensambla código con NASM en Windows x86_64.
+      - name: NASM (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/setup-nasm@v1
+        continue-on-error: true
+
+      - name: Node.js (LTS)
+        uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - name: Rust (estable)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - name: Caché de Rust
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+          key: ci-${{ matrix.platform }}
+
+      - name: Dependencias de npm
+        run: npm ci
+
+      - name: Tipos (tsc)
+        run: npx tsc --noEmit
+
+      # También genera dist/, que el motor necesita para compilar (frontendDist = ../dist).
+      - name: Compilar la interfaz (vite build)
+        run: npx vite build
+
+      - name: Clippy
+        working-directory: src-tauri
+        shell: bash
+        run: cargo clippy --all-targets ${{ matrix.clippy_args }}
+
+      - name: Pruebas del motor
+        working-directory: src-tauri
+        run: cargo test --lib

@@ -81,8 +81,8 @@
   padding: 6px 12px;
   font-size: var(--fs-sm);
   color: var(--text);
-  background: color-mix(in srgb, var(--yellow) 14%, var(--surface));
-  border-bottom: 1px solid color-mix(in srgb, var(--yellow) 35%, transparent);
+  background: var(--mix-yellow-14-surface);
+  border-bottom: 1px solid var(--mix-yellow-35);
   flex: none;
 }
 .cmd-notice > svg {
@@ -90,7 +90,7 @@
   flex: none;
 }
 .cmd-notice.warn {
-  border: 1px solid color-mix(in srgb, var(--yellow) 35%, transparent);
+  border: 1px solid var(--mix-yellow-35);
   border-radius: var(--radius-sm);
   margin-bottom: 10px;
 }
@@ -280,15 +280,15 @@
 }
 .cmd-tag-read {
   color: var(--green);
-  background: color-mix(in srgb, var(--green) 15%, transparent);
+  background: var(--mix-green-15);
 }
 .cmd-tag-danger {
   color: var(--red);
-  background: color-mix(in srgb, var(--red) 15%, transparent);
+  background: var(--mix-red-15);
 }
 .cmd-tag-sudo {
   color: var(--orange);
-  background: color-mix(in srgb, var(--orange) 15%, transparent);
+  background: var(--mix-orange-15);
 }
 .cmd-var-ph {
   color: var(--yellow);
@@ -496,7 +496,7 @@
   overflow: auto;
 }
 .cmd-preview.danger {
-  border-color: color-mix(in srgb, var(--red) 55%, transparent);
+  border-color: var(--mix-red-55);
 }
 .cmd-preview.small {
   font-size: 11.5px;
@@ -574,11 +574,11 @@
 }
 .cmd-exit.ok {
   color: var(--green);
-  background: color-mix(in srgb, var(--green) 15%, transparent);
+  background: var(--mix-green-15);
 }
 .cmd-exit.bad {
   color: var(--red);
-  background: color-mix(in srgb, var(--red) 15%, transparent);
+  background: var(--mix-red-15);
 }
 .cmd-warn {
   color: var(--yellow);
@@ -807,7 +807,7 @@
 .cmd-table td {
   padding: 3px 8px;
   height: 25px;
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+  border-bottom: 1px solid var(--mix-border-60);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -823,7 +823,7 @@
   width: 120px;
 }
 .cmd-item-cmd .cmd-var-ph {
-  color: color-mix(in srgb, var(--accent) 75%, var(--text-muted));
+  color: var(--mix-accent-75-text-muted);
 }
 .cmd-col-bar {
   width: 32%;

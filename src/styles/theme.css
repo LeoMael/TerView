@@ -30,9 +30,11 @@
   --radius: 8px;
   --radius-lg: 12px;
   --shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  /* Sombra corta para lo que está encima de zonas que se redimensionan o se mueven (más barata de pintar). */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
 
-  --font: "Inter", "Noto Sans", "Segoe UI", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", "Fira Code", "Noto Sans Mono", "DejaVu Sans Mono", monospace;
+  --font: "Inter", "Noto Sans", "Segoe UI", -apple-system, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", "Noto Sans Mono", "DejaVu Sans Mono", "Cascadia Mono", Consolas, Menlo, monospace;
   --fs: 13px;
   --fs-sm: 12px;
   --fs-lg: 15px;
@@ -62,7 +64,91 @@
   --red: #e11d48;
   --purple: #7c3aed;
   --shadow: 0 10px 30px rgba(15, 23, 42, 0.15);
+  --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.12);
   color-scheme: light;
+}
+
+/* ───────── Mezclas de color precalculadas ─────────
+   Antes eran color-mix() en cada regla; WebKitGTK las resolvía en cada recálculo de estilos.
+   Nombre: --mix-<color>-<porcentaje>[-<fondo>] (sin fondo = sobre transparente).
+   Si cambias un color de arriba, recalcula estas (mismo resultado que color-mix in srgb). */
+:root {
+  --mix-accent-10: rgb(56 189 248 / 0.1);
+  --mix-accent-12: rgb(56 189 248 / 0.12);
+  --mix-accent-16: rgb(56 189 248 / 0.16);
+  --mix-accent-22: rgb(56 189 248 / 0.22);
+  --mix-accent-25: rgb(56 189 248 / 0.25);
+  --mix-accent-35: rgb(56 189 248 / 0.35);
+  --mix-accent-45: rgb(56 189 248 / 0.45);
+  --mix-accent-7-surface-2: #203348;
+  --mix-accent-75-text-muted: #4fb6e8;
+  --mix-border-60: rgb(31 41 55 / 0.6);
+  --mix-green-14: rgb(34 197 94 / 0.14);
+  --mix-green-15: rgb(34 197 94 / 0.15);
+  --mix-green-20: rgb(34 197 94 / 0.2);
+  --mix-orange-15: rgb(249 115 22 / 0.15);
+  --mix-orange-18: rgb(249 115 22 / 0.18);
+  --mix-orange-55-border-strong: #a05c32;
+  --mix-orange-6: rgb(249 115 22 / 0.06);
+  --mix-red-12: rgb(244 63 94 / 0.12);
+  --mix-red-14: rgb(244 63 94 / 0.14);
+  --mix-red-14-surface: #311d2f;
+  --mix-red-15: rgb(244 63 94 / 0.15);
+  --mix-red-20: rgb(244 63 94 / 0.2);
+  --mix-red-22-surface: #432133;
+  --mix-red-40: rgb(244 63 94 / 0.4);
+  --mix-red-55: rgb(244 63 94 / 0.55);
+  --mix-red-60: rgb(244 63 94 / 0.6);
+  --mix-surface-2-60: rgb(30 41 59 / 0.6);
+  --mix-surface-2-70: rgb(30 41 59 / 0.7);
+  --mix-surface-55: rgb(17 24 39 / 0.55);
+  --mix-surface-70: rgb(17 24 39 / 0.7);
+  --mix-yellow-12-surface: #2d2e25;
+  --mix-yellow-14-surface: #323124;
+  --mix-yellow-18-surface: #3b3824;
+  --mix-yellow-25: rgb(250 204 21 / 0.25);
+  --mix-yellow-35: rgb(250 204 21 / 0.35);
+  --mix-yellow-40: rgb(250 204 21 / 0.4);
+  --mix-yellow-50: rgb(250 204 21 / 0.5);
+}
+:root[data-theme="light"] {
+  --mix-accent-10: rgb(2 132 199 / 0.1);
+  --mix-accent-12: rgb(2 132 199 / 0.12);
+  --mix-accent-16: rgb(2 132 199 / 0.16);
+  --mix-accent-22: rgb(2 132 199 / 0.22);
+  --mix-accent-25: rgb(2 132 199 / 0.25);
+  --mix-accent-35: rgb(2 132 199 / 0.35);
+  --mix-accent-45: rgb(2 132 199 / 0.45);
+  --mix-accent-7-surface-2: #e0edf6;
+  --mix-accent-75-text-muted: #1378b0;
+  --mix-border-60: rgb(226 232 240 / 0.6);
+  --mix-green-14: rgb(22 163 74 / 0.14);
+  --mix-green-15: rgb(22 163 74 / 0.15);
+  --mix-green-20: rgb(22 163 74 / 0.2);
+  --mix-orange-15: rgb(234 88 12 / 0.15);
+  --mix-orange-18: rgb(234 88 12 / 0.18);
+  --mix-orange-55-border-strong: #dc906c;
+  --mix-orange-6: rgb(234 88 12 / 0.06);
+  --mix-red-12: rgb(225 29 72 / 0.12);
+  --mix-red-14: rgb(225 29 72 / 0.14);
+  --mix-red-14-surface: #fbdfe5;
+  --mix-red-15: rgb(225 29 72 / 0.15);
+  --mix-red-20: rgb(225 29 72 / 0.2);
+  --mix-red-22-surface: #f8cdd7;
+  --mix-red-40: rgb(225 29 72 / 0.4);
+  --mix-red-55: rgb(225 29 72 / 0.55);
+  --mix-red-60: rgb(225 29 72 / 0.6);
+  --mix-surface-2-60: rgb(241 245 249 / 0.6);
+  --mix-surface-2-70: rgb(241 245 249 / 0.7);
+  --mix-surface-55: rgb(255 255 255 / 0.55);
+  --mix-surface-70: rgb(255 255 255 / 0.7);
+  --mix-yellow-12-surface: #f9f1e1;
+  --mix-yellow-14-surface: #f8efdc;
+  --mix-yellow-18-surface: #f5ead2;
+  --mix-yellow-25: rgb(202 138 4 / 0.25);
+  --mix-yellow-35: rgb(202 138 4 / 0.35);
+  --mix-yellow-40: rgb(202 138 4 / 0.4);
+  --mix-yellow-50: rgb(202 138 4 / 0.5);
 }
 
 *,
@@ -226,7 +312,7 @@ button {
 .select:focus,
 .textarea:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent);
+  box-shadow: 0 0 0 2px var(--mix-accent-25);
 }
 .field-error {
   color: var(--red);
@@ -405,11 +491,12 @@ button {
   background: var(--border-strong);
   overflow: hidden;
 }
+/* Sin transición de ancho: el progreso llega cada ~200 ms y animar `width` obligaba a recalcular
+   la maquetación en cada fotograma de cada barra visible. */
 .progress > div {
   height: 100%;
   background: var(--orange);
   border-radius: 6px;
-  transition: width 0.2s;
 }
 .spinner {
   width: 16px;

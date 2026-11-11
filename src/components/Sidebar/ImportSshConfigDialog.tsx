@@ -7,6 +7,7 @@ import { errorMessage } from "../../api/core";
 import type { ServerProfile } from "../../api/types";
 import { useProfiles } from "../../stores/profiles";
 import { toast } from "../../stores/toasts";
+import { SSH_CONFIG_LABEL } from "../../lib/platform";
 
 function userHostPort(s: ServerProfile) {
   return `${s.username}@${s.host}:${s.port}`;
@@ -60,7 +61,7 @@ export function ImportSshConfigDialog({ onClose }: { onClose: () => void }) {
   return (
     <Modal
       open
-      title="Importar de ~/.ssh/config"
+      title={`Importar de ${SSH_CONFIG_LABEL}`}
       onClose={() => !saving && onClose()}
       width={520}
       footer={
@@ -79,14 +80,14 @@ export function ImportSshConfigDialog({ onClose }: { onClose: () => void }) {
     >
       {state.phase === "loading" && (
         <div className="sb-imp-status">
-          <span className="spinner sb-spinner" /> Leyendo ~/.ssh/config…
+          <span className="spinner sb-spinner" /> Leyendo {SSH_CONFIG_LABEL}…
         </div>
       )}
       {state.phase === "error" && <div className="field-error sb-imp-error">{state.message}</div>}
       {state.phase === "ready" && candidates.length === 0 && (
         <div className="empty-state sb-imp-empty">
           <FileSearch size={26} strokeWidth={1.5} />
-          <div>No hay servidores nuevos en ~/.ssh/config</div>
+          <div>No hay servidores nuevos en {SSH_CONFIG_LABEL}</div>
         </div>
       )}
       {state.phase === "ready" && candidates.length > 0 && (

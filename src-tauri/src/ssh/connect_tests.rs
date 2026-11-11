@@ -290,6 +290,83 @@ async fn key_auth_plain_and_with_passphrase() {
     uninstall_test_keys();
 }
 
+/// Autenticación con agente: agente vacío, sin agente y con una llave cargada.
+/// Usa un `ssh-agent` propio en un socket temporal (no toca el agente real del usuario).
+#[cfg(unix)]
+#[tokio::test]
+#[ignore]
+async fn agent_auth() {
+    struct AgentGuard(std::process::Child, Option<std::ffi::OsString>);
+    impl Drop for AgentGuard {
+        fn drop(&mut self) {
+            let _ = self.0.kill();
+            let _ = self.0.wait();
+            // SAFETY: tests con servidor, en un solo hilo (--test-threads=1).
+            unsafe {
+                match self.1.take() {
+                    Some(v) => std::env::set_var("SSH_AUTH_SOCK", v),
+                    None => std::env::remove_var("SSH_AUTH_SOCK"),
+                }
+            }
+        }
+    }
+
+    let tmp = TmpDir::new();
+    let kh = trusted_kh(&tmp).await;
+    uninstall_test_keys();
+    let mut profile = test_profile();
+    profile.auth = AuthMethod::Agent;
+
+    let sock = tmp.0.join("agent.sock");
+    let child = Command::new("ssh-agent")
+        .arg("-D")
+        .arg("-a")
+        .arg(&sock)
+        .stdout(std::process::Stdio::null())
+        .spawn()
+        .expect("ssh-agent");
+    let _guard = AgentGuard(child, std::env::var_os("SSH_AUTH_SOCK"));
+    for _ in 0..50 {
+        if sock.exists() {
+            break;
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+    }
+
+    // Socket inexistente → sin agente.
+    // SAFETY: ver AgentGuard.
+    unsafe { std::env::set_var("SSH_AUTH_SOCK", tmp.0.join("no-existe.sock")) };
+    match connect_with(&profile, Credentials::default(), &kh).await {
+        Err(AppError::AuthFailed(m)) => assert!(m.contains("no hay un agente SSH"), "{m}"),
+        r => panic!("se esperaba AuthFailed, llegó {:?}", r.err()),
+    }
+
+    // Agente vacío.
+    unsafe { std::env::set_var("SSH_AUTH_SOCK", &sock) };
+    match connect_with(&profile, Credentials::default(), &kh).await {
+        Err(AppError::AuthFailed(m)) => assert!(m.contains("no tiene llaves"), "{m}"),
+        r => panic!("se esperaba AuthFailed, llegó {:?}", r.err()),
+    }
+
+    // Con la llave cargada e instalada en el servidor → conecta.
+    let k = tmp.0.join("id_agente");
+    ssh_keygen(&k, "", &["-t", "ed25519"]);
+    let st = Command::new("ssh-add")
+        .arg("-q")
+        .arg(&k)
+        .env("SSH_AUTH_SOCK", &sock)
+        .status()
+        .expect("ssh-add");
+    assert!(st.success());
+    install_pubkey(&k.with_extension("pub"));
+    let s = connect_with(&profile, Credentials::default(), &kh).await.expect("agente");
+    let (out, _) = exec(&s, "echo agente").await;
+    assert_eq!(out.trim(), "agente");
+    crate::ssh::disconnect_session(&s).await;
+
+    uninstall_test_keys();
+}
+
 #[tokio::test]
 #[ignore]
 async fn key_file_errors() {

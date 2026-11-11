@@ -1,5 +1,5 @@
 // Contenido de una pestaña de conexión: área de trabajo (Archivos + editores) arriba y terminales abajo.
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState, type MouseEvent } from "react";
+import { lazy, memo, Suspense, useCallback, useEffect, useMemo, useState, type MouseEvent } from "react";
 import { Group, Panel, Separator, usePanelRef, type Layout, type LayoutChangedMeta } from "react-resizable-panels";
 import { FileCode2, FolderOpen, PanelBottomClose, PanelBottomOpen, RotateCw, SquareTerminal, Unplug, X } from "lucide-react";
 import type { SessionReconnecting } from "../../api/types";
@@ -7,13 +7,15 @@ import type { SessionTab } from "../../stores/tabs";
 import { useSettings } from "../../stores/settings";
 import { FileExplorer } from "../FileExplorer/FileExplorer";
 import { TerminalArea } from "../Terminal/TerminalArea";
-import { CommandsPanel } from "../Commands/CommandsPanel";
 import { confirmDialog } from "../ui/dialogs";
 import { basename } from "../../lib/paths";
+import { preloadable } from "../../lib/lazy";
 import { cancelReconnect, reconnectTab, requestCloseTab, setSessionPath, useEditorDirty } from "./sessionState";
 import "./SessionView.css";
 
 const RemoteEditor = lazy(() => import("../Editor/RemoteEditor"));
+/** Biblioteca de comandos (catálogo grande): se carga la primera vez que se abre la pestaña «Comandos». */
+export const CommandsPanel = preloadable(() => import("../Commands/CommandsPanel").then((m) => m.CommandsPanel));
 
 export interface SessionViewProps {
   tab: SessionTab;
@@ -29,25 +31,32 @@ type FixedTab = typeof FILES_TAB | typeof COMMANDS_TAB;
 type WorkTab = { kind: "fixed"; id: FixedTab } | { kind: "file"; path: string };
 
 /** Segundos que faltan para el próximo intento (cuenta atrás en vivo). */
-function useCountdown(info: SessionReconnecting | null): number | null {
+/** Solo corre mientras la pestaña se ve (las ocultas no gastan un temporizador). */
+function useCountdown(info: SessionReconnecting | null, visible: boolean): number | null {
   const [left, setLeft] = useState<number | null>(null);
+  const [deadline, setDeadline] = useState<{ info: SessionReconnecting; at: number } | null>(null);
+  // El plazo se fija al llegar el aviso, aunque la pestaña esté oculta.
+  if (info && deadline?.info !== info) setDeadline({ info, at: Date.now() + info.nextRetrySecs * 1000 });
+  else if (!info && deadline) setDeadline(null);
   useEffect(() => {
-    if (!info) {
+    if (!deadline) {
       setLeft(null);
       return;
     }
-    const deadline = Date.now() + info.nextRetrySecs * 1000;
-    const tick = () => setLeft(Math.max(0, Math.ceil((deadline - Date.now()) / 1000)));
+    if (!visible) return;
+    const at = deadline.at;
+    // setLeft con el mismo número no vuelve a dibujar: basta con mirar 4 veces por segundo.
+    const tick = () => setLeft(Math.max(0, Math.ceil((at - Date.now()) / 1000)));
     tick();
     const id = window.setInterval(tick, 250);
     return () => window.clearInterval(id);
-  }, [info]);
+  }, [deadline, visible]);
   return left;
 }
 
-function ReconnectingBanner({ tab }: { tab: SessionTab }) {
+function ReconnectingBanner({ tab, visible }: { tab: SessionTab; visible: boolean }) {
   const r = tab.reconnect;
-  const left = useCountdown(r);
+  const left = useCountdown(r, visible);
   return (
     <div className="sv-banner sv-banner-warn" role="status" aria-live="polite">
       <span className="spinner sv-banner-spinner" />
@@ -77,7 +86,7 @@ function initialLayout(saved: number[] | undefined): Layout {
   return { work: 58, terminal: 42 };
 }
 
-export function SessionView({ tab, active }: SessionViewProps) {
+export const SessionView = memo(function SessionView({ tab, active }: SessionViewProps) {
   const [files, setFiles] = useState<string[]>([]);
   /** Pestaña visible del área de trabajo: "Archivos", "Comandos" o un archivo abierto. */
   const [view, setView] = useState<WorkTab>({ kind: "fixed", id: FILES_TAB });
@@ -87,6 +96,9 @@ export function SessionView({ tab, active }: SessionViewProps) {
   }, []);
   const showFiles = view.kind === "fixed" && view.id === FILES_TAB;
   const showCommands = view.kind === "fixed" && view.id === COMMANDS_TAB;
+  /** El panel de Comandos se monta la primera vez que se abre y luego se conserva. */
+  const [commandsMounted, setCommandsMounted] = useState(false);
+  if (showCommands && !commandsMounted) setCommandsMounted(true);
   const [termCollapsed, setTermCollapsed] = useState(false);
   const termPanel = usePanelRef();
   const dirtyPaths = useEditorDirty((s) => s.dirty[tab.sessionId] ?? EMPTY);
@@ -170,7 +182,7 @@ export function SessionView({ tab, active }: SessionViewProps) {
 
   return (
     <div className={active ? "sv-root" : "sv-root sv-hidden"} aria-hidden={!active}>
-      {tab.status === "reconnecting" && <ReconnectingBanner tab={tab} />}
+      {tab.status === "reconnecting" && <ReconnectingBanner tab={tab} visible={active} />}
       {closed && (
         <div className="sv-banner" role="alert">
           <Unplug size={15} />
@@ -263,14 +275,24 @@ export function SessionView({ tab, active }: SessionViewProps) {
                 onPathChange={onPathChange}
               />
             </div>
-            <div className={showCommands ? "sv-pane" : "sv-pane sv-hidden"}>
-              <CommandsPanel
-                sessionId={tab.sessionId}
-                profileId={tab.profileId}
-                active={active && showCommands}
-                disabled={!connected}
-              />
-            </div>
+            {commandsMounted && (
+              <div className={showCommands ? "sv-pane" : "sv-pane sv-hidden"}>
+                <Suspense
+                  fallback={
+                    <div className="empty-state">
+                      <div className="spinner" />
+                    </div>
+                  }
+                >
+                  <CommandsPanel
+                    sessionId={tab.sessionId}
+                    profileId={tab.profileId}
+                    active={active && showCommands}
+                    disabled={!connected}
+                  />
+                </Suspense>
+              </div>
+            )}
             {files.map((p) => (
               <div key={p} className={current === p ? "sv-pane" : "sv-pane sv-hidden"}>
                 <Suspense
@@ -310,4 +332,4 @@ export function SessionView({ tab, active }: SessionViewProps) {
       </Group>
     </div>
   );
-}
+});

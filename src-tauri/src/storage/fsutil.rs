@@ -1,7 +1,8 @@
 //! Lectura/escritura segura de archivos JSON de configuración.
 //!
 //! - Escritura atómica: archivo temporal en la misma carpeta + `rename`.
-//! - Permisos: carpeta 0700 y archivo 0600 (en Unix), porque contienen hosts y usuarios.
+//! - Permisos: carpeta 0700 y archivo 0600 (en Unix), porque contienen hosts y usuarios. En Windows
+//!   la carpeta de usuario (`%APPDATA%`, `%USERPROFILE%\.ssh`) ya es privada por sus ACL heredadas.
 //! - Archivo corrupto: se aparta como `<nombre>.bak-<unix>` y se empieza de cero.
 
 use std::fs;
@@ -132,11 +133,8 @@ pub fn write_atomic(path: &Path, bytes: &[u8]) -> AppResult<()> {
         f.write_all(bytes)?;
         f.sync_all()?;
         drop(f);
-        fs::rename(&tmp, path)?;
-        // Asegura que el rename quede en disco.
-        if let Ok(d) = fs::File::open(dir) {
-            let _ = d.sync_all();
-        }
+        replace_file(&tmp, path)?;
+        sync_dir(dir);
         Ok(())
     })();
 
@@ -145,4 +143,38 @@ pub fn write_atomic(path: &Path, bytes: &[u8]) -> AppResult<()> {
         return Err(AppError::Io(format!("no se pudo guardar {}: {e}", path.display())));
     }
     Ok(())
+}
+
+/// Pone `tmp` en lugar de `dest` (reemplazándolo si existe). El archivo temporal ya debe estar
+/// cerrado.
+///
+/// En Windows `rename` reemplaza el destino (`MoveFileEx` con `MOVEFILE_REPLACE_EXISTING`), pero
+/// falla con «acceso denegado» si otro programa lo tiene abierto en ese instante (antivirus,
+/// indexador, OneDrive, un editor). Se reintenta unas cuantas veces antes de rendirse.
+pub fn replace_file(tmp: &Path, dest: &Path) -> std::io::Result<()> {
+    #[cfg(windows)]
+    {
+        let mut delay = std::time::Duration::from_millis(20);
+        for _ in 0..6 {
+            match fs::rename(tmp, dest) {
+                Err(e) if e.kind() == std::io::ErrorKind::PermissionDenied => {
+                    std::thread::sleep(delay);
+                    delay *= 2;
+                }
+                other => return other,
+            }
+        }
+    }
+    fs::rename(tmp, dest)
+}
+
+/// Asegura que un `rename` dentro de `dir` quede en disco. En Windows no se pueden abrir
+/// carpetas como archivo (y NTFS ya registra el cambio en su diario), así que no hace nada.
+pub fn sync_dir(dir: &Path) {
+    #[cfg(unix)]
+    if let Ok(d) = fs::File::open(dir) {
+        let _ = d.sync_all();
+    }
+    #[cfg(not(unix))]
+    let _ = dir;
 }

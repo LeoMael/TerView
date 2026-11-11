@@ -29,6 +29,11 @@ export function recordRecentServer(profileId: string) {
   }
 }
 
+/** Fondo suave del color del servidor (16 %). Con "#rrggbb" se evita color-mix (más barato en WebKitGTK). */
+function tint16(color: string): string {
+  return /^#[0-9a-f]{6}$/i.test(color) ? `${color}29` : `color-mix(in srgb, ${color} 16%, transparent)`;
+}
+
 export function Welcome() {
   const servers = useProfiles((s) => s.servers);
   const loaded = useProfiles((s) => s.loaded);
@@ -57,7 +62,7 @@ export function Welcome() {
 
   const card = (p: ServerProfile) => (
     <button key={p.id} className="wl-server" onClick={() => void connect(p)} disabled={busy !== null} title={`Conectar a ${p.name}`}>
-      <span className="wl-server-icon" style={p.color ? { color: p.color, background: `color-mix(in srgb, ${p.color} 16%, transparent)` } : undefined}>
+      <span className="wl-server-icon" style={p.color ? { color: p.color, background: tint16(p.color) } : undefined}>
         {busy === p.id ? <span className="spinner" /> : <Server size={16} />}
       </span>
       <span className="wl-server-text">

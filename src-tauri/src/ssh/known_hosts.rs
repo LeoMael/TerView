@@ -293,11 +293,14 @@ fn write_atomic(path: &Path, content: &str) -> AppResult<()> {
         let mut f = opts.open(&tmp)?;
         f.write_all(content.as_bytes())?;
         f.sync_all()?;
-        // Si el archivo original tenía otros permisos, se respetan.
+        drop(f);
+        // Si el archivo original tenía otros permisos, se respetan (en Unix; en Windows
+        // copiar el «solo lectura» impediría reemplazarlo).
+        #[cfg(unix)]
         if let Ok(meta) = std::fs::metadata(path) {
             std::fs::set_permissions(&tmp, meta.permissions())?;
         }
-        std::fs::rename(&tmp, path)
+        crate::storage::fsutil::replace_file(&tmp, path)
     })();
     if let Err(e) = result {
         let _ = std::fs::remove_file(&tmp);

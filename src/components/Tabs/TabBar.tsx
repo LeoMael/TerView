@@ -9,6 +9,7 @@ import { cancelReconnect, moveTab, reconnectTab, requestCloseTab, tabCurrentPath
 import { Logo } from "../ui/Logo";
 import { PopupMenu } from "./PopupMenu";
 import "./TabBar.css";
+import { shortcutLabel } from "../../lib/platform";
 
 const STATUS_LABEL: Record<SessionTab["status"], string> = {
   connected: "Conectado",
@@ -92,7 +93,7 @@ export function TabBar() {
       <button
         className="icon-btn tabs-side-btn"
         onClick={toggleSidebar}
-        title={sidebarCollapsed ? "Mostrar barra lateral (Ctrl+B)" : "Ocultar barra lateral (Ctrl+B)"}
+        title={`${sidebarCollapsed ? "Mostrar" : "Ocultar"} barra lateral (${shortcutLabel("B")})`}
         aria-label="Mostrar u ocultar barra lateral"
       >
         {sidebarCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
@@ -146,7 +147,7 @@ export function TabBar() {
               <span className="tabs-title">{t.title}</span>
               <button
                 className={unsaved ? "tabs-close unsaved" : "tabs-close"}
-                title={unsaved ? "Cerrar (hay archivos sin guardar)" : "Cerrar (Ctrl+W)"}
+                title={unsaved ? "Cerrar (hay archivos sin guardar)" : `Cerrar (${shortcutLabel("W")})`}
                 aria-label={`Cerrar ${t.title}`}
                 tabIndex={-1}
                 onPointerDown={(e) => e.stopPropagation()}
@@ -173,7 +174,7 @@ export function TabBar() {
           <Plus size={16} />
         </button>
       </div>
-      <button className="icon-btn tabs-side-btn" onClick={openSettings} title="Ajustes (Ctrl+,)" aria-label="Ajustes">
+      <button className="icon-btn tabs-side-btn" onClick={openSettings} title={`Ajustes (${shortcutLabel(",")})`} aria-label="Ajustes">
         <Settings size={16} />
       </button>
 

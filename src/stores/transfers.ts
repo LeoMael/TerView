@@ -101,8 +101,10 @@ interface Agg {
 
 const aggs = new Map<string, Agg>();
 
+/** Primer tramo del nombre relativo ("fotos/" de "fotos/a.png"). Acepta "\\" por si el
+ *  nombre se formó a partir de una ruta local de Windows. */
 function rootOf(name: string): string {
-  const i = name.indexOf("/");
+  const i = name.search(/[\\/]/);
   return i < 0 ? name : name.slice(0, i + 1);
 }
 

@@ -243,10 +243,8 @@ fn write_json_atomic<T: Serialize>(path: &Path, value: &T) -> AppResult<()> {
         f.write_all(b"\n")?;
         f.sync_all()?;
         drop(f);
-        fs::rename(&tmp, path)?;
-        if let Ok(d) = fs::File::open(dir) {
-            let _ = d.sync_all();
-        }
+        crate::storage::fsutil::replace_file(&tmp, path)?;
+        crate::storage::fsutil::sync_dir(dir);
         Ok(())
     })();
     if let Err(e) = result {

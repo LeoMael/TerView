@@ -1,5 +1,5 @@
 // Zona de terminales de una pestaña de conexión: sub-pestañas + una xterm por shell.
-import { useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { Plus, RefreshCw, SquareTerminal, Unplug, X } from "lucide-react";
 import { TerminalView } from "./TerminalView";
 import type { ConnState, TermController, TermStatus } from "./termController";
@@ -24,7 +24,7 @@ interface SubTab {
 let keySeq = 0;
 const newTab = (num: number): SubTab => ({ key: ++keySeq, num, status: "opening" });
 
-export function TerminalArea({ sessionId, active, disabled }: TerminalAreaProps) {
+export const TerminalArea = memo(function TerminalArea({ sessionId, active, disabled }: TerminalAreaProps) {
   const [tabs, setTabs] = useState<SubTab[]>(() => (disabled ? [] : [newTab(1)]));
   const [activeKey, setActiveKey] = useState<number | null>(() => tabs[0]?.key ?? null);
   const ctrls = useRef(new Map<number, TermController>());
@@ -185,4 +185,4 @@ export function TerminalArea({ sessionId, active, disabled }: TerminalAreaProps)
       </div>
     </div>
   );
-}
+});
