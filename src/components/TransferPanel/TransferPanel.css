@@ -1,0 +1,472 @@
+/* Panel de transferencias (barra inferior). Prefijo: tp- */
+
+.tp-root {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  height: 34px;
+  min-height: 0;
+  background: var(--bg-sunken);
+  border-top: 1px solid var(--border);
+  font-size: var(--fs);
+  overflow: hidden;
+  container-type: inline-size;
+}
+.tp-root.tp-expanded {
+  height: 260px;
+}
+
+.tp-ellipsis {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tp-spin {
+  animation: spin 1s linear infinite;
+}
+.tp-dir {
+  flex: none;
+}
+.tp-dir-up {
+  color: var(--orange);
+}
+.tp-dir-down {
+  color: var(--accent);
+}
+.tp-err-text {
+  color: var(--red);
+}
+.tp-skip-text {
+  color: var(--text-faint);
+}
+.tp-ibtn {
+  width: 24px;
+  height: 24px;
+}
+.tp-ibtn.tp-danger:hover {
+  color: var(--red);
+}
+
+/* ───────── Barras de progreso ───────── */
+.tp-bar {
+  height: 6px;
+}
+.tp-bar-done > div {
+  background: var(--green);
+}
+.tp-bar-error > div {
+  background: var(--red);
+}
+.tp-bar-paused > div,
+.tp-bar-canceled > div {
+  background: var(--text-faint);
+}
+.tp-bar-queued > div {
+  background: color-mix(in srgb, var(--orange) 55%, var(--border-strong));
+}
+
+/* ───────── Plegado (una línea) ───────── */
+.tp-collapsed {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 34px;
+  padding: 0 6px 0 14px;
+  cursor: pointer;
+  outline: none;
+  white-space: nowrap;
+}
+.tp-collapsed:hover,
+.tp-collapsed:focus-visible {
+  background: color-mix(in srgb, var(--surface-2) 60%, transparent);
+}
+.tp-c-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 34%;
+  color: var(--text);
+}
+.tp-c-count {
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+.tp-collapsed > .tp-bar {
+  flex: 1 1 260px;
+  min-width: 60px;
+  max-width: 320px;
+}
+.tp-c-speed {
+  font-size: var(--fs-sm);
+  min-width: 70px;
+  text-align: right;
+}
+.tp-c-eta {
+  font-size: var(--fs-sm);
+  min-width: 48px;
+}
+.tp-c-err {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--red);
+  font-size: var(--fs-sm);
+}
+.tp-c-actions {
+  display: inline-flex;
+  gap: 2px;
+  margin-left: auto;
+}
+.tp-c-chevron {
+  display: inline-flex;
+  color: var(--text-faint);
+  padding: 0 4px;
+}
+.tp-c-idle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tp-c-idle + .tp-c-chevron {
+  margin-left: auto;
+}
+.tp-idle-ico {
+  color: var(--text-faint);
+  margin-right: -4px;
+}
+.tp-idle-ico + span:not(.tp-idle-ico) {
+  margin-left: 6px;
+}
+
+/* ───────── Desplegado ───────── */
+.tp-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 34px;
+  flex: none;
+  padding: 0 6px 0 14px;
+  border-bottom: 1px solid var(--border);
+}
+.tp-head-sum {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tp-head-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.tp-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  container-type: inline-size;
+}
+.tp-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 100%;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  padding: 0 16px;
+  text-align: center;
+}
+.tp-empty svg {
+  color: var(--text-faint);
+  flex: none;
+}
+
+/* Lote */
+.tp-batch {
+  border-bottom: 1px solid var(--border);
+}
+.tp-batch.tp-open {
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+}
+.tp-brow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 34px;
+  padding: 0 6px 0 8px;
+  cursor: pointer;
+  outline: none;
+  white-space: nowrap;
+}
+.tp-brow:hover,
+.tp-brow:focus-visible {
+  background: var(--surface-2);
+}
+.tp-caret {
+  display: inline-flex;
+  color: var(--text-faint);
+  flex: none;
+}
+.tp-blabel {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex: 1 1 140px;
+  min-width: 80px;
+}
+.tp-bname {
+  font-weight: 500;
+  flex: 0 1 auto;
+}
+.tp-server {
+  font-size: var(--fs-sm);
+  flex: 0 1 auto;
+}
+.tp-bcount {
+  flex: none;
+  font-size: var(--fs-sm);
+  min-width: 84px;
+  text-align: right;
+}
+.tp-bbytes {
+  flex: none;
+  font-size: var(--fs-sm);
+  min-width: 140px;
+  text-align: right;
+}
+.tp-bprog {
+  flex: 0 1 160px;
+  min-width: 60px;
+}
+.tp-bspeed {
+  flex: none;
+  width: 78px;
+  text-align: right;
+  font-size: var(--fs-sm);
+}
+.tp-beta {
+  flex: none;
+  width: 52px;
+  font-size: var(--fs-sm);
+}
+.tp-bactions {
+  display: inline-flex;
+  justify-content: flex-end;
+  gap: 2px;
+  flex: none;
+  width: 78px;
+}
+.tp-berror {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px 6px 58px;
+  margin-top: -4px;
+  color: var(--red);
+  font-size: var(--fs-sm);
+}
+.tp-berror svg {
+  flex: none;
+}
+
+/* Estado */
+.tp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+  min-width: 96px;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--surface-3);
+}
+.tp-badge-running {
+  color: var(--orange);
+  background: color-mix(in srgb, var(--orange) 15%, transparent);
+}
+.tp-badge-done {
+  color: var(--green);
+  background: color-mix(in srgb, var(--green) 14%, transparent);
+}
+.tp-badge-error {
+  color: var(--red);
+  background: color-mix(in srgb, var(--red) 14%, transparent);
+}
+.tp-badge-queued {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+/* Trabajos del lote */
+.tp-jobs {
+  padding: 0 0 6px;
+}
+.tp-filters {
+  display: flex;
+  gap: 4px;
+  padding: 2px 8px 4px 56px;
+}
+.tp-filter {
+  height: 22px;
+  padding: 0 8px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
+.tp-filter:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.tp-filter.tp-on {
+  background: var(--surface-3);
+  color: var(--text);
+}
+.tp-jempty {
+  padding: 4px 0 4px 64px;
+  font-size: var(--fs-sm);
+}
+.tp-jscroll {
+  overflow-y: auto;
+  margin: 0 6px 0 48px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+}
+.tp-job {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 4px 0 8px;
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+}
+.tp-job:hover {
+  background: var(--surface-2);
+}
+.tp-job > svg {
+  flex: none;
+}
+.tp-jname {
+  flex: 1 1 auto;
+  min-width: 80px;
+}
+.tp-jinfo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+}
+.tp-jbar {
+  display: inline-block;
+  width: 70px;
+}
+.tp-jbar .tp-bar {
+  height: 4px;
+}
+.tp-jerr {
+  flex: 0 1 50%;
+  color: var(--red);
+  text-align: right;
+}
+/* Nota discreta: "Omitido: ya existía", "Esperando reconexión…". */
+.tp-jnote {
+  flex: 0 1 50%;
+  min-width: 0;
+  color: var(--text-faint);
+  text-align: right;
+  font-style: italic;
+}
+.tp-jactions {
+  display: inline-flex;
+  gap: 0;
+  flex: none;
+  width: 48px;
+  justify-content: flex-end;
+  opacity: 0;
+}
+.tp-job:hover .tp-jactions,
+.tp-jactions:focus-within {
+  opacity: 1;
+}
+.tp-jactions .tp-ibtn {
+  width: 22px;
+  height: 22px;
+}
+.tp-ji-running {
+  color: var(--orange);
+}
+.tp-ji-done {
+  color: var(--green);
+}
+.tp-ji-error {
+  color: var(--red);
+}
+.tp-ji-queued,
+.tp-ji-paused,
+.tp-ji-skipped,
+.tp-ji-canceled {
+  color: var(--text-faint);
+}
+.tp-job-canceled .tp-jname,
+.tp-job-skipped .tp-jname,
+.tp-job-done .tp-jname {
+  color: var(--text-muted);
+}
+
+/* Anchos estrechos: se ocultan columnas secundarias. */
+@container (max-width: 820px) {
+  .tp-bbytes,
+  .tp-beta {
+    display: none;
+  }
+}
+@container (max-width: 620px) {
+  .tp-server,
+  .tp-badge {
+    display: none;
+  }
+  .tp-bspeed {
+    width: 64px;
+  }
+}
+@container (max-width: 460px) {
+  .tp-bprog {
+    display: none;
+  }
+}
+
+/* Barra plegada estrecha */
+@container (max-width: 640px) {
+  .tp-c-eta,
+  .tp-c-err {
+    display: none;
+  }
+  .tp-c-title {
+    max-width: 45%;
+  }
+}
+@container (max-width: 460px) {
+  .tp-c-count {
+    display: none;
+  }
+}

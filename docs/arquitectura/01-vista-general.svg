@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <defs>
+    <marker id="mp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#a78bfa"/></marker>
+    <marker id="mg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#22c55e"/></marker>
+  </defs>
+  <style>
+    text{font-family:'Noto Sans','DejaVu Sans',sans-serif;fill:#e2e8f0}
+    .t{font-size:34px;font-weight:700}
+    .st{font-size:18px;fill:#94a3b8}
+    .h{font-size:24px;font-weight:700}
+    .b{font-size:18px;font-weight:600}
+    .s{font-size:15px;fill:#94a3b8}
+    .mono{font-family:'Noto Sans Mono','DejaVu Sans Mono',monospace}
+    .pi{fill:#1e293b;stroke:#2c4a66;stroke-width:1.5}
+    .po{fill:#1e293b;stroke:#5a3a20;stroke-width:1.5}
+  </style>
+  <rect width="1600" height="900" fill="#0f172a"/>
+
+  <text x="60" y="62" class="t">TerView — Vista general</text>
+  <text x="60" y="94" class="st">Dos mitades dentro de la misma app. Solo el motor habla con el servidor.</text>
+
+  <!-- Tu computadora -->
+  <rect x="40" y="120" width="1120" height="720" rx="24" fill="none" stroke="#475569" stroke-width="2" stroke-dasharray="10 8"/>
+  <text x="64" y="152" class="s" style="font-weight:700;letter-spacing:2px">TU COMPUTADORA · APP TERVIEW</text>
+
+  <!-- Interfaz -->
+  <rect x="80" y="180" width="440" height="630" rx="18" fill="#10243a" stroke="#38bdf8" stroke-width="2.5"/>
+  <text x="110" y="225" class="h" style="fill:#38bdf8">INTERFAZ</text>
+  <text x="110" y="252" class="s">Lo que ves · React + TypeScript</text>
+
+  <rect x="110" y="280" width="380" height="72" rx="12" class="pi"/>
+  <text x="130" y="312" class="b">Servidores y proyectos</text>
+  <text x="130" y="336" class="s">Lista guardada, conectar con 1 clic</text>
+  <rect x="110" y="366" width="380" height="72" rx="12" class="pi"/>
+  <text x="130" y="398" class="b">Pestañas</text>
+  <text x="130" y="422" class="s">Una conexión por pestaña</text>
+  <rect x="110" y="452" width="380" height="72" rx="12" class="pi"/>
+  <text x="130" y="484" class="b">Explorador de archivos</text>
+  <text x="130" y="508" class="s">Navegar carpetas, arrastrar y soltar</text>
+  <rect x="110" y="538" width="380" height="72" rx="12" class="pi"/>
+  <text x="130" y="570" class="b">Terminal</text>
+  <text x="130" y="594" class="s">xterm.js (la misma de VS Code)</text>
+  <rect x="110" y="624" width="380" height="72" rx="12" class="pi"/>
+  <text x="130" y="656" class="b">Editor</text>
+  <text x="130" y="680" class="s">Monaco (el mismo de VS Code)</text>
+  <rect x="110" y="710" width="380" height="72" rx="12" class="pi"/>
+  <text x="130" y="742" class="b">Cola de transferencias</text>
+  <text x="130" y="766" class="s">Progreso, pausar, cancelar</text>
+
+  <!-- IPC -->
+  <rect x="545" y="300" width="110" height="40" rx="20" fill="#2e2550" stroke="#a78bfa" stroke-width="2"/>
+  <text x="600" y="327" text-anchor="middle" style="fill:#a78bfa;font-weight:700;font-size:18px">IPC</text>
+  <text x="600" y="388" text-anchor="middle" class="s">Comandos</text>
+  <line x1="525" y1="400" x2="672" y2="400" stroke="#a78bfa" stroke-width="3" marker-end="url(#mp)"/>
+  <text x="600" y="458" text-anchor="middle" class="s">Respuestas</text>
+  <line x1="675" y1="470" x2="528" y2="470" stroke="#a78bfa" stroke-width="3" marker-end="url(#mp)"/>
+  <text x="600" y="548" text-anchor="middle" class="s">En vivo</text>
+  <line x1="675" y1="560" x2="528" y2="560" stroke="#a78bfa" stroke-width="3" stroke-dasharray="8 6" marker-end="url(#mp)"/>
+  <text x="600" y="586" text-anchor="middle" style="font-size:13px;fill:#94a3b8">terminal y progreso</text>
+  <text x="600" y="680" text-anchor="middle" class="mono" style="font-size:14px;fill:#a78bfa">invoke()</text>
+  <text x="600" y="702" text-anchor="middle" class="mono" style="font-size:14px;fill:#a78bfa">Channel</text>
+
+  <!-- Motor -->
+  <rect x="680" y="180" width="440" height="630" rx="18" fill="#2a1a10" stroke="#f97316" stroke-width="2.5"/>
+  <text x="710" y="225" class="h" style="fill:#f97316">MOTOR</text>
+  <text x="710" y="252" class="s">Lo que trabaja · Rust</text>
+
+  <rect x="710" y="280" width="380" height="72" rx="12" class="po"/>
+  <text x="730" y="312" class="b">Conexiones SSH</text>
+  <text x="730" y="336" class="s">russh · autenticación y huellas</text>
+  <rect x="710" y="366" width="380" height="72" rx="12" class="po"/>
+  <text x="730" y="398" class="b">SFTP</text>
+  <text x="730" y="422" class="s">Listar, crear, renombrar, borrar</text>
+  <rect x="710" y="452" width="380" height="72" rx="12" class="po"/>
+  <text x="730" y="484" class="b">Terminal (PTY)</text>
+  <text x="730" y="508" class="s">Shell real del servidor</text>
+  <rect x="710" y="538" width="380" height="72" rx="12" class="po"/>
+  <text x="730" y="570" class="b">Transferencias</text>
+  <text x="730" y="594" class="s">4 en paralelo, reanudables</text>
+  <rect x="710" y="624" width="380" height="72" rx="12" class="po"/>
+  <text x="730" y="656" class="b">Llavero seguro</text>
+  <text x="730" y="680" class="s">Contraseñas cifradas por el sistema</text>
+  <rect x="710" y="710" width="380" height="72" rx="12" class="po"/>
+  <text x="730" y="742" class="b">Configuración</text>
+  <text x="730" y="766" class="s mono">~/.config/terview/*.json</text>
+
+  <!-- SSH -->
+  <line x1="1126" y1="480" x2="1234" y2="480" stroke="#22c55e" stroke-width="3.5" marker-start="url(#mg)" marker-end="url(#mg)"/>
+  <text x="1198" y="464" text-anchor="middle" style="fill:#22c55e;font-weight:700;font-size:18px">SSH</text>
+  <text x="1198" y="506" text-anchor="middle" class="s">cifrado</text>
+
+  <!-- Servidor -->
+  <rect x="1240" y="360" width="310" height="240" rx="18" fill="#0f2a1c" stroke="#22c55e" stroke-width="2.5"/>
+  <text x="1270" y="405" class="h" style="fill:#22c55e">SERVIDOR</text>
+  <text x="1270" y="442" class="b mono" style="font-weight:400">user@x.x.x.x</text>
+  <text x="1270" y="470" class="s">Linux · puerto 22</text>
+  <rect x="1270" y="500" width="250" height="20" rx="4" fill="#14532d"/><circle cx="1505" cy="510" r="4" fill="#22c55e"/>
+  <rect x="1270" y="528" width="250" height="20" rx="4" fill="#14532d"/><circle cx="1505" cy="538" r="4" fill="#22c55e"/>
+  <rect x="1270" y="556" width="250" height="20" rx="4" fill="#14532d"/><circle cx="1505" cy="566" r="4" fill="#22c55e"/>
+
+  <text x="60" y="878" style="font-size:17px;fill:#94a3b8">La interfaz nunca toca la red: le pide todo al motor. Por eso la app es segura y pesa ~10 MB.</text>
+</svg>

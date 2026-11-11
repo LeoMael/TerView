@@ -1,0 +1,228 @@
+.sv-root {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--surface);
+}
+.sv-hidden {
+  display: none !important;
+}
+
+/* ── Aviso de conexión perdida ── */
+.sv-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+  padding: 4px 10px 4px 12px;
+  background: color-mix(in srgb, var(--red) 14%, var(--surface));
+  border-bottom: 1px solid color-mix(in srgb, var(--red) 40%, transparent);
+  color: var(--text);
+  flex: none;
+}
+.sv-banner > svg {
+  color: var(--red);
+  flex: none;
+}
+.sv-banner-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  user-select: text;
+}
+.sv-banner-text strong {
+  color: var(--red);
+}
+.sv-banner-warn {
+  background: color-mix(in srgb, var(--yellow) 12%, var(--surface));
+  border-bottom-color: color-mix(in srgb, var(--yellow) 40%, transparent);
+}
+.sv-banner-warn .sv-banner-text strong {
+  color: var(--text);
+}
+.sv-banner-spinner {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  border-top-color: var(--yellow);
+}
+.sv-banner-reason {
+  color: var(--text-muted);
+}
+
+.sv-group {
+  flex: 1;
+  min-height: 0;
+}
+.sv-work,
+.sv-terminal {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+.sv-terminal {
+  background: var(--bg-terminal);
+}
+
+/* ── Pestañas internas (Archivos / editores) ── */
+.sv-tabs {
+  display: flex;
+  align-items: stretch;
+  height: 32px;
+  padding: 0 4px 0 6px;
+  gap: 2px;
+  background: var(--bg-sunken);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  flex: none;
+}
+.sv-tabs::-webkit-scrollbar {
+  display: none;
+}
+.sv-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 220px;
+  margin-top: 4px;
+  padding: 0 4px 0 10px;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  white-space: nowrap;
+  flex: none;
+  outline: none;
+}
+.sv-tab-fixed {
+  padding-right: 10px;
+}
+.sv-tab:hover {
+  color: var(--text);
+  background: color-mix(in srgb, var(--surface-2) 60%, transparent);
+}
+.sv-tab:focus-visible {
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+.sv-tab.active {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text);
+  margin-bottom: -1px;
+}
+.sv-tab.active::before {
+  content: "";
+  position: absolute;
+  left: -1px;
+  right: -1px;
+  top: -1px;
+  height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: var(--accent);
+}
+.sv-tab > svg,
+.sv-tab-icon {
+  flex: none;
+  color: var(--text-faint);
+}
+.sv-tab.active > svg {
+  color: var(--accent);
+}
+.sv-tab-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sv-tab-close {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-faint);
+  cursor: pointer;
+  flex: none;
+  padding: 0;
+}
+.sv-tab-close:hover {
+  background: var(--surface-3);
+  color: var(--text);
+}
+.sv-tab-close > svg {
+  opacity: 0;
+}
+.sv-tab:hover .sv-tab-close > svg,
+.sv-tab.active .sv-tab-close > svg {
+  opacity: 1;
+}
+.sv-dirty-dot {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--orange);
+  display: none;
+}
+.sv-tab-close.dirty .sv-dirty-dot {
+  display: block;
+}
+.sv-tab-close.dirty > svg {
+  opacity: 0 !important;
+}
+.sv-tab-close.dirty:hover .sv-dirty-dot {
+  display: none;
+}
+.sv-tab-close.dirty:hover > svg {
+  opacity: 1 !important;
+}
+.sv-tabs-sep {
+  align-self: center;
+  width: 1px;
+  height: 16px;
+  margin: 4px 4px 0;
+  background: var(--border-strong);
+  flex: none;
+}
+.sv-tabs-fill {
+  flex: 1;
+  min-width: 8px;
+}
+.sv-term-toggle {
+  align-self: center;
+  flex: none;
+}
+.sv-term-toggle.on {
+  color: var(--accent);
+}
+
+/* ── Contenido ── */
+.sv-work-body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+.sv-pane {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.sv-pane > * {
+  flex: 1;
+  min-height: 0;
+}

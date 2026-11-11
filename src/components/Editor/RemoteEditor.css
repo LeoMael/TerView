@@ -1,0 +1,135 @@
+.ed-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: var(--surface);
+}
+.ed-body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+.ed-host {
+  position: absolute;
+  inset: 0;
+}
+.ed-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--text-muted);
+  padding: 24px;
+  text-align: center;
+}
+.ed-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  max-width: 440px;
+  padding: 20px 24px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+.ed-error > svg {
+  color: var(--yellow);
+}
+.ed-error strong {
+  color: var(--text);
+  font-size: var(--fs-lg);
+}
+.ed-error p {
+  margin: 0;
+  line-height: 1.5;
+  user-select: text;
+}
+.ed-error-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.ed-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 26px;
+  padding: 0 6px 0 10px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-sunken);
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  flex: none;
+}
+.ed-path {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  direction: rtl;
+  text-align: left;
+  user-select: text;
+}
+.ed-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.ed-state-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+}
+.ed-dirty {
+  color: var(--text);
+}
+.ed-dirty .ed-state-dot {
+  background: var(--orange);
+}
+.ed-sep {
+  width: 1px;
+  height: 14px;
+  background: var(--border-strong);
+}
+.ed-meta {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.ed-lang {
+  height: 20px;
+  padding: 0 4px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  outline: none;
+}
+.ed-lang:hover,
+.ed-lang:focus {
+  border-color: var(--border-strong);
+  background: var(--surface-2);
+  color: var(--text);
+}
+.ed-lang option {
+  background: var(--surface);
+  color: var(--text);
+}
+.ed-btn {
+  width: 22px;
+  height: 22px;
+}
+.ed-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}

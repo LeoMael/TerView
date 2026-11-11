@@ -1,0 +1,168 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="960" viewBox="0 0 1600 960">
+  <style>
+    text{font-family:'Noto Sans','DejaVu Sans',sans-serif;fill:#e2e8f0}
+    .t{font-size:34px;font-weight:700}
+    .st{font-size:18px;fill:#94a3b8}
+    .b{font-size:15px;font-weight:600}
+    .r{font-size:14px}
+    .s{font-size:13px;fill:#94a3b8}
+    .mono{font-family:'Noto Sans Mono','DejaVu Sans Mono',monospace}
+    .sec{font-size:11px;font-weight:700;letter-spacing:1.4px;fill:#64748b}
+    .badge{fill:#f43f5e}
+    .bn{font-size:16px;font-weight:700;fill:#fff}
+    .lt{font-size:18px;font-weight:700}
+    .ld{font-size:15px;fill:#94a3b8}
+  </style>
+  <rect width="1600" height="960" fill="#0f172a"/>
+
+  <text x="60" y="62" class="t">Biblioteca de comandos</text>
+  <text x="60" y="94" class="st">Todos los comandos útiles listos para aplicar en el servidor conectado.</text>
+
+  <!-- ventana -->
+  <rect x="60" y="130" width="1180" height="780" rx="12" fill="#111827" stroke="#475569" stroke-width="2"/>
+  <path d="M60,142 a12,12 0 0 1 12,-12 h1156 a12,12 0 0 1 12,12 v28 h-1180 z" fill="#1e293b"/>
+  <circle cx="84" cy="150" r="4" fill="#22c55e"/><text x="96" y="155" class="b" style="font-size:14px">web-prod</text>
+  <text x="180" y="155" class="s">deploy@192.168.1.10</text>
+
+  <!-- pestañas internas -->
+  <rect x="60" y="170" width="1180" height="38" fill="#0b1220"/>
+  <text x="84" y="194" class="r" style="fill:#94a3b8">Archivos</text>
+  <path d="M164,208 v-30 a6,6 0 0 1 6,-6 h112 a6,6 0 0 1 6,6 v30 z" fill="#111827"/>
+  <text x="182" y="195" class="r" style="font-weight:600">Comandos</text>
+  <rect x="164" y="205" width="124" height="3" fill="#38bdf8"/>
+  <text x="312" y="194" class="r" style="fill:#94a3b8">deploy.sh</text>
+
+  <!-- barra de búsqueda -->
+  <rect x="80" y="222" width="460" height="34" rx="8" fill="#0f172a" stroke="#334155"/>
+  <circle cx="100" cy="238" r="6" fill="none" stroke="#94a3b8" stroke-width="2"/><line x1="105" y1="243" x2="110" y2="248" stroke="#94a3b8" stroke-width="2"/>
+  <text x="122" y="244" class="r" style="fill:#64748b">Buscar comando…</text>
+  <rect x="448" y="229" width="84" height="20" rx="4" fill="#1e293b"/><text x="490" y="243" text-anchor="middle" class="s mono" style="font-size:11px">Ctrl+Shift+P</text>
+  <rect x="880" y="222" width="160" height="34" rx="8" fill="#1e293b" stroke="#475569"/><text x="960" y="244" text-anchor="middle" class="r">+ Nuevo comando</text>
+  <rect x="1052" y="222" width="172" height="34" rx="8" fill="#38bdf8"/><text x="1138" y="244" text-anchor="middle" class="r" style="font-weight:700;fill:#0f172a">Analizar servidor</text>
+
+  <!-- categorías -->
+  <rect x="60" y="270" width="220" height="640" fill="#0b1220"/>
+  <text x="80" y="296" class="sec">CATEGORÍAS</text>
+  <rect x="68" y="308" width="204" height="30" rx="6" fill="#1e3a5f"/>
+  <text x="84" y="328" class="r" style="font-weight:600">Podman</text><text x="260" y="328" text-anchor="end" class="s">58</text>
+  <text x="84" y="362" class="r">Docker</text><text x="260" y="362" text-anchor="end" class="s">58</text>
+  <text x="84" y="396" class="r">Análisis del sistema</text><text x="260" y="396" text-anchor="end" class="s">19</text>
+  <text x="84" y="430" class="r">Procesos</text><text x="260" y="430" text-anchor="end" class="s">5</text>
+  <text x="84" y="464" class="r">Discos y archivos</text><text x="260" y="464" text-anchor="end" class="s">7</text>
+  <text x="84" y="498" class="r">Red</text><text x="260" y="498" text-anchor="end" class="s">11</text>
+  <text x="84" y="532" class="r">Servicios</text><text x="260" y="532" text-anchor="end" class="s">6</text>
+  <text x="84" y="566" class="r">Logs</text><text x="260" y="566" text-anchor="end" class="s">4</text>
+  <text x="84" y="600" class="r">Usuarios</text><text x="260" y="600" text-anchor="end" class="s">5</text>
+  <text x="84" y="634" class="r">Paquetes</text><text x="260" y="634" text-anchor="end" class="s">4</text>
+  <text x="84" y="668" class="r">Seguridad</text><text x="260" y="668" text-anchor="end" class="s">4</text>
+  <text x="84" y="702" class="r">Web</text><text x="260" y="702" text-anchor="end" class="s">4</text>
+  <text x="84" y="736" class="r">Git</text><text x="260" y="736" text-anchor="end" class="s">4</text>
+  <line x1="80" y1="756" x2="260" y2="756" stroke="#1f2937"/>
+  <text x="84" y="784" class="r" style="fill:#facc15;font-weight:600">★ Mis comandos</text><text x="260" y="784" text-anchor="end" class="s">5</text>
+
+  <!-- lista de comandos -->
+  <line x1="700" y1="270" x2="700" y2="910" stroke="#1f2937"/>
+  <text x="300" y="296" class="sec">VER Y ESTADO</text>
+  <text x="300" y="324" class="r" style="font-weight:600">Contenedores en ejecución</text>
+  <text x="300" y="344" class="s mono">podman ps</text>
+  <rect x="616" y="312" width="64" height="18" rx="9" fill="#14301f"/><text x="648" y="325" text-anchor="middle" style="font-size:11px;fill:#22c55e">lectura</text>
+  <text x="300" y="378" class="r" style="font-weight:600">Uso de recursos</text>
+  <text x="300" y="398" class="s mono">podman stats --no-stream</text>
+  <rect x="616" y="366" width="64" height="18" rx="9" fill="#14301f"/><text x="648" y="379" text-anchor="middle" style="font-size:11px;fill:#22c55e">lectura</text>
+
+  <text x="300" y="440" class="sec">LOGS Y ENTRAR</text>
+  <rect x="290" y="450" width="400" height="58" rx="6" fill="#1e3a5f"/>
+  <text x="300" y="474" class="r" style="font-weight:600">Seguir logs en vivo</text>
+  <text x="300" y="494" class="s mono" style="font-size:12px">podman logs -f --tail {{lineas}} {{contenedor}}</text>
+  <text x="300" y="534" class="r" style="font-weight:600">Entrar con shell</text>
+  <text x="300" y="554" class="s mono">podman exec -it {{contenedor}} sh</text>
+
+  <text x="300" y="596" class="sec">LEVANTAR Y PARAR</text>
+  <text x="300" y="624" class="r" style="font-weight:600">Reiniciar contenedor</text>
+  <text x="300" y="644" class="s mono">podman restart {{contenedor}}</text>
+  <text x="300" y="678" class="r" style="font-weight:600">Levantar compose</text>
+  <text x="300" y="698" class="s mono">podman compose up -d</text>
+
+  <text x="300" y="740" class="sec">LIMPIEZA</text>
+  <text x="300" y="768" class="r" style="font-weight:600;fill:#f43f5e">Limpieza total</text>
+  <text x="300" y="788" class="s mono">podman system prune -a -f</text>
+  <rect x="604" y="756" width="76" height="18" rx="9" fill="#3b1220"/><text x="642" y="769" text-anchor="middle" style="font-size:11px;fill:#f43f5e">peligroso</text>
+
+  <!-- detalle -->
+  <text x="724" y="300" style="font-size:20px;font-weight:700">Seguir logs en vivo</text>
+  <text x="724" y="326" class="s" style="font-size:14px">Muestra los logs del contenedor en tiempo real.</text>
+
+  <text x="724" y="366" class="s">contenedor</text>
+  <rect x="724" y="376" width="240" height="32" rx="6" fill="#0f172a" stroke="#38bdf8"/>
+  <text x="738" y="397" class="r mono">web</text><path d="M944,388 l6,6 l6,-6" fill="none" stroke="#94a3b8" stroke-width="2"/>
+  <text x="724" y="426" class="s" style="font-size:12px">sugeridos desde el servidor: web · db · redis</text>
+  <text x="990" y="366" class="s">lineas</text>
+  <rect x="990" y="376" width="110" height="32" rx="6" fill="#0f172a" stroke="#334155"/>
+  <text x="1004" y="397" class="r mono">200</text>
+
+  <text x="724" y="466" class="s">Se ejecutará:</text>
+  <rect x="724" y="476" width="496" height="40" rx="8" fill="#020617" stroke="#334155"/>
+  <text x="740" y="502" class="mono" style="font-size:14px"><tspan fill="#22c55e">$</tspan> podman logs -f --tail 200 web</text>
+
+  <rect x="724" y="534" width="160" height="34" rx="8" fill="#1e293b" stroke="#475569"/><text x="804" y="556" text-anchor="middle" class="r">Insertar en terminal</text>
+  <rect x="894" y="534" width="100" height="34" rx="8" fill="#38bdf8"/><text x="944" y="556" text-anchor="middle" class="r" style="font-weight:700;fill:#0f172a">Ejecutar</text>
+  <rect x="1004" y="534" width="216" height="34" rx="8" fill="#1e293b" stroke="#475569"/><text x="1112" y="556" text-anchor="middle" class="r">Ejecutar y ver resultado</text>
+
+  <text x="724" y="606" class="sec">RESULTADO</text>
+  <rect x="724" y="616" width="496" height="276" rx="8" fill="#020617" stroke="#1f2937"/>
+  <text x="740" y="644" class="mono" style="font-size:12.5px;fill:#cbd5e1">10:42:01 GET /api/health 200 3ms</text>
+  <text x="740" y="666" class="mono" style="font-size:12.5px;fill:#cbd5e1">10:42:05 GET /api/users 200 41ms</text>
+  <text x="740" y="688" class="mono" style="font-size:12.5px;fill:#facc15">10:42:09 WARN pool casi lleno (18/20)</text>
+  <text x="740" y="710" class="mono" style="font-size:12.5px;fill:#f43f5e">10:42:11 ERROR conexión a db rechazada</text>
+  <text x="740" y="732" class="mono" style="font-size:12.5px;fill:#cbd5e1">10:42:14 reintentando en 5 s…</text>
+  <text x="740" y="754" class="mono" style="font-size:12.5px;fill:#cbd5e1">10:42:19 conectado a db</text>
+  <text x="740" y="776" class="mono" style="font-size:12.5px;fill:#cbd5e1">10:42:20 GET /api/health 200 2ms</text>
+  <rect x="740" y="788" width="8" height="14" fill="#e2e8f0"/>
+
+  <!-- marcadores -->
+  <circle cx="270" cy="296" r="15" class="badge"/><text x="270" y="302" text-anchor="middle" class="bn">1</text>
+  <circle cx="548" cy="222" r="15" class="badge"/><text x="548" y="228" text-anchor="middle" class="bn">2</text>
+  <circle cx="1110" cy="426" r="15" class="badge"/><text x="1110" y="432" text-anchor="middle" class="bn">3</text>
+  <circle cx="1220" cy="476" r="15" class="badge"/><text x="1220" y="482" text-anchor="middle" class="bn">4</text>
+  <circle cx="1220" cy="534" r="15" class="badge"/><text x="1220" y="540" text-anchor="middle" class="bn">5</text>
+  <circle cx="1224" cy="222" r="15" class="badge"/><text x="1224" y="228" text-anchor="middle" class="bn">6</text>
+  <circle cx="226" cy="770" r="15" class="badge"/><text x="226" y="776" text-anchor="middle" class="bn">7</text>
+
+  <!-- leyenda -->
+  <circle cx="1290" cy="150" r="15" class="badge"/><text x="1290" y="156" text-anchor="middle" class="bn">1</text>
+  <text x="1316" y="156" class="lt">Categorías</text>
+  <text x="1316" y="180" class="ld">Podman, Docker, sistema,</text>
+  <text x="1316" y="200" class="ld">red, servicios, logs…</text>
+
+  <circle cx="1290" cy="250" r="15" class="badge"/><text x="1290" y="256" text-anchor="middle" class="bn">2</text>
+  <text x="1316" y="256" class="lt">Buscar y paleta</text>
+  <text x="1316" y="280" class="ld">Ctrl+Shift+P desde</text>
+  <text x="1316" y="300" class="ld">cualquier pestaña.</text>
+
+  <circle cx="1290" cy="350" r="15" class="badge"/><text x="1290" y="356" text-anchor="middle" class="bn">3</text>
+  <text x="1316" y="356" class="lt">Variables</text>
+  <text x="1316" y="380" class="ld">Con sugerencias que vienen</text>
+  <text x="1316" y="400" class="ld">del propio servidor.</text>
+
+  <circle cx="1290" cy="450" r="15" class="badge"/><text x="1290" y="456" text-anchor="middle" class="bn">4</text>
+  <text x="1316" y="456" class="lt">Vista previa exacta</text>
+  <text x="1316" y="480" class="ld">Ves el comando final</text>
+  <text x="1316" y="500" class="ld">antes de ejecutarlo.</text>
+
+  <circle cx="1290" cy="550" r="15" class="badge"/><text x="1290" y="556" text-anchor="middle" class="bn">5</text>
+  <text x="1316" y="556" class="lt">Tres formas de aplicar</text>
+  <text x="1316" y="580" class="ld">Insertar, ejecutar, o ejecutar</text>
+  <text x="1316" y="600" class="ld">y ver el resultado aparte.</text>
+
+  <circle cx="1290" cy="650" r="15" class="badge"/><text x="1290" y="656" text-anchor="middle" class="bn">6</text>
+  <text x="1316" y="656" class="lt">Analizar servidor</text>
+  <text x="1316" y="680" class="ld">Informe de CPU, memoria,</text>
+  <text x="1316" y="700" class="ld">discos, puertos, contenedores.</text>
+
+  <circle cx="1290" cy="750" r="15" class="badge"/><text x="1290" y="756" text-anchor="middle" class="bn">7</text>
+  <text x="1316" y="756" class="lt">Mis comandos</text>
+  <text x="1316" y="780" class="ld">Propios, por proyecto o</text>
+  <text x="1316" y="800" class="ld">servidor; exportables.</text>
+
+  <text x="60" y="940" style="font-size:16px;fill:#94a3b8">Comandos peligrosos (rojo) piden confirmación. La contraseña de sudo nunca se guarda: se escribe en la terminal.</text>
+</svg>

@@ -1,0 +1,350 @@
+// Editor de archivos remotos (Monaco local). Ctrl+S guarda directamente en el servidor.
+import { useCallback, useEffect, useRef, useState } from "react";
+import { AlertTriangle, FileWarning, RotateCw, Save, Settings as SettingsIcon } from "lucide-react";
+import { sftp } from "../../api/sftp";
+import { errorMessage, isApiError } from "../../api/core";
+import { useSettings } from "../../stores/settings";
+import { useUi } from "../../stores/ui";
+import { toast } from "../../stores/toasts";
+import { confirmDialog } from "../ui/dialogs";
+import { formatBytes, formatDate } from "../../lib/format";
+import { useAppTheme } from "../Settings/theme";
+import { applyMonacoTheme, monaco } from "./monacoSetup";
+import { detectLanguage, languageLabel, LANGUAGE_CHOICES } from "./languages";
+import "./RemoteEditor.css";
+
+export interface RemoteEditorProps {
+  sessionId: string;
+  path: string;
+  active: boolean;
+  onDirtyChange: (dirty: boolean) => void;
+}
+
+type LoadState =
+  | { kind: "loading" }
+  | { kind: "ready" }
+  | { kind: "error"; title: string; message: string; tooLarge: boolean };
+
+let modelSeq = 0;
+
+export function RemoteEditor({ sessionId, path, active, onDirtyChange }: RemoteEditorProps) {
+  const hostRef = useRef<HTMLDivElement>(null);
+  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+  const modelRef = useRef<monaco.editor.ITextModel | null>(null);
+  const savedVersion = useRef(0);
+  const remoteModified = useRef<number | null>(null);
+  const savingRef = useRef(false);
+  const dirtyRef = useRef(false);
+  const onDirtyRef = useRef(onDirtyChange);
+  onDirtyRef.current = onDirtyChange;
+
+  const [state, setState] = useState<LoadState>({ kind: "loading" });
+  const [dirty, setDirty] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [cursor, setCursor] = useState({ line: 1, col: 1, sel: 0 });
+  const [language, setLanguage] = useState(() => detectLanguage(path));
+  const [info, setInfo] = useState<{ size: number; modified: number | null }>({ size: 0, modified: null });
+
+  const theme = useAppTheme((s) => s.theme);
+  const fontSize = useSettings((s) => s.settings.editorFontSize);
+  const fontFamily = useSettings((s) => s.settings.editorFontFamily);
+  const maxBytes = useSettings((s) => s.settings.editorMaxBytes);
+
+  const markDirty = useCallback((d: boolean) => {
+    if (dirtyRef.current === d) return;
+    dirtyRef.current = d;
+    setDirty(d);
+    onDirtyRef.current(d);
+  }, []);
+
+  // ── Carga del contenido ──
+  const load = useCallback(async () => {
+    setState({ kind: "loading" });
+    try {
+      const text = await sftp.readText(sessionId, path);
+      const model = modelRef.current;
+      if (!model) return;
+      model.setValue(text.content);
+      savedVersion.current = model.getAlternativeVersionId();
+      remoteModified.current = text.modified;
+      setInfo({ size: text.size, modified: text.modified });
+      markDirty(false);
+      setState({ kind: "ready" });
+      editorRef.current?.setPosition({ lineNumber: 1, column: 1 });
+      editorRef.current?.revealLine(1);
+      if (active) requestAnimationFrame(() => editorRef.current?.focus());
+    } catch (e) {
+      if (isApiError(e, "FileTooLarge")) {
+        setState({
+          kind: "error",
+          tooLarge: true,
+          title: "Archivo demasiado grande",
+          message: `${errorMessage(e)} El límite actual del editor es ${formatBytes(maxBytes)}; puedes subirlo en Ajustes → Editor, o descargar el archivo.`,
+        });
+      } else if (isApiError(e, "Invalid")) {
+        setState({
+          kind: "error",
+          tooLarge: false,
+          title: "No es un archivo de texto",
+          message: `${errorMessage(e)} Descárgalo para abrirlo con un programa de tu equipo.`,
+        });
+      } else {
+        setState({ kind: "error", tooLarge: false, title: "No se pudo abrir el archivo", message: errorMessage(e) });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId, path, markDirty]);
+
+  // ── Guardar ──
+  const save = useCallback(async () => {
+    const model = modelRef.current;
+    if (!model || savingRef.current || state.kind !== "ready") return;
+    savingRef.current = true;
+    setSaving(true);
+    try {
+      try {
+        const st = await sftp.stat(sessionId, path);
+        if (remoteModified.current !== null && st.modified !== null && st.modified !== remoteModified.current) {
+          const ok = await confirmDialog({
+            title: "El archivo cambió en el servidor",
+            message: (
+              <>
+                El archivo cambió en el servidor ({formatDate(st.modified)}) desde que lo abriste. ¿Sobrescribir con tu
+                versión?
+              </>
+            ),
+            confirmText: "Sobrescribir",
+            danger: true,
+          });
+          if (!ok) return;
+        }
+      } catch (e) {
+        if (isApiError(e, "NotFound")) {
+          const ok = await confirmDialog({
+            title: "El archivo ya no existe",
+            message: "Alguien lo borró o movió en el servidor. ¿Crearlo de nuevo con tu versión?",
+            confirmText: "Crear y guardar",
+          });
+          if (!ok) return;
+        } else {
+          throw e;
+        }
+      }
+      const versionAtSave = model.getAlternativeVersionId();
+      const entry = await sftp.writeText(sessionId, path, model.getValue());
+      savedVersion.current = versionAtSave;
+      remoteModified.current = entry.modified;
+      setInfo({ size: entry.size, modified: entry.modified });
+      markDirty(model.getAlternativeVersionId() !== versionAtSave);
+    } catch (e) {
+      toast.error("No se pudo guardar", e);
+    } finally {
+      savingRef.current = false;
+      setSaving(false);
+    }
+  }, [sessionId, path, state.kind, markDirty]);
+
+  const saveRef = useRef(save);
+  saveRef.current = save;
+
+  const reload = useCallback(async () => {
+    if (dirtyRef.current) {
+      const ok = await confirmDialog({
+        title: "Descartar cambios",
+        message: "Tienes cambios sin guardar. ¿Recargar el archivo desde el servidor y perderlos?",
+        confirmText: "Recargar",
+        danger: true,
+      });
+      if (!ok) return;
+    }
+    await load();
+  }, [load]);
+
+  // ── Crear el editor (una vez) ──
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!host) return;
+    applyMonacoTheme(useAppTheme.getState().theme);
+    const uri = monaco.Uri.from({ scheme: "terview", authority: `s${++modelSeq}`, path: path.startsWith("/") ? path : `/${path}` });
+    const model = monaco.editor.createModel("", detectLanguage(path), uri);
+    const s = useSettings.getState().settings;
+    const editor = monaco.editor.create(host, {
+      model,
+      automaticLayout: true,
+      fontSize: s.editorFontSize,
+      fontFamily: s.editorFontFamily,
+      fontLigatures: false,
+      minimap: { enabled: true, renderCharacters: false, scale: 1, maxColumn: 80 },
+      scrollBeyondLastLine: false,
+      smoothScrolling: true,
+      renderWhitespace: "selection",
+      renderLineHighlight: "all",
+      tabSize: 4,
+      detectIndentation: true,
+      wordWrap: "off",
+      contextmenu: true,
+      mouseWheelZoom: true,
+      padding: { top: 6, bottom: 6 },
+      fixedOverflowWidgets: true,
+      stickyScroll: { enabled: true },
+      bracketPairColorization: { enabled: true },
+    });
+    editorRef.current = editor;
+    modelRef.current = model;
+
+    const subs = [
+      model.onDidChangeContent(() => markDirty(model.getAlternativeVersionId() !== savedVersion.current)),
+      editor.onDidChangeCursorSelection((e) => {
+        const sel = e.selection;
+        setCursor({
+          line: sel.positionLineNumber,
+          col: sel.positionColumn,
+          sel: sel.isEmpty() ? 0 : model.getValueLengthInRange(sel),
+        });
+      }),
+    ];
+    editor.addAction({
+      id: "terview.save",
+      label: "Guardar en el servidor",
+      keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS],
+      contextMenuGroupId: "navigation",
+      contextMenuOrder: 0,
+      run: () => {
+        void saveRef.current();
+      },
+    });
+    void load();
+    return () => {
+      subs.forEach((d) => d.dispose());
+      editor.dispose();
+      model.dispose();
+      editorRef.current = null;
+      modelRef.current = null;
+    };
+    // Solo al montar: path/sessionId no cambian para una instancia.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Tema
+  useEffect(() => {
+    applyMonacoTheme(theme);
+  }, [theme]);
+
+  // Fuente
+  useEffect(() => {
+    editorRef.current?.updateOptions({ fontSize, fontFamily });
+  }, [fontSize, fontFamily]);
+
+  // Lenguaje elegido a mano
+  useEffect(() => {
+    const m = modelRef.current;
+    if (m) monaco.editor.setModelLanguage(m, language);
+  }, [language]);
+
+  // Foco y Ctrl+S cuando el editor es visible pero el foco no está dentro de Monaco.
+  useEffect(() => {
+    if (!active) return;
+    const id = requestAnimationFrame(() => {
+      editorRef.current?.layout();
+      editorRef.current?.focus();
+    });
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === "s") {
+        const t = e.target as HTMLElement | null;
+        if (t?.closest?.(".monaco-editor")) return; // lo maneja la acción de Monaco
+        if (t?.closest?.(".xterm")) return;
+        e.preventDefault();
+        void saveRef.current();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      cancelAnimationFrame(id);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [active]);
+
+  const openSettings = useUi((s) => s.openSettings);
+
+  return (
+    <div className="ed-root">
+      <div className="ed-body">
+        <div ref={hostRef} className="ed-host" style={{ visibility: state.kind === "ready" ? "visible" : "hidden" }} />
+        {state.kind === "loading" && (
+          <div className="ed-overlay">
+            <div className="spinner" />
+            <span>Abriendo {path}…</span>
+          </div>
+        )}
+        {state.kind === "error" && (
+          <div className="ed-overlay">
+            <div className="ed-error">
+              {state.tooLarge ? <FileWarning size={28} /> : <AlertTriangle size={28} />}
+              <strong>{state.title}</strong>
+              <p>{state.message}</p>
+              <div className="ed-error-actions">
+                <button className="btn btn-sm" onClick={() => void load()}>
+                  <RotateCw size={14} /> Reintentar
+                </button>
+                {state.tooLarge && (
+                  <button className="btn btn-sm" onClick={openSettings}>
+                    <SettingsIcon size={14} /> Abrir ajustes
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+      <div className="ed-status">
+        <span className="ed-path mono" title={path}>
+          {/* Marcas LTR: con direction:rtl (elipsis al principio) la "/" inicial no se mueve al final. */}
+          {`\u200e${path}\u200e`}
+        </span>
+        {state.kind === "ready" && (
+          <>
+            <span className={dirty ? "ed-state ed-dirty" : "ed-state ed-clean"}>
+              <span className="ed-state-dot" />
+              {saving ? "Guardando…" : dirty ? "Sin guardar" : "Guardado"}
+            </span>
+            <span className="ed-sep" />
+            <span className="ed-meta">
+              Ln {cursor.line}, Col {cursor.col}
+              {cursor.sel > 0 && ` (${cursor.sel} sel.)`}
+            </span>
+            <span className="ed-meta" title={info.modified ? `Modificado: ${formatDate(info.modified)}` : undefined}>
+              {formatBytes(info.size)}
+            </span>
+            <select
+              className="ed-lang"
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+              title="Lenguaje"
+              aria-label="Lenguaje"
+            >
+              {!LANGUAGE_CHOICES.includes(language) && <option value={language}>{languageLabel(language)}</option>}
+              {LANGUAGE_CHOICES.map((l) => (
+                <option key={l} value={l}>
+                  {languageLabel(l)}
+                </option>
+              ))}
+            </select>
+          </>
+        )}
+        <button className="icon-btn ed-btn" onClick={() => void reload()} title="Recargar desde el servidor" disabled={saving}>
+          <RotateCw size={14} />
+        </button>
+        <button
+          className="icon-btn ed-btn"
+          onClick={() => void save()}
+          title="Guardar (Ctrl+S)"
+          disabled={state.kind !== "ready" || saving}
+        >
+          <Save size={14} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export default RemoteEditor;

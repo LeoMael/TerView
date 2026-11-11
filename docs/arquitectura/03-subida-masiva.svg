@@ -1,0 +1,125 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="860" viewBox="0 0 1600 860">
+  <defs>
+    <marker id="mm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#64748b"/></marker>
+    <marker id="mo" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#f97316"/></marker>
+  </defs>
+  <style>
+    text{font-family:'Noto Sans','DejaVu Sans',sans-serif;fill:#e2e8f0}
+    .t{font-size:34px;font-weight:700}
+    .st{font-size:18px;fill:#94a3b8}
+    .h{font-size:20px;font-weight:700}
+    .b{font-size:18px;font-weight:600}
+    .s{font-size:15px;fill:#94a3b8}
+    .n{font-size:18px;font-weight:700;fill:#0f172a}
+    .mono{font-family:'Noto Sans Mono','DejaVu Sans Mono',monospace}
+    .step{fill:#1e293b;stroke:#334155;stroke-width:1.5}
+    .card{fill:#1e293b;stroke:#334155}
+  </style>
+  <rect width="1600" height="860" fill="#0f172a"/>
+
+  <text x="60" y="62" class="t">Subir una carpeta completa</text>
+  <text x="60" y="94" class="st">Ejemplo: arrastras la carpeta fotos/ (2.000 archivos) al explorador.</text>
+
+  <!-- Pasos -->
+  <rect x="60" y="130" width="260" height="140" rx="14" class="step"/>
+  <circle cx="94" cy="166" r="18" fill="#38bdf8"/><text x="94" y="172" text-anchor="middle" class="n">1</text>
+  <text x="124" y="173" class="b">Arrastras</text>
+  <text x="80" y="215" class="s">la carpeta fotos/</text><text x="80" y="238" class="s">desde tu PC al explorador</text>
+
+  <line x1="322" y1="200" x2="361" y2="200" stroke="#64748b" stroke-width="3" marker-end="url(#mm)"/>
+
+  <rect x="365" y="130" width="260" height="140" rx="14" class="step"/>
+  <circle cx="399" cy="166" r="18" fill="#a78bfa"/><text x="399" y="172" text-anchor="middle" class="n">2</text>
+  <text x="429" y="173" class="b">Se recorre</text>
+  <text x="385" y="215" class="s">encuentra 2.000 archivos</text><text x="385" y="238" class="s">y 12 subcarpetas</text>
+
+  <line x1="627" y1="200" x2="666" y2="200" stroke="#64748b" stroke-width="3" marker-end="url(#mm)"/>
+
+  <rect x="670" y="130" width="260" height="140" rx="14" class="step"/>
+  <circle cx="704" cy="166" r="18" fill="#facc15"/><text x="704" y="172" text-anchor="middle" class="n">3</text>
+  <text x="734" y="173" class="b">Crea carpetas</text>
+  <text x="690" y="215" class="s">arma la misma estructura</text><text x="690" y="238" class="s">en el servidor</text>
+
+  <line x1="932" y1="200" x2="971" y2="200" stroke="#64748b" stroke-width="3" marker-end="url(#mm)"/>
+
+  <rect x="975" y="130" width="260" height="140" rx="14" fill="#2e1a0e" stroke="#f97316" stroke-width="2"/>
+  <circle cx="1009" cy="166" r="18" fill="#f97316"/><text x="1009" y="172" text-anchor="middle" class="n">4</text>
+  <text x="1039" y="173" class="b">Transfiere</text>
+  <text x="995" y="215" class="s">4 trabajadores a la vez</text><text x="995" y="238" class="s">en bloques de 256 KB</text>
+
+  <line x1="1237" y1="200" x2="1276" y2="200" stroke="#64748b" stroke-width="3" marker-end="url(#mm)"/>
+
+  <rect x="1280" y="130" width="260" height="140" rx="14" class="step"/>
+  <circle cx="1314" cy="166" r="18" fill="#22c55e"/><text x="1314" y="172" text-anchor="middle" class="n">5</text>
+  <text x="1344" y="173" class="b">Listo</text>
+  <text x="1300" y="215" class="s">el explorador se refresca</text><text x="1300" y="238" class="s">y avisa si algo falló</text>
+
+  <!-- Detalle paso 4 -->
+  <path d="M1105,272 L1105,300 L60,300 L60,320" fill="none" stroke="#f97316" stroke-width="1.5" stroke-dasharray="6 6"/>
+  <text x="80" y="345" style="font-size:14px;font-weight:700;letter-spacing:2px;fill:#f97316">DETALLE DEL PASO 4</text>
+
+  <text x="80" y="395" class="h">COLA</text>
+  <rect x="80" y="410" width="270" height="36" rx="8" class="card"/><text x="96" y="434" class="mono" style="font-size:14px">fotos/img_0645.jpg</text>
+  <rect x="80" y="452" width="270" height="36" rx="8" class="card"/><text x="96" y="476" class="mono" style="font-size:14px">fotos/img_0646.jpg</text>
+  <rect x="80" y="494" width="270" height="36" rx="8" class="card"/><text x="96" y="518" class="mono" style="font-size:14px">fotos/img_0647.jpg</text>
+  <rect x="80" y="536" width="270" height="36" rx="8" class="card"/><text x="96" y="560" class="mono" style="font-size:14px">fotos/viaje/mar_01.png</text>
+  <rect x="80" y="578" width="270" height="36" rx="8" class="card"/><text x="96" y="602" class="mono" style="font-size:14px">fotos/viaje/mar_02.png</text>
+  <rect x="80" y="620" width="270" height="36" rx="8" class="card"/><text x="96" y="644" class="mono" style="font-size:14px">fotos/viaje/mar_03.png</text>
+  <text x="96" y="690" class="s">… y 1.350 más</text>
+
+  <line x1="352" y1="530" x2="512" y2="442" stroke="#f97316" stroke-width="2" marker-end="url(#mo)"/>
+  <line x1="352" y1="530" x2="512" y2="542" stroke="#f97316" stroke-width="2" marker-end="url(#mo)"/>
+  <line x1="352" y1="530" x2="512" y2="642" stroke="#f97316" stroke-width="2" marker-end="url(#mo)"/>
+  <line x1="352" y1="530" x2="512" y2="742" stroke="#f97316" stroke-width="2" marker-end="url(#mo)"/>
+
+  <rect x="520" y="400" width="300" height="84" rx="12" fill="#2e1a0e" stroke="#f97316"/>
+  <text x="540" y="428" class="b">Trabajador 1</text><text x="680" y="428" class="mono" style="font-size:13px;fill:#94a3b8">img_0641.jpg</text>
+  <rect x="540" y="452" width="260" height="10" rx="5" fill="#334155"/><rect x="540" y="452" width="203" height="10" rx="5" fill="#f97316"/>
+  <text x="800" y="477" text-anchor="end" class="s" style="font-size:12px">78%</text>
+
+  <rect x="520" y="500" width="300" height="84" rx="12" fill="#2e1a0e" stroke="#f97316"/>
+  <text x="540" y="528" class="b">Trabajador 2</text><text x="680" y="528" class="mono" style="font-size:13px;fill:#94a3b8">img_0642.jpg</text>
+  <rect x="540" y="552" width="260" height="10" rx="5" fill="#334155"/><rect x="540" y="552" width="117" height="10" rx="5" fill="#f97316"/>
+  <text x="800" y="577" text-anchor="end" class="s" style="font-size:12px">45%</text>
+
+  <rect x="520" y="600" width="300" height="84" rx="12" fill="#2e1a0e" stroke="#f97316"/>
+  <text x="540" y="628" class="b">Trabajador 3</text><text x="680" y="628" class="mono" style="font-size:13px;fill:#94a3b8">img_0643.jpg</text>
+  <rect x="540" y="652" width="260" height="10" rx="5" fill="#334155"/><rect x="540" y="652" width="239" height="10" rx="5" fill="#f97316"/>
+  <text x="800" y="677" text-anchor="end" class="s" style="font-size:12px">92%</text>
+
+  <rect x="520" y="700" width="300" height="84" rx="12" fill="#2e1a0e" stroke="#f97316"/>
+  <text x="540" y="728" class="b">Trabajador 4</text><text x="680" y="728" class="mono" style="font-size:13px;fill:#94a3b8">img_0644.jpg</text>
+  <rect x="540" y="752" width="260" height="10" rx="5" fill="#334155"/><rect x="540" y="752" width="31" height="10" rx="5" fill="#f97316"/>
+  <text x="800" y="777" text-anchor="end" class="s" style="font-size:12px">12%</text>
+
+  <line x1="822" y1="442" x2="1032" y2="442" stroke="#f97316" stroke-width="2.5" marker-end="url(#mo)"/>
+  <line x1="822" y1="542" x2="1032" y2="542" stroke="#f97316" stroke-width="2.5" marker-end="url(#mo)"/>
+  <line x1="822" y1="642" x2="1032" y2="642" stroke="#f97316" stroke-width="2.5" marker-end="url(#mo)"/>
+  <line x1="822" y1="742" x2="1032" y2="742" stroke="#f97316" stroke-width="2.5" marker-end="url(#mo)"/>
+  <text x="927" y="428" text-anchor="middle" class="s" style="font-size:13px">SFTP</text>
+
+  <rect x="1040" y="380" width="260" height="420" rx="16" fill="#0f2a1c" stroke="#22c55e" stroke-width="2"/>
+  <text x="1062" y="418" class="h" style="fill:#22c55e">SERVIDOR</text>
+  <text x="1062" y="446" class="mono" style="font-size:14px;fill:#94a3b8">/var/www/fotos/</text>
+  <circle cx="1070" cy="486" r="5" fill="#22c55e"/><text x="1084" y="491" class="mono" style="font-size:14px">img_0001.jpg</text>
+  <circle cx="1070" cy="516" r="5" fill="#22c55e"/><text x="1084" y="521" class="mono" style="font-size:14px">img_0002.jpg</text>
+  <circle cx="1070" cy="546" r="5" fill="#22c55e"/><text x="1084" y="551" class="mono" style="font-size:14px">img_0003.jpg</text>
+  <text x="1084" y="581" class="s">…</text>
+  <circle cx="1070" cy="606" r="5" fill="#22c55e"/><text x="1084" y="611" class="mono" style="font-size:14px">img_0640.jpg</text>
+  <text x="1062" y="660" class="b">640 de 2.000</text>
+  <rect x="1062" y="676" width="216" height="12" rx="6" fill="#14532d"/><rect x="1062" y="676" width="69" height="12" rx="6" fill="#22c55e"/>
+  <text x="1062" y="720" class="s">12 MB/s · faltan ~3 min</text>
+
+  <rect x="1330" y="380" width="230" height="420" rx="16" fill="none" stroke="#64748b" stroke-width="1.5" stroke-dasharray="6 6"/>
+  <text x="1350" y="418" style="font-size:14px;font-weight:700;letter-spacing:2px;fill:#cbd5e1">SI ALGO FALLA</text>
+  <text x="1350" y="462" class="b" style="font-size:16px">Error en un archivo</text>
+  <text x="1350" y="486" class="s">se reintenta 3 veces</text>
+  <text x="1350" y="536" class="b" style="font-size:16px">Se corta la conexión</text>
+  <text x="1350" y="560" class="s">reanuda desde el</text>
+  <text x="1350" y="582" class="s">último byte enviado</text>
+  <text x="1350" y="632" class="b" style="font-size:16px">Progreso en vivo</text>
+  <text x="1350" y="656" class="s">cada 200 ms en la</text>
+  <text x="1350" y="678" class="s">barra inferior</text>
+  <text x="1350" y="728" class="b" style="font-size:16px">Pausar / cancelar</text>
+  <text x="1350" y="752" class="s">en cualquier momento</text>
+</svg>

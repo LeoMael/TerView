@@ -1,0 +1,247 @@
+.tabs-bar {
+  display: flex;
+  align-items: stretch;
+  height: 38px;
+  padding: 0 4px;
+  gap: 2px;
+  background: var(--bg-sunken);
+  border-bottom: 1px solid var(--border);
+  flex: none;
+}
+.tabs-side-btn {
+  align-self: center;
+  flex: none;
+}
+.tabs-list {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: stretch;
+  gap: 3px;
+  padding: 5px 4px 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+.tabs-list::-webkit-scrollbar {
+  display: none;
+}
+
+.tabs-tab {
+  --tab-color: transparent;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 110px;
+  max-width: 220px;
+  padding: 0 4px 0 12px;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: var(--radius) var(--radius) 0 0;
+  color: var(--text-muted);
+  cursor: default;
+  flex: none;
+  outline: none;
+  transition: background 0.1s, color 0.1s;
+}
+.tabs-tab:hover {
+  background: color-mix(in srgb, var(--surface-2) 70%, transparent);
+  color: var(--text);
+}
+.tabs-tab.active {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text);
+  margin-bottom: -1px;
+  z-index: 1;
+}
+.tabs-tab:focus-visible {
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+.tabs-tab.dragging {
+  opacity: 0.85;
+  background: var(--surface-2);
+  box-shadow: var(--shadow);
+  z-index: 2;
+}
+/* Franja de color del servidor */
+.tabs-color {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: -1px;
+  height: 2px;
+  border-radius: 0 0 2px 2px;
+  background: var(--tab-color);
+  opacity: 0.7;
+}
+.tabs-tab.active .tabs-color {
+  left: -1px;
+  right: -1px;
+  border-radius: var(--radius) var(--radius) 0 0;
+  opacity: 1;
+}
+.tabs-tab.active:not(:has(.tabs-color))::before {
+  content: "";
+  position: absolute;
+  left: -1px;
+  right: -1px;
+  top: -1px;
+  height: 2px;
+  border-radius: var(--radius) var(--radius) 0 0;
+  background: var(--accent);
+}
+
+.tabs-status {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+}
+.tabs-status.connected {
+  background: var(--green);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--green) 20%, transparent);
+}
+.tabs-status.closed {
+  background: var(--red);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--red) 20%, transparent);
+}
+.tabs-status.reconnecting {
+  background: var(--yellow);
+  animation: tabs-pulse 1.2s ease-in-out infinite;
+}
+@keyframes tabs-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--yellow) 25%, transparent);
+    opacity: 1;
+  }
+  50% {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--yellow) 10%, transparent);
+    opacity: 0.55;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tabs-status.reconnecting {
+    animation: none;
+  }
+}
+.tabs-tab.reconnecting .tabs-title {
+  color: var(--text-muted);
+}
+.tabs-logo {
+  align-self: center;
+  margin: 0 4px 0 2px;
+  opacity: 0.9;
+}
+.tabs-tab.closed .tabs-title {
+  color: var(--text-faint);
+  text-decoration: line-through;
+  text-decoration-color: color-mix(in srgb, var(--red) 60%, transparent);
+}
+.tabs-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tabs-close {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-faint);
+  cursor: pointer;
+  flex: none;
+}
+.tabs-close > svg {
+  opacity: 0;
+}
+.tabs-tab:hover .tabs-close > svg,
+.tabs-tab.active .tabs-close > svg {
+  opacity: 1;
+}
+.tabs-close:hover {
+  background: var(--surface-3);
+  color: var(--text);
+}
+.tabs-unsaved-dot {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--orange);
+  display: none;
+}
+.tabs-close.unsaved .tabs-unsaved-dot {
+  display: block;
+}
+.tabs-close.unsaved > svg {
+  opacity: 0 !important;
+}
+.tabs-close.unsaved:hover .tabs-unsaved-dot {
+  display: none;
+}
+.tabs-close.unsaved:hover > svg {
+  opacity: 1 !important;
+}
+
+.tabs-new {
+  align-self: center;
+  margin: 0 0 0 2px;
+  flex: none;
+}
+
+/* Menús */
+.tabs-menu {
+  max-width: 340px;
+}
+.tabs-menu-label {
+  padding: 6px 10px 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.tabs-menu-scroll {
+  max-height: 320px;
+  overflow-y: auto;
+}
+.tabs-menu-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-faint);
+  flex: none;
+}
+.tabs-menu-name {
+  flex: none;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tabs-menu-host {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+  color: var(--text-faint);
+  font-size: var(--fs-sm);
+}
+.tabs-menu button:focus-visible {
+  outline: none;
+  background: var(--accent-bg);
+}

@@ -1,0 +1,227 @@
+.st-root {
+  display: flex;
+  gap: 16px;
+  min-height: 300px;
+}
+.st-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 170px;
+  flex: none;
+  padding-right: 12px;
+  border-right: 1px solid var(--border);
+}
+.st-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  padding: 0 10px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  text-align: left;
+  cursor: pointer;
+}
+.st-nav-item:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.st-nav-item.active {
+  background: var(--accent-bg);
+  color: var(--text);
+}
+.st-nav-item.active > svg {
+  color: var(--accent);
+}
+.st-nav-item:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+.st-content {
+  flex: 1;
+  min-width: 0;
+}
+.st-title {
+  margin: 2px 0 10px;
+  font-size: var(--fs-lg);
+  font-weight: 600;
+}
+.st-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.st-row:last-of-type {
+  border-bottom: none;
+}
+.st-row-label {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.st-row-label small {
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  line-height: 1.4;
+}
+.st-row-control {
+  flex: none;
+  display: flex;
+  align-items: center;
+}
+.st-wide {
+  width: 250px;
+  font-size: var(--fs-sm);
+}
+
+/* Selector segmentado (tema) */
+.st-segmented {
+  display: inline-flex;
+  padding: 2px;
+  gap: 2px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--bg);
+}
+.st-segmented button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 12px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.st-segmented button:hover {
+  color: var(--text);
+}
+.st-segmented button.active {
+  background: var(--surface-3);
+  color: var(--text);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+.st-segmented button.active > svg {
+  color: var(--accent);
+}
+
+/* Número con − / + */
+.st-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.st-num {
+  width: 56px;
+  height: 28px;
+  text-align: center;
+  padding: 0 4px;
+}
+.st-suffix {
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  min-width: 20px;
+}
+.st-stepper .icon-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* Interruptor */
+.st-switch {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--surface-3);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.st-switch > span {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  transition: transform 0.15s, background 0.15s;
+}
+.st-switch.on {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.st-switch.on > span {
+  transform: translateX(16px);
+  background: var(--accent-contrast);
+}
+.st-switch:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+/* Deslizador */
+.st-range {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.st-range input[type="range"] {
+  width: 160px;
+  accent-color: var(--accent);
+}
+.st-range-value {
+  min-width: 22px;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Vista previa de la terminal */
+.st-preview {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: var(--bg-terminal);
+  border: 1px solid var(--border);
+  color: #e2e8f0;
+  line-height: 1.45;
+  white-space: pre;
+  overflow: hidden;
+}
+.st-prompt {
+  color: #4ade80;
+}
+.st-path {
+  color: #60a5fa;
+}
+
+.st-reset {
+  margin-right: auto;
+}
+.st-footer-hint {
+  align-self: center;
+  color: var(--text-faint);
+  font-size: var(--fs-sm);
+}
+.st-comment {
+  color: #94a3b8;
+}
+.st-disabled {
+  opacity: 0.5;
+}

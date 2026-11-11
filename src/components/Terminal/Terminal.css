@@ -1,0 +1,272 @@
+/* Terminal integrada (sub-pestañas + xterm.js). Clases con prefijo term-. */
+
+.term-area {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: var(--bg-terminal);
+  overflow: hidden;
+}
+
+/* ───────── Barra de sub-pestañas ───────── */
+.term-bar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 30px;
+  flex: none;
+  padding: 0 6px 0 4px;
+  background: var(--bg-sunken);
+  border-bottom: 1px solid var(--border);
+}
+.term-tabs {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.term-tabs::-webkit-scrollbar {
+  display: none;
+}
+.term-tab {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  height: 100%;
+  padding: 0 4px 0 10px;
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  border-right: 1px solid var(--border);
+  outline: none;
+  white-space: nowrap;
+}
+.term-tab:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+.term-tab.active {
+  color: var(--text);
+  background: var(--surface);
+}
+.term-tab.active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--accent);
+}
+.term-tab:focus-visible {
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+.term-tab-icon {
+  flex: none;
+  color: var(--green);
+}
+.term-tab.exited .term-tab-icon {
+  color: var(--text-faint);
+}
+.term-tab.exited .term-tab-label {
+  color: var(--text-faint);
+}
+.term-tab-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-faint);
+  cursor: pointer;
+  opacity: 0;
+}
+.term-tab:hover .term-tab-close,
+.term-tab.active .term-tab-close {
+  opacity: 1;
+}
+.term-tab-close:hover {
+  background: var(--surface-3);
+  color: var(--text);
+}
+.term-add {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  margin-left: 2px;
+}
+.term-add:disabled {
+  opacity: 0.4;
+  cursor: default;
+  background: transparent;
+}
+
+/* ───────── Cuerpo ───────── */
+.term-body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  background: var(--bg-terminal);
+}
+.term-view {
+  position: absolute;
+  inset: 0;
+  display: none;
+  padding: 4px 4px 2px 8px;
+}
+.term-view.visible {
+  display: block;
+}
+.term-host {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+.term-host .xterm {
+  height: 100%;
+  user-select: text;
+}
+.term-host .xterm-viewport {
+  background-color: transparent !important;
+}
+.term-empty {
+  color: var(--text-faint);
+}
+
+.term-overlay {
+  position: absolute;
+  bottom: 10px;
+  right: 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  font-size: var(--fs-sm);
+  color: var(--text);
+  background: color-mix(in srgb, var(--red) 22%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--red) 55%, transparent);
+  border-radius: 999px;
+  box-shadow: var(--shadow);
+  pointer-events: none;
+  z-index: 5;
+}
+.term-overlay svg {
+  color: var(--red);
+}
+
+/* ───────── Menú contextual ───────── */
+.term-menu kbd {
+  margin-left: auto;
+  padding-left: 16px;
+  font-family: var(--font);
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+/* Reconectando: aviso discreto (no tapa la terminal). */
+.term-overlay.reconnecting {
+  color: var(--text);
+  background: color-mix(in srgb, var(--yellow) 18%, var(--surface));
+  border-color: color-mix(in srgb, var(--yellow) 50%, transparent);
+}
+.term-overlay.reconnecting svg {
+  color: var(--yellow);
+}
+.term-overlay-spin {
+  animation: spin 1.2s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .term-overlay-spin {
+    animation: none;
+  }
+}
+
+/* ───────── Búsqueda (Ctrl+Mayús+F) ───────── */
+.term-search {
+  position: absolute;
+  top: 6px;
+  right: 18px;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 30px;
+  padding: 0 4px 0 8px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  box-shadow: var(--shadow);
+}
+.term-search-icon {
+  flex: none;
+  color: var(--text-faint);
+}
+.term-search-input {
+  width: 180px;
+  height: 22px;
+  margin: 0 4px;
+  padding: 0 4px;
+  font: inherit;
+  font-size: var(--fs-sm);
+  color: var(--text);
+  background: transparent;
+  border: none;
+  outline: none;
+}
+.term-search-input::placeholder {
+  color: var(--text-faint);
+}
+.term-search-count {
+  min-width: 52px;
+  padding: 0 4px;
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.term-search-count.none {
+  color: var(--red);
+}
+.term-search-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 3px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.term-search-btn:hover:not(:disabled) {
+  color: var(--text);
+  background: var(--surface-3);
+}
+.term-search-btn:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+}
+.term-search-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.term-search-case.on {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+}

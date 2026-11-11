@@ -1,0 +1,323 @@
+//! Tipos compartidos entre el motor y la interfaz.
+//!
+//! CONTRATO: cada tipo aquí tiene su espejo exacto en `src/api/types.ts`.
+//! Si cambias uno, cambia el otro. Todos se serializan en camelCase.
+
+use serde::{Deserialize, Serialize};
+
+// ───────────────────────── Eventos globales (app.emit) ─────────────────────────
+
+/// Payload: `Vec<TransferJob>` con los trabajos que cambiaron (máx. cada ~200 ms).
+pub const EV_TRANSFER_UPDATE: &str = "transfer://update";
+/// Payload: `Vec<String>` con ids de trabajos eliminados de la lista.
+pub const EV_TRANSFER_REMOVED: &str = "transfer://removed";
+/// Payload: `TerminalExit`.
+pub const EV_TERMINAL_EXIT: &str = "terminal://exit";
+/// Payload: `SessionClosed`. Se emite cuando una conexión SSH se cierra o se cae
+/// (si la reconexión automática se rindió o está desactivada).
+pub const EV_SESSION_CLOSED: &str = "session://closed";
+/// Payload: `SessionReconnecting`. La conexión se cayó y se está reintentando (mismo sessionId).
+pub const EV_SESSION_RECONNECTING: &str = "session://reconnecting";
+/// Payload: `SessionInfo`. La reconexión funcionó: mismo sessionId, conexión nueva.
+/// Terminales y canales SFTP anteriores murieron: hay que reabrirlos.
+pub const EV_SESSION_RECONNECTED: &str = "session://reconnected";
+
+// ───────────────────────── Servidores y proyectos ─────────────────────────
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum AuthMethod {
+    Password,
+    Key,
+    Agent,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ServerProfile {
+    /// Vacío al crear; el motor asigna un UUID.
+    pub id: String,
+    pub name: String,
+    pub host: String,
+    pub port: u16,
+    pub username: String,
+    pub auth: AuthMethod,
+    /// Ruta a la llave privada (si auth = key). Acepta `~/`.
+    pub key_path: Option<String>,
+    /// Carpeta a abrir al conectar (si no, el home del usuario).
+    pub default_path: Option<String>,
+    /// Color de acento (hex) para reconocerlo en pestañas.
+    pub color: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Bookmark {
+    pub server_id: String,
+    pub path: String,
+    pub label: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Project {
+    /// Vacío al crear; el motor asigna un UUID.
+    pub id: String,
+    pub name: String,
+    pub server_ids: Vec<String>,
+    pub bookmarks: Vec<Bookmark>,
+    pub color: Option<String>,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProfilesData {
+    pub servers: Vec<ServerProfile>,
+    pub projects: Vec<Project>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct Settings {
+    /// "dark" | "light" | "system"
+    pub theme: String,
+    pub terminal_font_size: u16,
+    pub terminal_font_family: String,
+    /// Transferencias simultáneas (1..=8).
+    pub transfer_concurrency: u8,
+    pub show_hidden_files: bool,
+    pub confirm_delete: bool,
+    /// Tamaño máximo para abrir en el editor.
+    pub editor_max_bytes: u64,
+    /// Tamaños de paneles guardados por la interfaz (porcentajes), clave libre.
+    pub layout: std::collections::HashMap<String, Vec<f64>>,
+    /// Intervalo de la señal de vida SSH (s). Se da por caída tras 3 sin respuesta (5..=120).
+    pub keepalive_secs: u16,
+    /// Reintentar solo cuando se cae la conexión.
+    pub auto_reconnect: bool,
+    /// Intentos de reconexión automática (1..=20).
+    pub reconnect_attempts: u8,
+    pub editor_font_size: u16,
+    pub editor_font_family: String,
+    /// Mantener ~/.ssh/config sincronizado con los servidores guardados.
+    pub ssh_config_sync: bool,
+    /// Si el destino ya existe al transferir: "overwrite" | "skip" | "newer" (solo si el origen es más nuevo).
+    pub transfer_conflict: String,
+}
+
+impl Default for Settings {
+    fn default() -> Self {
+        Self {
+            theme: "dark".into(),
+            terminal_font_size: 14,
+            terminal_font_family: "'JetBrains Mono', 'Fira Code', 'Noto Sans Mono', monospace".into(),
+            transfer_concurrency: 4,
+            show_hidden_files: false,
+            confirm_delete: true,
+            editor_max_bytes: 5 * 1024 * 1024,
+            layout: Default::default(),
+            keepalive_secs: 10,
+            auto_reconnect: true,
+            reconnect_attempts: 5,
+            editor_font_size: 14,
+            editor_font_family: "'JetBrains Mono', 'Fira Code', 'Noto Sans Mono', monospace".into(),
+            ssh_config_sync: false,
+            transfer_conflict: "overwrite".into(),
+        }
+    }
+}
+
+// ───────────────────────── SSH ─────────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct HostKeyInfo {
+    pub host: String,
+    pub port: u16,
+    /// p. ej. "ssh-ed25519"
+    pub algorithm: String,
+    /// p. ej. "SHA256:abc..."
+    pub fingerprint: String,
+    /// Llave pública en formato OpenSSH; se devuelve tal cual en `ssh_trust_host`.
+    pub key_openssh: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SessionInfo {
+    pub id: String,
+    pub profile_id: String,
+    pub name: String,
+    pub host: String,
+    pub port: u16,
+    pub username: String,
+    /// Unix ms
+    pub connected_at: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SessionReconnecting {
+    pub session_id: String,
+    /// Intento actual (1-based).
+    pub attempt: u8,
+    pub max_attempts: u8,
+    /// Segundos hasta el próximo intento.
+    pub next_retry_secs: u32,
+    pub reason: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SessionClosed {
+    pub session_id: String,
+    pub reason: String,
+}
+
+// ───────────────────────── Terminal ─────────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TerminalExit {
+    pub term_id: String,
+    pub code: Option<u32>,
+}
+
+// ───────────────────────── SFTP ─────────────────────────
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum FileKind {
+    File,
+    Dir,
+    Symlink,
+    Other,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FileEntry {
+    pub name: String,
+    /// Ruta absoluta en el servidor.
+    pub path: String,
+    pub kind: FileKind,
+    /// Si es symlink: true si apunta a una carpeta.
+    pub is_dir_link: bool,
+    pub size: u64,
+    /// Unix segundos.
+    pub modified: Option<u64>,
+    /// Bits de permisos (p. ej. 0o755).
+    pub permissions: Option<u32>,
+    /// "drwxr-xr-x"
+    pub permissions_str: String,
+    pub uid: Option<u32>,
+    pub gid: Option<u32>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RemoteText {
+    pub path: String,
+    pub content: String,
+    pub size: u64,
+    pub modified: Option<u64>,
+}
+
+// ───────────────────────── Transferencias ─────────────────────────
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum TransferDirection {
+    Upload,
+    Download,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum TransferStatus {
+    Queued,
+    Running,
+    Paused,
+    Done,
+    /// No se transfirió por la política de conflictos (ya existía / no era más nuevo).
+    Skipped,
+    Error,
+    Canceled,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TransferJob {
+    pub id: String,
+    /// Todos los archivos de una misma acción (p. ej. arrastrar una carpeta) comparten batch.
+    pub batch_id: String,
+    pub session_id: String,
+    pub direction: TransferDirection,
+    pub local_path: String,
+    pub remote_path: String,
+    /// Nombre a mostrar (ruta relativa dentro del lote, p. ej. "fotos/viaje/a.jpg").
+    pub name: String,
+    pub size: u64,
+    pub transferred: u64,
+    pub status: TransferStatus,
+    pub error: Option<String>,
+    /// Bytes por segundo (media reciente).
+    pub speed: f64,
+    /// Unix ms
+    pub created_at: u64,
+    pub finished_at: Option<u64>,
+}
+
+// ───────────────────────── ~/.ssh/config ─────────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SshConfigExport {
+    pub path: String,
+    /// Servidores escritos en el bloque de TerView.
+    pub count: usize,
+}
+
+// ───────────────────────── Biblioteca de comandos ─────────────────────────
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum SnippetScope {
+    Global,
+    Project,
+    Server,
+}
+
+/// Comando guardado por el usuario ("Mis comandos"). Los del catálogo base viven en la interfaz.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Snippet {
+    /// Vacío al crear; el motor asigna un UUID.
+    pub id: String,
+    pub name: String,
+    pub description: Option<String>,
+    /// Plantilla con variables `{{nombre}}` o `{{nombre:defecto}}`.
+    pub command: String,
+    /// Categoría libre (p. ej. "Podman", "Mis scripts").
+    pub category: String,
+    pub scope: SnippetScope,
+    /// id de proyecto o servidor si scope != global.
+    pub scope_id: Option<String>,
+    pub dangerous: bool,
+    pub sudo: bool,
+    pub read_only: bool,
+}
+
+/// Resultado de ejecutar un comando aparte (canal exec).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ExecResult {
+    pub stdout: String,
+    pub stderr: String,
+    pub exit_code: Option<u32>,
+    pub duration_ms: u64,
+    /// true si la salida superó el límite y se recortó.
+    pub truncated: bool,
+    /// true si se cortó por tiempo.
+    pub timed_out: bool,
+}

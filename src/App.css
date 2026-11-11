@@ -1,0 +1,118 @@
+/* Estructura principal de la ventana. Prefijo: app- */
+
+.app {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  background: var(--bg);
+}
+.app-boot {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+}
+.app-group {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+.app-sidebar {
+  height: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-sunken);
+}
+.app-sidebar > * {
+  flex: 1;
+  min-height: 0;
+}
+.app-main {
+  height: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+}
+.app-content {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ── Divisores redimensionables (también los usa SessionView) ── */
+.app-sep {
+  position: relative;
+  flex: none;
+  z-index: 5;
+  background: var(--border);
+  outline: none;
+}
+.app-sep-v {
+  width: 1px;
+}
+.app-sep-h {
+  height: 1px;
+}
+.app-sep::after {
+  content: "";
+  position: absolute;
+  background: transparent;
+  transition: background 0.12s;
+  pointer-events: none;
+}
+.app-sep-v::after {
+  top: 0;
+  bottom: 0;
+  left: -2px;
+  right: -2px;
+}
+.app-sep-h::after {
+  left: 0;
+  right: 0;
+  top: -2px;
+  bottom: -2px;
+}
+.app-sep[data-separator="hover"]::after,
+.app-sep[data-separator="active"]::after,
+.app-sep[data-separator="focus"]::after {
+  background: var(--accent);
+}
+.app-sep[data-separator="hover"]::after {
+  transition-delay: 0.15s;
+}
+
+/* Agarradera "•••" en el centro del divisor */
+.app-sep-grip {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 4px;
+  background-color: var(--surface);
+  background-image: radial-gradient(circle, var(--text-faint) 1.2px, transparent 1.6px);
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.8;
+  transition: opacity 0.12s;
+}
+.app-sep-v .app-sep-grip {
+  width: 5px;
+  height: 22px;
+  background-size: 5px 7px;
+  background-position: center 1px;
+}
+.app-sep-h .app-sep-grip {
+  width: 22px;
+  height: 5px;
+  background-size: 7px 5px;
+  background-position: 1px center;
+}
+.app-sep[data-separator="hover"] .app-sep-grip,
+.app-sep[data-separator="active"] .app-sep-grip {
+  opacity: 0;
+}

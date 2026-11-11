@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+  <defs>
+    <marker id="mb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#38bdf8"/></marker>
+    <marker id="mp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#a78bfa"/></marker>
+    <marker id="mo" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#f97316"/></marker>
+  </defs>
+  <style>
+    text{font-family:'Noto Sans','DejaVu Sans',sans-serif;fill:#e2e8f0}
+    .t{font-size:34px;font-weight:700}
+    .st{font-size:18px;fill:#94a3b8}
+    .h{font-size:22px;font-weight:700}
+    .sec{font-size:14px;font-weight:700;letter-spacing:1.5px}
+    .b{font-size:17px;font-weight:600}
+    .s{font-size:14px;fill:#94a3b8}
+    .mono{font-family:'Noto Sans Mono','DejaVu Sans Mono',monospace}
+    .cb{fill:#1e293b;stroke:#2c4a66}
+    .co{fill:#1e293b;stroke:#5a3a20}
+    .cmd{font-family:'Noto Sans Mono','DejaVu Sans Mono',monospace;font-size:13px;fill:#c4b5fd}
+  </style>
+  <rect width="1600" height="1000" fill="#0f172a"/>
+
+  <text x="60" y="62" class="t">Estructura del código</text>
+  <text x="60" y="94" class="st">Cada pieza de la interfaz tiene su pareja en el motor. Así es fácil saber dónde tocar.</text>
+
+  <!-- INTERFAZ -->
+  <rect x="60" y="130" width="600" height="830" rx="18" fill="#10243a" stroke="#38bdf8" stroke-width="2.5"/>
+  <text x="85" y="170" class="h" style="fill:#38bdf8">INTERFAZ</text>
+  <text x="200" y="170" class="mono" style="font-size:16px;fill:#94a3b8">src/</text>
+
+  <text x="85" y="212" class="sec" style="fill:#7dd3fc">components/ · LO QUE VES</text>
+  <rect x="85" y="226" width="176" height="56" rx="10" class="cb"/><text x="173" y="260" text-anchor="middle" class="b" style="font-size:15px">Sidebar</text>
+  <rect x="272" y="226" width="176" height="56" rx="10" class="cb"/><text x="360" y="260" text-anchor="middle" class="b" style="font-size:15px">Tabs</text>
+  <rect x="459" y="226" width="176" height="56" rx="10" class="cb"/><text x="547" y="260" text-anchor="middle" class="b" style="font-size:15px">FileExplorer</text>
+  <rect x="85" y="292" width="176" height="56" rx="10" class="cb"/><text x="173" y="326" text-anchor="middle" class="b" style="font-size:15px">Terminal</text>
+  <rect x="272" y="292" width="176" height="56" rx="10" class="cb"/><text x="360" y="326" text-anchor="middle" class="b" style="font-size:15px">Editor</text>
+  <rect x="459" y="292" width="176" height="56" rx="10" class="cb"/><text x="547" y="326" text-anchor="middle" class="b" style="font-size:15px">TransferPanel</text>
+
+  <line x1="360" y1="352" x2="360" y2="384" stroke="#38bdf8" stroke-width="2.5" marker-end="url(#mb)"/>
+
+  <text x="85" y="410" class="sec" style="fill:#7dd3fc">stores/ · LO QUE RECUERDA</text>
+  <rect x="85" y="424" width="176" height="56" rx="10" class="cb"/><text x="173" y="458" text-anchor="middle" class="mono" style="font-size:14px">profiles.ts</text>
+  <rect x="272" y="424" width="176" height="56" rx="10" class="cb"/><text x="360" y="458" text-anchor="middle" class="mono" style="font-size:14px">tabs.ts</text>
+  <rect x="459" y="424" width="176" height="56" rx="10" class="cb"/><text x="547" y="458" text-anchor="middle" class="mono" style="font-size:14px">transfers.ts</text>
+
+  <line x1="360" y1="484" x2="360" y2="516" stroke="#38bdf8" stroke-width="2.5" marker-end="url(#mb)"/>
+
+  <text x="85" y="542" class="sec" style="fill:#7dd3fc">api/ · ÚNICA PUERTA AL MOTOR</text>
+  <rect x="85" y="560" width="550" height="62" rx="10" class="cb"/><text x="105" y="597" class="mono" style="font-size:15px">ssh.ts</text><text x="250" y="597" class="s">conectar / desconectar</text>
+  <rect x="85" y="638" width="550" height="62" rx="10" class="cb"/><text x="105" y="675" class="mono" style="font-size:15px">terminal.ts</text><text x="250" y="675" class="s">abrir shell, teclas, tamaño</text>
+  <rect x="85" y="716" width="550" height="62" rx="10" class="cb"/><text x="105" y="753" class="mono" style="font-size:15px">sftp.ts</text><text x="250" y="753" class="s">listar, crear, borrar, leer</text>
+  <rect x="85" y="794" width="550" height="62" rx="10" class="cb"/><text x="105" y="831" class="mono" style="font-size:15px">transfers.ts</text><text x="250" y="831" class="s">subir, bajar, pausar</text>
+  <rect x="85" y="872" width="550" height="62" rx="10" class="cb"/><text x="105" y="909" class="mono" style="font-size:15px">profiles.ts</text><text x="250" y="909" class="s">servidores y proyectos</text>
+
+  <!-- Puente -->
+  <text x="800" y="545" text-anchor="middle" class="sec" style="fill:#a78bfa">COMANDOS IPC</text>
+  <line x1="640" y1="591" x2="936" y2="591" stroke="#a78bfa" stroke-width="2.5" marker-start="url(#mp)" marker-end="url(#mp)"/>
+  <text x="800" y="582" text-anchor="middle" class="cmd">ssh_connect</text>
+  <line x1="640" y1="669" x2="936" y2="669" stroke="#a78bfa" stroke-width="2.5" marker-start="url(#mp)" marker-end="url(#mp)"/>
+  <text x="800" y="660" text-anchor="middle" class="cmd">term_open · term_write</text>
+  <line x1="640" y1="747" x2="936" y2="747" stroke="#a78bfa" stroke-width="2.5" marker-start="url(#mp)" marker-end="url(#mp)"/>
+  <text x="800" y="738" text-anchor="middle" class="cmd">sftp_list_dir · sftp_rename</text>
+  <line x1="640" y1="825" x2="936" y2="825" stroke="#a78bfa" stroke-width="2.5" marker-start="url(#mp)" marker-end="url(#mp)"/>
+  <text x="800" y="816" text-anchor="middle" class="cmd">transfer_upload</text>
+  <line x1="640" y1="903" x2="936" y2="903" stroke="#a78bfa" stroke-width="2.5" marker-start="url(#mp)" marker-end="url(#mp)"/>
+  <text x="800" y="894" text-anchor="middle" class="cmd">profiles_list · profiles_save</text>
+
+  <!-- MOTOR -->
+  <rect x="940" y="130" width="600" height="830" rx="18" fill="#2a1a10" stroke="#f97316" stroke-width="2.5"/>
+  <text x="965" y="170" class="h" style="fill:#f97316">MOTOR</text>
+  <text x="1060" y="170" class="mono" style="font-size:16px;fill:#94a3b8">src-tauri/src/</text>
+
+  <text x="965" y="212" class="sec" style="fill:#fdba74">ARRANQUE</text>
+  <rect x="965" y="226" width="176" height="56" rx="10" class="co"/><text x="1053" y="252" text-anchor="middle" class="mono" style="font-size:14px">main.rs</text><text x="1053" y="272" text-anchor="middle" class="s" style="font-size:12px">inicia la app</text>
+  <rect x="1152" y="226" width="176" height="56" rx="10" class="co"/><text x="1240" y="252" text-anchor="middle" class="mono" style="font-size:14px">lib.rs</text><text x="1240" y="272" text-anchor="middle" class="s" style="font-size:12px">registra comandos</text>
+  <rect x="1339" y="226" width="176" height="56" rx="10" class="co"/><text x="1427" y="252" text-anchor="middle" class="mono" style="font-size:14px">error.rs</text><text x="1427" y="272" text-anchor="middle" class="s" style="font-size:12px">errores claros</text>
+
+  <text x="965" y="330" class="sec" style="fill:#fdba74">ESTADO GLOBAL</text>
+  <rect x="965" y="344" width="550" height="136" rx="10" class="co"/>
+  <text x="985" y="376" class="b" style="font-size:15px">Sesiones activas</text>
+  <text x="985" y="400" class="s mono" style="font-size:13px">sessionId → conexión SSH + canales</text>
+  <text x="985" y="436" class="b" style="font-size:15px">Cola de transferencias</text>
+  <text x="985" y="460" class="s mono" style="font-size:13px">trabajos pendientes, en curso, hechos</text>
+
+  <line x1="1240" y1="484" x2="1240" y2="516" stroke="#f97316" stroke-width="2.5" marker-end="url(#mo)"/>
+
+  <text x="965" y="542" class="sec" style="fill:#fdba74">MÓDULOS · EL TRABAJO REAL</text>
+  <rect x="965" y="560" width="550" height="62" rx="10" class="co"/><text x="985" y="597" class="mono" style="font-size:15px">ssh/</text><text x="1110" y="597" class="s mono" style="font-size:13px">session · auth · known_hosts</text>
+  <rect x="965" y="638" width="550" height="62" rx="10" class="co"/><text x="985" y="675" class="mono" style="font-size:15px">terminal/</text><text x="1110" y="675" class="s mono" style="font-size:13px">pty</text>
+  <rect x="965" y="716" width="550" height="62" rx="10" class="co"/><text x="985" y="753" class="mono" style="font-size:15px">sftp/</text><text x="1110" y="753" class="s mono" style="font-size:13px">browse · files</text>
+  <rect x="965" y="794" width="550" height="62" rx="10" class="co"/><text x="985" y="831" class="mono" style="font-size:15px">transfer/</text><text x="1110" y="831" class="s mono" style="font-size:13px">queue · worker · walker</text>
+  <rect x="965" y="872" width="550" height="62" rx="10" class="co"/><text x="985" y="909" class="mono" style="font-size:15px">storage/</text><text x="1110" y="909" class="s mono" style="font-size:13px">profiles · secrets (llavero)</text>
+</svg>

@@ -1,0 +1,129 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <defs>
+    <marker id="mp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#a78bfa"/></marker>
+    <marker id="mg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#22c55e"/></marker>
+    <marker id="mm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker>
+    <marker id="my" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#facc15"/></marker>
+  </defs>
+  <style>
+    text{font-family:'Noto Sans','DejaVu Sans',sans-serif;fill:#e2e8f0}
+    .t{font-size:34px;font-weight:700}
+    .st{font-size:18px;fill:#94a3b8}
+    .h{font-size:20px;font-weight:700}
+    .b{font-size:16px;font-weight:600}
+    .r{font-size:14px}
+    .s{font-size:13px;fill:#94a3b8}
+    .mono{font-family:'Noto Sans Mono','DejaVu Sans Mono',monospace}
+    .sec{font-size:12px;font-weight:700;letter-spacing:1.4px}
+  </style>
+  <rect width="1600" height="900" fill="#0f172a"/>
+
+  <text x="60" y="62" class="t">Servidor MCP <tspan style="font-size:18px;font-weight:600;fill:#facc15">· próximamente</tspan></text>
+  <text x="60" y="94" class="st">Un asistente de IA usa tus servidores a través de TerView, siempre con tu permiso.</text>
+
+  <!-- Asistente -->
+  <rect x="60" y="170" width="330" height="360" rx="18" fill="#1e1838" stroke="#a78bfa" stroke-width="2.5"/>
+  <text x="85" y="210" class="h" style="fill:#a78bfa">ASISTENTE DE IA</text>
+  <text x="85" y="236" class="s">Claude Code · Claude Desktop</text>
+  <text x="85" y="256" class="s">u otro cliente MCP</text>
+  <rect x="85" y="282" width="280" height="96" rx="12" fill="#2e2550"/>
+  <text x="102" y="310" class="r">«Revisa por qué se cayó</text>
+  <text x="102" y="332" class="r">el contenedor web en</text>
+  <text x="102" y="354" class="r">web-prod y reinícialo»</text>
+  <text x="85" y="412" class="sec" style="fill:#c4b5fd">USA HERRAMIENTAS</text>
+  <text x="85" y="438" class="mono" style="font-size:13px;fill:#cbd5e1">list_servers  run_command</text>
+  <text x="85" y="460" class="mono" style="font-size:13px;fill:#cbd5e1">read_file     write_file</text>
+  <text x="85" y="482" class="mono" style="font-size:13px;fill:#cbd5e1">upload        download</text>
+  <text x="85" y="504" class="mono" style="font-size:13px;fill:#cbd5e1">analyze_server  …</text>
+
+  <line x1="394" y1="300" x2="546" y2="300" stroke="#a78bfa" stroke-width="3.5" marker-start="url(#mp)" marker-end="url(#mp)"/>
+  <text x="470" y="284" text-anchor="middle" style="font-size:18px;font-weight:700;fill:#a78bfa">MCP</text>
+  <text x="470" y="326" text-anchor="middle" class="s">solo en tu PC</text>
+  <text x="470" y="344" text-anchor="middle" class="s">+ token</text>
+
+  <!-- TerView -->
+  <rect x="550" y="140" width="620" height="560" rx="18" fill="#10243a" stroke="#38bdf8" stroke-width="2.5"/>
+  <text x="575" y="178" class="h" style="fill:#38bdf8">TERVIEW</text>
+  <text x="680" y="178" class="s">(debe estar abierta)</text>
+
+  <rect x="575" y="200" width="270" height="90" rx="12" fill="#1e293b" stroke="#a78bfa"/>
+  <text x="595" y="232" class="b">Servidor MCP</text>
+  <text x="595" y="256" class="s">recibe la petición del</text>
+  <text x="595" y="274" class="s">asistente</text>
+
+  <line x1="710" y1="292" x2="710" y2="318" stroke="#94a3b8" stroke-width="2.5" marker-end="url(#mm)"/>
+
+  <rect x="575" y="322" width="270" height="130" rx="12" fill="#2e2a0e" stroke="#facc15"/>
+  <text x="595" y="352" class="b">Control de permisos</text>
+  <circle cx="601" cy="378" r="5" fill="#22c55e"/><text x="614" y="383" class="s">Lectura: pasa</text>
+  <circle cx="601" cy="404" r="5" fill="#facc15"/><text x="614" y="409" class="s">Cambios: te pregunta</text>
+  <circle cx="601" cy="430" r="5" fill="#f43f5e"/><text x="614" y="435" class="s">Peligroso: siempre pregunta</text>
+
+  <line x1="710" y1="454" x2="710" y2="480" stroke="#94a3b8" stroke-width="2.5" marker-end="url(#mm)"/>
+
+  <rect x="575" y="484" width="270" height="110" rx="12" fill="#2a1a10" stroke="#f97316"/>
+  <text x="595" y="514" class="b">Motor TerView</text>
+  <text x="595" y="538" class="s">SSH · SFTP · transferencias</text>
+  <text x="595" y="558" class="s">biblioteca de comandos</text>
+  <text x="595" y="578" class="s">(usa tus conexiones guardadas)</text>
+
+  <path d="M847,380 C870,380 870,250 880,250" fill="none" stroke="#facc15" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#my)"/>
+
+  <!-- diálogo de permiso -->
+  <rect x="884" y="200" width="266" height="250" rx="12" fill="#111827" stroke="#f43f5e" stroke-width="2"/>
+  <text x="902" y="230" class="b">Permiso del asistente</text>
+  <text x="902" y="258" class="s">Quiere ejecutar en</text>
+  <text x="902" y="276" class="s"><tspan font-weight="700" fill="#e2e8f0">web-prod</tspan>:</text>
+  <rect x="902" y="290" width="230" height="34" rx="6" fill="#020617"/>
+  <text x="914" y="312" class="mono" style="font-size:13px"><tspan fill="#22c55e">$</tspan> podman restart web</text>
+  <rect x="902" y="338" width="230" height="30" rx="7" fill="#38bdf8"/><text x="1017" y="358" text-anchor="middle" class="r" style="font-weight:700;fill:#0f172a">Permitir una vez</text>
+  <rect x="902" y="374" width="230" height="30" rx="7" fill="#1e293b" stroke="#475569"/><text x="1017" y="394" text-anchor="middle" class="r">Siempre en este servidor</text>
+  <rect x="902" y="410" width="230" height="30" rx="7" fill="#1e293b" stroke="#475569"/><text x="1017" y="430" text-anchor="middle" class="r">Denegar</text>
+
+  <!-- actividad -->
+  <rect x="884" y="470" width="266" height="210" rx="12" fill="#111827" stroke="#334155"/>
+  <text x="902" y="498" class="sec" style="fill:#94a3b8">ACTIVIDAD DEL ASISTENTE</text>
+  <circle cx="908" cy="524" r="5" fill="#22c55e"/><text x="920" y="529" class="mono" style="font-size:12px">podman ps -a</text><text x="1132" y="529" text-anchor="end" class="s" style="font-size:11px">lectura</text>
+  <circle cx="908" cy="552" r="5" fill="#22c55e"/><text x="920" y="557" class="mono" style="font-size:12px">podman logs web</text><text x="1132" y="557" text-anchor="end" class="s" style="font-size:11px">lectura</text>
+  <circle cx="908" cy="580" r="5" fill="#22c55e"/><text x="920" y="585" class="mono" style="font-size:12px">df -h</text><text x="1132" y="585" text-anchor="end" class="s" style="font-size:11px">lectura</text>
+  <circle cx="908" cy="608" r="5" fill="#facc15"/><text x="920" y="613" class="mono" style="font-size:12px">podman restart web</text><text x="1132" y="613" text-anchor="end" class="s" style="font-size:11px">aprobado</text>
+  <text x="902" y="660" class="s" style="font-size:12px">Guardado en mcp-audit.log</text>
+
+  <!-- servidores -->
+  <line x1="1170" y1="325" x2="1256" y2="325" stroke="#22c55e" stroke-width="3" marker-end="url(#mg)"/>
+  <line x1="1170" y1="445" x2="1256" y2="445" stroke="#22c55e" stroke-width="3" marker-end="url(#mg)"/>
+  <text x="1213" y="310" text-anchor="middle" style="font-size:15px;font-weight:700;fill:#22c55e">SSH</text>
+
+  <rect x="1260" y="280" width="280" height="90" rx="14" fill="#0f2a1c" stroke="#22c55e" stroke-width="2"/>
+  <text x="1282" y="314" class="b">web-prod</text>
+  <rect x="1282" y="328" width="92" height="22" rx="11" fill="#14532d"/><text x="1328" y="344" text-anchor="middle" style="font-size:12px;fill:#86efac">Completo</text>
+
+  <rect x="1260" y="400" width="280" height="90" rx="14" fill="#0f2a1c" stroke="#22c55e" stroke-width="2"/>
+  <text x="1282" y="434" class="b">db-server</text>
+  <rect x="1282" y="448" width="108" height="22" rx="11" fill="#1e3a5f"/><text x="1336" y="464" text-anchor="middle" style="font-size:12px;fill:#7dd3fc">Solo lectura</text>
+
+  <rect x="1260" y="520" width="280" height="90" rx="14" fill="#111827" stroke="#334155" stroke-width="2" stroke-dasharray="6 5"/>
+  <text x="1282" y="554" class="b" style="fill:#64748b">vps-personal</text>
+  <rect x="1282" y="568" width="96" height="22" rx="11" fill="#3b1220"/><text x="1330" y="584" text-anchor="middle" style="font-size:12px;fill:#fda4af">Sin acceso</text>
+
+  <!-- seguridad -->
+  <rect x="60" y="740" width="340" height="110" rx="14" fill="#111827" stroke="#334155"/>
+  <text x="84" y="776" class="b">Apagado por defecto</text>
+  <text x="84" y="802" class="s">Se activa en Ajustes →</text>
+  <text x="84" y="822" class="s">Asistentes de IA (MCP).</text>
+
+  <rect x="430" y="740" width="340" height="110" rx="14" fill="#111827" stroke="#334155"/>
+  <text x="454" y="776" class="b">Permiso por servidor</text>
+  <text x="454" y="802" class="s">Sin acceso · Solo lectura ·</text>
+  <text x="454" y="822" class="s">Completo. Tú decides cuál.</text>
+
+  <rect x="800" y="740" width="340" height="110" rx="14" fill="#111827" stroke="#334155"/>
+  <text x="824" y="776" class="b">Las contraseñas no salen</text>
+  <text x="824" y="802" class="s">El asistente usa conexiones,</text>
+  <text x="824" y="822" class="s">nunca ve credenciales ni llaves.</text>
+
+  <rect x="1170" y="740" width="370" height="110" rx="14" fill="#111827" stroke="#334155"/>
+  <text x="1194" y="776" class="b">Todo queda registrado</text>
+  <text x="1194" y="802" class="s">Cada acción del asistente se ve</text>
+  <text x="1194" y="822" class="s">en la app y en un archivo de registro.</text>
+</svg>
