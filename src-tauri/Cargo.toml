@@ -1,6 +1,6 @@
 [package]
 name = "terview"
-version = "0.2.0"
+version = "0.2.1"
 description = "Cliente SSH/SFTP visual"
 authors = []
 edition = "2024"
