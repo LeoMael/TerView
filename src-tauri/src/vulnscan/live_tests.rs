@@ -259,3 +259,16 @@ async fn sshd_scan_can_be_canceled() {
     let r = scan_session(&s, &opts, &cancel, &p).await;
     assert!(matches!(r, Err(crate::error::AppError::Canceled)), "{:?}", r.map(|r| r.findings.len()));
 }
+
+/// Fedora 44 con `dnf advisory` (dnf5; baja metadatos: necesita red y tarda). Fedora no está en OSV.
+#[tokio::test]
+#[ignore]
+async fn distro_fedora_44_dnf5() {
+    let r = scan_container("registry.fedoraproject.org/fedora:44", true).await;
+    assert_eq!(r.host.ecosystem, None);
+    let dnf = r.sources.iter().find(|s| s.id == SourceId::Distro).unwrap();
+    assert!(dnf.used, "{dnf:?}");
+    assert_eq!(dnf.label, "dnf advisory");
+    assert!(r.osv_sample.is_empty(), "Fedora no va a OSV");
+    assert!(r.findings.iter().all(|f| f.sources == [SourceId::Distro] && f.has_fix));
+}
