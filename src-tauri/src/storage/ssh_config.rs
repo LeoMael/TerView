@@ -10,12 +10,15 @@
 //!
 //! Las rutas se inyectan con [`SshEnv`] para poder probarlo con archivos temporales.
 
-use std::collections::HashSet;
+use std::collections::{BTreeMap, HashSet};
 use std::fs;
 use std::path::{Component, Path, PathBuf};
 use std::sync::Mutex;
 
-use super::fsutil;
+use serde::Serialize;
+use tauri::{AppHandle, Manager, State};
+
+use super::{fsutil, ProfileStore, SettingsStore};
 use crate::error::{AppError, AppResult};
 use crate::types::{AuthMethod, ServerProfile, SshConfigExport};
 
@@ -36,6 +39,8 @@ pub struct SshEnv {
     pub backup: PathBuf,
     /// Usuario local: el que usa ssh si el `Host` no dice `User`.
     pub local_user: String,
+    /// Alias elegidos a mano (id del servidor → alias). None = no se guardan.
+    pub aliases_file: Option<PathBuf>,
 }
 
 impl SshEnv {
@@ -45,6 +50,7 @@ impl SshEnv {
         SshEnv {
             config: ssh_dir.join("config"),
             backup: ssh_dir.join("config.bak-terview"),
+            aliases_file: Some(home.join(".config").join("terview").join("ssh-aliases.json")),
             ssh_dir,
             home,
             local_user: local_user.into(),
@@ -59,7 +65,9 @@ impl SshEnv {
             .iter()
             .find_map(|k| std::env::var(k).ok().filter(|v| !v.trim().is_empty()))
             .unwrap_or_else(|| "root".into());
-        Ok(Self::for_home(home, user))
+        let mut env = Self::for_home(home, user);
+        env.aliases_file = fsutil::config_dir().map(|d| d.join("ssh-aliases.json"));
+        Ok(env)
     }
 }
 
@@ -85,7 +93,8 @@ pub fn export_with(env: &SshEnv, servers: impl FnOnce() -> Vec<ServerProfile>) -
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => Vec::new(),
         Err(e) => return Err(AppError::Io(format!("no se pudo leer {}: {e}", env.config.display()))),
     };
-    let next = splice_block(&original, &servers)?;
+    let aliases = assign_aliases_with(&servers, &load_overrides(env));
+    let next = splice_aliased(&original, &servers, &aliases)?;
     let out = SshConfigExport { path: env.config.display().to_string(), count: servers.len() };
     if next == original {
         return Ok(out);
@@ -114,7 +123,13 @@ fn resolve_symlink(p: &Path) -> PathBuf {
 
 /// Devuelve el contenido nuevo: el original con el bloque de TerView reemplazado/insertado
 /// (o quitado si no hay servidores). Todo lo de fuera del bloque se conserva byte a byte.
+#[cfg(test)]
 pub fn splice_block(original: &[u8], servers: &[ServerProfile]) -> AppResult<Vec<u8>> {
+    splice_aliased(original, servers, &assign_aliases(servers))
+}
+
+/// Igual que [`splice_block`] con los alias ya decididos (uno por servidor, mismo orden).
+fn splice_aliased(original: &[u8], servers: &[ServerProfile], aliases: &[String]) -> AppResult<Vec<u8>> {
     let lines = split_lines(original);
     let begin = lines.iter().position(|&(s, e)| line_trim(&original[s..e]) == BEGIN_MARKER.as_bytes());
 
@@ -140,7 +155,7 @@ pub fn splice_block(original: &[u8], servers: &[ServerProfile]) -> AppResult<Vec
             // Si tras el bloque hay opciones sueltas (no Host/Match), cerramos con `Host *`
             // para que sigan aplicando a todos como antes.
             let reset = !next_is_section_or_eof(suffix);
-            out.extend_from_slice(render_block(servers, reset).as_bytes());
+            out.extend_from_slice(render_aliased(servers, aliases, reset).as_bytes());
         }
         out.extend_from_slice(suffix);
         return Ok(out);
@@ -149,7 +164,7 @@ pub fn splice_block(original: &[u8], servers: &[ServerProfile]) -> AppResult<Vec
     if servers.is_empty() {
         return Ok(original.to_vec());
     }
-    let block = render_block(servers, false);
+    let block = render_aliased(servers, aliases, false);
     let first_section = lines.iter().find(|&&(s, e)| is_section_line(&original[s..e])).map(|&(s, _)| s);
     let mut out = Vec::with_capacity(original.len() + block.len() + 2);
     match first_section {
@@ -180,12 +195,11 @@ pub fn splice_block(original: &[u8], servers: &[ServerProfile]) -> AppResult<Vec
 }
 
 /// Bloque completo (con marcadores), terminado en `\n`.
-pub fn render_block(servers: &[ServerProfile], reset: bool) -> String {
-    let aliases = assign_aliases(servers);
+fn render_aliased(servers: &[ServerProfile], aliases: &[String], reset: bool) -> String {
     let mut s = String::new();
     s.push_str(BEGIN_MARKER);
     s.push('\n');
-    for (i, (srv, alias)) in servers.iter().zip(&aliases).enumerate() {
+    for (i, (srv, alias)) in servers.iter().zip(aliases).enumerate() {
         if i > 0 {
             s.push('\n');
         }
@@ -209,22 +223,54 @@ pub fn render_block(servers: &[ServerProfile], reset: bool) -> String {
 }
 
 /// Alias seguro para cada servidor (mismo orden), sin duplicados: `web`, `web-2`, `web-3`…
+#[cfg(test)]
 pub fn assign_aliases(servers: &[ServerProfile]) -> Vec<String> {
+    assign_aliases_with(servers, &AliasOverrides::new())
+}
+
+/// Como [`assign_aliases`], pero respetando los alias elegidos a mano (`overrides`, id → alias).
+/// Los elegidos a mano se reservan primero, así un alias automático nunca se los quita.
+pub fn assign_aliases_with(servers: &[ServerProfile], overrides: &AliasOverrides) -> Vec<String> {
     let mut used = HashSet::new();
-    servers
-        .iter()
-        .map(|s| {
-            let base = slugify(&s.name);
-            let mut alias = base.clone();
-            let mut n = 2;
-            while used.contains(&alias) {
-                alias = format!("{base}-{n}");
-                n += 1;
-            }
-            used.insert(alias.clone());
-            alias
-        })
-        .collect()
+    let mut out = vec![String::new(); servers.len()];
+    let mut pending = Vec::new();
+    for (i, s) in servers.iter().enumerate() {
+        match overrides.get(&s.id).and_then(|a| sanitize_alias(a).ok()) {
+            Some(a) if used.insert(a.clone()) => out[i] = a,
+            other => pending.push((i, other.unwrap_or_else(|| slugify(&s.name)))),
+        }
+    }
+    for (i, base) in pending {
+        let mut alias = base.clone();
+        let mut n = 2;
+        while used.contains(&alias) {
+            alias = format!("{base}-{n}");
+            n += 1;
+        }
+        used.insert(alias.clone());
+        out[i] = alias;
+    }
+    out
+}
+
+/// Alias escrito a mano → forma segura para `Host`: minúsculas, `[a-z0-9._-]`, sin comodines.
+pub fn sanitize_alias(input: &str) -> AppResult<String> {
+    let a = input.trim().to_lowercase();
+    if a.is_empty() {
+        return Err(AppError::Invalid("El alias no puede estar vacío".into()));
+    }
+    if a.chars().count() > 64 {
+        return Err(AppError::Invalid("El alias es demasiado largo (máximo 64 caracteres)".into()));
+    }
+    if !a.chars().all(|c| c.is_ascii_alphanumeric() || matches!(c, '-' | '_' | '.')) {
+        return Err(AppError::Invalid(
+            "El alias solo puede tener letras sin acentos, números, «-», «_» y «.»".into(),
+        ));
+    }
+    if a.starts_with(['-', '.']) {
+        return Err(AppError::Invalid("El alias no puede empezar por «-» ni por «.»".into()));
+    }
+    Ok(a)
 }
 
 /// `Cliente X / web` → `cliente-x-web`. Solo `[a-z0-9-]`; vacío → `servidor`.
@@ -600,6 +646,27 @@ fn same_key(host: &str, port: u16, user: &str) -> (String, u16, String) {
 /// Lee la configuración de ssh y devuelve servidores candidatos (id ""), omitiendo los que ya
 /// existen en `existing` (mismo host + puerto + usuario) y el propio bloque de TerView.
 pub fn import(env: &SshEnv, existing: &[ServerProfile]) -> AppResult<Vec<ServerProfile>> {
+    Ok(import_preview(env, existing)?
+        .into_iter()
+        .filter(|c| c.existing_id.is_none())
+        .map(|c| c.server)
+        .collect())
+}
+
+/// Candidato a importar, marcado si ya está en TerView.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SshImportCandidate {
+    pub server: ServerProfile,
+    /// Servidor de TerView con el mismo host + puerto + usuario.
+    pub existing_id: Option<String>,
+    pub existing_name: Option<String>,
+    /// Nombre del servidor de TerView que se exporta con este mismo alias (choque de `Host`).
+    pub alias_used_by: Option<String>,
+}
+
+/// Como [`import`], pero devuelve también los que ya existen (marcados) en lugar de omitirlos.
+pub fn import_preview(env: &SshEnv, existing: &[ServerProfile]) -> AppResult<Vec<SshImportCandidate>> {
     let bytes = match fs::read(&env.config) {
         Ok(b) => b,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(Vec::new()),
@@ -608,8 +675,8 @@ pub fn import(env: &SshEnv, existing: &[ServerProfile]) -> AppResult<Vec<ServerP
     let mut parser = Parser { env, sections: Vec::new(), aliases: Vec::new() };
     parser.parse_text(&String::from_utf8_lossy(&bytes), 0, Cond::All);
 
-    let mut seen: HashSet<(String, u16, String)> =
-        existing.iter().map(|s| same_key(&s.host, s.port, &s.username)).collect();
+    let mut seen: HashSet<(String, u16, String)> = HashSet::new();
+    let terview_aliases = assign_aliases_with(existing, &load_overrides(env));
     let mut out = Vec::new();
 
     for alias in &parser.aliases {
@@ -671,11 +738,452 @@ pub fn import(env: &SshEnv, existing: &[ServerProfile]) -> AppResult<Vec<ServerP
             color: None,
         };
         let Ok(candidate) = super::validate_server(candidate) else { continue };
-        if seen.insert(same_key(&candidate.host, candidate.port, &candidate.username)) {
-            out.push(candidate);
+        let key = same_key(&candidate.host, candidate.port, &candidate.username);
+        if !seen.insert(key.clone()) {
+            continue; // otro Host del archivo ya apunta al mismo sitio
         }
+        let same = existing.iter().find(|s| same_key(&s.host, s.port, &s.username) == key);
+        let alias_used_by = terview_aliases
+            .iter()
+            .position(|a| a.eq_ignore_ascii_case(alias))
+            .map(|i| existing[i].name.clone());
+        out.push(SshImportCandidate {
+            existing_id: same.map(|s| s.id.clone()),
+            existing_name: same.map(|s| s.name.clone()),
+            alias_used_by,
+            server: candidate,
+        });
     }
     Ok(out)
+}
+
+// ───────────────────────── Alias elegidos a mano ─────────────────────────
+
+/// id del servidor → alias que el usuario eligió para `~/.ssh/config`.
+pub type AliasOverrides = BTreeMap<String, String>;
+
+static ALIASES_LOCK: Mutex<()> = Mutex::new(());
+
+pub fn load_overrides(env: &SshEnv) -> AliasOverrides {
+    match &env.aliases_file {
+        Some(p) => fsutil::read_json_or_default(p),
+        None => AliasOverrides::new(),
+    }
+}
+
+/// Aplica cambios (`None` o vacío = volver al alias automático) y quita los de servidores que ya
+/// no existen. Devuelve el mapa resultante. Falla (sin guardar nada) si algún alias no es válido.
+pub fn update_overrides(
+    env: &SshEnv,
+    changes: &BTreeMap<String, Option<String>>,
+    valid_ids: &HashSet<String>,
+) -> AppResult<AliasOverrides> {
+    let _guard = ALIASES_LOCK.lock().unwrap_or_else(|p| p.into_inner());
+    let mut map = load_overrides(env);
+    for (id, alias) in changes {
+        match alias.as_deref().map(str::trim).filter(|a| !a.is_empty()) {
+            Some(a) => {
+                map.insert(id.clone(), sanitize_alias(a)?);
+            }
+            None => {
+                map.remove(id);
+            }
+        }
+    }
+    map.retain(|id, _| valid_ids.contains(id));
+    if let Some(p) = &env.aliases_file {
+        fsutil::write_json_atomic(p, &map)?;
+    }
+    Ok(map)
+}
+
+// ───────────────────────── Choques con `Host` escritos a mano ─────────────────────────
+
+/// Sección `Host`/`Match` escrita por el usuario (fuera del bloque de TerView o en un `Include`).
+#[derive(Debug, Clone)]
+struct UserSection {
+    file: PathBuf,
+    /// 1 = primera línea.
+    line: usize,
+    text: String,
+    kind: UserKind,
+    /// Está antes del bloque de TerView: para esos alias ssh usa SUS valores, no los de TerView.
+    before_block: bool,
+}
+
+#[derive(Debug, Clone)]
+enum UserKind {
+    Host(Vec<String>),
+    /// `Match` con criterios `originalhost` (alias) y/o `host` (alias o HostName).
+    Match {
+        original: Vec<String>,
+        host: Vec<String>,
+        /// Tiene otros criterios (`user`, `exec`…) que no evaluamos: «podría» aplicar.
+        conditional: bool,
+    },
+}
+
+/// Un `Host`/`Match` del usuario que captura un alias de TerView.
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct SshHostMatch {
+    /// Archivo (con `~/` si está en la carpeta personal).
+    pub file: String,
+    pub line: usize,
+    /// La línea tal cual (`Host web *.lan`).
+    pub text: String,
+    /// El patrón que coincide.
+    pub pattern: String,
+    /// "exact" (mismo nombre), "pattern" (comodín) o "match" (bloque `Match`).
+    pub kind: String,
+    /// `Match` con más condiciones: puede que no aplique siempre.
+    pub conditional: bool,
+    /// Está antes del bloque de TerView: ssh usará los valores de esa sección y no los de TerView.
+    pub before_terview: bool,
+}
+
+/// Servidor de TerView cuyo alias choca con la configuración escrita a mano.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SshAliasConflict {
+    pub server_id: String,
+    pub server_name: String,
+    pub alias: String,
+    /// Alias libre propuesto (`<alias>-tv`).
+    pub suggestion: String,
+    /// El alias lo eligió el usuario (no es el automático).
+    pub custom: bool,
+    pub matches: Vec<SshHostMatch>,
+}
+
+/// Alias con el que se exportaría un servidor (p. ej. el que se está editando) y sus choques.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SshAliasInfo {
+    pub alias: String,
+    /// Alias libre propuesto si hay choques.
+    pub suggestion: Option<String>,
+    pub matches: Vec<SshHostMatch>,
+}
+
+struct Scanner<'a> {
+    env: &'a SshEnv,
+    out: Vec<UserSection>,
+}
+
+impl Scanner<'_> {
+    /// `before`: None en el archivo principal (se calcula por línea); Some(x) en un `Include`.
+    fn scan_text(&mut self, file: &Path, text: &str, depth: usize, before: Option<bool>) {
+        let lines: Vec<&str> = text.lines().collect();
+        // Dónde está (o se insertaría) el bloque de TerView en el archivo principal.
+        let anchor = if before.is_none() {
+            lines.iter().position(|l| l.trim() == BEGIN_MARKER).or_else(|| {
+                lines
+                    .iter()
+                    .position(|l| matches!(split_line(l).map(|(k, _)| k).as_deref(), Some("host" | "match")))
+            })
+        } else {
+            None
+        };
+        let mut in_terview = false;
+        for (i, raw) in lines.iter().enumerate() {
+            let trimmed = raw.trim();
+            if trimmed == BEGIN_MARKER {
+                in_terview = true;
+                continue;
+            }
+            if trimmed == END_MARKER {
+                in_terview = false;
+                continue;
+            }
+            if in_terview {
+                continue;
+            }
+            let Some((key, args)) = split_line(trimmed) else { continue };
+            let is_before = before.unwrap_or_else(|| anchor.is_none_or(|a| i < a));
+            let kind = match key.as_str() {
+                "host" => UserKind::Host(args),
+                "match" => match parse_match(&args) {
+                    Some(k) => k,
+                    None => continue,
+                },
+                "include" => {
+                    if depth < MAX_INCLUDE_DEPTH {
+                        for a in &args {
+                            for p in expand_include(self.env, a) {
+                                match fs::read(&p) {
+                                    Ok(b) => self.scan_text(&p, &String::from_utf8_lossy(&b), depth + 1, Some(is_before)),
+                                    Err(e) => log::warn!("No se pudo leer {}: {e}", p.display()),
+                                }
+                            }
+                        }
+                    }
+                    continue;
+                }
+                _ => continue,
+            };
+            self.out.push(UserSection {
+                file: file.to_path_buf(),
+                line: i + 1,
+                text: trimmed.to_string(),
+                kind,
+                before_block: is_before,
+            });
+        }
+    }
+}
+
+/// Criterios de `Match` que afectan a un alias. None si no puede capturar uno concreto
+/// (`Match all`, solo `user`/`exec`…).
+fn parse_match(args: &[String]) -> Option<UserKind> {
+    let (mut original, mut host, mut conditional) = (Vec::new(), Vec::new(), false);
+    let mut it = args.iter();
+    while let Some(a) = it.next() {
+        let crit = a.to_ascii_lowercase();
+        match crit.as_str() {
+            "all" | "canonical" | "final" => {}
+            "host" | "originalhost" => {
+                let Some(v) = it.next() else { break };
+                let pats = v.split(',').filter(|p| !p.is_empty()).map(str::to_string);
+                if crit == "host" {
+                    host.extend(pats);
+                } else {
+                    original.extend(pats);
+                }
+            }
+            _ => {
+                // `user x`, `exec "…"`, `!host x`… : no se evalúan.
+                conditional = true;
+                if !matches!(crit.trim_start_matches('!'), "all" | "canonical" | "final") {
+                    it.next();
+                }
+            }
+        }
+    }
+    if original.is_empty() && host.is_empty() {
+        return None;
+    }
+    Some(UserKind::Match { original, host, conditional })
+}
+
+/// Lee `~/.ssh/config` (y sus `Include`) y devuelve los `Host`/`Match` escritos a mano.
+fn scan_user_sections(env: &SshEnv) -> AppResult<Vec<UserSection>> {
+    let bytes = match fs::read(&env.config) {
+        Ok(b) => b,
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(Vec::new()),
+        Err(e) => return Err(AppError::Io(format!("no se pudo leer {}: {e}", env.config.display()))),
+    };
+    let mut sc = Scanner { env, out: Vec::new() };
+    sc.scan_text(&env.config, &String::from_utf8_lossy(&bytes), 0, None);
+    Ok(sc.out)
+}
+
+/// Patrón que solo tiene `*` (p. ej. `Host *`): es la configuración común a todos, no un choque.
+fn is_catch_all(p: &str) -> bool {
+    !p.is_empty() && p.chars().all(|c| c == '*')
+}
+
+/// Primer patrón positivo que captura `name` dentro de una lista estilo OpenSSH
+/// (un negado que coincide descarta la lista entera). Ignora los `*` sueltos.
+fn matching_pattern(pats: &[String], name: &str) -> Option<String> {
+    if !cond_matches(&Cond::Hosts(pats.to_vec()), name) {
+        return None;
+    }
+    let lower = name.to_lowercase();
+    pats.iter()
+        .filter(|p| !p.starts_with('!') && !is_catch_all(p))
+        .find(|p| wildmatch(&p.to_lowercase(), &lower))
+        .cloned()
+}
+
+/// Secciones del usuario que capturan `alias` (cuyo `HostName` es `hostname`).
+fn find_matches(env: &SshEnv, sections: &[UserSection], alias: &str, hostname: &str) -> Vec<SshHostMatch> {
+    let mut out = Vec::new();
+    for s in sections {
+        let (pattern, kind, conditional) = match &s.kind {
+            UserKind::Host(pats) => match matching_pattern(pats, alias) {
+                Some(p) => {
+                    let kind = if is_concrete(&p) { "exact" } else { "pattern" };
+                    (p, kind, false)
+                }
+                None => continue,
+            },
+            UserKind::Match { original, host, conditional } => {
+                // `host` se compara con el nombre final (tras HostName); `originalhost`, con el alias.
+                let hit = matching_pattern(original, alias)
+                    .or_else(|| matching_pattern(host, hostname))
+                    .or_else(|| matching_pattern(host, alias));
+                match hit {
+                    Some(p) => (p, "match", *conditional),
+                    None => continue,
+                }
+            }
+        };
+        out.push(SshHostMatch {
+            file: tildeify(env, &s.file),
+            line: s.line,
+            text: s.text.clone(),
+            pattern,
+            kind: kind.into(),
+            conditional,
+            before_terview: s.before_block,
+        });
+    }
+    out
+}
+
+/// Primer alias libre entre `<alias>-tv`, `<alias>-tv2`… y `tv-<alias>`, `tv-<alias>-2`… (este último
+/// por si el choque es un prefijo como `Host web*`). Libre = no lo captura ningún `Host`/`Match` por
+/// nombre y no lo usa otro servidor. Si no hay ninguno, `<alias>-tv`.
+fn suggest_alias(env: &SshEnv, sections: &[UserSection], alias: &str, used: &HashSet<String>) -> String {
+    let first = format!("{alias}-tv");
+    let candidates = std::iter::once(first.clone())
+        .chain((2..10).map(|n| format!("{alias}-tv{n}")))
+        .chain(std::iter::once(format!("tv-{alias}")))
+        .chain((2..10).map(|n| format!("tv-{alias}-{n}")));
+    for cand in candidates {
+        // Sin HostName: un `Match host <ip>` no se arregla cambiando el alias.
+        if !used.contains(&cand) && find_matches(env, sections, &cand, "").is_empty() {
+            return cand;
+        }
+    }
+    first
+}
+
+/// Servidores de TerView cuyo alias exportado choca con un `Host`/`Match` escrito a mano.
+pub fn conflicts(env: &SshEnv, servers: &[ServerProfile]) -> AppResult<Vec<SshAliasConflict>> {
+    let overrides = load_overrides(env);
+    let aliases = assign_aliases_with(servers, &overrides);
+    let sections = scan_user_sections(env)?;
+    let mut used: HashSet<String> = aliases.iter().cloned().collect();
+    let mut out = Vec::new();
+    for (srv, alias) in servers.iter().zip(&aliases) {
+        let matches = find_matches(env, &sections, alias, &srv.host);
+        if matches.is_empty() {
+            continue;
+        }
+        let suggestion = suggest_alias(env, &sections, alias, &used);
+        used.insert(suggestion.clone());
+        out.push(SshAliasConflict {
+            server_id: srv.id.clone(),
+            server_name: srv.name.clone(),
+            alias: alias.clone(),
+            suggestion,
+            custom: overrides.get(&srv.id).is_some_and(|a| sanitize_alias(a).ok().as_ref() == Some(alias)),
+            matches,
+        });
+    }
+    Ok(out)
+}
+
+/// Alias con el que se exportaría `draft` (nuevo si su id está vacío o no existe) y sus choques.
+/// `custom`: alias escrito en el editor (None o vacío = automático).
+pub fn alias_info(
+    env: &SshEnv,
+    servers: &[ServerProfile],
+    draft: ServerProfile,
+    custom: Option<&str>,
+) -> AppResult<SshAliasInfo> {
+    let custom = custom.map(str::trim).filter(|c| !c.is_empty()).map(sanitize_alias).transpose()?;
+    let mut overrides = load_overrides(env);
+    let mut list = servers.to_vec();
+    let idx = match list.iter().position(|s| !draft.id.is_empty() && s.id == draft.id) {
+        Some(i) => i,
+        None => {
+            list.push(draft.clone());
+            list.len() - 1
+        }
+    };
+    list[idx] = draft.clone();
+    match custom {
+        Some(c) => overrides.insert(draft.id.clone(), c),
+        None => overrides.remove(&draft.id),
+    };
+    let aliases = assign_aliases_with(&list, &overrides);
+    let alias = aliases[idx].clone();
+    let sections = scan_user_sections(env)?;
+    let matches = find_matches(env, &sections, &alias, &draft.host);
+    let suggestion = if matches.is_empty() {
+        None
+    } else {
+        let used: HashSet<String> = aliases.into_iter().collect();
+        Some(suggest_alias(env, &sections, &alias, &used))
+    };
+    Ok(SshAliasInfo { alias, suggestion, matches })
+}
+
+// ───────────────────────── Comandos ─────────────────────────
+
+async fn blocking<T: Send + 'static>(f: impl FnOnce() -> AppResult<T> + Send + 'static) -> AppResult<T> {
+    tokio::task::spawn_blocking(f)
+        .await
+        .map_err(|e| AppError::Io(format!("tarea interna interrumpida: {e}")))?
+}
+
+/// Servidores cuyo alias choca con un `Host`/`Match` escrito a mano en `~/.ssh/config` (o sus `Include`).
+#[tauri::command]
+pub async fn ssh_config_conflicts(store: State<'_, ProfileStore>) -> AppResult<Vec<SshAliasConflict>> {
+    let servers = store.data().servers;
+    blocking(move || conflicts(&SshEnv::user()?, &servers)).await
+}
+
+/// Alias que tendría un servidor en edición (`id` vacío = nuevo) y si choca.
+#[tauri::command]
+pub async fn ssh_config_alias_info(
+    store: State<'_, ProfileStore>,
+    id: String,
+    name: String,
+    host: String,
+    alias: Option<String>,
+) -> AppResult<SshAliasInfo> {
+    let servers = store.data().servers;
+    let draft = ServerProfile {
+        id,
+        name: if name.trim().is_empty() { host.trim().to_string() } else { name.trim().to_string() },
+        host: host.trim().to_string(),
+        port: 22,
+        username: String::new(),
+        auth: AuthMethod::Password,
+        key_path: None,
+        default_path: None,
+        color: None,
+    };
+    blocking(move || alias_info(&SshEnv::user()?, &servers, draft, alias.as_deref())).await
+}
+
+/// Alias elegidos a mano (id del servidor → alias).
+#[tauri::command]
+pub async fn ssh_config_aliases() -> AppResult<AliasOverrides> {
+    blocking(|| Ok(load_overrides(&SshEnv::user()?))).await
+}
+
+/// Cambia alias elegidos a mano (`null` o "" = automático). Si «Mantener sincronizado» está activo,
+/// vuelve a exportar. Devuelve todos los alias elegidos a mano.
+#[tauri::command]
+pub async fn ssh_config_set_aliases(
+    app: AppHandle,
+    aliases: BTreeMap<String, Option<String>>,
+) -> AppResult<AliasOverrides> {
+    blocking(move || {
+        let env = SshEnv::user()?;
+        let store = app.state::<ProfileStore>();
+        let ids: HashSet<String> = store.data().servers.into_iter().map(|s| s.id).collect();
+        let map = update_overrides(&env, &aliases, &ids)?;
+        if app.state::<SettingsStore>().get().ssh_config_sync
+            && let Err(e) = export_with(&env, || store.data().servers)
+        {
+            log::error!("No se pudo sincronizar ~/.ssh/config: {e}");
+        }
+        Ok(map)
+    })
+    .await
+}
+
+/// Como `profiles_import_ssh_config`, pero incluye (marcados) los que ya están en TerView.
+#[tauri::command]
+pub async fn ssh_config_import_preview(store: State<'_, ProfileStore>) -> AppResult<Vec<SshImportCandidate>> {
+    let existing = store.data().servers;
+    blocking(move || import_preview(&SshEnv::user()?, &existing)).await
 }
 
 #[cfg(test)]
@@ -917,6 +1425,202 @@ mod tests {
         let env = t.env();
         export(&env, &[srv("a", "a.lan", 22, "u", None)]).unwrap();
         assert!(import(&env, &[]).unwrap().is_empty());
+    }
+
+    /// Resumen compacto de choques: `alias: pattern@archivo:línea(kind[,antes][,cond])`.
+    fn summary(c: &[SshAliasConflict]) -> Vec<String> {
+        c.iter()
+            .map(|c| {
+                let m: Vec<String> = c
+                    .matches
+                    .iter()
+                    .map(|m| {
+                        let mut s = format!("{}@{}:{}({}", m.pattern, m.file, m.line, m.kind);
+                        if m.before_terview {
+                            s.push_str(",antes");
+                        }
+                        if m.conditional {
+                            s.push_str(",cond");
+                        }
+                        s.push(')');
+                        s
+                    })
+                    .collect();
+                format!("{} -> {} [{}]", c.alias, c.suggestion, m.join(" "))
+            })
+            .collect()
+    }
+
+    #[test]
+    fn conflicts_exact_patterns_case_include_and_match() {
+        let t = Tmp::new();
+        let env = t.env();
+        t.write(
+            ".ssh/config",
+            &format!(
+                "Include conf.d/*\n\
+                 \n\
+                 {BEGIN_MARKER}\nHost web\n    HostName 10.0.0.1\n{END_MARKER}\n\
+                 \n\
+                 Host WEB\n\
+                 \x20   User manual\n\
+                 Host db?? !db-tv\n\
+                 \x20   Port 2200\n\
+                 Host *-lan !nas-lan\n\
+                 Match originalhost cache exec \"true\"\n\
+                 Match host 10.9.9.9\n\
+                 Match all\n\
+                 Host *\n\
+                 \x20   ServerAliveInterval 30\n"
+            ),
+        );
+        t.write(".ssh/conf.d/trabajo", "Host api\n    HostName api.example.com\n");
+        let servers = [
+            srv("web", "10.0.0.1", 22, "u", None),
+            srv("db01", "db.lan", 22, "u", None),
+            srv("nas lan", "nas.lan", 22, "u", None),
+            srv("caja lan", "caja.lan", 22, "u", None),
+            srv("api", "api.example.com", 22, "u", None),
+            srv("cache", "cache.lan", 22, "u", None),
+            srv("monitor", "10.9.9.9", 22, "u", None),
+            srv("libre", "libre.example.com", 22, "u", None),
+        ];
+        let got = conflicts(&env, &servers).unwrap();
+        assert_eq!(
+            summary(&got),
+            [
+                // Mayúsculas: ssh compara sin distinguirlas. El bloque propio no cuenta.
+                "web -> web-tv [WEB@~/.ssh/config:8(exact)]",
+                "db01 -> db01-tv [db??@~/.ssh/config:10(pattern)]",
+                // nas-lan está excluido con `!nas-lan`; caja-lan, no.
+                "caja-lan -> caja-lan-tv [*-lan@~/.ssh/config:12(pattern)]",
+                // Include al principio: va antes del bloque → sus valores ganan.
+                "api -> api-tv [api@~/.ssh/conf.d/trabajo:1(exact,antes)]",
+                // `Match` con `exec`: puede que no aplique siempre.
+                "cache -> cache-tv [cache@~/.ssh/config:13(match,cond)]",
+                // `Match host` compara con el HostName.
+                "monitor -> monitor-tv [10.9.9.9@~/.ssh/config:14(match)]",
+            ]
+        );
+        assert!(got.iter().all(|c| !c.custom));
+    }
+
+    #[test]
+    fn conflicts_without_block_use_insert_position() {
+        let t = Tmp::new();
+        let env = t.env();
+        // Sin bloque todavía: se insertará antes del primer Host → el Host va después.
+        t.write(".ssh/config", "Host web\n  User a\n");
+        let got = conflicts(&env, &[srv("web", "h", 22, "u", None)]).unwrap();
+        assert_eq!(summary(&got), ["web -> web-tv [web@~/.ssh/config:1(exact)]"]);
+        // Sin archivo: nada.
+        fs::remove_file(&env.config).unwrap();
+        assert!(conflicts(&env, &[srv("web", "h", 22, "u", None)]).unwrap().is_empty());
+        // Solo `Host *` y `Match all`: no son choques.
+        t.write(".ssh/config", "Host *\n  User x\nMatch all\n  Port 1\nHost **\n");
+        assert!(conflicts(&env, &[srv("web", "h", 22, "u", None)]).unwrap().is_empty());
+    }
+
+    #[test]
+    fn custom_aliases_fix_conflicts_and_export() {
+        let t = Tmp::new();
+        let env = t.env();
+        t.write(".ssh/config", "Host web web-tv\n  User mano\n");
+        let a = srv("web", "10.0.0.1", 22, "u", None);
+        let b = srv("Web", "10.0.0.2", 22, "u", None);
+        let servers = [a.clone(), b.clone()];
+        let got = conflicts(&env, &servers).unwrap();
+        // web-tv ya existe a mano → web-tv2. El segundo se llama web-2 (no choca).
+        assert_eq!(summary(&got), ["web -> web-tv2 [web@~/.ssh/config:1(exact)]"]);
+
+        // Elegir el alias propuesto: se guarda y se usa al exportar.
+        let ids: HashSet<String> = servers.iter().map(|s| s.id.clone()).collect();
+        let mut ch = BTreeMap::new();
+        ch.insert(a.id.clone(), Some(" WEB-tv2 ".to_string()));
+        ch.insert("borrado".to_string(), Some("x".to_string()));
+        let map = update_overrides(&env, &ch, &ids).unwrap();
+        assert_eq!(map.get(&a.id).map(String::as_str), Some("web-tv2"));
+        assert!(!map.contains_key("borrado"));
+        export(&env, &servers).unwrap();
+        let text = fs::read_to_string(&env.config).unwrap();
+        assert!(text.contains("Host web-tv2\n    HostName 10.0.0.1"));
+        // El automático del segundo pasa a ser `web` (el nombre quedó libre)… y choca.
+        assert!(text.contains("Host web\n    HostName 10.0.0.2"));
+        let got = conflicts(&env, &servers).unwrap();
+        assert_eq!(got.len(), 1);
+        assert_eq!(got[0].server_id, b.id);
+
+        // Alias inválidos: no se guarda nada.
+        let mut bad = BTreeMap::new();
+        bad.insert(b.id.clone(), Some("web *".to_string()));
+        assert!(update_overrides(&env, &bad, &ids).is_err());
+        assert_eq!(load_overrides(&env).len(), 1);
+        // Volver al automático.
+        let mut back = BTreeMap::new();
+        back.insert(a.id.clone(), None);
+        assert!(update_overrides(&env, &back, &ids).unwrap().is_empty());
+    }
+
+    #[test]
+    fn alias_info_for_draft_server() {
+        let t = Tmp::new();
+        let env = t.env();
+        t.write(".ssh/config", "Host prod*\n  User mano\n");
+        let existing = [srv("prod", "a", 22, "u", None)];
+        // Nuevo servidor llamado «Prod»: sería `prod-2` (prod ya lo usa otro) y lo captura `prod*`.
+        let mut draft = srv("Prod", "b", 22, "u", None);
+        draft.id = String::new();
+        let info = alias_info(&env, &existing, draft.clone(), None).unwrap();
+        assert_eq!(info.alias, "prod-2");
+        assert_eq!(info.matches.len(), 1);
+        assert_eq!(info.matches[0].pattern, "prod*");
+        // `prod-2-tv…` también empiezan por «prod» → se propone con prefijo.
+        assert_eq!(info.suggestion.as_deref(), Some("tv-prod-2"));
+        // Con alias propio libre: sin choques.
+        let info = alias_info(&env, &existing, draft.clone(), Some("Backend")).unwrap();
+        assert_eq!(info.alias, "backend");
+        assert!(info.matches.is_empty() && info.suggestion.is_none());
+        // Alias inválido: error.
+        assert!(alias_info(&env, &existing, draft, Some("a?b")).is_err());
+        // Editar el existente: mismo id → no cuenta como otro.
+        let info = alias_info(&env, &existing, existing[0].clone(), None).unwrap();
+        assert_eq!(info.alias, "prod");
+    }
+
+    #[test]
+    fn import_preview_marks_existing() {
+        let t = Tmp::new();
+        let env = t.env();
+        t.write(
+            ".ssh/config",
+            "Host nuevo\n  HostName n.lan\n  User u\nHost viejo\n  HostName v.lan\n  User u\nHost web\n  HostName w2.lan\n  User u\n",
+        );
+        let existing = [srv("Viejo guardado", "V.lan", 22, "u", None), srv("web", "w.lan", 22, "u", None)];
+        let got = import_preview(&env, &existing).unwrap();
+        let s: Vec<String> = got
+            .iter()
+            .map(|c| format!("{} {:?} {:?}", c.server.name, c.existing_name, c.alias_used_by))
+            .collect();
+        assert_eq!(
+            s,
+            [
+                "nuevo None None",
+                "viejo Some(\"Viejo guardado\") None",
+                "web None Some(\"web\")",
+            ]
+        );
+        assert_eq!(got[1].existing_id.as_deref(), Some(existing[0].id.as_str()));
+        // `import` sigue omitiendo los existentes.
+        let names: Vec<String> = import(&env, &existing).unwrap().into_iter().map(|s| s.name).collect();
+        assert_eq!(names, ["nuevo", "web"]);
+    }
+
+    #[test]
+    fn sanitize_alias_rules() {
+        assert_eq!(sanitize_alias("  Mi.Server_1-a ").unwrap(), "mi.server_1-a");
+        for bad in ["", "  ", "a b", "web*", "a?", "!x", "-x", ".x", "ñandu", &"a".repeat(65)] {
+            assert!(sanitize_alias(bad).is_err(), "{bad}");
+        }
     }
 
     #[test]

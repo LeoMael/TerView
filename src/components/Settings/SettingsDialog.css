@@ -225,3 +225,10 @@
 .st-disabled {
   opacity: 0.5;
 }
+
+/* Subtítulos dentro de una sección (Avanzado, Acerca de). */
+.st-subtitle {
+  margin: 14px 0 6px;
+  font-size: var(--fs);
+  font-weight: 600;
+}

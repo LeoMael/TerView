@@ -1,6 +1,21 @@
 // Pestaña "Comandos" dentro de cada conexión (mockup docs/arquitectura/07-biblioteca-comandos.png).
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Activity, Download, Plus, Search, Upload, WifiOff, X } from "lucide-react";
+import {
+  Activity,
+  ClipboardCopy,
+  ClipboardPaste,
+  Copy,
+  CopyPlus,
+  Download,
+  Network,
+  Pencil,
+  Plus,
+  Search,
+  Trash2,
+  Upload,
+  WifiOff,
+  X,
+} from "lucide-react";
 import { Group, Panel, Separator, type Layout, type LayoutChangedMeta } from "react-resizable-panels";
 import { useSettings } from "../../stores/settings";
 import { errorMessage } from "../../api/core";
@@ -15,6 +30,9 @@ import { ANALYSIS_COMMAND, ANALYSIS_TIMEOUT_SECS, parseReport } from "./analysis
 import { AnalysisReport, type AnalysisState } from "./AnalysisReport";
 import { CATEGORIES, type Distro } from "./catalog";
 import { CommandDetail } from "./CommandDetail";
+import { CommandMenu, type CommandMenuItem } from "./CommandMenu";
+import { ImportSnippetsDialog } from "./ImportSnippetsDialog";
+import { multiRunBlockedReason, runOnManyServers } from "./multi";
 import { CommandTags, HighlightedCommand } from "./parts";
 import { SnippetDialog, emptySnippet } from "./SnippetDialog";
 import {
@@ -27,7 +45,7 @@ import {
   type CommandItem,
   type SessionInfoCache,
 } from "./state";
-import { exportSnippets, importSnippetsFromText } from "./transfer";
+import { exportSnippets, exportSnippetsToFile, pickImportFile, planImport, type ImportPlan } from "./transfer";
 import "./Commands.css";
 
 export interface CommandsPanelProps {
@@ -58,7 +76,8 @@ export function CommandsPanel({ sessionId, profileId, active, disabled }: Comman
   const [dialog, setDialog] = useState<Snippet | null>(null);
   const [analysis, setAnalysis] = useState<AnalysisState | null>(null);
   const [showReport, setShowReport] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
+  const [importing, setImporting] = useState<{ plan: ImportPlan; source: string } | null>(null);
+  const [menu, setMenu] = useState<{ x: number; y: number; item: CommandItem } | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
@@ -197,21 +216,54 @@ export function CommandsPanel({ sessionId, profileId, active, disabled }: Comman
     if (ok && (await removeMine(it.custom.id))) toast.success("Comando eliminado");
   };
 
-  const onImportFile = async (file: File | undefined) => {
-    if (!file) return;
+  const importFromFile = async () => {
     try {
-      await importSnippetsFromText(await file.text());
+      const picked = await pickImportFile();
+      if (picked) setImporting({ plan: planImport(picked.text), source: picked.path });
     } catch (e) {
       toast.error("No se pudo importar", e);
     }
   };
   const importFromClipboard = async () => {
     try {
-      await importSnippetsFromText(await clipboard.read());
+      setImporting({ plan: planImport(await clipboard.read()), source: "Portapapeles" });
     } catch (e) {
       toast.error("No se pudo importar", e);
     }
   };
+
+  const copyCommand = async (it: CommandItem) => {
+    try {
+      await clipboard.write(it.command);
+      toast.success("Comando copiado");
+    } catch (e) {
+      toast.error("No se pudo copiar al portapapeles", e);
+    }
+  };
+
+  const menuItems = (it: CommandItem): CommandMenuItem[] => {
+    const multi = multiRunBlockedReason(it);
+    const items: CommandMenuItem[] = [
+      {
+        label: "Ejecutar en varios servidores…",
+        icon: <Network size={14} />,
+        disabled: !!multi,
+        onSelect: () => runOnManyServers(it, profileId),
+      },
+      { label: "Copiar comando", icon: <ClipboardCopy size={14} />, onSelect: () => void copyCommand(it) },
+    ];
+    if (it.custom) {
+      items.push(
+        { label: "Editar…", icon: <Pencil size={14} />, sepBefore: true, onSelect: () => editItem(it) },
+        { label: "Duplicar…", icon: <CopyPlus size={14} />, onSelect: () => duplicateItem(it) },
+        { label: "Eliminar", icon: <Trash2 size={14} />, danger: true, onSelect: () => void deleteItem(it) },
+      );
+    } else {
+      items.push({ label: "Copiar a Mis comandos…", icon: <Copy size={14} />, sepBefore: true, onSelect: () => copyToMine(it) });
+    }
+    return items;
+  };
+  const closeMenu = useCallback(() => setMenu(null), []);
 
   const showingMine = !searching && category === MY_CATEGORY;
 
@@ -334,30 +386,32 @@ export function CommandsPanel({ sessionId, profileId, active, disabled }: Comman
             >
               {showingMine && (
                 <div className="cmd-mine-bar">
-                  <button className="btn btn-sm" onClick={() => fileRef.current?.click()} title="Importar desde un archivo JSON">
-                    <Upload size={13} /> Importar
+                  <button className="btn btn-sm" onClick={() => void importFromFile()} title="Importar desde un archivo .json (con vista previa)">
+                    <Upload size={13} /> Importar desde archivo…
                   </button>
-                  <button className="btn btn-sm" onClick={importFromClipboard} title="Importar el JSON copiado en el portapapeles">
-                    Pegar JSON
+                  <button
+                    className="btn btn-sm"
+                    onClick={() => void importFromClipboard()}
+                    title="Importar el JSON copiado en el portapapeles (con vista previa)"
+                  >
+                    <ClipboardPaste size={13} /> Pegar JSON
                   </button>
                   <button
                     className="btn btn-sm"
                     disabled={mine.length === 0}
-                    onClick={() => exportSnippets(mine)}
+                    onClick={() => void exportSnippetsToFile(mine)}
+                    title="Guarda todos tus comandos en un archivo .json"
+                  >
+                    <Download size={13} /> Exportar a archivo…
+                  </button>
+                  <button
+                    className="btn btn-sm"
+                    disabled={mine.length === 0}
+                    onClick={() => void exportSnippets(mine)}
                     title="Copia todos tus comandos como JSON al portapapeles"
                   >
-                    <Download size={13} /> Exportar
+                    <ClipboardCopy size={13} /> Copiar JSON
                   </button>
-                  <input
-                    ref={fileRef}
-                    type="file"
-                    accept=".json,application/json"
-                    hidden
-                    onChange={(e) => {
-                      void onImportFile(e.target.files?.[0]);
-                      e.target.value = "";
-                    }}
-                  />
                 </div>
               )}
               {groups.length === 0 && (
@@ -386,6 +440,19 @@ export function CommandsPanel({ sessionId, profileId, active, disabled }: Comman
                       className={`cmd-item${it.id === selectedId ? " selected" : ""}${it.dangerous ? " danger" : ""}`}
                       onClick={() => setSelectedId(it.id)}
                       onDoubleClick={() => setSelectedId(it.id)}
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        setSelectedId(it.id);
+                        setMenu({ x: e.clientX, y: e.clientY, item: it });
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "ContextMenu" || (e.shiftKey && e.key === "F10")) {
+                          e.preventDefault();
+                          const r = e.currentTarget.getBoundingClientRect();
+                          setSelectedId(it.id);
+                          setMenu({ x: r.left + 24, y: r.bottom, item: it });
+                        }
+                      }}
                     >
                       <span className="cmd-item-top">
                         <span className="cmd-item-name">{it.name}</span>
@@ -410,6 +477,7 @@ export function CommandsPanel({ sessionId, profileId, active, disabled }: Comman
                   key={selected.id}
                   item={selected}
                   sessionId={sessionId}
+                  profileId={profileId}
                   disabled={disabled}
                   onEdit={() => editItem(selected)}
                   onDuplicate={() => duplicateItem(selected)}
@@ -426,6 +494,10 @@ export function CommandsPanel({ sessionId, profileId, active, disabled }: Comman
         </Panel>
       </Group>
 
+      {menu && <CommandMenu x={menu.x} y={menu.y} items={menuItems(menu.item)} onClose={closeMenu} />}
+      {importing && (
+        <ImportSnippetsDialog plan={importing.plan} source={importing.source} onClose={() => setImporting(null)} />
+      )}
       {dialog && (
         <SnippetDialog
           initial={dialog}

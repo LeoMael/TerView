@@ -25,9 +25,9 @@ use tokio::sync::Notify;
 use super::copy::{self, CopyError, CopyResult, Ctrl, STOP_CANCEL, STOP_PAUSE};
 use super::paths::{
     local_file_name, local_io_message, local_name_key, local_root_name, numbered_name, remote_basename, remote_join,
-    remote_kind, remote_parent, safe_remote_name, walk_local, RemoteKind,
+    remote_kind, remote_parent, renamed_display, safe_remote_name, walk_local, RemoteKind,
 };
-use super::policy::{decide, Conflict};
+use super::policy::{decide, Conflict, ConflictQuestion, Decision, ASK_MSG};
 use super::pool::{Chan, Lease, Pools};
 use crate::error::AppResult;
 use crate::ssh::SshSession;
@@ -54,6 +54,10 @@ pub trait TransferEnv: Send + Sync + 'static {
     fn auto_reconnect(&self) -> bool;
     fn emit_update(&self, jobs: Vec<TransferJob>);
     fn emit_removed(&self, ids: Vec<String>);
+    /// Un trabajo choca con un destino existente y la política es "preguntar".
+    fn emit_conflict(&self, question: ConflictQuestion);
+    /// Preguntas que ya no están pendientes (respondidas en bloque, canceladas o pausadas).
+    fn emit_conflict_done(&self, job_ids: Vec<String>);
 }
 
 /// Cómo repetir un recorrido de carpeta que falló.
@@ -85,6 +89,8 @@ struct Entry {
     touched: bool,
     /// Se pidió reanudar mientras se estaba pausando.
     resume_after_stop: bool,
+    /// Respuesta del usuario a un conflicto (manda sobre la política del lote).
+    decision: Option<Conflict>,
     dirty: bool,
     last_bytes: u64,
 }
@@ -108,6 +114,9 @@ struct State {
     down: HashMap<String, Instant>,
     /// Sesiones cerradas definitivamente (lo que falle después no espera).
     closed: HashSet<String>,
+    /// Preguntas de conflicto pendientes (jobId → pregunta). Esos trabajos quedan `Queued`
+    /// fuera de la cola (no ocupan turno) hasta que se responda.
+    questions: HashMap<String, ConflictQuestion>,
     dirty: Vec<String>,
     last_tick: Instant,
 }
@@ -181,6 +190,8 @@ struct NewJob {
 enum Outcome {
     Copied(u64),
     Skipped(String),
+    /// El destino existe y hay que preguntar (el trabajo suelta su turno).
+    Ask(Box<ConflictQuestion>),
 }
 
 impl Engine {
@@ -195,6 +206,7 @@ impl Engine {
                 running: Vec::new(),
                 down: HashMap::new(),
                 closed: HashSet::new(),
+                questions: HashMap::new(),
                 dirty: Vec::new(),
                 last_tick: Instant::now(),
             }),
@@ -342,6 +354,7 @@ impl Engine {
     }
 
     pub fn pause(self: &Arc<Self>, ids: &[String]) {
+        let mut answered = Vec::new();
         {
             let mut st = self.lock();
             for id in ids {
@@ -361,11 +374,21 @@ impl Engine {
                     TransferStatus::Queued => {
                         e.job.status = TransferStatus::Paused;
                         e.job.speed = 0.0;
+                        // Si esperaba una respuesta, al reanudar se vuelve a preguntar.
+                        if st.questions.remove(&id).is_some() {
+                            if let Some(e) = st.jobs.get_mut(&id) {
+                                e.job.error = None;
+                            }
+                            answered.push(id.clone());
+                        }
                         st.mark(&id);
                     }
                     _ => {}
                 }
             }
+        }
+        if !answered.is_empty() {
+            self.env.emit_conflict_done(answered);
         }
         self.kick();
     }
@@ -400,6 +423,7 @@ impl Engine {
 
     pub fn cancel(self: &Arc<Self>, ids: &[String]) {
         let mut cleanup = Vec::new();
+        let mut answered = Vec::new();
         {
             let mut st = self.lock();
             for id in ids {
@@ -424,11 +448,20 @@ impl Engine {
                         e.job.status = TransferStatus::Canceled;
                         e.job.speed = 0.0;
                         e.job.finished_at = Some(now);
+                        if st.questions.remove(&id).is_some() {
+                            if let Some(e) = st.jobs.get_mut(&id) {
+                                e.job.error = None;
+                            }
+                            answered.push(id.clone());
+                        }
                         st.mark(&id);
                     }
                     _ => {}
                 }
             }
+        }
+        if !answered.is_empty() {
+            self.env.emit_conflict_done(answered);
         }
         for job in cleanup {
             let me = self.clone();
@@ -497,6 +530,67 @@ impl Engine {
             });
         }
         self.schedule();
+    }
+
+    /// Preguntas de conflicto pendientes (en orden de llegada de los trabajos).
+    pub fn conflicts(&self) -> Vec<ConflictQuestion> {
+        let st = self.lock();
+        st.order.iter().filter_map(|id| st.questions.get(id)).cloned().collect()
+    }
+
+    /// Responde la pregunta de `job_id` con `answer` (Overwrite / Skip / Rename / Newer).
+    /// Con `apply_to_all`, la respuesta pasa a ser la política del lote: responde también
+    /// sus otras preguntas pendientes y las que vendrían después.
+    /// Devuelve los ids de las preguntas respondidas (ya emitidos como resueltos).
+    pub fn resolve(self: &Arc<Self>, job_id: &str, answer: Conflict, apply_to_all: bool) -> Vec<String> {
+        if answer == Conflict::Ask {
+            return Vec::new();
+        }
+        let answered: Vec<String> = {
+            let mut st = self.lock();
+            let batch_id = match st.questions.get(job_id) {
+                Some(q) => q.batch_id.clone(),
+                None => match st.jobs.get(job_id) {
+                    Some(e) if apply_to_all => e.job.batch_id.clone(),
+                    _ => return Vec::new(),
+                },
+            };
+            let targets: Vec<String> = if apply_to_all {
+                if let Some(b) = st.batches.get_mut(&batch_id) {
+                    b.policy = answer;
+                }
+                st.order
+                    .iter()
+                    .filter(|id| st.questions.get(*id).is_some_and(|q| q.batch_id == batch_id))
+                    .cloned()
+                    .collect()
+            } else {
+                vec![job_id.to_string()]
+            };
+            let mut done = Vec::with_capacity(targets.len());
+            for id in targets {
+                if st.questions.remove(&id).is_none() {
+                    continue;
+                }
+                if let Some(e) = st.jobs.get_mut(&id)
+                    && e.job.status == TransferStatus::Queued
+                    && e.ctrl.is_none()
+                {
+                    e.decision = Some(answer);
+                    e.job.error = None;
+                    // Al frente: el usuario espera ver el resultado de su respuesta.
+                    st.enqueue(&id, true);
+                    st.mark(&id);
+                }
+                done.push(id);
+            }
+            done
+        };
+        if !answered.is_empty() {
+            self.env.emit_conflict_done(answered.clone());
+        }
+        self.schedule();
+        answered
     }
 
     /// Quita terminados (done / skipped / canceled / error). Devuelve los ids quitados (ya emitidos).
@@ -655,6 +749,7 @@ impl Engine {
                         ctrl: None,
                         touched: false,
                         resume_after_stop: false,
+                        decision: None,
                         dirty: false,
                         last_bytes: 0,
                     },
@@ -1001,10 +1096,12 @@ impl Engine {
     }
 
     async fn run_job(self: Arc<Self>, id: String, ctrl: Arc<Ctrl>) {
-        let Some((job, kind, policy, check)) = ({
+        let Some((mut job, kind, policy, check)) = ({
             let st = self.lock();
             st.jobs.get(&id).map(|e| {
-                let policy = st.batches.get(&e.job.batch_id).map(|b| b.policy).unwrap_or_default();
+                let batch = st.batches.get(&e.job.batch_id).map(|b| b.policy).unwrap_or_default();
+                // La respuesta del usuario a este archivo manda sobre la del lote.
+                let policy = e.decision.unwrap_or(batch);
                 // La política solo se aplica antes de tocar el destino (no al reanudar).
                 let check = !e.touched && e.job.transferred == 0;
                 (e.job.clone(), e.kind.clone(), policy, check)
@@ -1013,7 +1110,7 @@ impl Engine {
             return;
         };
         let res = match kind {
-            Kind::File { .. } | Kind::Link { .. } => self.execute(&job, &kind, policy, check, &ctrl).await,
+            Kind::File { .. } | Kind::Link { .. } => self.execute(&mut job, &kind, policy, check, &ctrl).await,
             _ => Err(CopyError::Fatal("No reintentable".into())),
         };
         let stop = ctrl.stop.load(Ordering::SeqCst);
@@ -1022,11 +1119,21 @@ impl Engine {
         if canceled && touched {
             self.delete_partial(&job).await;
         }
+        let mut ask: Option<ConflictQuestion> = None;
         {
             let mut st = self.lock();
             st.running.retain(|x| x != &id);
             let mut requeue = false;
+            let (batch_policy, batch_paused, batch_canceled) = st
+                .batches
+                .get(&job.batch_id)
+                .map(|b| (b.policy, b.paused, b.canceled))
+                .unwrap_or((Conflict::Overwrite, false, true));
             if let Some(e) = st.jobs.get_mut(&id) {
+                // "Mantener ambos" pudo cambiar el destino.
+                e.job.local_path.clone_from(&job.local_path);
+                e.job.remote_path.clone_from(&job.remote_path);
+                e.job.name.clone_from(&job.name);
                 e.ctrl = None;
                 e.touched = touched && !canceled;
                 e.job.speed = 0.0;
@@ -1044,6 +1151,25 @@ impl Engine {
                         e.job.transferred = 0;
                         e.job.error = Some(why);
                         e.job.finished_at = Some(now_ms());
+                    }
+                    Ok(Outcome::Ask(q)) => {
+                        // `stop` se relee con el candado tomado: cancelar/pausar lo cambian
+                        // también con el candado, así no se cuela una pregunta huérfana.
+                        let stop = ctrl.stop.load(Ordering::SeqCst);
+                        if stop == STOP_CANCEL || batch_canceled {
+                            e.job.status = TransferStatus::Canceled;
+                            e.job.finished_at = Some(now_ms());
+                        } else if (stop == STOP_PAUSE || batch_paused) && !e.resume_after_stop {
+                            e.job.status = TransferStatus::Paused;
+                        } else if batch_policy != Conflict::Ask {
+                            // Mientras tanto se respondió "aplicar a todos": sin preguntar.
+                            e.job.status = TransferStatus::Queued;
+                            requeue = true;
+                        } else {
+                            e.job.status = TransferStatus::Queued;
+                            e.job.error = Some(ASK_MSG.into());
+                            ask = Some(*q);
+                        }
                     }
                     Err(CopyError::Stopped) if canceled => {
                         e.job.status = TransferStatus::Canceled;
@@ -1078,7 +1204,13 @@ impl Engine {
             if requeue {
                 st.enqueue(&id, true);
             }
+            if let Some(q) = &ask {
+                st.questions.insert(id.clone(), q.clone());
+            }
             st.mark(&id);
+        }
+        if let Some(q) = ask {
+            self.env.emit_conflict(q);
         }
         self.schedule();
     }
@@ -1100,7 +1232,14 @@ impl Engine {
     }
 
     /// Copia con reintentos automáticos ante cortes del canal.
-    async fn execute(&self, job: &TransferJob, kind: &Kind, policy: Conflict, check: bool, ctrl: &Ctrl) -> CopyResult<Outcome> {
+    async fn execute(
+        &self,
+        job: &mut TransferJob,
+        kind: &Kind,
+        policy: Conflict,
+        check: bool,
+        ctrl: &Ctrl,
+    ) -> CopyResult<Outcome> {
         let mut attempt = 0u32;
         let mut recovered = 0u32;
         let mut check = check;
@@ -1118,7 +1257,7 @@ impl Engine {
                 Err(msg) if msg == CLOSED_MSG => (true, None, Err(CopyError::Transient(msg))),
                 Err(msg) => (false, None, Err(CopyError::Transient(msg))),
                 Ok((session, lease)) => {
-                    let r = self.attempt(job, kind, policy, &mut check, verify, lease.chan(), ctrl).await;
+                    let r = try_once(job, kind, policy, &mut check, verify, lease.chan(), ctrl).await;
                     (session.is_closed(), Some(lease), r)
                 }
             };
@@ -1154,76 +1293,6 @@ impl Engine {
                 other => return other,
             }
         }
-    }
-
-    /// Un intento con un canal ya prestado.
-    #[allow(clippy::too_many_arguments)]
-    async fn attempt(
-        &self,
-        job: &TransferJob,
-        kind: &Kind,
-        policy: Conflict,
-        check: &mut bool,
-        verify: bool,
-        chan: &Chan,
-        ctrl: &Ctrl,
-    ) -> CopyResult<Outcome> {
-        let local = Path::new(&job.local_path);
-        let up = job.direction == TransferDirection::Upload;
-        let (mode, mtime) = match kind {
-            Kind::File { mode, mtime } => (*mode, *mtime),
-            Kind::Link { target, mtime } => {
-                return if up {
-                    upload_link(chan, local, &job.remote_path, target.as_deref(), policy, *check).await
-                } else {
-                    download_link(chan, &job.remote_path, local, *mtime, policy, *check).await
-                };
-            }
-            _ => return Err(CopyError::Fatal("No reintentable".into())),
-        };
-
-        if *check {
-            let decision = if up {
-                let src = copy::unix_secs_u64(tokio::fs::metadata(local).await.and_then(|m| m.modified()));
-                decide(policy, src, remote_dest(chan, &job.remote_path).await?)
-            } else {
-                decide(policy, mtime.map(u64::from), local_dest(local).await?)
-            };
-            if let Err(why) = decision {
-                return Ok(Outcome::Skipped(why.into()));
-            }
-            // Bajada: si el nombre lo ocupa un enlace simbólico local, se reemplaza el enlace
-            // (nunca se escribe a través de él).
-            if !up
-                && let Ok(m) = tokio::fs::symlink_metadata(local).await
-                && m.file_type().is_symlink()
-            {
-                remove_link_or_file(local)
-                    .await
-                    .map_err(|e| CopyError::Fatal(local_io_message(&e)))?;
-            }
-            *check = false;
-        }
-
-        let mut offset = ctrl.progress.load(Ordering::Relaxed);
-        if verify && offset > 0 {
-            // Se continúa solo si el destino tiene al menos lo ya confirmado.
-            let dest = if up {
-                copy::remote_size(chan, &job.remote_path).await
-            } else {
-                copy::local_size(local).await
-            };
-            if dest.is_none_or(|s| s < offset) {
-                offset = 0;
-                ctrl.progress.store(0, Ordering::Relaxed);
-            }
-        }
-        let n = if up {
-            copy::upload_file(chan, local, &job.remote_path, offset, ctrl).await?
-        } else {
-            copy::download_file(chan, &job.remote_path, local, offset, job.size, mode, mtime, ctrl).await?
-        };
-        Ok(Outcome::Copied(n))
     }
 
     async fn delete_partial(&self, job: &TransferJob) {
@@ -1308,46 +1377,184 @@ impl Engine {
     }
 }
 
+// ───────────────────────── Un intento ─────────────────────────
+
+/// Un intento con un canal ya prestado. Con "mantener ambos" cambia el destino de `job`.
+#[allow(clippy::too_many_arguments)]
+async fn try_once(
+    job: &mut TransferJob,
+    kind: &Kind,
+    policy: Conflict,
+    check: &mut bool,
+    verify: bool,
+    chan: &Chan,
+    ctrl: &Ctrl,
+) -> CopyResult<Outcome> {
+    let up = job.direction == TransferDirection::Upload;
+    let is_link = matches!(kind, Kind::Link { .. });
+    let (mode, mtime) = match kind {
+        Kind::File { mode, mtime } => (*mode, *mtime),
+        Kind::Link { mtime, .. } => (None, *mtime),
+        _ => return Err(CopyError::Fatal("No reintentable".into())),
+    };
+
+    if *check {
+        let local = Path::new(&job.local_path);
+        let (src_mtime, dest) = if up {
+            let meta = if is_link {
+                tokio::fs::symlink_metadata(local).await
+            } else {
+                tokio::fs::metadata(local).await
+            };
+            (copy::unix_secs_u64(meta.and_then(|m| m.modified())), remote_dest(chan, &job.remote_path).await?)
+        } else {
+            (mtime.map(u64::from), local_dest(local).await?)
+        };
+        match decide(policy, src_mtime, dest.map(|d| d.mtime)) {
+            Decision::Transfer => {}
+            Decision::Skip(why) => return Ok(Outcome::Skipped(why.into())),
+            Decision::Ask => {
+                let dest = dest.unwrap_or_default();
+                let (source, destination) = if up {
+                    (job.local_path.clone(), job.remote_path.clone())
+                } else {
+                    (job.remote_path.clone(), job.local_path.clone())
+                };
+                return Ok(Outcome::Ask(Box::new(ConflictQuestion {
+                    job_id: job.id.clone(),
+                    batch_id: job.batch_id.clone(),
+                    session_id: job.session_id.clone(),
+                    direction: job.direction,
+                    name: job.name.clone(),
+                    source,
+                    destination,
+                    source_size: (!is_link).then_some(job.size),
+                    source_mtime: src_mtime,
+                    dest_size: dest.size,
+                    dest_mtime: dest.mtime,
+                    is_link,
+                })));
+            }
+            Decision::Rename => rename_destination(job, chan, up).await?,
+        }
+        // Bajada de un archivo: si el nombre lo ocupa un enlace simbólico local, se reemplaza
+        // el enlace (nunca se escribe a través de él).
+        let local = Path::new(&job.local_path);
+        if !up
+            && !is_link
+            && let Ok(m) = tokio::fs::symlink_metadata(local).await
+            && m.file_type().is_symlink()
+        {
+            remove_link_or_file(local)
+                .await
+                .map_err(|e| CopyError::Fatal(local_io_message(&e)))?;
+        }
+        *check = false;
+    }
+
+    let local = Path::new(&job.local_path);
+    if let Kind::Link { target, .. } = kind {
+        return if up {
+            upload_link(chan, &job.remote_path, target.as_deref()).await
+        } else {
+            download_link(chan, &job.remote_path, local).await
+        };
+    }
+
+    let mut offset = ctrl.progress.load(Ordering::Relaxed);
+    if verify && offset > 0 {
+        // Se continúa solo si el destino tiene al menos lo ya confirmado.
+        let dest = if up {
+            copy::remote_size(chan, &job.remote_path).await
+        } else {
+            copy::local_size(local).await
+        };
+        if dest.is_none_or(|s| s < offset) {
+            offset = 0;
+            ctrl.progress.store(0, Ordering::Relaxed);
+        }
+    }
+    let n = if up {
+        copy::upload_file(chan, local, &job.remote_path, offset, ctrl).await?
+    } else {
+        copy::download_file(chan, &job.remote_path, local, offset, job.size, mode, mtime, ctrl).await?
+    };
+    Ok(Outcome::Copied(n))
+}
+
+/// Primer nombre libre `nombre (N).ext` junto al destino ("mantener ambos"); actualiza la
+/// ruta de destino y el nombre a mostrar del trabajo.
+async fn rename_destination(job: &mut TransferJob, chan: &Chan, up: bool) -> CopyResult<()> {
+    const MAX_TRIES: usize = 10_000;
+    if up {
+        let parent = remote_parent(&job.remote_path);
+        let base = remote_basename(&job.remote_path);
+        for n in 2..MAX_TRIES {
+            let name = numbered_name(&base, n);
+            let cand = remote_join(&parent, &name);
+            if remote_dest(chan, &cand).await?.is_none() {
+                job.remote_path = cand;
+                job.name = renamed_display(&job.name, &name);
+                return Ok(());
+            }
+        }
+    } else {
+        let local = PathBuf::from(&job.local_path);
+        let base = local.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
+        for n in 2..MAX_TRIES {
+            let name = numbered_name(&base, n);
+            let cand = local.with_file_name(&name);
+            if local_dest(&cand).await?.is_none() {
+                job.local_path = cand.to_string_lossy().into_owned();
+                job.name = renamed_display(&job.name, &name);
+                return Ok(());
+            }
+        }
+    }
+    Err(CopyError::Fatal("No se encontró un nombre libre para mantener ambos archivos".into()))
+}
+
 // ───────────────────────── Conflictos y enlaces ─────────────────────────
 
-/// ¿Existe el destino remoto? `None` = no existe; `Some(mtime)` si existe (sin seguir enlaces).
-async fn remote_dest(chan: &Chan, path: &str) -> CopyResult<Option<Option<u64>>> {
+/// Fecha (segundos Unix) y tamaño de un destino que ya existe, si se conocen.
+#[derive(Debug, Clone, Copy, Default)]
+struct DestMeta {
+    mtime: Option<u64>,
+    size: Option<u64>,
+}
+
+/// ¿Existe el destino remoto? `None` = no existe (sin seguir enlaces).
+async fn remote_dest(chan: &Chan, path: &str) -> CopyResult<Option<DestMeta>> {
     match chan.raw.lstat(path.to_string()).await {
-        Ok(a) => Ok(Some(a.attrs.mtime.map(u64::from))),
+        Ok(a) => Ok(Some(DestMeta {
+            mtime: a.attrs.mtime.map(u64::from),
+            size: a.attrs.size,
+        })),
         Err(e) if copy::is_no_such_file(&e) => Ok(None),
         Err(e) => Err(copy::sftp_err(e)),
     }
 }
 
 /// ¿Existe el destino local? (sin seguir enlaces).
-async fn local_dest(path: &Path) -> CopyResult<Option<Option<u64>>> {
+async fn local_dest(path: &Path) -> CopyResult<Option<DestMeta>> {
     match tokio::fs::symlink_metadata(path).await {
-        Ok(m) => Ok(Some(copy::unix_secs_u64(m.modified()))),
+        Ok(m) => Ok(Some(DestMeta {
+            mtime: copy::unix_secs_u64(m.modified()),
+            size: m.is_file().then_some(m.len()),
+        })),
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(None),
         Err(e) => Err(CopyError::Fatal(local_io_message(&e))),
     }
 }
 
-/// Recrea un enlace simbólico local en el servidor (mismo objetivo).
-async fn upload_link(
-    chan: &Chan,
-    local: &Path,
-    remote: &str,
-    target: Option<&str>,
-    policy: Conflict,
-    check: bool,
-) -> CopyResult<Outcome> {
+/// Recrea un enlace simbólico local en el servidor (mismo objetivo). La política de
+/// conflictos ya se aplicó en `attempt`.
+async fn upload_link(chan: &Chan, remote: &str, target: Option<&str>) -> CopyResult<Outcome> {
     let Some(target) = target else {
         return Err(CopyError::Fatal("Falta el destino del enlace".into()));
     };
     let raw = &chan.raw;
     let dest = remote_dest(chan, remote).await?;
-    if check {
-        let src = copy::unix_secs_u64(tokio::fs::symlink_metadata(local).await.and_then(|m| m.modified()));
-        if let Err(why) = decide(policy, src, dest) {
-            return Ok(Outcome::Skipped(why.into()));
-        }
-    }
     if dest.is_some() {
         let is_dir = raw
             .lstat(remote.to_string())
@@ -1374,22 +1581,12 @@ async fn upload_link(
 }
 
 /// Recrea un enlace simbólico remoto en el equipo local (mismo objetivo).
-async fn download_link(
-    chan: &Chan,
-    remote: &str,
-    local: &Path,
-    mtime: Option<u32>,
-    policy: Conflict,
-    check: bool,
-) -> CopyResult<Outcome> {
+async fn download_link(chan: &Chan, remote: &str, local: &Path) -> CopyResult<Outcome> {
     let name = chan.raw.readlink(remote.to_string()).await.map_err(copy::sftp_err)?;
     let Some(target) = name.files.into_iter().next().map(|f| f.filename).filter(|t| !t.is_empty()) else {
         return Err(CopyError::Fatal("El servidor no devolvió el destino del enlace".into()));
     };
     let dest = local_dest(local).await?;
-    if check && let Err(why) = decide(policy, mtime.map(u64::from), dest) {
-        return Ok(Outcome::Skipped(why.into()));
-    }
     let lerr = |e: std::io::Error| CopyError::Fatal(local_io_message(&e));
     if dest.is_some() {
         let meta = tokio::fs::symlink_metadata(local).await.map_err(lerr)?;

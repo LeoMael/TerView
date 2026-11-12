@@ -245,3 +245,38 @@
   outline: none;
   background: var(--accent-bg);
 }
+
+/* Insignia de privilegios (root / sudo) */
+.tabs-priv {
+  flex: none;
+  margin-right: -4px;
+  padding: 0 4px;
+  height: 15px;
+  line-height: 13px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  cursor: default;
+  user-select: none;
+}
+.tabs-priv-root {
+  color: var(--orange);
+  background: var(--mix-orange-15);
+  border-color: var(--mix-orange-55-border-strong);
+}
+.tabs-priv-sudo {
+  color: var(--accent);
+  background: var(--mix-accent-16);
+  border-color: var(--mix-accent-35);
+}
+.tabs-priv-maybe {
+  color: var(--text-faint);
+  border-color: var(--border);
+  border-style: dashed;
+}
+.tabs-tab.closed .tabs-priv {
+  opacity: 0.5;
+}

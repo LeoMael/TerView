@@ -10,4 +10,10 @@ export const snippets = {
   /** Ejecuta un comando aparte (canal exec) y captura la salida. */
   exec: (sessionId: string, command: string, timeoutSecs = 30) =>
     call<ExecResult>("exec_capture", { sessionId, command, timeoutSecs }),
+  /**
+   * Igual que `exec`, pero escribe `stdin` en la entrada estándar del comando y luego envía EOF.
+   * Para contraseñas (sudo -S, chpasswd): nunca las pongas en `command`.
+   */
+  execStdin: (sessionId: string, command: string, stdin: string, timeoutSecs = 30) =>
+    call<ExecResult>("exec_capture_stdin", { sessionId, command, stdin, timeoutSecs }),
 };

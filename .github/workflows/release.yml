@@ -10,6 +10,15 @@
 #   Windows -> .msi (WiX) y -setup.exe (NSIS)
 #   macOS   -> .dmg universal (Intel + Apple Silicon)
 # Un fallo en un sistema no cancela los demás (fail-fast: false).
+#
+# Actualizaciones automáticas (tauri-plugin-updater):
+#   Con el secreto TAURI_SIGNING_PRIVATE_KEY (y TAURI_SIGNING_PRIVATE_KEY_PASSWORD) cada instalador se
+#   firma (.sig) y tauri-action sube `latest.json` al Release; la app lo consulta en
+#   https://github.com/LeoMael/TerView/releases/latest/download/latest.json
+#   (solo cuenta el Release PUBLICADO más reciente: los borradores no los ve la app).
+#   Sin el secreto se generan igual los instaladores, pero sin firma ni latest.json (aviso en el log).
+#   Crear los secretos:  gh secret set TAURI_SIGNING_PRIVATE_KEY < ~/.tauri/terview-updater.key
+#                        gh secret set TAURI_SIGNING_PRIVATE_KEY_PASSWORD < ~/.tauri/terview-updater.password
 
 name: Publicar versión
 
@@ -94,15 +103,57 @@ jobs:
       - name: Dependencias de npm
         run: npm ci
 
+      # Sin la llave privada, `tauri build` fallaría al firmar los paquetes de actualización:
+      # en ese caso se desactivan (createUpdaterArtifacts=false) y se avisa, pero los instaladores salen igual.
+      - name: Firma de actualizaciones
+        id: firma
+        shell: bash
+        env:
+          LLAVE: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+        run: |
+          if [ -n "$LLAVE" ]; then
+            echo "Llave de firma presente: se generan .sig y latest.json."
+            echo "args=" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning title=Sin llave de firma::Falta el secreto TAURI_SIGNING_PRIVATE_KEY. Se generan los instaladores, pero sin actualizaciones automáticas (sin .sig ni latest.json)."
+            echo "args=--config '{\"bundle\":{\"createUpdaterArtifacts\":false}}'" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Notas del Release = sección de esta versión en CHANGELOG.md. También van en latest.json y la app
+      # las muestra en "Hay una versión nueva" (solo lo que está antes de la línea `---`).
+      - name: Notas de la versión
+        id: notas
+        shell: bash
+        run: |
+          VERSION=$(node -p "require('./src-tauri/tauri.conf.json').version")
+          NOTAS=$(awk -v v="## [$VERSION]" '
+            index($0, "## [") == 1 { if (dentro) exit; if (index($0, v) == 1) { dentro = 1; next } }
+            dentro { print }
+          ' CHANGELOG.md | sed -e '/./,$!d')
+          if [ -z "$NOTAS" ]; then
+            NOTAS="Novedades: ver [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)."
+          fi
+          {
+            echo "cuerpo<<FIN_NOTAS_TERVIEW"
+            echo "$NOTAS"
+            echo "FIN_NOTAS_TERVIEW"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Compilar y publicar instaladores
         uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tagName: v__VERSION__
           releaseName: TerView v__VERSION__
           releaseBody: |
-            Novedades de esta versión: ver [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md).
+            ${{ steps.notas.outputs.cuerpo }}
+
+            ---
+
+            Historial completo: [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md).
 
             **Instalación:** ver la sección [Instalación del README](https://github.com/${{ github.repository }}#instalación).
 
@@ -119,4 +170,7 @@ jobs:
             abrir la app con clic derecho → *Abrir*.
           releaseDraft: true
           prerelease: false
-          args: ${{ matrix.args }}
+          # latest.json: en Windows actualiza con el -setup.exe (NSIS, por usuario, sin permisos de admin).
+          uploadUpdaterJson: true
+          updaterJsonPreferNsis: true
+          args: ${{ matrix.args }} ${{ steps.firma.outputs.args }}

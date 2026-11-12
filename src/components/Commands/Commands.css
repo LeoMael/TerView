@@ -1020,3 +1020,134 @@
 .cmd-btn-wrap > .btn:disabled {
   pointer-events: none;
 }
+.cmd-note-info {
+  color: var(--text-muted);
+}
+
+/* ───────── Importar (vista previa) ───────── */
+.cmd-imp {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+.cmd-imp-source {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  min-width: 0;
+}
+.cmd-imp-source .mono {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cmd-imp-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.cmd-imp-stat {
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.cmd-imp-stat b {
+  color: var(--text);
+}
+.cmd-imp-stat.add b {
+  color: var(--green);
+}
+.cmd-imp-stat.upd b {
+  color: var(--accent);
+}
+.cmd-imp-stat.bad b {
+  color: var(--red);
+}
+.cmd-imp-invalid {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+}
+.cmd-imp-invalid svg {
+  flex: none;
+  margin-top: 2px;
+}
+.cmd-imp-list {
+  max-height: 260px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.cmd-imp-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  padding: 0 8px;
+  font-size: 13px;
+  min-width: 0;
+}
+.cmd-imp-row + .cmd-imp-row {
+  border-top: 1px solid var(--border);
+}
+.cmd-imp-row.off {
+  opacity: 0.45;
+}
+.cmd-imp-tag {
+  flex: none;
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.cmd-imp-tag.add {
+  color: var(--green);
+  background: color-mix(in srgb, var(--green) 14%, transparent);
+}
+.cmd-imp-tag.upd {
+  color: var(--accent);
+  background: var(--accent-bg);
+}
+.cmd-imp-name {
+  flex: none;
+  max-width: 45%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cmd-imp-cmd {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.cmd-imp-more,
+.cmd-imp-empty {
+  padding: 6px 8px;
+  font-size: 12px;
+}
+.cmd-imp-check {
+  font-size: 13px;
+}
+
+/* ───────── Menú de cada comando ───────── */
+.cmd-menu button {
+  font-size: 13px;
+}
+.cmd-menu-icon {
+  display: inline-flex;
+  width: 16px;
+  color: var(--text-muted);
+}
+.cmd-menu .danger .cmd-menu-icon {
+  color: inherit;
+}

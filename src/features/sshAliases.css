@@ -1,0 +1,106 @@
+/* Choques de alias con ~/.ssh/config (diálogo al exportar y aviso del editor de servidor). */
+.ssha-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.ssha-intro {
+  margin: 0;
+}
+.ssha-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 340px;
+  overflow-y: auto;
+}
+.ssha-item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  padding: 8px 10px;
+}
+.ssha-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+.ssha-name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ssha-alias {
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+.ssha-matches {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ssha-matches li {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  min-width: 0;
+  font-size: var(--fs-sm);
+}
+.ssha-line {
+  color: var(--yellow);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.ssha-where {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.ssha-opts {
+  display: flex;
+  gap: 16px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+.ssha-radio {
+  font-size: 13px;
+}
+
+/* Aviso en línea del editor de servidor */
+.ssha-inline {
+  margin-top: 4px;
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+.ssha-inline.warn {
+  color: var(--orange);
+}
+.ssha-inline .ssha-matches li {
+  color: var(--text-muted);
+}
+.ssha-inline-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.ssha-inline-row svg {
+  flex: none;
+}
+.ssha-linkbtn {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--accent);
+  cursor: pointer;
+  font: inherit;
+  text-decoration: underline;
+}

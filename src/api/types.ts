@@ -65,7 +65,7 @@ export interface Settings {
   /** Mantener ~/.ssh/config sincronizado. */
   sshConfigSync: boolean;
   /** Si el destino existe al transferir. */
-  transferConflict: "overwrite" | "skip" | "newer";
+  transferConflict: "overwrite" | "skip" | "newer" | "ask";
 }
 
 // ───────── SSH ─────────

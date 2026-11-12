@@ -1,0 +1,190 @@
+.dg {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.dg-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.dg-intro {
+  flex: 1;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  line-height: 1.4;
+}
+.dg-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.dg-section > h4,
+.dg-section-head > h4 {
+  margin: 0;
+}
+.dg-section-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.dg-section-head > .dg-muted {
+  flex: 1;
+}
+.dg-small {
+  height: 26px;
+  padding: 0 9px;
+  font-size: var(--fs-sm);
+}
+.dg-muted,
+.dg-note {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  line-height: 1.4;
+}
+.dg-note {
+  color: var(--text-faint);
+}
+.dg-error,
+.dg-bad {
+  color: var(--red);
+}
+.dg-error {
+  margin: 0;
+  font-size: var(--fs-sm);
+}
+.dg-warn {
+  color: var(--yellow);
+}
+.dg-mono {
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+}
+.dg-wrap {
+  word-break: break-word;
+}
+
+.dg-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 8px;
+}
+.dg-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.dg-tile-value {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.dg-tile-label {
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+
+.dg-kv {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  gap: 5px 12px;
+  margin: 0;
+  font-size: var(--fs-sm);
+}
+.dg-kv dt {
+  color: var(--text-muted);
+}
+.dg-kv dd {
+  margin: 0;
+  min-width: 0;
+}
+
+.dg-table-wrap {
+  max-height: 260px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.dg-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
+}
+.dg-table th,
+.dg-table td {
+  height: 26px;
+  padding: 0 8px;
+  text-align: right;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border);
+}
+.dg-table th:first-child,
+.dg-table td:first-child {
+  text-align: left;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dg-table th {
+  position: sticky;
+  top: 0;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.dg-table tbody tr:last-child td {
+  border-bottom: none;
+}
+.dg-table tbody tr:hover {
+  background: var(--surface-2);
+}
+
+/* Indicador flotante de FPS (fuera de los Ajustes). */
+.dg-fps-overlay {
+  position: fixed;
+  left: 12px;
+  bottom: 12px;
+  z-index: 950;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 4px 0 10px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  pointer-events: auto;
+}
+.dg-fps-num {
+  min-width: 2ch;
+  text-align: right;
+  font-weight: 700;
+  font-size: var(--fs);
+}
+.dg-fps-num.good {
+  color: var(--green);
+}
+.dg-fps-num.warn {
+  color: var(--yellow);
+}
+.dg-fps-num.bad {
+  color: var(--red);
+}
+.dg-fps-extra {
+  color: var(--text-faint);
+}
+.dg-fps-overlay .icon-btn {
+  width: 22px;
+  height: 22px;
+}

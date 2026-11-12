@@ -59,6 +59,7 @@
   min-height: 0;
 }
 .sv-work,
+.sv-col,
 .sv-terminal {
   display: flex;
   flex-direction: column;
@@ -69,8 +70,9 @@
   background: var(--bg-terminal);
 }
 
-/* ── Pestañas internas (Archivos / editores) ── */
+/* ── Pestañas internas (vistas fijas y archivos) ── */
 .sv-tabs {
+  position: relative; /* referencia de offsetLeft al arrastrar pestañas */
   display: flex;
   align-items: stretch;
   height: 32px;
@@ -201,12 +203,118 @@
   flex: 1;
   min-width: 8px;
 }
-.sv-term-toggle {
+/* Las pestañas de archivo llevan `order` (su posición); lo que va tras el relleno queda siempre al final. */
+.sv-tabs > .sv-tabs-fill,
+.sv-tabs > .sv-tabs-fill ~ * {
+  order: 100000;
+}
+/* Botones de la barra (terminal, maximizar, ventana aparte). */
+.sv-bar-btn {
   align-self: center;
   flex: none;
 }
-.sv-term-toggle.on {
+.sv-bar-btn.on {
   color: var(--accent);
+}
+
+/* Arrastre de la pestaña de un archivo: reordenar o despegar a otra ventana. */
+.sv-tab.dragging {
+  z-index: 2;
+  cursor: grabbing;
+  color: var(--text);
+  background: var(--surface);
+  border-color: var(--border);
+  box-shadow: var(--shadow-sm);
+  transition: opacity 0.12s;
+}
+.sv-tab.dragging.detaching {
+  opacity: 0.35;
+  box-shadow: none;
+}
+.sv-drag-ghost {
+  position: fixed;
+  z-index: 1000;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transform: translate(-24px, -14px);
+}
+.sv-drag-ghost-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 260px;
+  height: 28px;
+  padding: 0 12px 0 10px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+  box-shadow: var(--shadow);
+}
+.sv-drag-ghost-tab > svg {
+  flex: none;
+  color: var(--accent);
+}
+.sv-drag-ghost-tab > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sv-drag-ghost-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  align-self: flex-start;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-size: 11px;
+  white-space: nowrap;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Archivos abiertos en otra ventana. */
+.sv-detached {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 220px;
+  height: 22px;
+  margin: 4px 2px 0 0; /* mismo desplazamiento que las pestañas */
+  padding: 0 8px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+  cursor: pointer;
+  flex: none;
+}
+.sv-detached > svg {
+  flex: none;
+  color: var(--accent);
+}
+.sv-detached > span:first-of-type {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text);
+}
+.sv-detached-hint {
+  color: var(--text-faint);
+}
+.sv-detached:hover {
+  background: var(--mix-surface-2-60);
+  border-color: var(--accent);
+}
+.sv-detached:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 1px var(--accent);
 }
 
 /* ── Contenido ── */
@@ -225,4 +333,22 @@
 .sv-pane > * {
   flex: 1;
   min-height: 0;
+}
+
+/* ── Vista fija | editores ──
+   Los dos paneles están siempre montados. En modo pestañas se ve solo uno a todo el área
+   (data-mode side o editors); dividido (split), los dos con su divisor. */
+.sv-split {
+  flex: 1;
+  min-height: 0;
+}
+.sv-split[data-mode="side"] > [data-sv-panel="editors"],
+.sv-split[data-mode="side"] > [data-separator],
+.sv-split[data-mode="editors"] > [data-sv-panel="side"],
+.sv-split[data-mode="editors"] > [data-separator] {
+  display: none !important;
+}
+.sv-split[data-mode="side"] > [data-sv-panel="side"],
+.sv-split[data-mode="editors"] > [data-sv-panel="editors"] {
+  flex: 1 1 0 !important;
 }

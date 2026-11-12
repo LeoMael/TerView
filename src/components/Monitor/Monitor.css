@@ -1,0 +1,572 @@
+/* Pestaña «Monitor». Todo con prefijo .mon- y variables de theme.css (tema claro y oscuro). */
+
+.mon-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: var(--bg);
+  font-size: var(--fs);
+}
+
+/* ───────── Cabecera ───────── */
+.mon-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 8px;
+  flex: none;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-sunken);
+}
+.mon-header-spacer {
+  flex: 1;
+}
+.mon-seg {
+  display: inline-flex;
+  padding: 2px;
+  gap: 2px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+.mon-seg button {
+  height: 24px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.mon-seg button:hover {
+  color: var(--text);
+}
+.mon-seg button.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+}
+.mon-seg button:focus-visible,
+.mon-sort:focus-visible,
+.mon-chart:focus-visible,
+.mon-lock:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.mon-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.mon-pulse {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: mon-pulse 1s ease-in-out infinite;
+}
+@keyframes mon-pulse {
+  50% {
+    opacity: 0.25;
+  }
+}
+.mon-interval {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-sm);
+}
+.mon-interval .select {
+  height: 26px;
+  padding: 0 6px;
+  font-size: var(--fs-sm);
+}
+.mon-bell {
+  position: relative;
+}
+.mon-bell-dot {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--red);
+  box-shadow: 0 0 0 2px var(--bg-sunken);
+}
+.mon-dot-alert {
+  display: inline-block;
+  background: var(--red);
+}
+
+/* ───────── Cuerpo ───────── */
+.mon-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  user-select: text;
+}
+.mon-error {
+  color: var(--red);
+  font-size: var(--fs-sm);
+}
+.mon-banner {
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--mix-red-12);
+}
+
+/* ───────── Tarjetas ───────── */
+.mon-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 10px;
+}
+.mon-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 10px 12px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.mon-card-label {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+.mon-card-value {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--text);
+  white-space: nowrap;
+}
+.mon-net-value {
+  display: flex;
+  gap: 12px;
+  font-size: 17px;
+  line-height: 30px;
+  overflow: hidden;
+}
+.mon-net-value > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+.mon-card-sub {
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 6px;
+  min-height: 16px;
+}
+.mon-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.mon-legend .mon-key + * {
+  margin-left: 0;
+}
+.mon-legend .mon-key:not(:first-child) {
+  margin-left: 6px;
+}
+.mon-key {
+  display: inline-block;
+  width: 10px;
+  height: 2px;
+  border-radius: 1px;
+  flex: none;
+}
+
+/* ───────── Gráficas ───────── */
+.mon-chart {
+  position: relative;
+  width: 100%;
+  border-radius: 4px;
+}
+.mon-chart svg {
+  display: block;
+  overflow: visible;
+}
+.mon-chart:not(.mon-chart-compact) {
+  padding-top: 13px;
+}
+.mon-grid {
+  stroke: var(--border);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+.mon-ref {
+  stroke: var(--text-faint);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  shape-rendering: crispEdges;
+}
+.mon-area {
+  fill: currentColor;
+  fill-opacity: 0.12;
+  stroke: none;
+}
+.mon-line {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.mon-chart-compact .mon-line {
+  stroke-width: 1.5;
+}
+.mon-cross {
+  stroke: var(--text-faint);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+.mon-dot {
+  fill: currentColor;
+  stroke: var(--surface);
+  stroke-width: 2;
+}
+.mon-chart-scale {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-size: 10px;
+  line-height: 1;
+  color: var(--text-faint);
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
+}
+.mon-tip {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  transform: translateX(-50%);
+  z-index: 5;
+  padding: 5px 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  box-shadow: var(--shadow-sm);
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
+}
+.mon-tip-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.mon-tip-row strong {
+  color: var(--text);
+}
+
+/* ───────── Secciones ───────── */
+.mon-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.mon-section .section-label {
+  margin: 0;
+}
+.mon-section-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.mon-ct-toggle {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  gap: 6px;
+}
+.mon-empty-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: var(--fs-sm);
+}
+
+/* Discos */
+.mon-disks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 8px 16px;
+}
+.mon-disk {
+  min-width: 0;
+}
+.mon-disk-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: var(--fs-sm);
+  margin-bottom: 4px;
+}
+.mon-disk-mount {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mon-disk-num {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.mon-meter {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--surface-3);
+  overflow: hidden;
+}
+.mon-meter-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+.mon-ok {
+  background: var(--accent);
+}
+.mon-warn {
+  background: var(--yellow);
+}
+.mon-crit {
+  background: var(--red);
+}
+
+/* Tablas */
+.mon-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.mon-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-sm);
+}
+.mon-table th {
+  height: 28px;
+  padding: 0 8px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  background: var(--bg-sunken);
+}
+.mon-table td {
+  height: 27px;
+  padding: 0 8px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.mon-table tbody tr:last-child td {
+  border-bottom: none;
+}
+.mon-table tbody tr:hover td {
+  background: var(--surface-2);
+}
+.mon-table .mon-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.mon-table td.mono {
+  font-size: 12px;
+}
+.mon-table .mon-name {
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 40%;
+}
+.mon-user {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mon-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font-weight: inherit;
+  cursor: pointer;
+}
+.mon-sort:hover,
+.mon-sort.active {
+  color: var(--text);
+}
+.mon-actions {
+  width: 1%;
+  text-align: right;
+}
+.mon-kill {
+  height: 22px;
+  gap: 4px;
+  opacity: 0.75;
+}
+.mon-table tbody tr:hover .mon-kill,
+.mon-kill:focus-visible {
+  opacity: 1;
+}
+.mon-kill:hover:not(:disabled) {
+  color: var(--red);
+  border-color: var(--mix-red-55);
+}
+.mon-kill .spinner {
+  width: 11px;
+  height: 11px;
+}
+.mon-lock {
+  display: inline-flex;
+  padding: 0 8px;
+  color: var(--text-faint);
+  cursor: help;
+}
+.mon-tag {
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: 8px;
+  background: var(--surface-3);
+  color: var(--text-muted);
+  font-size: 10px;
+  line-height: 16px;
+}
+.mon-foot {
+  padding: 4px 8px;
+  font-size: 11px;
+  border-top: 1px solid var(--border);
+}
+
+/* ───────── Alertas ───────── */
+.mon-alert-master {
+  font-weight: 600;
+}
+.mon-alert-help {
+  margin: 6px 0 10px;
+  font-size: var(--fs-sm);
+  line-height: 1.45;
+}
+.mon-alert-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 32px;
+}
+.mon-alert-limit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+}
+.mon-alert-input {
+  width: 58px;
+  height: 26px;
+  text-align: right;
+}
+.mon-alert-active {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--mix-red-12);
+}
+.mon-alert-active > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ───────── Resumen de conexiones ───────── */
+.mon-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+.mon-scard {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.mon-scard-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.mon-scard-color {
+  width: 4px;
+  height: 14px;
+  border-radius: 2px;
+  flex: none;
+}
+.mon-scard-title {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mon-scard-head .mon-tag {
+  margin-left: 0;
+}
+.mon-scard-msg {
+  font-size: var(--fs-sm);
+  padding: 8px 0;
+}
+.mon-scard-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  margin: 0;
+}
+.mon-scard-stats div {
+  min-width: 0;
+}
+.mon-scard-stats dt {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+.mon-scard-stats dd {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.mon-scard-net {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}

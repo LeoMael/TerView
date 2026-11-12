@@ -24,3 +24,62 @@ export const settingsApi = {
   load: () => call<Settings>("settings_load"),
   save: (settings: Settings) => call<Settings>("settings_save", { settings }),
 };
+
+// ───────── Alias de ~/.ssh/config y choques con `Host` escritos a mano ─────────
+
+/** Un `Host`/`Match` escrito a mano (fuera del bloque de TerView o en un `Include`) que captura un alias. */
+export interface SshHostMatch {
+  /** Archivo (con `~/` si está en la carpeta personal). */
+  file: string;
+  line: number;
+  /** La línea tal cual, p. ej. `Host web *.lan`. */
+  text: string;
+  /** Patrón que coincide. */
+  pattern: string;
+  kind: "exact" | "pattern" | "match";
+  /** `Match` con más condiciones (`exec`, `user`…): puede que no aplique siempre. */
+  conditional: boolean;
+  /** Está antes del bloque de TerView: ssh usará SUS valores para ese alias. */
+  beforeTerview: boolean;
+}
+
+export interface SshAliasConflict {
+  serverId: string;
+  serverName: string;
+  alias: string;
+  /** Alias libre propuesto (`<alias>-tv`). */
+  suggestion: string;
+  /** El alias lo eligió el usuario. */
+  custom: boolean;
+  matches: SshHostMatch[];
+}
+
+export interface SshAliasInfo {
+  /** Alias con el que se exportaría. */
+  alias: string;
+  suggestion: string | null;
+  matches: SshHostMatch[];
+}
+
+export interface SshImportCandidate {
+  server: ServerProfile;
+  /** Servidor de TerView con el mismo host, puerto y usuario. */
+  existingId: string | null;
+  existingName: string | null;
+  /** Servidor de TerView que se exporta con este mismo alias. */
+  aliasUsedBy: string | null;
+}
+
+export const sshAliases = {
+  /** Servidores guardados cuyo alias choca con la configuración escrita a mano. */
+  conflicts: () => call<SshAliasConflict[]>("ssh_config_conflicts"),
+  /** Alias de un servidor en edición (`id` "" = nuevo); `alias` vacío/null = automático. */
+  info: (id: string, name: string, host: string, alias: string | null) =>
+    call<SshAliasInfo>("ssh_config_alias_info", { id, name, host, alias }),
+  /** Alias elegidos a mano (id del servidor → alias). */
+  list: () => call<Record<string, string>>("ssh_config_aliases"),
+  /** Cambia alias (null o "" = automático). Si «Mantener sincronizado» está activo, vuelve a exportar. */
+  set: (aliases: Record<string, string | null>) => call<Record<string, string>>("ssh_config_set_aliases", { aliases }),
+  /** Candidatos a importar, incluidos los que ya existen (marcados). */
+  importPreview: () => call<SshImportCandidate[]>("ssh_config_import_preview"),
+};

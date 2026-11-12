@@ -138,6 +138,22 @@ impl client::Handler for ClientHandler {
         Ok(())
     }
 
+    /// Túneles remotos (-R): el canal `forwarded-tcpip` se entrega al módulo de túneles.
+    #[allow(clippy::too_many_arguments)]
+    async fn server_channel_open_forwarded_tcpip(
+        &mut self,
+        channel: russh::Channel<client::Msg>,
+        _connected_address: &str,
+        connected_port: u32,
+        _originator_address: &str,
+        _originator_port: u32,
+        reply: client::ChannelOpenHandle,
+        _session: &mut client::Session,
+    ) -> Result<(), Self::Error> {
+        crate::tunnels::on_forwarded_tcpip(&self.host, self.port, channel, connected_port, reply);
+        Ok(())
+    }
+
     async fn disconnected(
         &mut self,
         reason: DisconnectReason<Self::Error>,

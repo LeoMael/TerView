@@ -8,6 +8,12 @@
 //! - `copy`:   copia de un archivo con peticiones SFTP encadenadas.
 //! - `pool`:   reserva de canales SFTP por sesión.
 //! - `paths`:  rutas y recorrido de carpetas locales.
+//! - `policy`: política de conflictos (sobrescribir / omitir / más nuevo / preguntar).
+//!
+//! Política "preguntar": el trabajo que choca suelta su turno y queda en cola con la nota
+//! `ASK_MSG`; se emite `EV_TRANSFER_CONFLICT` (`ConflictQuestion`) y la interfaz responde con
+//! `transfer_resolve_conflict`. Las preguntas que dejan de estar pendientes (respondidas en
+//! bloque, canceladas o pausadas) se avisan con `EV_TRANSFER_CONFLICT_DONE` (ids de trabajo).
 
 mod copy;
 mod engine;
@@ -23,7 +29,12 @@ use futures::future::BoxFuture;
 use tauri::{AppHandle, Emitter, Listener, Manager, State};
 
 pub use engine::{Engine, TransferEnv};
-pub use policy::Conflict;
+pub use policy::{Conflict, ConflictQuestion};
+
+/// Payload: `ConflictQuestion`. El destino existe y la política es "preguntar".
+pub const EV_TRANSFER_CONFLICT: &str = "transfer://conflict";
+/// Payload: `Vec<String>` con ids de trabajos cuya pregunta ya no está pendiente.
+pub const EV_TRANSFER_CONFLICT_DONE: &str = "transfer://conflict-done";
 
 use crate::error::{AppError, AppResult};
 use crate::ssh::{SessionStore, SshSession};
@@ -75,6 +86,18 @@ impl TransferEnv for TauriEnv {
     fn emit_removed(&self, ids: Vec<String>) {
         if let Err(e) = self.app.emit(EV_TRANSFER_REMOVED, ids) {
             log::warn!("no se pudo emitir limpieza: {e}");
+        }
+    }
+
+    fn emit_conflict(&self, question: ConflictQuestion) {
+        if let Err(e) = self.app.emit(EV_TRANSFER_CONFLICT, question) {
+            log::warn!("no se pudo emitir conflicto: {e}");
+        }
+    }
+
+    fn emit_conflict_done(&self, job_ids: Vec<String>) {
+        if let Err(e) = self.app.emit(EV_TRANSFER_CONFLICT_DONE, job_ids) {
+            log::warn!("no se pudo emitir conflicto resuelto: {e}");
         }
     }
 }
@@ -194,5 +217,28 @@ pub async fn transfer_retry(app: AppHandle, transfers: State<'_, TransferManager
 #[tauri::command]
 pub async fn transfer_clear_finished(app: AppHandle, transfers: State<'_, TransferManager>) -> AppResult<()> {
     transfers.engine(&app).clear_finished();
+    Ok(())
+}
+
+/// Preguntas de conflicto pendientes (para la interfaz al abrirse o recargar).
+#[tauri::command]
+pub async fn transfer_conflicts(transfers: State<'_, TransferManager>) -> AppResult<Vec<ConflictQuestion>> {
+    Ok(transfers.engine.get().map(|e| e.conflicts()).unwrap_or_default())
+}
+
+/// Responde una pregunta de conflicto. `answer`: "overwrite" | "skip" | "rename" | "newer".
+/// Con `apply_to_all` vale para todos los conflictos de ese lote (pendientes y futuros).
+#[tauri::command]
+pub async fn transfer_resolve_conflict(
+    app: AppHandle,
+    transfers: State<'_, TransferManager>,
+    job_id: String,
+    answer: String,
+    apply_to_all: bool,
+) -> AppResult<()> {
+    let Some(choice) = Conflict::parse_answer(&answer) else {
+        return Err(AppError::Invalid(format!("Respuesta no válida: {answer}")));
+    };
+    transfers.engine(&app).resolve(&job_id, choice, apply_to_all);
     Ok(())
 }

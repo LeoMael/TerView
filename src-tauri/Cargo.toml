@@ -36,6 +36,17 @@ walkdir = "2.5.0"
 log = "0.4.35"
 tokio-util = "0.7.20"
 tauri-plugin-clipboard-manager = "2.5.0"
+# Actualizaciones automáticas (latest.json firmado en GitHub Releases) y reinicio tras instalar.
+tauri-plugin-updater = "2.14.1"
+tauri-plugin-process = "2.4.0"
+# GitHub (módulo `github`): HTTPS con rustls + aws-lc-rs (ya en el árbol por russh), sin OpenSSL.
+reqwest = { version = "0.13", default-features = false, features = ["rustls"] }
+# Sincronización cifrada (ya en el árbol por russh/ssh-key): AES-256-GCM + Argon2id.
+aes-gcm = "0.11"
+argon2 = { version = "0.6", default-features = false, features = ["alloc"] }
+getrandom = "0.4"
+base64ct = { version = "1.8", features = ["alloc"] }
+chrono = "0.4"
 
 # Windows: aws-lc-sys (cripto de russh) necesita NASM para x86_64; con `prebuilt-nasm` usa los
 # objetos ya ensamblados que trae el crate, así el build de CI no depende de tener NASM instalado.

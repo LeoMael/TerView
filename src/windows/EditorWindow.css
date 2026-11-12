@@ -1,0 +1,109 @@
+/* Ventana de editor aparte. */
+.edw-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: var(--surface);
+}
+
+.edw-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 6px 0 12px;
+  background: var(--bg-sunken);
+  border-bottom: 1px solid var(--border);
+  flex: none;
+  min-width: 0;
+}
+.edw-icon {
+  flex: none;
+  color: var(--accent);
+}
+.edw-name {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.edw-server {
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.edw-dirty {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--orange);
+  flex: none;
+}
+.edw-fill {
+  flex: 1;
+  min-width: 8px;
+}
+.edw-bar .btn {
+  flex: none;
+  white-space: nowrap;
+}
+
+.edw-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 32px;
+  padding: 4px 12px;
+  background: var(--mix-red-14-surface);
+  border-bottom: 1px solid var(--mix-red-40);
+  flex: none;
+}
+.edw-banner > svg {
+  flex: none;
+  color: var(--red);
+}
+.edw-banner-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.edw-banner-text strong {
+  color: var(--red);
+}
+.edw-banner-warn {
+  background: var(--mix-yellow-12-surface);
+  border-bottom-color: var(--mix-yellow-40);
+}
+.edw-banner-warn > svg {
+  color: var(--yellow);
+}
+.edw-banner-warn .edw-banner-text strong {
+  color: var(--text);
+}
+.edw-spin {
+  animation: edw-spin 1s linear infinite;
+}
+@keyframes edw-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.edw-body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.edw-body > * {
+  flex: 1;
+  min-height: 0;
+}

@@ -34,6 +34,7 @@ import {
   type BatchStatus,
   type BatchSummary,
 } from "../../stores/transfers";
+import { ConflictDialog } from "./ConflictDialog";
 import "./TransferPanel.css";
 
 const EXPANDED_KEY = "terview.transfers.expanded";
@@ -186,6 +187,7 @@ export function TransferPanel() {
       ) : (
         <CollapsedBar list={list} onExpand={() => toggle(true)} />
       )}
+      <ConflictDialog />
     </section>
   );
 }

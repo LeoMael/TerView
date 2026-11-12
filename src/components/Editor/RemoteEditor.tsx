@@ -1,5 +1,5 @@
 // Editor de archivos remotos (Monaco local). Ctrl+S guarda directamente en el servidor.
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useImperativeHandle, useRef, useState, type Ref } from "react";
 import { AlertTriangle, FileWarning, RotateCw, Save, Settings as SettingsIcon } from "lucide-react";
 import { sftp } from "../../api/sftp";
 import { errorMessage, isApiError } from "../../api/core";
@@ -18,6 +18,19 @@ export interface RemoteEditorProps {
   path: string;
   active: boolean;
   onDirtyChange: (dirty: boolean) => void;
+  /** Sin conexión con el servidor: se puede seguir editando, pero no guardar ni recargar. */
+  offline?: boolean;
+  /** Abrir los ajustes (por defecto, el diálogo de la ventana principal). */
+  onOpenSettings?: () => void;
+  ref?: Ref<RemoteEditorHandle>;
+}
+
+/** Control del editor desde fuera (p. ej. «Guardar y abrir en otra ventana»). */
+export interface RemoteEditorHandle {
+  /** Guarda en el servidor. true si quedó guardado (o no había nada que guardar). */
+  save: () => Promise<boolean>;
+  isDirty: () => boolean;
+  focus: () => void;
 }
 
 type LoadState =
@@ -27,7 +40,7 @@ type LoadState =
 
 let modelSeq = 0;
 
-export function RemoteEditor({ sessionId, path, active, onDirtyChange }: RemoteEditorProps) {
+export function RemoteEditor({ sessionId, path, active, onDirtyChange, offline = false, onOpenSettings, ref }: RemoteEditorProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const modelRef = useRef<monaco.editor.ITextModel | null>(null);
@@ -37,6 +50,8 @@ export function RemoteEditor({ sessionId, path, active, onDirtyChange }: RemoteE
   const dirtyRef = useRef(false);
   const onDirtyRef = useRef(onDirtyChange);
   onDirtyRef.current = onDirtyChange;
+  const offlineRef = useRef(offline);
+  offlineRef.current = offline;
 
   const [state, setState] = useState<LoadState>({ kind: "loading" });
   const [dirty, setDirty] = useState(false);
@@ -96,9 +111,13 @@ export function RemoteEditor({ sessionId, path, active, onDirtyChange }: RemoteE
   }, [sessionId, path, markDirty]);
 
   // ── Guardar ──
-  const save = useCallback(async () => {
+  const save = useCallback(async (): Promise<boolean> => {
     const model = modelRef.current;
-    if (!model || savingRef.current || state.kind !== "ready") return;
+    if (!model || savingRef.current || state.kind !== "ready") return false;
+    if (offlineRef.current) {
+      toast.error("No se puede guardar", "No hay conexión con el servidor. Tus cambios siguen aquí: guarda cuando vuelva.");
+      return false;
+    }
     savingRef.current = true;
     setSaving(true);
     try {
@@ -116,7 +135,7 @@ export function RemoteEditor({ sessionId, path, active, onDirtyChange }: RemoteE
             confirmText: "Sobrescribir",
             danger: true,
           });
-          if (!ok) return;
+          if (!ok) return false;
         }
       } catch (e) {
         if (isApiError(e, "NotFound")) {
@@ -125,7 +144,7 @@ export function RemoteEditor({ sessionId, path, active, onDirtyChange }: RemoteE
             message: "Alguien lo borró o movió en el servidor. ¿Crearlo de nuevo con tu versión?",
             confirmText: "Crear y guardar",
           });
-          if (!ok) return;
+          if (!ok) return false;
         } else {
           throw e;
         }
@@ -136,8 +155,10 @@ export function RemoteEditor({ sessionId, path, active, onDirtyChange }: RemoteE
       remoteModified.current = entry.modified;
       setInfo({ size: entry.size, modified: entry.modified });
       markDirty(model.getAlternativeVersionId() !== versionAtSave);
+      return true;
     } catch (e) {
       toast.error("No se pudo guardar", e);
+      return false;
     } finally {
       savingRef.current = false;
       setSaving(false);
@@ -146,6 +167,16 @@ export function RemoteEditor({ sessionId, path, active, onDirtyChange }: RemoteE
 
   const saveRef = useRef(save);
   saveRef.current = save;
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      save: () => (dirtyRef.current ? saveRef.current() : Promise.resolve(true)),
+      isDirty: () => dirtyRef.current,
+      focus: () => editorRef.current?.focus(),
+    }),
+    [],
+  );
 
   const reload = useCallback(async () => {
     if (dirtyRef.current) {
@@ -264,7 +295,8 @@ export function RemoteEditor({ sessionId, path, active, onDirtyChange }: RemoteE
     };
   }, [active]);
 
-  const openSettings = useUi((s) => s.openSettings);
+  const openMainSettings = useUi((s) => s.openSettings);
+  const openSettings = onOpenSettings ?? openMainSettings;
 
   return (
     <div className="ed-root">
@@ -331,14 +363,19 @@ export function RemoteEditor({ sessionId, path, active, onDirtyChange }: RemoteE
             </select>
           </>
         )}
-        <button className="icon-btn ed-btn" onClick={() => void reload()} title="Recargar desde el servidor" disabled={saving}>
+        <button
+          className="icon-btn ed-btn"
+          onClick={() => void reload()}
+          title={offline ? "Sin conexión con el servidor" : "Recargar desde el servidor"}
+          disabled={saving || offline}
+        >
           <RotateCw size={14} />
         </button>
         <button
           className="icon-btn ed-btn"
           onClick={() => void save()}
-          title="Guardar (Ctrl+S)"
-          disabled={state.kind !== "ready" || saving}
+          title={offline ? "Sin conexión: no se puede guardar" : "Guardar (Ctrl+S)"}
+          disabled={state.kind !== "ready" || saving || offline}
         >
           <Save size={14} />
         </button>

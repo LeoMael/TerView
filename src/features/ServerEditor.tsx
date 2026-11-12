@@ -2,15 +2,17 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { open as openFileDialog } from "@tauri-apps/plugin-dialog";
 import { homeDir, join } from "@tauri-apps/api/path";
-import { FolderOpen } from "lucide-react";
+import { AlertTriangle, FolderOpen } from "lucide-react";
 import { Modal } from "../components/ui/Modal";
-import { profiles as profilesApi } from "../api/profiles";
+import { profiles as profilesApi, sshAliases, type SshAliasInfo } from "../api/profiles";
+import { errorMessage } from "../api/core";
 import type { AuthMethod, ServerProfile } from "../api/types";
 import { useProfiles } from "../stores/profiles";
 import { useUi } from "../stores/ui";
 import { toast } from "../stores/toasts";
 import { ColorPicker } from "./ColorPicker";
-import { SSH_KEY_EXAMPLE } from "../lib/platform";
+import { SSH_CONFIG_LABEL, SSH_KEY_EXAMPLE } from "../lib/platform";
+import { SshAliasMatches, describeMatch } from "./sshAliases";
 
 export function ServerEditorHost() {
   const editor = useUi((s) => s.serverEditor);
@@ -19,7 +21,7 @@ export function ServerEditorHost() {
   return <ServerEditor key={editor.server?.id || "new"} initial={editor.server} onClose={close} />;
 }
 
-type Errors = Partial<Record<"name" | "host" | "port" | "username" | "keyPath", string>>;
+type Errors = Partial<Record<"name" | "host" | "port" | "username" | "keyPath" | "alias", string>>;
 
 const AUTH_OPTIONS: { value: AuthMethod; label: string }[] = [
   { value: "password", label: "Contraseña" },
@@ -51,6 +53,7 @@ function ServerEditor({ initial, onClose }: { initial: ServerProfile | null; onC
   /** null = desconocido (nuevo o llavero no disponible). */
   const [hasSecret, setHasSecret] = useState<boolean | null>(null);
   const firstRef = useRef<HTMLInputElement>(null);
+  const alias = useSshAlias(initial?.id ?? "", name, host);
 
   useEffect(() => {
     firstRef.current?.focus();
@@ -78,6 +81,7 @@ function ServerEditor({ initial, onClose }: { initial: ServerProfile | null; onC
     const p = Number(port);
     if (!Number.isInteger(p) || p < 1 || p > 65535) e.port = "Puerto entre 1 y 65535";
     if (auth === "key" && !keyPath.trim()) e.keyPath = "Elige la llave privada";
+    if (alias.error) e.alias = alias.error;
     return e;
   };
 
@@ -132,6 +136,13 @@ function ServerEditor({ initial, onClose }: { initial: ServerProfile | null; onC
     if (!saved) {
       setSaving(false);
       return;
+    }
+    if (alias.changed) {
+      try {
+        await sshAliases.set({ [saved.id]: alias.value.trim() || null });
+      } catch (err) {
+        toast.error(`No se pudo guardar el alias de ${SSH_CONFIG_LABEL}`, err);
+      }
     }
     if (projectId !== initialProjectId) {
       const st = useProfiles.getState();
@@ -189,6 +200,22 @@ function ServerEditor({ initial, onClose }: { initial: ServerProfile | null; onC
             placeholder={host.trim() || "p. ej. web-prod"}
             onChange={(e) => setName(e.target.value)}
           />
+        </label>
+
+        <label className="field">
+          <span>Alias para ssh (opcional)</span>
+          <input
+            className="input mono"
+            value={alias.value}
+            spellCheck={false}
+            autoCapitalize="off"
+            placeholder={alias.info && !alias.value.trim() ? `${alias.info.alias} (automático)` : "Se genera a partir del nombre"}
+            onChange={(e) => {
+              alias.setValue(e.target.value);
+              clearErr("alias");
+            }}
+          />
+          <AliasNote state={alias} />
         </label>
 
         <div className="field-row">
@@ -352,5 +379,104 @@ function ServerEditor({ initial, onClose }: { initial: ServerProfile | null; onC
         </div>
       </div>
     </Modal>
+  );
+}
+
+// ───────── Alias de ~/.ssh/config ─────────
+
+interface AliasState {
+  /** Alias escrito a mano ("" = automático). */
+  value: string;
+  setValue: (v: string) => void;
+  /** Distinto del guardado. */
+  changed: boolean;
+  info: SshAliasInfo | null;
+  error: string | null;
+}
+
+/** Alias elegido a mano para el servidor y, con un pequeño retardo, si choca con un `Host` escrito a mano. */
+function useSshAlias(id: string, name: string, host: string): AliasState {
+  const [value, setValue] = useState("");
+  const [saved, setSaved] = useState<string | null>(null);
+  const [info, setInfo] = useState<SshAliasInfo | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!id) {
+      setSaved("");
+      return;
+    }
+    let alive = true;
+    sshAliases
+      .list()
+      .then((m) => {
+        if (!alive) return;
+        setSaved(m[id] ?? "");
+        setValue((v) => v || (m[id] ?? ""));
+      })
+      .catch(() => alive && setSaved(""));
+    return () => {
+      alive = false;
+    };
+  }, [id]);
+
+  useEffect(() => {
+    const n = name.trim() || host.trim();
+    if (!n && !value.trim()) {
+      setInfo(null);
+      setError(null);
+      return;
+    }
+    let alive = true;
+    const t = window.setTimeout(() => {
+      sshAliases
+        .info(id, n, host.trim(), value.trim() || null)
+        .then((i) => {
+          if (!alive) return;
+          setInfo(i);
+          setError(null);
+        })
+        .catch((e) => {
+          if (!alive) return;
+          setInfo(null);
+          // Alias inválido: se muestra; otros fallos (p. ej. no se puede leer el archivo) no bloquean.
+          setError(value.trim() ? errorMessage(e) : null);
+        });
+    }, 300);
+    return () => {
+      alive = false;
+      window.clearTimeout(t);
+    };
+  }, [id, name, host, value]);
+
+  return { value, setValue, changed: saved !== null && value.trim() !== saved, info, error };
+}
+
+function AliasNote({ state }: { state: AliasState }) {
+  const { info, error } = state;
+  if (error) return <div className="cd-err">{error}</div>;
+  if (!info) return null;
+  if (info.matches.length === 0) {
+    return (
+      <div className="ssha-inline">
+        Con «ssh <span className="mono">{info.alias}</span>» desde cualquier terminal (si exportas a {SSH_CONFIG_LABEL}).
+      </div>
+    );
+  }
+  return (
+    <div className="ssha-inline warn" role="status" title={info.matches.map(describeMatch).join("\n")}>
+      <div className="ssha-inline-row">
+        <AlertTriangle size={13} />
+        <span>
+          «<span className="mono">{info.alias}</span>» ya aparece en tu {SSH_CONFIG_LABEL} escrito a mano.
+        </span>
+        {info.suggestion && (
+          <button type="button" className="ssha-linkbtn" onClick={() => info.suggestion && state.setValue(info.suggestion)}>
+            Usar «{info.suggestion}»
+          </button>
+        )}
+      </div>
+      <SshAliasMatches matches={info.matches} />
+    </div>
   );
 }

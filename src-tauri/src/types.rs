@@ -101,7 +101,7 @@ pub struct Settings {
     pub editor_font_family: String,
     /// Mantener ~/.ssh/config sincronizado con los servidores guardados.
     pub ssh_config_sync: bool,
-    /// Si el destino ya existe al transferir: "overwrite" | "skip" | "newer" (solo si el origen es más nuevo).
+    /// Si el destino ya existe al transferir: "overwrite" | "skip" | "newer" (solo si el origen es más nuevo) | "ask" (preguntar).
     pub transfer_conflict: String,
 }
 

@@ -1,0 +1,68 @@
+.upn {
+  position: fixed;
+  top: 48px;
+  right: 14px;
+  z-index: 900;
+  width: 340px;
+  max-width: calc(100vw - 28px);
+  padding: 10px 12px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  font-size: var(--fs);
+}
+.upn-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.upn-icon {
+  flex: none;
+  margin-top: 2px;
+  color: var(--accent);
+}
+.upn-title {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.upn-title small,
+.upn-progress small,
+.upn-hint {
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+.upn-hint,
+.upn-error {
+  margin: 8px 0 0;
+  line-height: 1.4;
+}
+.upn-error {
+  color: var(--red);
+  font-size: var(--fs-sm);
+}
+.upn-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.upn-actions .btn {
+  height: 28px;
+  padding: 0 10px;
+}
+.upn-later {
+  margin-left: auto;
+}
+.upn-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+}
+.upn-progress .progress > div {
+  background: var(--accent);
+}

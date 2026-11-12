@@ -118,6 +118,15 @@ pub fn numbered_name(name: &str, n: usize) -> String {
     }
 }
 
+/// Nombre a mostrar (ruta relativa "carpeta/a.txt") con el último componente cambiado
+/// por `new_base` ("mantener ambos" → "carpeta/a (2).txt").
+pub fn renamed_display(display: &str, new_base: &str) -> String {
+    match display.trim_end_matches('/').rfind('/') {
+        Some(i) => format!("{}{new_base}", &display[..=i]),
+        None => new_base.to_string(),
+    }
+}
+
 /// Objetivo de un enlace local, tal como se recrea en el servidor. En Windows los separadores
 /// pasan a `/`, y los objetivos absolutos (`C:\…`, `\\?\…`, uniones de carpeta) no tienen sentido
 /// en el servidor: `None`.
@@ -273,6 +282,13 @@ pub fn local_io_message(e: &std::io::Error) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn renamed_display_cases() {
+        assert_eq!(renamed_display("a.txt", "a (2).txt"), "a (2).txt");
+        assert_eq!(renamed_display("fotos/viaje/a.jpg", "a (3).jpg"), "fotos/viaje/a (3).jpg");
+        assert_eq!(renamed_display("", "x (2)"), "x (2)");
+    }
 
     #[test]
     fn remote_join_cases() {

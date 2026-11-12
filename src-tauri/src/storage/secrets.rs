@@ -26,6 +26,26 @@ pub fn delete_secret(profile_id: &str) -> AppResult<()> {
     delete_secret_in(SERVICE, profile_id)
 }
 
+// ───────── Token de GitHub (servicio "terview", usuario "github-token") ─────────
+
+/// Usuario del llavero donde se guarda el token personal de GitHub.
+pub const GITHUB_TOKEN_USER: &str = "github-token";
+
+/// Token de GitHub guardado (None si no hay cuenta conectada).
+pub fn get_github_token() -> AppResult<Option<String>> {
+    get_secret_in(SERVICE, GITHUB_TOKEN_USER)
+}
+
+/// Guarda (o reemplaza) el token de GitHub. Solo en el llavero: nunca en archivos ni en logs.
+pub fn set_github_token(token: &str) -> AppResult<()> {
+    set_secret_in(SERVICE, GITHUB_TOKEN_USER, token)
+}
+
+/// Borra el token de GitHub ("Desconectar"). Si no existía, no es error.
+pub fn delete_github_token() -> AppResult<()> {
+    delete_secret_in(SERVICE, GITHUB_TOKEN_USER)
+}
+
 // ───────── Implementación parametrizada por servicio (los tests usan "terview-test") ─────────
 
 fn entry(service: &str, user: &str) -> AppResult<Entry> {

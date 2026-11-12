@@ -37,10 +37,19 @@
   arrastrar archivos desde tu PC.
 - **Transferir miles de archivos**: carpetas completas, varias a la vez, con pausa y reanudación.
   Si se corta, continúa desde donde quedó.
-- **Editar archivos del servidor** con el mismo editor de VS Code.
+- **Editar archivos del servidor** con el mismo editor de VS Code: cada archivo en su pestaña, junto al explorador
+  o en una ventana aparte (arrastra la pestaña fuera, como en el navegador).
 - **Aplicar comandos listos** para Podman, Docker, sistema, red, servicios y logs, o guardar los tuyos.
   Incluye un botón **Analizar servidor**.
 - **Organizar tus servidores** en proyectos, con carpetas favoritas. Importa y exporta `~/.ssh/config`.
+- **Gestionar contenedores** de Podman o Docker sin escribir comandos: levantar, parar, ver logs,
+  Compose, y limpiar imágenes que no se usan.
+- **Ver el servidor en vivo**: CPU, memoria, discos, red y procesos, con alertas.
+- **Administrar usuarios y grupos** si eres root o tienes sudo. TerView lo detecta solo y lo muestra en la pestaña.
+- **Abrir túneles** para usar en tu PC una base de datos o un panel del servidor sin abrir puertos.
+- **Ejecutar un comando en varios servidores** a la vez y comparar los resultados.
+- **Conectar tu cuenta de GitHub**: llaves SSH, clonar, desplegar y sincronizar tu configuración.
+- **Actualizarse sola** cuando sale una versión nueva.
 - Tema oscuro o claro y paneles ajustables.
 
 ## Instalación
@@ -107,7 +116,8 @@ Todavía no hay instalador publicado. Se puede [compilar desde el código](#desa
    en *Conexión rápida*.
 2. Elige cómo entrar: **contraseña**, **llave SSH** (por ejemplo `id_ed25519`) o **agente SSH**.
 3. Haz **doble clic** en el servidor para conectarte. La primera vez verás la **huella** del
-   servidor: confírmala si es el servidor correcto.
+   servidor: confírmala si es el servidor correcto. Si ya está abierto, el doble clic te lleva a
+   su pestaña; para abrir otra conexión usa **Ctrl+doble clic**, el clic central o el **+** de las pestañas.
 4. Listo: arriba tienes **Archivos** y **Comandos**, abajo la **terminal**. Arrastra archivos
    desde tu PC al explorador para subirlos.
 
@@ -131,7 +141,14 @@ Con el foco en la terminal, `Ctrl+W` y `Ctrl+B` van a la shell (borrar palabra, 
 **En el explorador:** `Enter` abrir · `Backspace` subir de carpeta · `Alt+←` / `Alt+→` atrás y adelante ·
 `Ctrl+L` escribir ruta · `Ctrl+F` filtrar · `F2` renombrar · `Supr` eliminar · `F5` actualizar.
 
-**En el editor:** `Ctrl+S` guardar en el servidor.
+**En el editor:** `Ctrl+S` guardar en el servidor · `Ctrl+Shift+M` dividir (explorador | editor) o quitar la división ·
+clic central en una pestaña para cerrarla.
+
+Los archivos abiertos son pestañas, como en el navegador: arrastra una pestaña para cambiarla de orden, o
+**suéltala fuera de la ventana** (o bastante más abajo de la barra) para abrirla en una ventana aparte. Al cerrar esa
+ventana o pulsar «Volver», el archivo vuelve como pestaña. Con clic derecho en la pestaña: «Abrir en ventana aparte»,
+«Dividir con Archivos» o «Dividir con Comandos». En Ajustes → Editor eliges cómo se abre un archivo: pestaña (por
+defecto), dividido o ventana aparte.
 
 ## Seguridad
 

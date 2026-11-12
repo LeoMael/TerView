@@ -1,12 +1,17 @@
 // Ajustes de la app. Los cambios se aplican al momento (useSettings().update guarda con retardo).
 import { useEffect, useState, type ReactNode } from "react";
 import {
+  AppWindow,
   ArrowLeftRight,
+  Columns2,
   FileCode2,
   FileOutput,
   FolderTree,
+  Info,
   Minus,
+  SlidersHorizontal,
   Monitor,
+  PanelTop,
   Moon,
   Palette,
   Plug,
@@ -24,10 +29,14 @@ import { confirmDialog } from "../ui/dialogs";
 import { profiles } from "../../api/profiles";
 import { toast } from "../../stores/toasts";
 import { getTerminalGpu, setTerminalGpu } from "../Terminal/gpuPref";
+import { getEditorOpenMode, setEditorOpenMode, type EditorOpenMode } from "../Editor/openPref";
 import "./SettingsDialog.css";
 import { SSH_CONFIG_LABEL } from "../../lib/platform";
-
-type SectionId = "appearance" | "terminal" | "connection" | "transfers" | "explorer" | "editor" | "servers";
+import { useSettingsNav, type SectionId } from "./settingsNav";
+import { DiagnosticsPanel } from "../Diagnostics/DiagnosticsPanel";
+import { AboutHeader, ChangelogView, UpdatesBox } from "../About/About";
+import { getAutoCheck, setAutoCheck } from "../../features/updater/updater";
+import { checkSshAliasesBeforeExport } from "../../features/sshAliases";
 
 const SECTIONS: { id: SectionId; label: string; icon: ReactNode }[] = [
   { id: "appearance", label: "Apariencia", icon: <Palette size={15} /> },
@@ -37,6 +46,8 @@ const SECTIONS: { id: SectionId; label: string; icon: ReactNode }[] = [
   { id: "explorer", label: "Explorador", icon: <FolderTree size={15} /> },
   { id: "editor", label: "Editor", icon: <FileCode2 size={15} /> },
   { id: "servers", label: "Servidores", icon: <Server size={15} /> },
+  { id: "advanced", label: "Avanzado", icon: <SlidersHorizontal size={15} /> },
+  { id: "about", label: "Acerca de", icon: <Info size={15} /> },
 ];
 
 const FONT_PRESETS = [
@@ -56,7 +67,8 @@ const MB = 1024 * 1024;
 export function SettingsDialog() {
   const open = useUi((s) => s.settingsOpen);
   const close = useUi((s) => s.closeSettings);
-  const [section, setSection] = useState<SectionId>("appearance");
+  const section = useSettingsNav((s) => s.section);
+  const setSection = useSettingsNav((s) => s.setSection);
   if (!open) return null;
   return (
     <Modal
@@ -98,6 +110,8 @@ export function SettingsDialog() {
           {section === "explorer" && <Explorer />}
           {section === "editor" && <EditorSection />}
           {section === "servers" && <ServersSection />}
+          {section === "advanced" && <AdvancedSection />}
+          {section === "about" && <AboutSection />}
         </div>
       </div>
     </Modal>
@@ -309,6 +323,7 @@ const CONFLICT_HINTS: Record<Settings["transferConflict"], string> = {
   overwrite: "El archivo de destino se reemplaza siempre.",
   skip: "Si ya existe, no se transfiere (queda como «omitido»).",
   newer: "Solo se reemplaza si el origen es más reciente que el destino.",
+  ask: "Pregunta archivo por archivo qué hacer (se puede aplicar a toda la transferencia).",
 };
 
 function Transfers() {
@@ -340,6 +355,7 @@ function Transfers() {
             { v: "overwrite", label: "Sobrescribir" },
             { v: "skip", label: "Omitir" },
             { v: "newer", label: "Solo si es más nuevo" },
+            { v: "ask", label: "Preguntar" },
           ]}
         />
       </Row>
@@ -368,9 +384,29 @@ function EditorSection() {
   const [size, setSize] = useSetting("editorFontSize");
   const [family, setFamily] = useSetting("editorFontFamily");
   const mb = Math.max(1, Math.round(maxBytes / MB));
+  const [openMode, setOpenModeState] = useState<EditorOpenMode>(getEditorOpenMode);
+  const setOpenMode = (m: EditorOpenMode) => {
+    setEditorOpenMode(m);
+    setOpenModeState(m);
+  };
   return (
     <>
       <h3 className="st-title">Editor</h3>
+      <Row
+        label="Al abrir un archivo"
+        hint="Arrastra la pestaña de un archivo fuera de la ventana para abrirlo aparte. Ctrl+Shift+M divide o quita la división."
+      >
+        <Segmented
+          value={openMode}
+          label="Al abrir un archivo"
+          onChange={setOpenMode}
+          options={[
+            { v: "tab", label: "Pestaña", icon: <PanelTop size={14} /> },
+            { v: "split", label: "Dividido", icon: <Columns2 size={14} /> },
+            { v: "window", label: "En ventana aparte", icon: <AppWindow size={14} /> },
+          ]}
+        />
+      </Row>
       <Row label="Tamaño de letra">
         <NumberStepper value={size} min={8} max={32} suffix="px" onChange={setSize} />
       </Row>
@@ -429,6 +465,7 @@ function ServersSection() {
   const [busy, setBusy] = useState(false);
 
   const exportNow = async (): Promise<boolean> => {
+    if (!(await checkSshAliasesBeforeExport())) return false;
     setBusy(true);
     try {
       const r = await profiles.exportSshConfig();
@@ -467,6 +504,40 @@ function ServersSection() {
           {busy ? <span className="spinner" /> : <FileOutput size={14} />} Exportar ahora
         </button>
       </Row>
+    </>
+  );
+}
+
+function AdvancedSection() {
+  return (
+    <>
+      <h3 className="st-title">Avanzado</h3>
+      <h4 className="st-subtitle">Diagnóstico</h4>
+      <DiagnosticsPanel />
+    </>
+  );
+}
+
+function AboutSection() {
+  // Se guarda en este equipo (localStorage), no en los ajustes del motor.
+  const [auto, setAuto] = useState(getAutoCheck);
+  return (
+    <>
+      <AboutHeader />
+      <h4 className="st-subtitle">Actualizaciones</h4>
+      <UpdatesBox />
+      <Row label="Buscar actualizaciones automáticamente" hint="Al iniciar, sin interrumpir: si hay una versión nueva verás un aviso.">
+        <Toggle
+          checked={auto}
+          onChange={(v) => {
+            setAuto(v);
+            setAutoCheck(v);
+          }}
+          label="Buscar actualizaciones automáticamente"
+        />
+      </Row>
+      <h4 className="st-subtitle">Novedades</h4>
+      <ChangelogView />
     </>
   );
 }

@@ -1,0 +1,22 @@
+/* Marcas del diálogo «Importar de ~/.ssh/config». */
+.sb-imp-row.ssh-imp-exists {
+  cursor: default;
+}
+.sb-imp-row.ssh-imp-exists .sb-imp-name,
+.sb-imp-row.ssh-imp-exists .sb-imp-sub {
+  opacity: 0.6;
+}
+.ssh-imp-badge {
+  margin-left: auto;
+  flex: none;
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.ssh-imp-badge.warn {
+  color: var(--orange);
+  border-color: color-mix(in srgb, var(--orange) 45%, transparent);
+}

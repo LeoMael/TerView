@@ -232,7 +232,7 @@ Archivos: `src-tauri/src/storage/ssh_config.rs` (leer/escribir bloque), comandos
 |------|--------|
 | 2FA / códigos OTP | ✅ Hecho: diálogo "Código de verificación", varias rondas, llave + código. ⚠️ Sin probar contra un servidor 2FA real. Las sesiones con 2FA no se reconectan solas (el código es de un solo uso). |
 | Agente SSH | Implementado, ⚠️ sin probar con un agente real. |
-| Conflictos al subir | ✅ Ajustes → Transferencias: Sobrescribir / Omitir / Solo si es más nuevo. Falta preguntar archivo por archivo. |
+| Conflictos al subir | ✅ Sobrescribir / Omitir / Solo si es más nuevo / **Preguntar** archivo por archivo (v0.4.0). |
 | Simultáneas por servidor | ✅ Hecho (el límite cuenta por servidor). |
 | Symlinks en carpetas | ✅ Se copian como enlaces en ambos sentidos. |
 | Buscar en la terminal | ✅ Ctrl+Shift+F. |
@@ -241,9 +241,9 @@ Archivos: `src-tauri/src/storage/ssh_config.rs` (leer/escribir bloque), comandos
 | Duplicar servidor | ✅ Copia también la contraseña guardada. |
 | Logo e ícono | ✅ `docs/marca/`, ícono de la app generado. |
 | Instaladores | ✅ `.rpm`, `.deb`, `.AppImage`, `.msi`, `-setup.exe` con GitHub Actions (v0.3.0). ⏳ Falta firmar (SmartScreen avisa). |
-| Arrastrar al sistema | ⏳ Arrastrar archivos **desde** el explorador al escritorio (necesita plugin de arrastre nativo). |
-| Exportar "Mis comandos" a archivo | ⏳ Hoy se copia al portapapeles; para guardar en archivo hace falta un comando del motor o `tauri-plugin-fs`. |
-| Alias de `~/.ssh/config` | ⏳ No se comprueba que el alias de TerView no choque con un `Host` escrito a mano. |
+| Arrastrar al sistema | ⏳ El arrastre nativo (`tauri-plugin-drag`) no funciona bien en Wayland ni con rutas con espacios. Alternativa hecha (v0.4.0): «Descargar en…» y «Descargar y abrir carpeta». |
+| Exportar "Mis comandos" a archivo | ✅ Exportar/importar a archivo con vista previa (v0.4.0). |
+| Alias de `~/.ssh/config` | ✅ Detecta choques (Host, patrones, Include, Match) y propone alias (v0.4.0). |
 | Cancelar "ver resultado" | ⏳ Deja de esperar, pero el comando remoto sigue hasta terminar o agotar el tiempo. |
 | Pruebas de la interfaz | ⏳ La interfaz se revisó con capturas en navegador; faltan pruebas automáticas dentro de la app real. |
 
@@ -289,18 +289,18 @@ Ordenadas por utilidad para el día a día:
 | Orden | Función | Origen |
 |-------|---------|--------|
 | 1 | [Optimización / rendimiento](#81-optimización--rendimiento) | Se siente lenta |
-| 2 | [Gestión del servidor: usuarios y grupos](#82-gestión-del-servidor-usuarios-y-grupos) | Falta para administradores |
-| 3 | [Monitoreo en vivo](#83-monitoreo-en-vivo) | Idea 4 |
-| 4 | [Túneles (port forwarding)](#84-túneles-port-forwarding) | Idea 1 |
-| 5 | [Versiones y actualizaciones](#85-versiones-y-actualizaciones) | Idea 8 |
-| 6 | [Ejecutar en varios servidores a la vez](#86-ejecutar-en-varios-servidores-a-la-vez) | Idea 3 (opcional) |
-| 7 | [GitHub: Actions + conectar cuenta](#9-github) | Instaladores, versiones, llaves, despliegues |
+| 2 | [Gestión del servidor: usuarios y grupos](#82-gestión-del-servidor-usuarios-y-grupos) | ✅ Hecho (v0.4.0) |
+| 3 | [Monitoreo en vivo](#83-monitoreo-en-vivo) | ✅ Hecho (v0.4.0) |
+| 4 | [Túneles (port forwarding)](#84-túneles-port-forwarding) | ✅ Hecho (v0.4.0) |
+| 5 | [Versiones y actualizaciones](#85-versiones-y-actualizaciones) | ✅ Hecho (v0.4.0) |
+| 6 | [Ejecutar en varios servidores a la vez](#86-ejecutar-en-varios-servidores-a-la-vez) | ✅ Hecho (v0.4.0) |
+| 7 | [GitHub: Actions + conectar cuenta](#9-github) | ✅ Hecho (v0.3.0 Actions, v0.4.0 cuenta) |
+| 8 | [Contenedores (Podman / Docker)](#87-administrador-de-contenedores-podman--docker--pedido-11112026) | ✅ Hecho (v0.4.0) |
 
 ### 8.1 Optimización / rendimiento
 
 **Hecho en v0.3.0:** carga bajo demanda (paquete inicial 914 → 362 KB), terminal WebGL, arreglo automático
-de WebKitGTK con NVIDIA, menos redibujados, `color-mix` precalculados. **Falta:** medir en la app real y
-el panel de diagnóstico.
+de WebKitGTK con NVIDIA, menos redibujados, `color-mix` precalculados. Panel de diagnóstico ✅ (v0.4.0). **Falta:** medir en la app real.
 
 **Primero medir, luego cambiar.** Hay que saber *dónde* se siente lenta:
 al abrir la app, al conectar, al navegar carpetas, al escribir en la terminal, al cambiar de pestaña,
@@ -370,6 +370,34 @@ logs), **firewall** (puertos abiertos), **paquetes** (actualizar, instalar), **t
 - **GitHub Actions** para generar instaladores de Linux (`.rpm`, `.deb`, `.AppImage`), Windows (`.msi`/`.exe`) y macOS en cada versión.
 - Ver también la **versión de lo instalado en el servidor** (Podman, Docker, nginx, kernel…) y si hay
   actualizaciones pendientes del sistema (ya se detecta en "Analizar servidor").
+
+### 8.7 Administrador de contenedores (Podman / Docker) — pedido 11/11/2026
+Pestaña **Contenedores** en cada conexión, todo visual (sin escribir comandos):
+- Detecta Podman y/o Docker (y si hace falta sudo o es modo *rootless*).
+- **Contenedores**: lista con estado, imagen, puertos, uso de CPU/memoria; iniciar, parar, reiniciar,
+  pausar, eliminar; ver logs en vivo; abrir una terminal dentro (`exec -it`); inspeccionar.
+- **Crear / levantar**: formulario (imagen, nombre, puertos, volúmenes, variables, reinicio) y
+  **Compose** (`compose up -d` / `down` / `pull` en una carpeta con `compose.yml`).
+- **Imágenes**: listar, descargar (`pull`), eliminar, **limpiar** las que no se usan (`image prune`)
+  mostrando antes cuánto espacio se libera.
+- **Volúmenes y redes**: listar, crear, eliminar, limpiar.
+- **Limpieza general** (`system prune`) con resumen de lo que se borrará y confirmación.
+- Siempre muestra el comando exacto antes de las acciones que borran.
+
+### 8.8 Puertos y servicios web — pedido 11/11/2026
+En **Administración**, dos sub-pestañas nuevas:
+- **Puertos**: todos los puertos en escucha (TCP/UDP, IPv4/IPv6) con proceso, PID, usuario y servicio
+  systemd/contenedor. Con root/sudo se ven los de **todos los usuarios**; sin privilegios, solo los propios
+  (y se avisa). Filtros: por usuario, por proceso, solo públicos (0.0.0.0/::) vs solo locales.
+  Acciones: abrir un túnel a tu PC, copiar dirección, ver el proceso en el Monitor.
+- **Sitios web**: detecta **nginx** y **Caddy**; lista cada sitio (dominios, puertos, HTTPS/certificado,
+  raíz o `proxy_pass`/`reverse_proxy` hacia qué puerto), enlaza el puerto de destino con la lista de
+  Puertos, abre el archivo de configuración en el editor, comprueba la configuración (`nginx -t`,
+  `caddy validate`) y recarga el servicio con confirmación.
+
+### Corrección — doble clic en un servidor de la barra lateral
+Hoy abre siempre una conexión nueva. Debe **ir a la pestaña ya abierta** de ese servidor (y reconectar
+si estaba cerrada). Para abrir una conexión adicional al mismo servidor se usa el **+**.
 
 ### 8.6 Ejecutar en varios servidores a la vez
 - Elegir servidores (o un proyecto completo) y ejecutar un comando de la biblioteca en todos.

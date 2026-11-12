@@ -1,16 +1,36 @@
 // Panel derecho: descripción, variables, vista previa exacta, acciones y resultado.
 import { useMemo, useState } from "react";
-import { Copy, CopyPlus, Pencil, Play, SquareTerminal, Terminal, Trash2 } from "lucide-react";
+import { Copy, CopyPlus, Network, Pencil, Play, SquareTerminal, Terminal, Trash2 } from "lucide-react";
 import { DISTRO_LABEL } from "./catalog";
 import { captureBlockedReason, toTerminal } from "./actions";
 import { CommandTags, Preview, ResultView, VarField, initialValues, rememberValues } from "./parts";
 import type { CommandItem } from "./state";
 import { missingVars, parseVars, renderTemplate, varLabel } from "./template";
 import { useRun } from "./useRun";
+import { usePrivilege } from "../../features/privileges";
+import { multiRunBlockedReason, runOnManyServers } from "./multi";
+
+/** Nota bajo la vista previa de un comando con sudo, según los privilegios detectados. */
+function SudoNote({ sessionId }: { sessionId: string }) {
+  const info = usePrivilege(sessionId);
+  const level = info?.level;
+  if (level === "root")
+    return info?.hasSudo ? (
+      <div className="cmd-note cmd-note-info">Eres root: no necesitas sudo.</div>
+    ) : (
+      <div className="cmd-note">Eres root y sudo no está instalado: quita «sudo» del comando.</div>
+    );
+  if (level === "sudo-nopasswd" && info?.tool === "sudo") return <div className="cmd-note cmd-note-info">Tienes sudo sin contraseña.</div>;
+  if (level === "user" || (info?.tool === "doas" && !info.hasSudo))
+    return <div className="cmd-note">Este comando necesita sudo y tu usuario no parece tenerlo.</div>;
+  return <div className="cmd-note">Usa sudo: la contraseña se escribe en la terminal y nunca se guarda.</div>;
+}
 
 interface Props {
   item: CommandItem;
   sessionId: string;
+  /** Servidor de esta conexión (se preselecciona al ejecutar en varios). */
+  profileId?: string;
   disabled: boolean;
   onEdit?: () => void;
   onDuplicate?: () => void;
@@ -18,7 +38,7 @@ interface Props {
   onCopyToMine?: () => void;
 }
 
-export function CommandDetail({ item, sessionId, disabled, onEdit, onDuplicate, onDelete, onCopyToMine }: Props) {
+export function CommandDetail({ item, sessionId, profileId, disabled, onEdit, onDuplicate, onDelete, onCopyToMine }: Props) {
   const [values, setValues] = useState<Record<string, string>>(() => initialValues(sessionId, item));
   const { state, start, cancel, clear } = useRun(sessionId);
   const vars = useMemo(() => parseVars(item.command), [item.command]);
@@ -27,6 +47,7 @@ export function CommandDetail({ item, sessionId, disabled, onEdit, onDuplicate, 
   const blocked = captureBlockedReason(item);
   const missingMsg = missing.length ? `Completa: ${missing.map(varLabel).join(", ")}` : null;
   const off = disabled || missing.length > 0;
+  const multiBlocked = multiRunBlockedReason(item);
 
   const submit = async (mode: "insert" | "run" | "capture") => {
     if (off) return;
@@ -97,11 +118,7 @@ export function CommandDetail({ item, sessionId, disabled, onEdit, onDuplicate, 
 
         <div className="cmd-preview-label">Se ejecutará:</div>
         <Preview item={item} values={values} />
-        {item.sudo && (
-          <div className="cmd-note">
-            Usa sudo: la contraseña se escribe en la terminal y nunca se guarda.
-          </div>
-        )}
+        {item.sudo && <SudoNote sessionId={sessionId} />}
 
         <div className="cmd-actions">
           <button
@@ -131,6 +148,12 @@ export function CommandDetail({ item, sessionId, disabled, onEdit, onDuplicate, 
           >
             <button className="btn" disabled={off || !!blocked || !!state?.running} onClick={() => submit("capture")}>
               <Play size={14} /> Ejecutar y ver resultado
+            </button>
+          </span>
+          {/* No depende de esta conexión: el panel de varios servidores abre las suyas y pide las variables. */}
+          <span className="cmd-btn-wrap" title={multiBlocked ?? "Elige servidores y ejecútalo en todos a la vez, con la salida de cada uno"}>
+            <button className="btn" disabled={!!multiBlocked} onClick={() => runOnManyServers(item, profileId)}>
+              <Network size={14} /> Ejecutar en varios servidores…
             </button>
           </span>
         </div>

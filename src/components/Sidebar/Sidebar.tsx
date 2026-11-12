@@ -5,6 +5,7 @@ import {
   ChevronDown,
   ChevronRight,
   Copy,
+  CopyPlus,
   Download,
   Folder,
   FolderPlus,
@@ -15,6 +16,8 @@ import {
   Search,
   Server,
   Settings as SettingsIcon,
+  SquareTerminal,
+  GitBranch,
   Trash2,
   Upload,
   X,
@@ -30,12 +33,15 @@ import { toast } from "../../stores/toasts";
 import { confirmDialog, promptDialog } from "../ui/dialogs";
 import { Logo } from "../ui/Logo";
 import { profiles as profilesApi } from "../../api/profiles";
-import { connectToMany, connectToServer } from "../../features/connect";
+import { connectToMany, connectToServer, openOrFocusServer } from "../../features/connect";
 import { SbContextMenu, type MenuItem } from "./SbContextMenu";
+import { openMultiRun } from "../../features/multirun/store";
+import { openGitHub } from "../GitHub";
 import { parseQuickConnect } from "./quickConnect";
 import { preloadable } from "../../lib/lazy";
 import "./Sidebar.css";
-import { SSH_CONFIG_LABEL } from "../../lib/platform";
+import { SSH_CONFIG_LABEL, isMac, isModKey } from "../../lib/platform";
+import { checkSshAliasesBeforeExport } from "../../features/sshAliases";
 
 const ImportSshConfigDialog = preloadable(() => import("./ImportSshConfigDialog").then((m) => m.ImportSshConfigDialog));
 
@@ -59,11 +65,39 @@ function writeCollapsed(v: Record<string, boolean>) {
   }
 }
 
-function connectedProfilesKey(tabs: readonly { status: string; profileId: string }[]): string {
-  const ids: string[] = [];
-  for (const t of tabs) if (t.status === "connected" && !ids.includes(t.profileId)) ids.push(t.profileId);
-  return ids.sort().join("\n");
+type TabState = "connected" | "reconnecting" | "closed";
+const TAB_STATE_RANK: Record<TabState, number> = { closed: 1, reconnecting: 2, connected: 3 };
+
+/** Estado de la mejor pestaña de cada servidor, como texto estable ("id:estado" por línea, ordenado):
+ *  así cambiar de pestaña no redibuja la barra; solo abrir, cerrar o cambiar de estado. */
+function tabStatesKey(tabs: readonly { status: TabState; profileId: string }[]): string {
+  const best = new Map<string, TabState>();
+  for (const t of tabs) {
+    const cur = best.get(t.profileId);
+    if (!cur || TAB_STATE_RANK[t.status] > TAB_STATE_RANK[cur]) best.set(t.profileId, t.status);
+  }
+  return Array.from(best, ([id, st]) => `${id}:${st}`)
+    .sort()
+    .join("\n");
 }
+
+function parseTabStates(key: string): Map<string, TabState> {
+  const m = new Map<string, TabState>();
+  for (const line of key ? key.split("\n") : []) {
+    const i = line.lastIndexOf(":");
+    m.set(line.slice(0, i), line.slice(i + 1) as TabState);
+  }
+  return m;
+}
+
+const MOD = isMac ? "⌘" : "Ctrl";
+const OPEN_HINT = `Doble clic: abrir o ir a su pestaña · ${MOD}+doble clic: nueva conexión`;
+
+const DOT_TITLE: Record<TabState, string> = {
+  connected: "Conectado — doble clic para ir a su pestaña",
+  reconnecting: "Reconectando — doble clic para ir a su pestaña",
+  closed: "Pestaña desconectada — doble clic para ir a ella y reconectar",
+};
 
 function userHost(s: ServerProfile) {
   return `${s.username}@${s.host}${s.port !== 22 ? `:${s.port}` : ""}`;
@@ -87,8 +121,8 @@ export function Sidebar() {
   const loaded = useProfiles((s) => s.loaded);
   const load = useProfiles((s) => s.load);
   const connecting = useProfiles((s) => s.connecting);
-  // Solo la lista de servidores conectados (texto): cambiar de pestaña o reconectar no redibuja la barra.
-  const connectedKey = useTabs((s) => connectedProfilesKey(s.tabs));
+  // Estado de las pestañas por servidor (texto): cambiar de pestaña no redibuja la barra.
+  const tabStatesKeyValue = useTabs((s) => tabStatesKey(s.tabs));
   const openServerEditor = useUi((s) => s.openServerEditor);
   const openProjectEditor = useUi((s) => s.openProjectEditor);
   const openSettings = useUi((s) => s.openSettings);
@@ -106,7 +140,7 @@ export function Sidebar() {
     if (!loaded) void load();
   }, [loaded, load]);
 
-  const connected = useMemo(() => new Set(connectedKey ? connectedKey.split("\n") : []), [connectedKey]);
+  const tabStates = useMemo(() => parseTabStates(tabStatesKeyValue), [tabStatesKeyValue]);
 
   const serverById = useMemo(() => new Map(servers.map((s) => [s.id, s])), [servers]);
 
@@ -136,8 +170,14 @@ export function Sidebar() {
 
   // ───────── Acciones ─────────
 
+  /** Conexión NUEVA (marcadores, «Abrir otra conexión», Ctrl+doble clic, clic central). */
   const connect = (s: ServerProfile, initialPath?: string | null) => {
     void connectToServer(s, initialPath ? { initialPath } : {});
+  };
+
+  /** Va a la pestaña ya abierta del servidor (reconectándola si hace falta) o conecta si no hay. */
+  const openOrFocus = (s: ServerProfile) => {
+    void openOrFocusServer(s);
   };
 
   const toggleProject = (id: string, force?: boolean) => {
@@ -211,13 +251,30 @@ export function Sidebar() {
         useUi.getState().openProjectEditor({ id: "", name: "", serverIds: [s.id], bookmarks: [], color: null }),
     });
 
+    const tabState = tabStates.get(s.id);
+    const busy = !!connecting[s.id];
     const items: MenuItem[] = [
-      { label: "Conectar", icon: <Plug size={14} />, onClick: () => connect(s), disabled: !!connecting[s.id] },
+      {
+        label: !tabState ? "Conectar" : tabState === "closed" ? "Ir a su pestaña y reconectar" : "Ir a su pestaña",
+        icon: <Plug size={14} />,
+        onClick: () => openOrFocus(s),
+        disabled: busy,
+      },
+    ];
+    if (tabState) {
+      items.push({ label: "Abrir otra conexión", icon: <CopyPlus size={14} />, onClick: () => connect(s), disabled: busy });
+    }
+    items.push(
+      {
+        label: "Ejecutar en varios servidores…",
+        icon: <SquareTerminal size={14} />,
+        onClick: () => openMultiRun({ profileIds: [s.id] }),
+      },
       "separator",
       { label: "Editar…", icon: <Pencil size={14} />, onClick: () => openServerEditor(s) },
       { label: "Duplicar", icon: <Copy size={14} />, onClick: () => void st.duplicateServer(s.id) },
       { label: "Añadir a proyecto", icon: <Layers size={14} />, submenu: projectItems },
-    ];
+    );
     if (projectId) {
       const p = st.projects.find((x) => x.id === projectId);
       items.push(
@@ -253,6 +310,12 @@ export function Sidebar() {
         icon: <Plug size={14} />,
         disabled: projServers.length === 0,
         onClick: () => void connectToMany(projServers),
+      },
+      {
+        label: "Ejecutar comando en el proyecto…",
+        icon: <SquareTerminal size={14} />,
+        disabled: projServers.length === 0,
+        onClick: () => openMultiRun({ projectId: p.id }),
       },
       "separator",
       { label: "Eliminar", icon: <Trash2 size={14} />, danger: true, onClick: () => void deleteProject(p) },
@@ -300,6 +363,7 @@ export function Sidebar() {
   };
 
   const exportSshConfig = async () => {
+    if (!(await checkSshAliasesBeforeExport())) return;
     try {
       const r = await profilesApi.exportSshConfig();
       toast.success(
@@ -336,7 +400,7 @@ export function Sidebar() {
     setQuick("");
     setQuickError(null);
     setSelected(`s:${server.id}`);
-    void connectToServer(server);
+    void openOrFocusServer(server);
   };
 
   // Navegación con flechas entre filas.
@@ -354,10 +418,16 @@ export function Sidebar() {
     rows[next].scrollIntoView({ block: "nearest" });
   };
 
-  const rowKeys = (e: KeyboardEvent<HTMLElement>, onEnter: () => void, key: string, items: () => MenuItem[]) => {
+  /** `onEnter` recibe true con Ctrl/⌘+Enter (en un servidor: abrir otra conexión). */
+  const rowKeys = (
+    e: KeyboardEvent<HTMLElement>,
+    onEnter: (withMod: boolean) => void,
+    key: string,
+    items: () => MenuItem[],
+  ) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      onEnter();
+      onEnter(isModKey(e));
     } else if (e.key === "ContextMenu" || (e.key === "F10" && e.shiftKey)) {
       e.preventDefault();
       openMenuForElement(e.currentTarget, key, items());
@@ -369,7 +439,7 @@ export function Sidebar() {
   const renderServer = (s: ServerProfile, projectId?: string) => {
     const key = projectId ? `p:${projectId}:s:${s.id}` : `s:${s.id}`;
     const isConnecting = !!connecting[s.id];
-    const isOn = connected.has(s.id);
+    const tabState = tabStates.get(s.id);
     return (
       <div
         key={key}
@@ -378,10 +448,17 @@ export function Sidebar() {
         role="treeitem"
         aria-selected={selected === key}
         className={`sb-row${projectId ? " sb-indent" : ""}${selected === key ? " selected" : ""}`}
-        title={`${s.name} — ${userHost(s)}`}
+        title={`${s.name} — ${userHost(s)}\n${OPEN_HINT}`}
         onClick={() => setSelected(key)}
-        onDoubleClick={() => connect(s)}
-        onKeyDown={(e) => rowKeys(e, () => connect(s), key, () => serverMenu(s, projectId))}
+        onDoubleClick={(e) => (isModKey(e) ? connect(s) : openOrFocus(s))}
+        onMouseDown={(e) => e.button === 1 && e.preventDefault()}
+        onAuxClick={(e) => {
+          if (e.button !== 1) return;
+          e.preventDefault();
+          setSelected(key);
+          connect(s);
+        }}
+        onKeyDown={(e) => rowKeys(e, (withMod) => (withMod ? connect(s) : openOrFocus(s)), key, () => serverMenu(s, projectId))}
         onContextMenu={(e) => openMenuAt(e, key, serverMenu(s, projectId))}
       >
         {s.color && <span className="sb-colorbar" style={{ background: s.color }} />}
@@ -390,8 +467,8 @@ export function Sidebar() {
             <span className="spinner sb-spinner" aria-label="Conectando" />
           ) : (
             <span
-              className={`status-dot${isOn ? " on" : ""}`}
-              title={isOn ? "Conectado" : "Desconectado"}
+              className={`status-dot${tabState === "connected" ? " on" : tabState ? ` sb-dot-${tabState}` : ""}`}
+              title={tabState ? DOT_TITLE[tabState] : "Sin conexión abierta"}
             />
           )}
         </span>
@@ -490,6 +567,23 @@ export function Sidebar() {
             onClick={(e) => openNewMenu(e.currentTarget)}
           >
             <Plus size={14} /> Nuevo <ChevronDown size={12} />
+          </button>
+          <button
+            className="icon-btn"
+            title="Ejecutar un comando en varios servidores a la vez"
+            aria-label="Ejecutar en varios servidores"
+            disabled={loaded && servers.length === 0}
+            onClick={() => openMultiRun()}
+          >
+            <SquareTerminal size={15} />
+          </button>
+          <button
+            className="icon-btn"
+            title="GitHub: llaves, repositorios, despliegues y sincronizar"
+            aria-label="GitHub"
+            onClick={() => openGitHub()}
+          >
+            <GitBranch size={15} />
           </button>
           <button className="icon-btn" title="Ajustes" aria-label="Ajustes" onClick={openSettings}>
             <SettingsIcon size={15} />

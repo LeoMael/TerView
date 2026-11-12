@@ -229,3 +229,56 @@ async fn live_exec_truncates_big_output() {
     assert_eq!(r.exit_code, Some(0));
     assert!(!r.timed_out);
 }
+
+#[tokio::test]
+#[ignore]
+async fn live_exec_stdin_cat_echoes_input() {
+    let s = session().await;
+    let input = "línea 1\nlínea 2 con 'comillas' y $VAR\n";
+    let r = exec::run_with_stdin(&s, "cat", input.as_bytes(), 10).await.unwrap();
+    assert_eq!(r.stdout, input);
+    assert_eq!(r.exit_code, Some(0));
+    assert!(!r.timed_out);
+}
+
+#[tokio::test]
+#[ignore]
+async fn live_exec_stdin_read_line() {
+    let s = session().await;
+    let r = exec::run_with_stdin(&s, "sh -c 'read a; echo \"ok:$a\"'", b"secreto\nresto\n", 10)
+        .await
+        .unwrap();
+    assert_eq!(r.stdout, "ok:secreto\n");
+    assert_eq!(r.exit_code, Some(0));
+}
+
+#[tokio::test]
+#[ignore]
+async fn live_exec_stdin_ignored_by_command_and_large() {
+    let s = session().await;
+    // El comando no lee stdin: no debe bloquearse.
+    let r = exec::run_with_stdin(&s, "echo hola", b"nada\n", 10).await.unwrap();
+    assert_eq!(r.stdout, "hola\n");
+    // Entrada grande (supera la ventana inicial del canal) mientras se lee la salida.
+    let big = vec![b'x'; 3_000_000];
+    let r = exec::run_with_stdin(&s, "wc -c", &big, 60).await.unwrap();
+    assert_eq!(r.stdout.trim(), "3000000");
+    // Sin EOF el comando quedaría esperando: con stdin vacío, `cat` termina enseguida.
+    let r = exec::run_with_stdin(&s, "cat", b"", 5).await.unwrap();
+    assert!(!r.timed_out);
+    assert_eq!(r.stdout, "");
+}
+
+/// Mismo arranque que usa la pestaña Administración (src/features/privileges/elevate.ts): el script llega
+/// por stdin, `dd` lee exactamente sus bytes y lo que sigue (secretos) queda para el script.
+#[tokio::test]
+#[ignore]
+async fn live_exec_stdin_bootstrap_script() {
+    let s = session().await;
+    let script = "IFS= read -r p\nprintf 'got:%s\\n' \"$p\"\ncat\n";
+    let command = format!("sh -c 'eval \"$(dd bs=1 count={} 2>/dev/null)\"'", script.len());
+    let stdin = format!("{script}secreto con espacios\nusuario:clave\n");
+    let r = exec::run_with_stdin(&s, &command, stdin.as_bytes(), 10).await.unwrap();
+    assert_eq!(r.stdout, "got:secreto con espacios\nusuario:clave\n");
+    assert_eq!(r.exit_code, Some(0));
+}

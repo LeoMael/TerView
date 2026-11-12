@@ -29,14 +29,51 @@ fn push_limited(buf: &mut Vec<u8>, data: &[u8]) -> bool {
 
 /// Ejecuta `command` y espera a que termine o venza `timeout_secs` (1..=600).
 pub async fn run(session: &SshSession, command: &str, timeout_secs: u32) -> AppResult<ExecResult> {
+    run_inner(session, command, None, timeout_secs).await
+}
+
+/// Como [`run`], pero escribe `stdin` en la entrada estándar del comando y después envía EOF.
+///
+/// `stdin` puede contener contraseñas: NUNCA se registra ni se incluye en mensajes de error.
+/// Se escribe a la vez que se lee la salida (un comando que no lee su entrada no bloquea la lectura).
+pub async fn run_with_stdin(
+    session: &SshSession,
+    command: &str,
+    stdin: &[u8],
+    timeout_secs: u32,
+) -> AppResult<ExecResult> {
+    run_inner(session, command, Some(stdin), timeout_secs).await
+}
+
+async fn run_inner(
+    session: &SshSession,
+    command: &str,
+    stdin: Option<&[u8]>,
+    timeout_secs: u32,
+) -> AppResult<ExecResult> {
     if command.trim().is_empty() {
         return Err(AppError::Invalid("El comando está vacío".into()));
     }
     let started = Instant::now();
     let deadline = tokio::time::Instant::now() + Duration::from_secs(clamp_timeout(timeout_secs));
 
-    let mut channel = session.open_channel().await?;
+    let channel = session.open_channel().await?;
     channel.exec(true, command.as_bytes()).await?;
+    let (mut reader, writer) = channel.split();
+
+    // Escritura de stdin + EOF, en paralelo con la lectura. Si no hay stdin no se envía nada
+    // (mismo comportamiento que antes: el comando ve una entrada abierta sin datos).
+    let write_stdin = async {
+        if let Some(data) = stdin {
+            // Errores de escritura (p. ej. el comando ya terminó y cerró el canal) se ignoran:
+            // el resultado real llega por el código de salida. Nunca se formatea `data`.
+            if writer.data(data).await.is_ok() {
+                let _ = writer.eof().await;
+            }
+        }
+    };
+    tokio::pin!(write_stdin);
+    let mut writing = stdin.is_some();
 
     let mut stdout = Vec::new();
     let mut stderr = Vec::new();
@@ -46,13 +83,20 @@ pub async fn run(session: &SshSession, command: &str, timeout_secs: u32) -> AppR
     let mut signal: Option<String> = None;
 
     loop {
-        match tokio::time::timeout_at(deadline, channel.wait()).await {
+        let msg = tokio::select! {
+            () = &mut write_stdin, if writing => {
+                writing = false;
+                continue;
+            }
+            r = tokio::time::timeout_at(deadline, reader.wait()) => r,
+        };
+        match msg {
             Err(_) => {
                 timed_out = true;
                 // Intentamos terminar el proceso remoto (no todos los servidores lo aceptan) y cerramos.
-                let _ = channel.signal(Sig::TERM).await;
-                let _ = channel.eof().await;
-                let _ = channel.close().await;
+                let _ = writer.signal(Sig::TERM).await;
+                let _ = writer.eof().await;
+                let _ = writer.close().await;
                 break;
             }
             Ok(None) => break,
@@ -62,7 +106,7 @@ pub async fn run(session: &SshSession, command: &str, timeout_secs: u32) -> AppR
                 ChannelMsg::ExitStatus { exit_status } => exit_code = Some(exit_status),
                 ChannelMsg::ExitSignal { signal_name, .. } => signal = Some(format!("{signal_name:?}")),
                 ChannelMsg::Failure => {
-                    let _ = channel.close().await;
+                    let _ = writer.close().await;
                     return Err(AppError::Ssh("el servidor rechazó la ejecución del comando".into()));
                 }
                 ChannelMsg::Close => break,

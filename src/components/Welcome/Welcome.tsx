@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { Command, FileCode2, Keyboard, MousePointerClick, Plus, Search, Server, Settings, TerminalSquare, Upload } from "lucide-react";
 import { useProfiles } from "../../stores/profiles";
 import { useUi } from "../../stores/ui";
-import { connectToServer } from "../../features/connect";
+import { openOrFocusServer } from "../../features/connect";
 import type { ServerProfile } from "../../api/types";
 import { Logo } from "../ui/Logo";
 import "./Welcome.css";
@@ -54,7 +54,7 @@ export function Welcome() {
     if (busy) return;
     setBusy(p.id);
     try {
-      await connectToServer(p, { initialPath: p.defaultPath });
+      await openOrFocusServer(p, { initialPath: p.defaultPath });
     } finally {
       setBusy(null);
     }
@@ -116,7 +116,11 @@ export function Welcome() {
           <div className="section-label">Consejos</div>
           <ul className="wl-tips">
             <li>
-              <MousePointerClick size={15} /> <span>Doble clic en un servidor de la barra lateral para conectar.</span>
+              <MousePointerClick size={15} />
+              <span>
+                Doble clic en un servidor de la barra lateral para conectar o ir a su pestaña si ya está abierta;{" "}
+                <kbd>Ctrl</kbd>+doble clic (o el <strong>+</strong> de las pestañas) abre otra conexión.
+              </span>
             </li>
             <li>
               <Upload size={15} /> <span>Arrastra archivos o carpetas desde tu equipo al explorador para subirlos.</span>
@@ -124,7 +128,9 @@ export function Welcome() {
             <li>
               <FileCode2 size={15} />
               <span>
-                Doble clic en un archivo de texto lo abre en el editor; <kbd>Ctrl</kbd>+<kbd>S</kbd> lo guarda en el servidor.
+                Doble clic en un archivo de texto lo abre en una pestaña nueva; <kbd>Ctrl</kbd>+<kbd>S</kbd> lo guarda en el
+                servidor. Arrastra la pestaña fuera de la ventana para abrirlo aparte, y <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>M</kbd>
+                lo pone junto al explorador.
               </span>
             </li>
             <li>

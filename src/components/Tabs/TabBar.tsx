@@ -8,6 +8,7 @@ import { connectToServer } from "../../features/connect";
 import { cancelReconnect, moveTab, reconnectTab, requestCloseTab, tabCurrentPath, useEditorDirty } from "../Session/sessionState";
 import { Logo } from "../ui/Logo";
 import { PopupMenu } from "./PopupMenu";
+import { PrivilegeBadge } from "./PrivilegeBadge";
 import "./TabBar.css";
 import { shortcutLabel } from "../../lib/platform";
 
@@ -145,6 +146,7 @@ export function TabBar() {
               {t.color && <span className="tabs-color" />}
               <span className={`tabs-status ${t.status}`} role="img" aria-label={STATUS_LABEL[t.status]} />
               <span className="tabs-title">{t.title}</span>
+              <PrivilegeBadge sessionId={t.sessionId} />
               <button
                 className={unsaved ? "tabs-close unsaved" : "tabs-close"}
                 title={unsaved ? "Cerrar (hay archivos sin guardar)" : `Cerrar (${shortcutLabel("W")})`}

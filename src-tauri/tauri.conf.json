@@ -30,6 +30,7 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "createUpdaterArtifacts": true,
     "publisher": "LeoMael",
     "copyright": "© 2026 LeoMael",
     "homepage": "https://github.com/LeoMael/TerView",
@@ -57,6 +58,17 @@
       },
       "wix": {
         "language": "es-ES"
+      }
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDY3NTM2QzdDQ0E2RkI3ODYKUldTR3QyL0tmR3hUWjBPRGxxZm1PQjNTM1NDQVFCY2s5bS9ISSs2dVk4eXhWSzRkTGsza2ZvdU8K",
+      "endpoints": [
+        "https://github.com/LeoMael/TerView/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
       }
     }
   }

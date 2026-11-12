@@ -1,0 +1,211 @@
+.ab-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.ab-version {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  color: var(--text-muted);
+}
+.ab-version strong {
+  color: var(--text);
+}
+.ab-badge {
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--mix-yellow-25);
+  color: var(--text);
+  font-size: 11px;
+}
+.ab-tagline {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+.ab-facts {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 3px 12px;
+  margin: 6px 0 4px;
+  font-size: var(--fs-sm);
+}
+.ab-facts dt {
+  color: var(--text-muted);
+}
+.ab-facts dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.ab-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+.ab-muted {
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+.ab-ok {
+  color: var(--green);
+}
+.ab-accent {
+  color: var(--accent);
+}
+.ab-error {
+  color: var(--red);
+}
+
+.ab-updates {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 0;
+}
+.ab-updates-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.ab-updates-status {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.ab-update-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--mix-accent-35);
+  background: var(--mix-accent-7-surface-2);
+  border-radius: var(--radius);
+}
+.ab-update-title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.ab-update-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.ab-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ab-progress .progress > div {
+  background: var(--accent);
+}
+.ab-md-notes {
+  max-height: 180px;
+  overflow: auto;
+}
+
+/* Novedades (CHANGELOG.md) */
+.ab-changelog {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 320px;
+  overflow: auto;
+  padding-right: 4px;
+}
+.ab-release {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+.ab-release > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  padding: 0 10px;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+.ab-release > summary::-webkit-details-marker {
+  display: none;
+}
+.ab-release > summary::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid var(--text-muted);
+  border-bottom: 1.5px solid var(--text-muted);
+  transform: rotate(-45deg);
+  transition: transform 0.12s;
+}
+.ab-release[open] > summary::before {
+  transform: rotate(45deg);
+}
+.ab-release > summary:hover {
+  background: var(--surface-2);
+}
+.ab-release > summary:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+.ab-release-version {
+  font-weight: 600;
+  flex: 1;
+}
+.ab-release > .ab-md {
+  padding: 2px 12px 10px 26px;
+}
+
+.ab-md {
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+}
+.ab-md h3,
+.ab-md h4,
+.ab-md h5 {
+  margin: 10px 0 4px;
+  font-size: var(--fs);
+  font-weight: 600;
+}
+.ab-md h3:first-child,
+.ab-md h4:first-child,
+.ab-md p:first-child {
+  margin-top: 4px;
+}
+.ab-md p {
+  margin: 6px 0;
+}
+.ab-md ul {
+  margin: 4px 0;
+  padding-left: 18px;
+}
+.ab-md li {
+  margin: 2px 0;
+}
+.ab-md code {
+  padding: 0 4px;
+  border-radius: 4px;
+  background: var(--surface-2);
+  font-family: var(--font-mono);
+  font-size: 0.95em;
+}
+.ab-md a {
+  color: var(--accent);
+  text-decoration: none;
+}
+.ab-md a:hover {
+  text-decoration: underline;
+}

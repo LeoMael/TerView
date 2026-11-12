@@ -10,8 +10,14 @@
     "opener:default",
     "window-state:default",
     "dialog:default",
+    "updater:default",
+    "process:allow-restart",
     "core:window:allow-set-title",
     "clipboard-manager:allow-read-text",
-    "clipboard-manager:allow-write-text"
+    "clipboard-manager:allow-write-text",
+    "core:webview:allow-create-webview-window",
+    "core:window:allow-set-focus",
+    "core:window:allow-unminimize",
+    "core:window:allow-destroy"
   ]
 }

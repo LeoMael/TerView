@@ -6,7 +6,12 @@
 // suma la nueva (O(cambios)), y solo los lotes tocados reciben un objeto nuevo.
 import { create } from "zustand";
 import { listen } from "@tauri-apps/api/event";
-import { transfers } from "../api/transfers";
+import {
+  EV_TRANSFER_CONFLICT,
+  EV_TRANSFER_CONFLICT_DONE,
+  transfers,
+  type TransferConflict,
+} from "../api/transfers";
 import {
   EV_TRANSFER_REMOVED,
   EV_TRANSFER_UPDATE,
@@ -62,6 +67,26 @@ export const useTransfers = create<TransfersState>(() => ({
   batches: {},
   loaded: false,
 }));
+
+/** Preguntas de conflicto pendientes ("Ya existe…"), en orden de llegada: se muestran de una en una. */
+export const useTransferConflicts = create<{ queue: TransferConflict[] }>(() => ({ queue: [] }));
+
+function addConflicts(list: TransferConflict[]) {
+  if (list.length === 0) return;
+  const queue = useTransferConflicts.getState().queue;
+  const known = new Set(queue.map((q) => q.jobId));
+  const fresh = list.filter((q) => !known.has(q.jobId));
+  if (fresh.length > 0) useTransferConflicts.setState({ queue: [...queue, ...fresh] });
+}
+
+/** Quita preguntas ya respondidas (también las del mismo lote si se aplicó a todos). */
+export function dropConflicts(jobIds: string[]) {
+  if (jobIds.length === 0) return;
+  const gone = new Set(jobIds);
+  const queue = useTransferConflicts.getState().queue;
+  const next = queue.filter((q) => !gone.has(q.jobId));
+  if (next.length !== queue.length) useTransferConflicts.setState({ queue: next });
+}
 
 /** Ids de trabajos de un lote, en orden de llegada (no reactivo: usar junto a `version`). */
 export function batchJobIds(batchId: string): readonly string[] {
@@ -393,9 +418,12 @@ export function initTransfersStore(): Promise<void> {
     try {
       await listen<TransferJob[]>(EV_TRANSFER_UPDATE, (e) => applyUpdate(e.payload));
       await listen<string[]>(EV_TRANSFER_REMOVED, (e) => applyRemoved(e.payload));
+      await listen<TransferConflict>(EV_TRANSFER_CONFLICT, (e) => addConflicts([e.payload]));
+      await listen<string[]>(EV_TRANSFER_CONFLICT_DONE, (e) => dropConflicts(e.payload));
       const list = await transfers.list();
       // Lo que ya llegó por eventos es más nuevo que la lista: solo se añaden los que faltan.
       applyUpdate(list, { onlyNew: true, silent: true });
+      addConflicts(await transfers.conflicts());
     } catch (err) {
       console.error("No se pudieron cargar las transferencias", err);
     } finally {

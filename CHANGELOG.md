@@ -4,6 +4,38 @@ Todos los cambios importantes de TerView se anotan aquí.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y las versiones
 siguen [Versionado Semántico](https://semver.org/lang/es/).
 
+## [Sin publicar]
+
+### Añadido
+- **Contenedores (Podman / Docker)**: pestaña visual para iniciar, parar, reiniciar y eliminar
+  contenedores, ver logs, abrir una terminal dentro, crear contenedores con plantillas (Nginx,
+  PostgreSQL, MySQL, MariaDB, Redis, Adminer, Portainer), levantar y bajar proyectos **Compose**, y
+  limpiar imágenes, volúmenes y redes que no se usan mostrando antes cuánto espacio se libera.
+- **Administración**: pestaña para gestionar usuarios (crear, editar, bloquear, eliminar, llaves SSH),
+  grupos, sesiones conectadas e historial de cambios. La contraseña de sudo se pide una vez por
+  sesión, se guarda solo en memoria y viaja siempre por la entrada estándar. Antes de cada cambio se
+  muestra el comando exacto.
+- **Detección de privilegios**: insignia **root** / **sudo** en la pestaña de la conexión, sin pedir
+  contraseña ni dejar rastro en el servidor.
+- **Monitor**: gráficas en vivo de CPU, memoria, red y carga, discos, procesos (con botón Terminar),
+  consumo de contenedores, alertas configurables y resumen de todas las conexiones.
+- **Túneles (port forwarding)**: local, remoto y SOCKS, guardados por servidor, con arranque automático
+  al conectar y continuidad tras reconexiones.
+- **Ejecutar en varios servidores a la vez**: un comando (o uno de la biblioteca) en varios servidores o
+  un proyecto entero, con resultados en tabla, lado a lado y "Comparar salidas".
+- **GitHub**: conectar la cuenta con un token (guardado en el llavero), pasar tus llaves SSH a un
+  servidor, clonar repositorios (con deploy key), desplegar con un botón, ver y lanzar GitHub Actions,
+  y sincronizar tu configuración en un Gist cifrado.
+- **Editor en pestañas, como un navegador**: arrastra una pestaña fuera para abrirla en otra ventana;
+  reordénalas arrastrando; divide con el explorador solo si quieres (`Ctrl+Shift+M`).
+- **Acerca de** con novedades y **actualizaciones automáticas** firmadas.
+- **Diagnóstico** (Ajustes → Avanzado): tiempos de arranque y de cada operación, FPS, GPU y "Copiar informe".
+- Transferencias: opción **"Preguntar"** cuando el archivo ya existe (sobrescribir, omitir, mantener
+  ambos o solo si es más nuevo, con "aplicar a todos").
+- Explorador: **"Descargar en…"** y **"Descargar y abrir carpeta"**.
+- "Mis comandos": **exportar e importar a archivo**, con vista previa.
+- `~/.ssh/config`: aviso cuando un servidor choca con un `Host` escrito a mano y alias alternativo.
+
 ## [0.3.0] - 2026-11-11
 
 ### Añadido
@@ -64,6 +96,7 @@ Primera versión pública de TerView, cliente SSH/SFTP de escritorio.
 - Instalador `.rpm` para Linux.
 - Documentación con diagramas en `docs/`.
 
-[Sin publicar]: https://github.com/LeoMael/TerView/compare/v0.2.1...HEAD
+[Sin publicar]: https://github.com/LeoMael/TerView/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/LeoMael/TerView/releases/tag/v0.3.0
 [0.2.1]: https://github.com/LeoMael/TerView/releases/tag/v0.2.1
 [0.2.0]: https://github.com/LeoMael/TerView/commit/6dfd50a

@@ -19,6 +19,7 @@ import {
   Eye,
   EyeOff,
   FilePlus,
+  FolderDown,
   FolderOpen,
   FolderPlus,
   FolderUp,
@@ -54,6 +55,7 @@ import { ContextMenu, type MenuItem } from "./ContextMenu";
 import { FileList, HEADER_H, ROW_H, type RowHandlers, type SortKey, type SortState } from "./FileList";
 import { isDirLike } from "./icons";
 import { PermissionsDialog } from "./PermissionsDialog";
+import { revealWhenDone, systemDownloadDir } from "./revealDownload";
 import "./FileExplorer.css";
 
 export interface FileExplorerProps {
@@ -431,16 +433,22 @@ export const FileExplorer = memo(function FileExplorer({
     focusRoot();
   });
 
-  const download = useEvent(async (list: FileEntry[]) => {
+  /** "Descargar en…" (elige carpeta) o, con `reveal`, "Descargar y abrir carpeta": baja a
+   *  Descargas y al terminar abre el gestor de archivos con lo descargado seleccionado. */
+  const download = useEvent(async (list: FileEntry[], reveal = false) => {
     if (!list.length) return;
     try {
-      const res = await openDialog({ directory: true, multiple: false, title: "Descargar en…" });
-      const dir = Array.isArray(res) ? res[0] : res;
+      let dir: string | null = reveal ? await systemDownloadDir() : null;
+      if (!dir) {
+        const res = await openDialog({ directory: true, multiple: false, title: "Descargar en…" });
+        dir = (Array.isArray(res) ? res[0] : res) ?? null;
+      }
       if (!dir) return;
       // `dir` es una ruta LOCAL (en Windows "C:\Users\…"): se pasa tal cual al motor, sin unirle "/".
-      await transfers.download(sessionId, list.map((e) => e.path), dir);
+      const batchId = await transfers.download(sessionId, list.map((e) => e.path), dir);
+      if (reveal) revealWhenDone(batchId, dir, list);
       const what = list.length === 1 ? `«${list[0].name}»` : plural(list.length, "elemento", "elementos");
-      toast.info(`Descargando ${what}…`, `a ${dir}`);
+      toast.info(`Descargando ${what}…`, reveal ? `a ${dir}; al terminar se abrirá la carpeta` : `a ${dir}`);
     } catch (err) {
       toast.error("No se pudo iniciar la descarga", err);
     } finally {
@@ -864,7 +872,12 @@ export const FileExplorer = memo(function FileExplorer({
         disabled: !single || single.kind === "other",
         onSelect: () => single && openEntry(single),
       },
-      { label: "Descargar…", icon: <Download size={15} />, onSelect: () => download(list) },
+      { label: "Descargar en…", icon: <Download size={15} />, onSelect: () => download(list) },
+      {
+        label: "Descargar y abrir carpeta",
+        icon: <FolderDown size={15} />,
+        onSelect: () => download(list, true),
+      },
       { sep: true },
       { label: "Renombrar", icon: <Pencil size={15} />, hint: "F2", disabled: !single, onSelect: () => single && rename(single) },
       { label: "Permisos…", icon: <KeyRound size={15} />, onSelect: () => setPermsFor(list) },

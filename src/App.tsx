@@ -8,6 +8,8 @@ import { Sidebar } from "./components/Sidebar/Sidebar";
 import { TransferPanel } from "./components/TransferPanel/TransferPanel";
 import { ConnectDialogHost, ProjectEditorHost, ServerEditorHost } from "./features/ConnectDialogs";
 import { PaletteHost, PaletteView } from "./components/Commands/PaletteHost";
+import { MultiRunHost } from "./components/MultiRun/MultiRunHost";
+import { GitHubHost } from "./components/GitHub";
 import { initThemeSync } from "./components/Settings/theme";
 import { requestCloseTab } from "./components/Session/sessionState";
 import { TabBar } from "./components/Tabs/TabBar";
@@ -16,6 +18,7 @@ import { useSettings } from "./stores/settings";
 import { useProfiles } from "./stores/profiles";
 import { initTabsListeners, useTabs } from "./stores/tabs";
 import { initTransfersStore } from "./stores/transfers";
+import { initPrivileges } from "./features/privileges";
 import { useUi } from "./stores/ui";
 import { idleQueue, preloadable } from "./lib/lazy";
 import { isMac, isModKey } from "./lib/platform";
@@ -53,6 +56,7 @@ function initApp() {
   void useProfiles.getState().load();
   void initTabsListeners();
   void initTransfersStore();
+  initPrivileges(); // root / sudo / usuario normal de cada conexión (en segundo plano)
 
   // Recordar servidores usados (para la pantalla de bienvenida).
   useTabs.subscribe((s, prev) => {
@@ -268,6 +272,8 @@ export default function App() {
       <ConnectDialogHost />
       <SettingsHost />
       <PaletteHost />
+      <MultiRunHost />
+      <GitHubHost />
     </>
   );
 }
