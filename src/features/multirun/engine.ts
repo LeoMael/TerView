@@ -11,11 +11,34 @@ export interface EngineDeps {
   connect(profileId: string): Promise<string>;
   /** Conecta resolviendo diálogos (contraseña, huella, 2FA). null = el usuario canceló. */
   connectInteractive(profileId: string): Promise<string | null>;
-  exec(sessionId: string, command: string, timeoutSecs: number): Promise<ExecResult>;
+  /** Ejecuta con un identificador (`execId`) para poder cancelarlo con `cancelExec`. */
+  exec(sessionId: string, command: string, timeoutSecs: number, execId: string): Promise<ExecResult>;
+  /** Identificador nuevo y único para `exec`. */
+  newExecId(): string;
+  /** Pide detener en el servidor la ejecución `execId`. false = no estaba (aún no empezó o ya terminó). */
+  cancelExec(execId: string): Promise<boolean>;
   disconnect(sessionId: string): Promise<void>;
   /** Nivel de privilegios (solo lectura, informativo). */
   privilege(sessionId: string, reused: boolean): Promise<PrivilegeHint | null>;
 }
+
+/** Ejecución en curso de un servidor (para poder detenerla al cancelar). */
+interface InFlight {
+  execId: string;
+  sessionId: string;
+  /** La sesión la abrió la ejecución: se cierra cuando el comando se haya detenido. */
+  owned: boolean;
+  /** Se cumple cuando `exec` termina (bien o mal). */
+  settled: Promise<void>;
+}
+
+/** Espera máxima a que el servidor detenga el comando antes de cerrar la sesión propia igualmente. */
+const STOP_WAIT_MS = 15_000;
+/** Reintentos de `cancelExec` si la ejecución aún no estaba anotada en el motor (llamadas casi a la vez). */
+const CANCEL_TRIES = 4;
+const CANCEL_RETRY_MS = 250;
+
+const delay = (ms: number) => new Promise<void>((res) => setTimeout(res, ms));
 
 export interface ConnectFailure {
   attention: AttentionKind | null;
@@ -79,6 +102,8 @@ export class RunEngine {
   private readonly gen = new Map<string, number>();
   /** Sesiones abiertas por la ejecución y aún sin cerrar (profileId → sessionId). */
   private readonly owned = new Map<string, string>();
+  /** Comandos ejecutándose ahora (profileId → ejecución). */
+  private readonly inFlight = new Map<string, InFlight>();
   private active = 0;
   private readonly waiting: (() => void)[] = [];
   private disposed = false;
@@ -132,15 +157,18 @@ export class RunEngine {
     const t = this.find(profileId);
     if (!t || isFinal(t.status)) return;
     this.bump(profileId);
-    const onTab = t.status === "running" && t.reused;
+    const ex = this.inFlight.get(profileId);
     this.patch(profileId, {
       status: "canceled",
       finishedAt: Date.now(),
-      detail: onTab
-        ? "Cancelado (usaba la sesión de una pestaña: el comando puede seguir ejecutándose en el servidor)"
-        : "Cancelado",
+      detail: ex ? "Cancelado. Se pidió al servidor detener el comando." : "Cancelado",
     });
-    this.closeOwned(profileId);
+    if (ex) {
+      this.inFlight.delete(profileId);
+      this.stopExec(profileId, ex);
+    } else {
+      this.closeOwned(profileId);
+    }
   }
 
   cancelAll(): void {
@@ -152,7 +180,10 @@ export class RunEngine {
     return this.list.some((t) => t.status === "queued" || t.status === "connecting" || t.status === "running");
   }
 
-  /** Cancela todo y cierra las sesiones propias. */
+  /**
+   * Cancela todo y cierra las sesiones propias. Las que tenían un comando en marcha se cierran
+   * cuando el servidor lo haya detenido (sin PTY, desconectar no basta para pararlo).
+   */
   dispose(): void {
     this.cancelAll();
     this.disposed = true;
@@ -184,6 +215,35 @@ export class RunEngine {
     this.deps.disconnect(sid).catch(() => {
       /* ya estaba cerrada */
     });
+  }
+
+  /**
+   * Detiene en el servidor un comando en marcha (pestaña o sesión propia). La sesión propia se cierra
+   * después, cuando `exec` termine (el motor necesita la sesión para mandar TERM/KILL), o como mucho
+   * a los STOP_WAIT_MS.
+   */
+  private stopExec(profileId: string, ex: InFlight) {
+    void this.requestCancel(ex);
+    if (!ex.owned) return;
+    // Se quita de la lista ya: un reintento puede abrir otra sesión para el mismo servidor.
+    if (this.owned.get(profileId) === ex.sessionId) this.owned.delete(profileId);
+    void Promise.race([ex.settled, delay(STOP_WAIT_MS)]).then(() =>
+      this.deps.disconnect(ex.sessionId).catch(() => {
+        /* ya estaba cerrada */
+      }),
+    );
+  }
+
+  /** Pide cancelar; si el motor aún no conocía la ejecución, lo vuelve a intentar unas veces. */
+  private async requestCancel(ex: InFlight) {
+    let done = false;
+    void ex.settled.then(() => {
+      done = true;
+    });
+    for (let i = 0; i < CANCEL_TRIES && !done; i++) {
+      if (await this.deps.cancelExec(ex.execId).catch(() => false)) return;
+      await delay(CANCEL_RETRY_MS);
+    }
   }
 
   private acquire(): Promise<void> {
@@ -269,7 +329,24 @@ export class RunEngine {
         }
         if (stale()) return;
         this.patch(profileId, { status: "running", execStartedAt: Date.now() });
-        const r = await this.deps.exec(sessionId, this.spec.command, this.spec.timeoutSecs);
+        const execId = this.deps.newExecId();
+        const pending = this.deps.exec(sessionId, this.spec.command, this.spec.timeoutSecs, execId);
+        const ex: InFlight = {
+          execId,
+          sessionId,
+          owned: !reused,
+          settled: pending.then(
+            () => {},
+            () => {},
+          ),
+        };
+        this.inFlight.set(profileId, ex);
+        let r: ExecResult;
+        try {
+          r = await pending;
+        } finally {
+          if (this.inFlight.get(profileId) === ex) this.inFlight.delete(profileId);
+        }
         if (stale()) return;
         const status = r.timedOut ? "timeout" : r.exitCode === 0 ? "ok" : "error";
         const detail = r.timedOut

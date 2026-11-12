@@ -81,6 +81,8 @@ export function FileList(p: Props) {
         if (t.closest(".fx-row")) return;
         p.onEmptyContextMenu(e);
       }}
+      // El arrastre de filas lo hace el sistema (arrastrar al escritorio): sin arrastre HTML propio.
+      onDragStart={(e) => e.preventDefault()}
     >
       <div className="fx-head" role="row" style={{ height: HEADER_H }}>
         {COLUMNS.map((c) => (

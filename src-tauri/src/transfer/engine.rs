@@ -635,8 +635,9 @@ impl Engine {
         removed
     }
 
-    /// ¿El lote terminó del todo (recorrido acabado y ningún trabajo pendiente)?
-    #[cfg(test)]
+    /// ¿El lote terminó del todo (recorrido acabado y ningún trabajo pendiente)? Un lote que no
+    /// existe cuenta como terminado. Lo usa "arrastrar al sistema" para no ofrecer una carpeta
+    /// a medio descargar (el recorrido puede seguir añadiendo trabajos tras acabar los primeros).
     pub fn batch_finished(&self, batch_id: &str) -> bool {
         let st = self.lock();
         let Some(b) = st.batches.get(batch_id) else { return true };

@@ -427,6 +427,34 @@
   white-space: nowrap;
   overflow: hidden;
 }
+/* Preparando para arrastrar al sistema (descarga a la caché). */
+.fx-dragprep {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--accent);
+}
+.fx-dragprep-cancel {
+  margin-left: 6px;
+  padding: 0 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 16px;
+  cursor: pointer;
+}
+.fx-dragprep-cancel:hover:not(:disabled) {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.fx-preparing .fx-list {
+  cursor: progress;
+}
 
 /* ───────── Menú y diálogos ───────── */
 .fx-menu button {

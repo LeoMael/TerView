@@ -182,6 +182,13 @@ pub async fn transfer_download(
     Ok(transfers.engine(&app).download(session_id, remote_paths, local_dir))
 }
 
+/// ¿El lote terminó del todo? (recorrido de carpetas acabado y nada en marcha ni en cola).
+/// A diferencia de los eventos de progreso, sabe si el recorrido aún puede añadir trabajos.
+#[tauri::command]
+pub async fn transfer_batch_finished(transfers: State<'_, TransferManager>, batch_id: String) -> AppResult<bool> {
+    Ok(transfers.engine.get().is_none_or(|e| e.batch_finished(&batch_id)))
+}
+
 #[tauri::command]
 pub async fn transfer_list(transfers: State<'_, TransferManager>) -> AppResult<Vec<TransferJob>> {
     Ok(transfers.engine.get().map(|e| e.list()).unwrap_or_default())

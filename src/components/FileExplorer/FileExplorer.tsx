@@ -40,7 +40,7 @@ import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { sftp } from "../../api/sftp";
 import { transfers } from "../../api/transfers";
-import { errorMessage } from "../../api/core";
+import { errorMessage, isApiError } from "../../api/core";
 import { clipboard } from "../../lib/clipboard";
 import { EV_TRANSFER_UPDATE, type FileEntry, type TransferJob } from "../../api/types";
 import { formatBytes } from "../../lib/format";
@@ -49,11 +49,22 @@ import { localBasename } from "../../lib/platform";
 import { useSettings } from "../../stores/settings";
 import { useTabs } from "../../stores/tabs";
 import { toast } from "../../stores/toasts";
+import { useTransfers } from "../../stores/transfers";
 import { confirmDialog, promptDialog } from "../ui/dialogs";
 import { Breadcrumb } from "./Breadcrumb";
 import { ContextMenu, type MenuItem } from "./ContextMenu";
 import { FileList, HEADER_H, ROW_H, type RowHandlers, type SortKey, type SortState } from "./FileList";
 import { isDirLike } from "./icons";
+import {
+  BIG_DRAG_BYTES,
+  DragOutCanceled,
+  forgetPrepared,
+  isOwnDragPaths,
+  ownDragActive,
+  prepareDragOut,
+  readyPaths,
+  startDragOut,
+} from "./dragOut";
 import { PermissionsDialog } from "./PermissionsDialog";
 import { revealWhenDone, systemDownloadDir } from "./revealDownload";
 import "./FileExplorer.css";
@@ -111,6 +122,24 @@ function validateName(v: string): string | null {
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
+/** Píxeles que hay que mover el ratón con el botón apretado para empezar a arrastrar al sistema. */
+const DRAG_START_PX = 6;
+
+/** Progreso de "preparando para arrastrar" (lee el lote del panel de transferencias). */
+function DragPrepStatus({ batchId, label, onCancel }: { batchId: string | null; label: string; onCancel: () => void }) {
+  const b = useTransfers((s) => (batchId ? s.batches[batchId] : undefined));
+  const pct = b && b.bytesTotal > 0 ? Math.floor((b.bytesDone / b.bytesTotal) * 100) : null;
+  return (
+    <span className="fx-dragprep" role="status" aria-live="polite">
+      · <RefreshCw size={12} className="fx-spin" /> Preparando para arrastrar {label}
+      {pct !== null && ` ${pct}%`}…
+      <button className="fx-dragprep-cancel" onClick={onCancel} disabled={!batchId}>
+        Cancelar
+      </button>
+    </span>
+  );
+}
+
 /** Devuelve una función estable que siempre llama a la versión más reciente de `fn`. */
 function useEvent<A extends unknown[], R>(fn: (...args: A) => R): (...args: A) => R {
   const ref = useRef(fn);
@@ -157,6 +186,8 @@ export const FileExplorer = memo(function FileExplorer({
   const [permsFor, setPermsFor] = useState<FileEntry[] | null>(null);
   const closeMenu = useCallback(() => setMenu(null), []);
   const [drop, setDrop] = useState<{ over: boolean; target: string | null }>({ over: false, target: null });
+  /** Descarga a la caché en curso para arrastrar al sistema. */
+  const [dragPrep, setDragPrep] = useState<{ batchId: string | null; label: string } | null>(null);
 
   const rootRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -167,6 +198,15 @@ export const FileExplorer = memo(function FileExplorer({
   const cwdRef = useRef<string | null>(null);
   const scrollToRef = useRef<string | null>(null);
   const typeAheadRef = useRef({ text: "", at: 0 });
+  // Arrastrar al sistema: dónde se apretó el botón, si sigue apretado y qué fila reducir al soltar.
+  const pressRef = useRef<{ x: number; y: number; entry: FileEntry } | null>(null);
+  const heldRef = useRef(false);
+  const pressSeqRef = useRef(0);
+  const deferSelectRef = useRef<string | null>(null);
+  const selectedRef = useRef(selected);
+  useEffect(() => {
+    selectedRef.current = selected;
+  }, [selected]);
 
   // ───────── Carga de carpetas ─────────
 
@@ -563,6 +603,119 @@ export const FileExplorer = memo(function FileExplorer({
     }
   });
 
+  // ───────── Arrastrar al sistema (escritorio / gestor de archivos) ─────────
+
+  const notePress = useEvent((e: ReactMouseEvent, entry: FileEntry) => {
+    pressRef.current = { x: e.clientX, y: e.clientY, entry };
+    heldRef.current = true;
+    pressSeqRef.current++;
+  });
+
+  /** Arrastre nativo de lo ya preparado. Si la caché se borró, vuelve a prepararlo una vez. */
+  const runDragOut = useEvent(async (paths: string[], items: FileEntry[], retry: boolean): Promise<void> => {
+    try {
+      await startDragOut(paths);
+    } catch (err) {
+      if (isApiError(err, "NotFound")) {
+        forgetPrepared(sessionId, items);
+        if (retry) await beginDragOut(items, false);
+        else toast.info("Lo preparado ya no está", "Vuelve a arrastrarlo para descargarlo otra vez.");
+      } else {
+        toast.error("No se pudo arrastrar", err);
+      }
+    } finally {
+      heldRef.current = false;
+    }
+  });
+
+  /** Empieza a arrastrar `items` fuera de la app: inmediato si ya están descargados; si no, los
+   *  descarga a la caché (con progreso) y arrastra al terminar si el botón sigue apretado. */
+  const beginDragOut = useEvent(async (items: FileEntry[], retry: boolean = true): Promise<void> => {
+    if (!sessionOnline(sessionId)) return;
+    const list = items.filter((e) => e.kind !== "other");
+    if (!list.length) return;
+    const ready = readyPaths(sessionId, list);
+    if (ready) {
+      await runDragOut(ready, list, retry);
+      return;
+    }
+    if (dragPrep) {
+      toast.info("Ya se está preparando otro arrastre", "Espera a que termine o cancélalo abajo.");
+      return;
+    }
+    const label = list.length === 1 ? `«${list[0].name}»` : plural(list.length, "elemento", "elementos");
+    const bytes = list.reduce((n, e) => n + (isDirLike(e) ? 0 : e.size), 0);
+    if (bytes > BIG_DRAG_BYTES) {
+      heldRef.current = false;
+      const ok = await confirmDialog({
+        title: `¿Preparar ${label} para arrastrar?`,
+        message: (
+          <>
+            <div>
+              Ocupa {formatBytes(bytes)}. Para poder arrastrarlo, TerView primero lo descarga a una carpeta temporal
+              (se ve en Transferencias) y después lo copias a donde lo sueltes.
+            </div>
+            <div>Para archivos grandes es más rápido «Descargar en…» (clic derecho).</div>
+          </>
+        ),
+        confirmText: "Preparar",
+      });
+      focusRoot();
+      if (!ok) return;
+    }
+    const seq = pressSeqRef.current;
+    setDragPrep({ batchId: null, label });
+    try {
+      const paths = await prepareDragOut(sessionId, list, (batchId) => setDragPrep({ batchId, label }));
+      setDragPrep(null);
+      // Sigue apretado desde el mismo clic: se arrastra ya. Si no, queda listo para el próximo.
+      if (heldRef.current && pressSeqRef.current === seq && sessionOnline(sessionId)) {
+        await runDragOut(paths, list, false);
+      } else {
+        toast.success(`Listo para arrastrar ${label}`, "Vuelve a arrastrarlo al escritorio o a una carpeta.");
+      }
+    } catch (err) {
+      if (!(err instanceof DragOutCanceled)) toast.error("No se pudo preparar el arrastre", err);
+    } finally {
+      setDragPrep(null);
+    }
+  });
+
+  const cancelDragPrep = useEvent(() => {
+    if (dragPrep?.batchId) transfers.cancel([dragPrep.batchId]).catch(() => {});
+  });
+
+  // Seguimiento del ratón tras apretar en una fila: pasado el umbral empieza el arrastre.
+  useEffect(() => {
+    const move = (e: MouseEvent) => {
+      const p = pressRef.current;
+      if (!p) return;
+      if (!(e.buttons & 1)) {
+        pressRef.current = null;
+        return;
+      }
+      if (Math.abs(e.clientX - p.x) + Math.abs(e.clientY - p.y) < DRAG_START_PX) return;
+      pressRef.current = null;
+      deferSelectRef.current = null;
+      const sel = selectedRef.current;
+      const items = sel.has(p.entry.path) ? rows.filter((r) => sel.has(r.path)) : [p.entry];
+      beginDragOut(items);
+    };
+    const up = () => {
+      heldRef.current = false;
+      const defer = deferSelectRef.current;
+      if (pressRef.current && defer) selectOnly(defer);
+      pressRef.current = null;
+      deferSelectRef.current = null;
+    };
+    window.addEventListener("mousemove", move);
+    window.addEventListener("mouseup", up);
+    return () => {
+      window.removeEventListener("mousemove", move);
+      window.removeEventListener("mouseup", up);
+    };
+  }, [rows, beginDragOut, selectOnly]);
+
   // ───────── Ratón ─────────
 
   const handlers: RowHandlers = useMemo(
@@ -582,9 +735,16 @@ export const FileExplorer = memo(function FileExplorer({
           });
           setCursor(entry.path);
           anchorRef.current = entry.path;
+        } else if (selectedRef.current.has(entry.path) && selectedRef.current.size > 1) {
+          // Puede ser el inicio de un arrastre de toda la selección: se reduce a esta fila
+          // al soltar sin haber arrastrado.
+          setCursor(entry.path);
+          anchorRef.current = entry.path;
+          deferSelectRef.current = entry.path;
         } else {
           selectOnly(entry.path);
         }
+        if (!e.shiftKey && !mod) notePress(e, entry);
       },
       onDoubleClick: (entry: FileEntry) => {
         if (sessionOnline(sessionId)) openEntry(entry);
@@ -603,7 +763,7 @@ export const FileExplorer = memo(function FileExplorer({
         setMenu({ x: e.clientX, y: e.clientY, onEntry: true });
       },
     }),
-    [openEntry, selectOnly, selectRange, sessionId],
+    [notePress, openEntry, selectOnly, selectRange, sessionId],
   );
 
   const onEmptyMouseDown = useCallback(() => {
@@ -757,6 +917,7 @@ export const FileExplorer = memo(function FileExplorer({
   // ───────── Arrastrar y soltar desde el sistema ─────────
 
   const dropRef = useRef(drop);
+  const ownOverRef = useRef(false);
   const setDropState = useCallback((over: boolean, target: string | null) => {
     const d = dropRef.current;
     if (d.over === over && d.target === target) return;
@@ -772,7 +933,12 @@ export const FileExplorer = memo(function FileExplorer({
       getCurrentWebview()
         .onDragDropEvent((ev) => {
           const p = ev.payload;
-          if (p.type === "leave") {
+          // Arrastre que salió de TerView (archivos de la caché de arrastre) pasando por la
+          // ventana: no es para subir. Las rutas solo llegan en "enter" y "drop".
+          if (p.type === "enter") ownOverRef.current = isOwnDragPaths(p.paths);
+          const own = ownOverRef.current || ownDragActive() || (p.type === "drop" && isOwnDragPaths(p.paths));
+          if (p.type === "leave" || p.type === "drop") ownOverRef.current = false;
+          if (own || p.type === "leave") {
             setDropState(false, null);
             return;
           }
@@ -951,6 +1117,7 @@ export const FileExplorer = memo(function FileExplorer({
   if (offline) cls += " fx-offline";
   if (drop.over) cls += " drop-over";
   if (drop.over && !drop.target) cls += " drop-here";
+  if (dragPrep) cls += " fx-preparing";
 
   return (
     <div ref={rootRef} className={cls} tabIndex={0} onKeyDown={onKeyDown} aria-label="Explorador de archivos">
@@ -1077,6 +1244,7 @@ export const FileExplorer = memo(function FileExplorer({
             {selSize > 0 || !hasSelDirs ? ` (${formatBytes(selSize)}${hasSelDirs ? " + carpetas" : ""})` : ""}
           </span>
         )}
+        {dragPrep && <DragPrepStatus batchId={dragPrep.batchId} label={dragPrep.label} onCancel={cancelDragPrep} />}
       </div>
 
       {tabStatus === "reconnecting" && (

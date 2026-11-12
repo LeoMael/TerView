@@ -1,8 +1,9 @@
-// Pestaña «Administración» de una conexión: usuarios, grupos, sesiones abiertas e historial de cambios.
+// Pestaña «Administración» de una conexión: usuarios, grupos, sesiones abiertas, puertos, sitios web e
+// historial de cambios.
 // Lee como usuario normal; los cambios se ejecutan como root (directo, sudo -n/doas -n o sudo -S con la
 // contraseña por stdin, guardada solo en memoria). Antes de cada cambio se muestra el comando exacto.
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
-import { History, KeyRound, LogOut, RefreshCw, ShieldAlert, ShieldCheck, Unplug, Users, UsersRound, MonitorDot } from "lucide-react";
+import { Globe, History, KeyRound, LogOut, MonitorDot, Network, RefreshCw, ShieldAlert, ShieldCheck, Unplug, Users, UsersRound } from "lucide-react";
 import { errorMessage } from "../../api/core";
 import { toast } from "../../stores/toasts";
 import { useTabs } from "../../stores/tabs";
@@ -11,15 +12,22 @@ import {
   buildUserRows,
   detectEnv,
   failureText,
+  parsePorts,
+  parseWeb,
+  readElevated,
   readServer,
   readShadow,
+  PORTS_SCRIPT,
+  WEB_SCRIPT,
   runPlan as execPlan,
   succeeded,
   useAdminHistory,
   MASK,
   type Plan,
+  type PortsResult,
   type ReadResult,
   type ShadowEntry,
+  type WebResult,
 } from "../../features/admin";
 import {
   forgetSudo,
@@ -28,20 +36,24 @@ import {
   usePrivilege,
   type Elevation,
 } from "../../features/privileges";
-import { AdminContext, type AdminContextValue, type RunOutcome } from "./context";
+import { AdminContext, type AdminContextValue, type PortsFilter, type RunOutcome, type ScanState } from "./context";
 import { SudoDialog } from "./SudoDialog";
 import { UsersTab } from "./UsersTab";
 import { GroupsTab } from "./GroupsTab";
 import { SessionsTab } from "./SessionsTab";
 import { HistoryTab } from "./HistoryTab";
+import { PortsTab } from "./PortsTab";
+import { WebTab } from "./WebTab";
 import "./Admin.css";
 
-type SubTab = "users" | "groups" | "sessions" | "history";
+type SubTab = "users" | "groups" | "sessions" | "ports" | "web" | "history";
 
 const TABS: { id: SubTab; label: string; icon: ReactNode }[] = [
   { id: "users", label: "Usuarios", icon: <Users size={14} /> },
   { id: "groups", label: "Grupos", icon: <UsersRound size={14} /> },
   { id: "sessions", label: "Conectados ahora", icon: <MonitorDot size={14} /> },
+  { id: "ports", label: "Puertos", icon: <Network size={14} /> },
+  { id: "web", label: "Sitios web", icon: <Globe size={14} /> },
   { id: "history", label: "Historial", icon: <History size={14} /> },
 ];
 
@@ -58,6 +70,46 @@ function elevationNote(el: Elevation): string {
   }
 }
 
+/** Sub-pestañas que necesitan la lectura de usuarios y grupos. */
+const NEEDS_READ: SubTab[] = ["users", "groups", "sessions"];
+
+const EMPTY_SCAN = { data: null, loading: false, error: null, elevated: false, elevationError: null };
+
+/**
+ * Lectura que se hace como root si hay elevación (si sudo falla, se repite sin elevar). Guarda el último
+ * resultado aunque se cambie de sub-pestaña.
+ */
+function useElevatedScan<T>(
+  sessionId: string,
+  elevation: Elevation | null,
+  script: string,
+  parse: (stdout: string) => T,
+  timeoutSecs: number,
+): [ScanState<T>, () => Promise<void>] {
+  const [state, setState] = useState<ScanState<T>>(EMPTY_SCAN);
+  const gen = useRef(0);
+  const load = useCallback(async () => {
+    const g = ++gen.current;
+    setState((s) => ({ ...s, loading: true, error: null }));
+    try {
+      const r = await readElevated(sessionId, script, elevation, timeoutSecs);
+      if (g !== gen.current) return;
+      if (r.elevationError?.failure === "need-password") refreshPrivilege(sessionId);
+      setState({
+        data: parse(r.result.stdout),
+        loading: false,
+        error: null,
+        elevated: r.elevated,
+        elevationError: r.elevationError ? r.elevationError.message : null,
+      });
+    } catch (e) {
+      if (g !== gen.current) return;
+      setState((s) => ({ ...s, loading: false, error: errorMessage(e) }));
+    }
+  }, [sessionId, elevation, script, parse, timeoutSecs]);
+  return [state, load];
+}
+
 /** Texto del historial: comandos sin contraseñas (nunca las llevan) + stdin enmascarado. */
 function historyCommand(plan: Plan, el: Elevation): string {
   return [elevationNote(el), ...plan.steps, ...(plan.secretLabel ? [`# entrada estándar: ${plan.secretLabel}`] : [])].join("\n");
@@ -68,11 +120,14 @@ export function AdminPanel({
   profileId,
   active,
   disabled,
+  onOpenFile,
 }: {
   sessionId: string;
   profileId: string;
   active: boolean;
   disabled: boolean;
+  /** Abre un archivo del servidor en el editor de la conexión. */
+  onOpenFile?: (path: string) => void;
 }) {
   const info = usePrivilege(sessionId);
   const elev = useElevation(sessionId, info);
@@ -90,6 +145,11 @@ export function AdminPanel({
   const [sudoOpen, setSudoOpen] = useState(false);
   const [stale, setStale] = useState(true);
   const gen = useRef(0);
+
+  const [ports, loadPorts] = useElevatedScan<PortsResult>(sessionId, elevation, PORTS_SCRIPT, parsePorts, 20);
+  const [web, loadWeb] = useElevatedScan<WebResult>(sessionId, elevation, WEB_SCRIPT, parseWeb, 40);
+  const [scanStale, setScanStale] = useState({ ports: true, web: true });
+  const [portsFilter, setPortsFilter] = useState<PortsFilter>({ query: "", scope: "all", proto: "all" });
 
   useEffect(() => ensureHistory(profileId), [ensureHistory, profileId]);
 
@@ -132,10 +192,14 @@ export function AdminPanel({
     if (prevElevKey.current !== elevKey) {
       prevElevKey.current = elevKey;
       setStale(true);
+      setScanStale({ ports: true, web: true });
     }
   }, [elevKey]);
   useEffect(() => {
-    if (disabled) setStale(true);
+    if (disabled) {
+      setStale(true);
+      setScanStale({ ports: true, web: true });
+    }
   }, [disabled]);
   useEffect(() => {
     if (active && !disabled && stale) {
@@ -143,6 +207,16 @@ export function AdminPanel({
       void load();
     }
   }, [active, disabled, stale, load]);
+  // Puertos: al abrir «Puertos» o «Sitios web» (los dos los usan). Sitios web: solo en su pestaña.
+  useEffect(() => {
+    if (!active || disabled) return;
+    const needPorts = (tab === "ports" || tab === "web") && scanStale.ports;
+    const needWeb = tab === "web" && scanStale.web;
+    if (!needPorts && !needWeb) return;
+    setScanStale((s) => ({ ports: needPorts ? false : s.ports, web: needWeb ? false : s.web }));
+    if (needPorts) void loadPorts();
+    if (needWeb) void loadWeb();
+  }, [active, disabled, tab, scanStale, loadPorts, loadWeb]);
 
   const env = useMemo(
     () => (read ? detectEnv(read.tools, info?.distroId ?? null, info?.distroLike ?? [], read.groups.map((g) => g.name)) : null),
@@ -183,6 +257,23 @@ export function AdminPanel({
 
   const askSudo = useCallback(() => setSudoOpen(true), []);
   const refresh = useCallback(() => void load(), [load]);
+  const reloadPorts = useCallback(() => void loadPorts(), [loadPorts]);
+  const reloadWeb = useCallback(() => void loadWeb(), [loadWeb]);
+  const goToPort = useCallback((port: number) => {
+    setPortsFilter({ query: `:${port}`, scope: "all", proto: "all" });
+    setTab("ports");
+  }, []);
+  const openFile = onOpenFile ?? null;
+
+  /** El botón de recargar de la cabecera relee lo que muestra la sub-pestaña actual. */
+  const refreshCurrent = () => {
+    if (tab === "ports") reloadPorts();
+    else if (tab === "web") {
+      reloadPorts();
+      reloadWeb();
+    } else refresh();
+  };
+  const busy = tab === "ports" ? ports.loading : tab === "web" ? web.loading || ports.loading : loading;
 
   const ctx: AdminContextValue = useMemo(
     () => ({
@@ -202,8 +293,39 @@ export function AdminPanel({
       refresh,
       runPlan,
       askSudo,
+      ports,
+      loadPorts: reloadPorts,
+      web,
+      loadWeb: reloadWeb,
+      portsFilter,
+      setPortsFilter,
+      goToPort,
+      openFile,
     }),
-    [sessionId, profileId, serverName, disabled, info, elev, elevation, env, read, shadow, users, me, refresh, runPlan, askSudo],
+    [
+      sessionId,
+      profileId,
+      serverName,
+      disabled,
+      info,
+      elev,
+      elevation,
+      env,
+      read,
+      shadow,
+      users,
+      me,
+      refresh,
+      runPlan,
+      askSudo,
+      ports,
+      reloadPorts,
+      web,
+      reloadWeb,
+      portsFilter,
+      goToPort,
+      openFile,
+    ],
   );
 
   const onTabKey = (e: KeyboardEvent) => {
@@ -265,12 +387,12 @@ export function AdminPanel({
             )}
             <button
               className="icon-btn"
-              onClick={refresh}
-              disabled={disabled || loading}
+              onClick={refreshCurrent}
+              disabled={disabled || busy}
               title="Recargar"
               aria-label="Recargar"
             >
-              <RefreshCw size={14} className={loading ? "adm-spin" : undefined} />
+              <RefreshCw size={14} className={busy ? "adm-spin" : undefined} />
             </button>
           </div>
         </div>
@@ -291,7 +413,7 @@ export function AdminPanel({
             )}
           </div>
         )}
-        {!disabled && elevation && shadowError && (
+        {!disabled && elevation && shadowError && NEEDS_READ.includes(tab) && (
           <div className="adm-banner adm-banner-warn" role="status">
             <ShieldAlert size={14} />
             <span className="adm-banner-text">No se pudo leer el estado de las contraseñas: {shadowError}</span>
@@ -304,7 +426,11 @@ export function AdminPanel({
         )}
 
         <div className="adm-body" id={`adm-panel-${sessionId}`} role="tabpanel" aria-labelledby={`adm-tab-${sessionId}-${tab}`}>
-          {error && !read ? (
+          {tab === "ports" ? (
+            <PortsTab />
+          ) : tab === "web" ? (
+            <WebTab />
+          ) : error && !read && NEEDS_READ.includes(tab) ? (
             <div className="empty-state">
               <ShieldAlert size={22} />
               <div>No se pudo leer la información del servidor</div>
@@ -313,7 +439,7 @@ export function AdminPanel({
                 <RefreshCw size={13} /> Reintentar
               </button>
             </div>
-          ) : !read && tab !== "history" ? (
+          ) : !read && NEEDS_READ.includes(tab) ? (
             <div className="empty-state">
               <span className="spinner" />
               <div>Leyendo usuarios y grupos…</div>

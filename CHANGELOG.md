@@ -33,8 +33,28 @@ siguen [Versionado Semántico](https://semver.org/lang/es/).
 - Transferencias: opción **"Preguntar"** cuando el archivo ya existe (sobrescribir, omitir, mantener
   ambos o solo si es más nuevo, con "aplicar a todos").
 - Explorador: **"Descargar en…"** y **"Descargar y abrir carpeta"**.
+- Explorador: **arrastrar archivos y carpetas al escritorio o a una carpeta** del gestor de archivos
+  (Nautilus, Dolphin, Explorador de Windows, Finder). TerView primero los descarga a una carpeta
+  temporal (se ve en Transferencias) y luego los suelta donde quieras; si ya estaban descargados, el
+  arrastre es inmediato. Funciona con nombres con espacios y acentos, en X11 y en Wayland.
+  ⚠️ Sin probar todavía con un arrastre real; en macOS, además, sin compilar.
 - "Mis comandos": **exportar e importar a archivo**, con vista previa.
 - `~/.ssh/config`: aviso cuando un servidor choca con un `Host` escrito a mano y alias alternativo.
+- **Puertos** (en Administración): todos los puertos en escucha, TCP y UDP, con su proceso, usuario y
+  servicio systemd o contenedor. Filtros (públicos o solo locales, usuario, proceso), abrir un túnel a
+  tu PC con un clic y copiar la dirección.
+- **Sitios web** (en Administración): sitios de **nginx** y **Caddy** con sus dominios, HTTPS y fecha
+  de caducidad del certificado, a qué sirve cada ruta y si hay algo escuchando en el puerto de destino.
+  Abre la configuración en el editor, comprueba la configuración y recarga el servicio con confirmación.
+
+### Mejorado
+- **Cancelar ahora detiene el comando en el servidor**: en el panel de Comandos y en "Ejecutar en
+  varios servidores" (también en las pestañas ya abiertas). Antes solo se dejaba de esperar y el
+  comando seguía corriendo. Al vencer el tiempo límite también se detiene.
+- **Túneles a puertos bajos** (menores de 1024, como 80 o 443): "Abrir túnel" elige solo un puerto
+  libre en tu PC, porque esos puertos piden permisos de administrador. Sirve en Puertos y en Contenedores.
+- **Doble clic en un servidor** de la barra lateral: va a su pestaña abierta (y la reconecta si hace
+  falta) en lugar de abrir otra conexión. Para otra conexión: Ctrl+doble clic.
 
 ## [0.3.0] - 2026-11-11
 

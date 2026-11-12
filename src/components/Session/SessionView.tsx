@@ -883,6 +883,7 @@ export const SessionView = memo(function SessionView({ tab, active }: SessionVie
                         profileId={tab.profileId}
                         active={active && sideVisible && side === "admin"}
                         disabled={!connected}
+                        onOpenFile={openFile}
                       />
                     </Suspense>
                   </div>

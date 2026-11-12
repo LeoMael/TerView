@@ -52,6 +52,16 @@ chrono = "0.4"
 # objetos ya ensamblados que trae el crate, así el build de CI no depende de tener NASM instalado.
 [target.'cfg(windows)'.dependencies]
 aws-lc-sys = { version = "0.47", features = ["prebuilt-nasm"] }
+# Arrastrar archivos al Explorador (módulo `dragout`): la misma versión que ya trae Tauri.
+windows = { version = "0.62", features = ["Win32_Foundation", "Win32_System_Com", "Win32_System_Ole", "Win32_UI_Shell", "Win32_UI_Shell_Common"] }
+
+# Arrastrar archivos al escritorio / gestor de archivos (módulo `dragout`): GTK3, ya en el árbol por Tauri.
+[target.'cfg(target_os = "linux")'.dependencies]
+gtk = "0.18"
+
+# Arrastrar archivos a Finder (módulo `dragout`). En macOS el crate de CrabNebula funciona bien.
+[target.'cfg(target_os = "macos")'.dependencies]
+drag = "2.1.1"
 
 
 # Read the optimization guideline for more details: https://tauri.app/concept/size/#cargo-configuration

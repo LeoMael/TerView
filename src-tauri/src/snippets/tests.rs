@@ -176,6 +176,105 @@ fn timeout_is_clamped() {
     assert_eq!(exec::clamp_timeout(10_000), 600);
 }
 
+#[test]
+fn bootstrap_is_safe_for_any_login_shell() {
+    let b = exec::bootstrap(1234);
+    assert!(b.starts_with("sh -c '") && b.ends_with('\''));
+    let inner = &b["sh -c '".len()..b.len() - 1];
+    // Dentro de las comillas simples: nada que bash, zsh, fish o tcsh interpreten.
+    for bad in ['\'', '\\', '!', '\n', '\r'] {
+        assert!(!inner.contains(bad), "el arranque no puede llevar {bad:?}");
+    }
+    assert!(inner.contains("count=1234"));
+}
+
+#[test]
+fn pid_mark_is_taken_out_of_stderr() {
+    let mut err = b"aviso del .bashrc\n__TERVIEW_PID__=4321\nerror real\n".to_vec();
+    let t = exec::take_pid_mark(&mut err).unwrap();
+    assert_eq!(t, exec::RemoteTarget { pid: 4321 });
+    assert_eq!(err, b"aviso del .bashrc\nerror real\n");
+    // Una vez quitada, ya no está.
+    assert!(exec::take_pid_mark(&mut err).is_none());
+
+    // Incompleta (sin salto de línea todavía): no se toca.
+    let mut half = b"__TERVIEW_PID__=12".to_vec();
+    assert!(exec::take_pid_mark(&mut half).is_none());
+    assert_eq!(half, b"__TERVIEW_PID__=12");
+    // Valores inválidos (o PID 0/1): no se aceptan.
+    for bad in [&b"__TERVIEW_PID__=abc\n"[..], b"__TERVIEW_PID__=1\n", b"__TERVIEW_PID__=55:2\n"] {
+        let mut v = bad.to_vec();
+        assert!(exec::take_pid_mark(&mut v).is_none());
+    }
+}
+
+#[test]
+fn kill_command_only_has_numbers() {
+    let t = exec::RemoteTarget { pid: 500 };
+    assert_eq!(t.kill_command("TERM"), "sh -c 'kill -TERM -500 2>/dev/null || kill -TERM 500 2>/dev/null; exit 0'");
+}
+
+#[test]
+fn registry_register_cancel_and_cleanup() {
+    let reg = exec::ExecRegistry::default();
+    assert!(!reg.cancel("x"), "no existe");
+    assert!(reg.register("  ").is_err());
+    {
+        let ticket = reg.register("a").unwrap();
+        assert!(reg.register("a").is_err(), "id repetido");
+        assert!(!ticket.token.is_cancelled());
+        assert!(reg.cancel("a"));
+        assert!(ticket.token.is_cancelled());
+    }
+    // Al terminar se quita de la lista.
+    assert!(!reg.cancel("a"));
+    assert!(reg.register("a").is_ok());
+}
+
+/// El arranque, probado en local con cada shell disponible como "shell de login" (sin SSH):
+/// el comando real llega por stdin, lo que sigue en stdin queda para el comando y se usa `$SHELL`.
+#[cfg(unix)]
+#[test]
+fn bootstrap_runs_with_local_shells() {
+    use std::io::Write;
+    use std::process::{Command, Stdio};
+
+    let user_cmd = "printf '%s|' \"$1x\" 'comillas \"dobles\" y $HOME literal'; echo \"${0##*/}\"; read -r l; echo \"stdin:$l\"";
+    for shell in ["/bin/sh", "/bin/bash", "/bin/dash", "/usr/bin/zsh", "/bin/busybox"] {
+        if !std::path::Path::new(shell).exists() {
+            continue;
+        }
+        let (login, args): (&str, Vec<String>) = if shell.ends_with("busybox") {
+            (shell, vec!["sh".into(), "-c".into(), exec::bootstrap(user_cmd.len())])
+        } else {
+            (shell, vec!["-c".into(), exec::bootstrap(user_cmd.len())])
+        };
+        let mut child = Command::new(login)
+            .args(&args)
+            .env("SHELL", shell)
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .unwrap();
+        let mut input = user_cmd.as_bytes().to_vec();
+        input.extend_from_slice(b"linea secreta\n");
+        child.stdin.take().unwrap().write_all(&input).unwrap();
+        let out = child.wait_with_output().unwrap();
+        let stdout = String::from_utf8_lossy(&out.stdout);
+        let mut stderr = out.stderr.clone();
+        let target = exec::take_pid_mark(&mut stderr).unwrap_or_else(|| panic!("{shell}: sin marca"));
+        assert!(target.pid > 1);
+        assert_eq!(String::from_utf8_lossy(&stderr), "", "{shell}");
+        let name = shell.rsplit('/').next().unwrap();
+        assert_eq!(
+            stdout,
+            format!("x|comillas \"dobles\" y $HOME literal|{name}\nstdin:linea secreta\n"),
+            "{shell}"
+        );
+    }
+}
+
 // ───────────── Con el servidor de pruebas (127.0.0.1:2222) ─────────────
 
 async fn session() -> std::sync::Arc<crate::ssh::SshSession> {
@@ -281,4 +380,103 @@ async fn live_exec_stdin_bootstrap_script() {
     let r = exec::run_with_stdin(&s, &command, stdin.as_bytes(), 10).await.unwrap();
     assert_eq!(r.stdout, "got:secreto con espacios\nusuario:clave\n");
     assert_eq!(r.exit_code, Some(0));
+}
+
+/// Cuenta los procesos remotos cuya línea de comandos contiene `pattern` (p. ej. "slee[p] 3001":
+/// los corchetes evitan contar al propio shell que ejecuta pgrep).
+async fn remote_count(s: &crate::ssh::SshSession, pattern: &str) -> usize {
+    let r = exec::run(s, &format!("pgrep -f '{pattern}' | wc -l"), 10).await.unwrap();
+    r.stdout.trim().parse().unwrap()
+}
+
+/// Limpia restos de una ejecución anterior de las pruebas que haya fallado a medias.
+async fn remote_cleanup(s: &crate::ssh::SshSession) {
+    let _ = exec::run(s, "pkill -9 -f 'slee[p] 30[0-9][0-9]'; true", 10).await;
+}
+
+/// Espera a que el comando esté en marcha (comprueba que `pattern` existe en el servidor) y cancela.
+async fn check_running_then_cancel(
+    s: &crate::ssh::SshSession,
+    pattern: &str,
+    expected: usize,
+    token: tokio_util::sync::CancellationToken,
+) {
+    tokio::time::sleep(std::time::Duration::from_millis(800)).await;
+    assert_eq!(remote_count(s, pattern).await, expected, "el comando debería estar en marcha");
+    token.cancel();
+}
+
+/// Cancelar detiene el proceso remoto (con la señal del canal y con el respaldo por PID).
+#[tokio::test]
+#[ignore]
+async fn live_exec_cancel_kills_remote_process() {
+    let s = session().await;
+    remote_cleanup(&s).await;
+    for (channel_signals, n) in [(true, 3001), (false, 3002)] {
+        let token = tokio_util::sync::CancellationToken::new();
+        let cmd = format!("echo empieza; sleep {n}");
+        let t0 = std::time::Instant::now();
+        let pattern = format!("slee[p] {n}");
+        let (r, ()) = tokio::join!(
+            exec::run_inner(&s, &cmd, None, 120, Some(&token), channel_signals),
+            check_running_then_cancel(&s, &pattern, 1, token.clone()),
+        );
+        assert!(matches!(r, Err(crate::error::AppError::Canceled)), "{r:?}");
+        assert!(t0.elapsed() < std::time::Duration::from_secs(8));
+        assert_eq!(remote_count(&s, &pattern).await, 0, "señales del canal: {channel_signals}");
+    }
+}
+
+/// Un comando que ignora TERM (y deja hijos) también se detiene: se pasa a KILL y se mata todo el grupo.
+#[tokio::test]
+#[ignore]
+async fn live_exec_cancel_kills_term_ignoring_group() {
+    let s = session().await;
+    remote_cleanup(&s).await;
+    for (channel_signals, n) in [(true, 3010), (false, 3020)] {
+        let token = tokio_util::sync::CancellationToken::new();
+        let cmd = format!("trap '' TERM; sleep {a} & sleep {b}; wait", a = n + 1, b = n + 2);
+        // "slee[p] 301" cubre los dos sleep (3011 y 3012) y el bash que los lanzó.
+        let pattern = format!("slee[p] {}", n / 10);
+        let (r, ()) = tokio::join!(
+            exec::run_inner(&s, &cmd, None, 120, Some(&token), channel_signals),
+            check_running_then_cancel(&s, &pattern, 3, token.clone()),
+        );
+        assert!(matches!(r, Err(crate::error::AppError::Canceled)), "{r:?}");
+        assert_eq!(remote_count(&s, &pattern).await, 0, "señales del canal: {channel_signals}");
+    }
+}
+
+/// Al vencer el tiempo tampoco queda el proceso vivo, y la salida parcial se conserva.
+#[tokio::test]
+#[ignore]
+async fn live_exec_timeout_kills_remote_process() {
+    let s = session().await;
+    remote_cleanup(&s).await;
+    for (channel_signals, n) in [(true, 3031), (false, 3032)] {
+        let cmd = format!("echo antes; sleep {n}");
+        let r = exec::run_inner(&s, &cmd, None, 1, None, channel_signals).await.unwrap();
+        assert!(r.timed_out);
+        assert_eq!(r.stdout, "antes\n");
+        assert!(!r.stderr.contains("__TERVIEW_PID__"));
+        assert_eq!(remote_count(&s, &format!("slee[p] {n}")).await, 0, "señales del canal: {channel_signals}");
+    }
+}
+
+/// El comando se sigue ejecutando con el shell de login del usuario (bash en el servidor de pruebas),
+/// con su stdin, y la marca de PID no aparece en la salida.
+#[tokio::test]
+#[ignore]
+async fn live_exec_uses_login_shell_and_hides_mark() {
+    let s = session().await;
+    let r = exec::run(&s, "[[ -n $BASH_VERSION ]] && echo bash; echo err >&2", 10).await.unwrap();
+    assert_eq!(r.stdout, "bash\n");
+    assert_eq!(r.stderr, "err\n");
+    let r = exec::run_with_stdin(&s, "read -r a; echo \"$a\"", b"hola\n", 10).await.unwrap();
+    assert_eq!(r.stdout, "hola\n");
+    // Ya cancelado antes de empezar: no se abre canal.
+    let token = tokio_util::sync::CancellationToken::new();
+    token.cancel();
+    let r = exec::run_cancellable(&s, "echo nunca", None, 10, &token).await;
+    assert!(matches!(r, Err(crate::error::AppError::Canceled)));
 }

@@ -27,8 +27,8 @@ export function MultiRunPanel() {
         title: "¿Cancelar la ejecución?",
         message:
           pending === 1
-            ? "Queda 1 servidor en marcha. Se cancelará y se cerrarán las conexiones abiertas para ejecutarlo."
-            : `Quedan ${pending} servidores en marcha. Se cancelarán y se cerrarán las conexiones abiertas para ejecutarlos.`,
+            ? "Queda 1 servidor en marcha. Se detendrá su comando en el servidor y se cerrarán las conexiones abiertas para ejecutarlo."
+            : `Quedan ${pending} servidores en marcha. Se detendrán sus comandos en los servidores y se cerrarán las conexiones abiertas para ejecutarlos.`,
         confirmText: "Cancelar y cerrar",
         cancelText: "Seguir",
         danger: true,

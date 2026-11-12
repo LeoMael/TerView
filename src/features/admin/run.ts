@@ -81,3 +81,37 @@ export async function readKeys(sessionId: string, user: string, el: Elevation): 
   if (!s.has("end")) throw new Error("No se pudo leer authorized_keys");
   return (s.get("keys") ?? []).filter((l) => l.trim() !== "");
 }
+
+export interface ElevatedRead {
+  result: ExecResult;
+  /** Se leyó como root (se ve todo). */
+  elevated: boolean;
+  /** Si se intentó elevar y falló (contraseña de sudo incorrecta…), el motivo. */
+  elevationError: ElevationError | null;
+}
+
+/**
+ * Lectura con la elevación disponible (null = sin elevar). Si sudo falla, se repite como usuario normal
+ * para mostrar al menos lo que se pueda ver. Exige que la salida termine en «@@end».
+ */
+export async function readElevated(
+  sessionId: string,
+  script: string,
+  el: Elevation | null,
+  timeoutSecs = 30,
+): Promise<ElevatedRead> {
+  let elevationError: ElevationError | null = null;
+  let r: ExecResult | null = null;
+  if (el && el.kind !== "none") {
+    try {
+      r = await runScript(sessionId, script, el, "", timeoutSecs);
+    } catch (e) {
+      if (!(e instanceof ElevationError)) throw e;
+      elevationError = e;
+    }
+  }
+  const elevated = r !== null;
+  if (!r) r = await runScript(sessionId, script, { kind: "none" }, "", timeoutSecs);
+  if (!splitSections(r.stdout).has("end")) throw new Error(failureText(r));
+  return { result: r, elevated, elevationError };
+}

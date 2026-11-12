@@ -2,7 +2,7 @@
 // Módulo ligero: lo importa la barra lateral (openMultiRun); el panel se carga aparte.
 import { create } from "zustand";
 import { ssh } from "../../api/ssh";
-import { snippets } from "../../api/snippets";
+import { newExecId, snippets } from "../../api/snippets";
 import { useProfiles } from "../../stores/profiles";
 import { useTabs } from "../../stores/tabs";
 import { detectPrivilege, getPrivilege } from "../privileges";
@@ -101,7 +101,9 @@ const realDeps: EngineDeps = {
     if (!profile) throw new Error("El servidor ya no existe");
     return connectInBackground(profile);
   },
-  exec: (sessionId, command, timeoutSecs) => snippets.exec(sessionId, command, timeoutSecs),
+  exec: (sessionId, command, timeoutSecs, execId) => snippets.exec(sessionId, command, timeoutSecs, execId),
+  newExecId,
+  cancelExec: (execId) => snippets.cancelExec(execId),
   disconnect: (sessionId) => ssh.disconnect(sessionId),
   privilege: async (sessionId, reused) => {
     // Solo lectura: en pestañas se usa lo ya detectado; si no, se consulta sin guardar nada.

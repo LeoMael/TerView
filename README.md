@@ -47,6 +47,8 @@
 - **Ver el servidor en vivo**: CPU, memoria, discos, red y procesos, con alertas.
 - **Administrar usuarios y grupos** si eres root o tienes sudo. TerView lo detecta solo y lo muestra en la pestaña.
 - **Abrir túneles** para usar en tu PC una base de datos o un panel del servidor sin abrir puertos.
+- **Ver puertos y sitios web** del servidor: qué programa usa cada puerto y los sitios de nginx o Caddy
+  con sus dominios y certificados.
 - **Ejecutar un comando en varios servidores** a la vez y comparar los resultados.
 - **Conectar tu cuenta de GitHub**: llaves SSH, clonar, desplegar y sincronizar tu configuración.
 - **Actualizarse sola** cuando sale una versión nueva.

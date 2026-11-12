@@ -52,7 +52,10 @@ export async function toTerminal(sessionId: string, item: CommandItem, command: 
   return true;
 }
 
-/** Ejecuta aparte (canal exec). La confirmación de peligrosos la hace quien llama. */
-export function captureExec(sessionId: string, command: string): Promise<ExecResult> {
-  return snippets.exec(sessionId, command, CAPTURE_TIMEOUT_SECS);
+/**
+ * Ejecuta aparte (canal exec). La confirmación de peligrosos la hace quien llama.
+ * Con `execId` se puede cancelar (`snippets.cancelExec`), y se detiene también en el servidor.
+ */
+export function captureExec(sessionId: string, command: string, execId?: string): Promise<ExecResult> {
+  return snippets.exec(sessionId, command, CAPTURE_TIMEOUT_SECS, execId);
 }

@@ -25,7 +25,7 @@ function joinLocal(dir: string, name: string): string {
 
 /** Rutas locales de los elementos raíz del lote (usa la del motor si ya la conoce:
  *  puede cambiar por "mantener ambos" o por nombres no válidos en Windows). */
-function rootPaths(batchId: string, dir: string, entries: FileEntry[]): string[] {
+export function rootPaths(batchId: string, dir: string, entries: FileEntry[]): string[] {
   const jobs = useTransfers.getState().jobs;
   const byName = new Map<string, string>();
   for (const id of batchJobIds(batchId)) {

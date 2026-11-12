@@ -36,6 +36,8 @@ export const transfers = {
   download: (sessionId: string, remotePaths: string[], localDir: string) =>
     call<string>("transfer_download", { sessionId, remotePaths, localDir }),
   list: () => call<TransferJob[]>("transfer_list"),
+  /** ¿El lote terminó del todo? (también sabe si el recorrido de carpetas sigue añadiendo trabajos). */
+  batchFinished: (batchId: string) => call<boolean>("transfer_batch_finished", { batchId }),
   /** ids: de trabajos o de lotes. */
   pause: (ids: string[]) => call<void>("transfer_pause", { ids }),
   resume: (ids: string[]) => call<void>("transfer_resume", { ids }),

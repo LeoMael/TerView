@@ -2,6 +2,7 @@
 //! Archivo de BASE: los agentes no lo editan; los comandos ya están todos registrados.
 
 mod diagnostics;
+mod dragout;
 mod error;
 mod github;
 mod localfs;
@@ -36,6 +37,7 @@ pub fn run() {
         .manage(terminal::TerminalStore::default())
         .manage(sftp::SftpStore::default())
         .manage(transfer::TransferManager::default())
+        .manage(snippets::ExecRegistry::default())
         // Al cerrar la principal se cierra la app entera (si no, seguirían vivas las ventanas de editor aparte).
         .on_window_event(|window, event| {
             if window.label() == "main" && matches!(event, tauri::WindowEvent::Destroyed) {
@@ -49,6 +51,8 @@ pub fn run() {
             // Túneles: definiciones guardadas + vigilante (arranque automático, reconexión, cierre).
             app.manage(tunnels::TunnelManager::load());
             app.state::<tunnels::TunnelManager>().start_watcher(app.handle().clone());
+            // Arrastrar al sistema: borra lo preparado hace más de un día.
+            dragout::clean_on_start(app.handle());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -84,6 +88,10 @@ pub fn run() {
             transfer::transfer_clear_finished,
             transfer::transfer_conflicts,
             transfer::transfer_resolve_conflict,
+            transfer::transfer_batch_finished,
+            // arrastrar al escritorio / gestor de archivos
+            dragout::drag_out_dir,
+            dragout::drag_out_start,
             // storage
             storage::profiles_load,
             storage::profiles_save_server,
@@ -111,6 +119,7 @@ pub fn run() {
             snippets::snippets_delete,
             snippets::exec_capture,
             snippets::exec_capture_stdin,
+            snippets::exec_cancel,
             // cuenta de GitHub
             github::gh_status,
             github::gh_connect,

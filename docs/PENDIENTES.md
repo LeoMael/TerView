@@ -1,9 +1,18 @@
 # TerView — Pendientes y próximas funciones
 
-Estado al 11/11/2026 (v0.2.0): fases 0–9 construidas e integradas — conexión, terminal, explorador,
-transferencias masivas, servidores/proyectos, editor, ventana, **reconexión automática, 2FA,
-biblioteca de comandos, exportar/importar `~/.ssh/config`** y logo. **82/82 pruebas del motor pasan.**
-Solo queda pendiente el MCP (opcional) y los detalles de la tabla final.
+Estado al 12/11/2026: versión publicada **0.3.0**; lo hecho después y aún sin publicar se marca como
+**v0.4.0** (así lo llama el CHANGELOG, en «Sin publicar»). Todo el plan de la sección 8 está construido:
+administración (usuarios, grupos, **puertos y sitios web**), monitor, túneles, contenedores, ejecutar en
+varios servidores, GitHub, versiones y actualizaciones. Los comandos que se ejecutan aparte ya se pueden
+**cancelar de verdad** (se detienen también en el servidor).
+
+**Lo que sigue pendiente:**
+- **Servidor MCP** (sección 3): opcional, diseñado y en pausa.
+- **Firmar el instalador** de Windows (SmartScreen avisa al instalar).
+- **Pruebas reales**: en un Windows real, contra un servidor con 2FA y con un agente SSH real.
+- **Medir el rendimiento** en la app real (el panel de diagnóstico ya existe).
+- **Probar con el ratón el arrastre al sistema** (ya implementado en Linux, Windows y macOS; macOS sin compilar).
+- **Pruebas automáticas de la interfaz** dentro de la app real.
 
 Este documento guarda lo que falta, **con suficiente detalle para retomarlo más tarde**.
 
@@ -241,10 +250,10 @@ Archivos: `src-tauri/src/storage/ssh_config.rs` (leer/escribir bloque), comandos
 | Duplicar servidor | ✅ Copia también la contraseña guardada. |
 | Logo e ícono | ✅ `docs/marca/`, ícono de la app generado. |
 | Instaladores | ✅ `.rpm`, `.deb`, `.AppImage`, `.msi`, `-setup.exe` con GitHub Actions (v0.3.0). ⏳ Falta firmar (SmartScreen avisa). |
-| Arrastrar al sistema | ⏳ El arrastre nativo (`tauri-plugin-drag`) no funciona bien en Wayland ni con rutas con espacios. Alternativa hecha (v0.4.0): «Descargar en…» y «Descargar y abrir carpeta». |
+| Arrastrar al sistema | ✅ Implementado (v0.4.0), ⚠️ **sin probar con un arrastre real** en ningún sistema. Arrastrar filas del explorador remoto al escritorio o a una carpeta: primero se descargan a `<caché>/arrastre/<id>/` con el motor de transferencias (se ven en el panel) y luego se arrastran los archivos locales. Si ya estaban descargados y no cambiaron, el arrastre es inmediato; si no, se muestra «Preparando para arrastrar…» abajo y, si el botón sigue apretado al terminar, arrastra en ese momento (si no, avisa «Listo para arrastrar»). Más de 1 GB pide confirmación. La caché se limpia al abrir la app (lo de más de un día). Módulo `dragout`. **Linux** (X11 y Wayland): GTK3 propio con `text/uri-list` (URIs codificadas por GLib: espacios y acentos ok). `tauri-plugin-drag`/`drag` 2.1.1 sigue con los fallos en GTK (URIs sin codificar, botón mal pasado, entrega de datos desconectada antes de que el destino la pida), por eso no se usa en Linux. Sin XDS (solo X11 y pocos gestores). **Windows**: objeto de datos del Shell + `SHDoDragDrop` (compila con `cargo-zigbuild clippy`; ⚠️ sin probar). **macOS**: crate `drag` ⚠️ sin compilar ni probar (lo compila la CI de publicación). Pendiente si hiciera falta: archivos virtuales (`CFSTR_FILECONTENTS` en Windows, `NSFilePromiseProvider` en macOS) para no copiar dos veces los archivos grandes; quedarían fuera del motor de transferencias. Alternativas que siguen: «Descargar en…» y «Descargar y abrir carpeta». |
 | Exportar "Mis comandos" a archivo | ✅ Exportar/importar a archivo con vista previa (v0.4.0). |
 | Alias de `~/.ssh/config` | ✅ Detecta choques (Host, patrones, Include, Match) y propone alias (v0.4.0). |
-| Cancelar "ver resultado" | ⏳ Deja de esperar, pero el comando remoto sigue hasta terminar o agotar el tiempo. |
+| Cancelar "ver resultado" | ✅ «Cancelar» y el tiempo límite detienen también el proceso en el servidor: señal TERM por el canal y, si no basta, `kill` al grupo del comando desde otro canal (TERM y luego KILL). Comando Tauri `exec_cancel(execId)` (v0.4.0). Lo usan el panel de Comandos y «Ejecutar en varios servidores»: al cancelar (un servidor, «Cancelar todo» o al cerrar el panel) se detiene el comando tanto en sesiones de pestaña como en las propias; las propias se desconectan **después**, cuando el comando ya paró (como mucho 15 s). ⚠️ Sin probar contra servidores reales variados (la señal por el canal necesita OpenSSH 7.9 o más nuevo; si no, se usa `kill`). |
 | Pruebas de la interfaz | ⏳ La interfaz se revisó con capturas en navegador; faltan pruebas automáticas dentro de la app real. |
 
 ---
@@ -296,6 +305,8 @@ Ordenadas por utilidad para el día a día:
 | 6 | [Ejecutar en varios servidores a la vez](#86-ejecutar-en-varios-servidores-a-la-vez) | ✅ Hecho (v0.4.0) |
 | 7 | [GitHub: Actions + conectar cuenta](#9-github) | ✅ Hecho (v0.3.0 Actions, v0.4.0 cuenta) |
 | 8 | [Contenedores (Podman / Docker)](#87-administrador-de-contenedores-podman--docker--pedido-11112026) | ✅ Hecho (v0.4.0) |
+| 9 | [Puertos y servicios web](#88-puertos-y-servicios-web--pedido-11112026) | ✅ Hecho (v0.4.0) |
+| — | [Corrección: doble clic en un servidor](#corrección--doble-clic-en-un-servidor-de-la-barra-lateral) | ✅ Hecho (v0.4.0) |
 
 ### 8.1 Optimización / rendimiento
 
@@ -385,6 +396,11 @@ Pestaña **Contenedores** en cada conexión, todo visual (sin escribir comandos)
 - Siempre muestra el comando exacto antes de las acciones que borran.
 
 ### 8.8 Puertos y servicios web — pedido 11/11/2026
+✅ **Hecho (v0.4.0).** Archivos: `src/components/Admin/PortsTab.tsx`, `WebTab.tsx`,
+`src/features/admin/ports.ts`, `web.ts` y `src/features/tunnels/openLocal.ts`.
+Diferencias con lo pedido: en lugar de «ver el proceso en el Monitor» hay «Copiar PID». «Abrir túnel» a un
+puerto menor de 1024 escucha en tu PC en un puerto libre que elige el motor (también en Contenedores).
+
 En **Administración**, dos sub-pestañas nuevas:
 - **Puertos**: todos los puertos en escucha (TCP/UDP, IPv4/IPv6) con proceso, PID, usuario y servicio
   systemd/contenedor. Con root/sudo se ven los de **todos los usuarios**; sin privilegios, solo los propios
@@ -396,8 +412,10 @@ En **Administración**, dos sub-pestañas nuevas:
   `caddy validate`) y recarga el servicio con confirmación.
 
 ### Corrección — doble clic en un servidor de la barra lateral
-Hoy abre siempre una conexión nueva. Debe **ir a la pestaña ya abierta** de ese servidor (y reconectar
-si estaba cerrada). Para abrir una conexión adicional al mismo servidor se usa el **+**.
+✅ **Hecho (v0.4.0).** El doble clic (y Enter) **va a la pestaña ya abierta** de ese servidor y la
+reconecta si estaba cerrada; si no hay pestaña, conecta (`openOrFocusServer` en `src/features/connect.ts`,
+usado por `openOrFocus` en `Sidebar.tsx`). Para abrir una conexión adicional al mismo servidor:
+Ctrl+doble clic, clic central o «Abrir otra conexión» en el menú.
 
 ### 8.6 Ejecutar en varios servidores a la vez
 - Elegir servidores (o un proyecto completo) y ejecutar un comando de la biblioteca en todos.
