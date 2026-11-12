@@ -82,6 +82,10 @@ export interface Settings {
   lockMinutes: number;
   /** Se dijo «Ahora no» a crear el PIN: no volver a preguntar al iniciar. */
   vaultPromptDismissed: boolean;
+  /** Escáner de vulnerabilidades. */
+  vulnscan: import("./vulnscan").VulnScanSettings;
+  /** Asistente de IA opcional (el token no va aquí). */
+  ai: import("./vulnscan").AiSettings;
 }
 
 // ───────── SSH ─────────

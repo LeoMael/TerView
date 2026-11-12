@@ -2,6 +2,7 @@
 import { create } from "zustand";
 import { settingsApi } from "../api/profiles";
 import type { Settings } from "../api/types";
+import { DEFAULT_AI_SETTINGS, DEFAULT_VULNSCAN_SETTINGS } from "../api/vulnscan";
 
 /** Fuente monoespaciada por defecto: Linux (JetBrains/Fira/Noto), Windows (Cascadia Mono, Consolas), macOS (Menlo). */
 export const DEFAULT_MONO_FONT = "'JetBrains Mono', 'Fira Code', 'Noto Sans Mono', 'Cascadia Mono', Consolas, Menlo, monospace";
@@ -27,6 +28,8 @@ export const DEFAULT_SETTINGS: Settings = {
   terminalTmux: "auto",
   lockMinutes: 15,
   vaultPromptDismissed: false,
+  vulnscan: DEFAULT_VULNSCAN_SETTINGS,
+  ai: DEFAULT_AI_SETTINGS,
 };
 
 interface SettingsState {
