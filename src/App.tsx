@@ -19,6 +19,7 @@ import { useProfiles } from "./stores/profiles";
 import { initTabsListeners, useTabs } from "./stores/tabs";
 import { initTransfersStore } from "./stores/transfers";
 import { initPrivileges } from "./features/privileges";
+import { PinDialogHost } from "./features/lock/PinDialog";
 import { useUi } from "./stores/ui";
 import { idleQueue, preloadable } from "./lib/lazy";
 import { isMac, isModKey } from "./lib/platform";
@@ -274,6 +275,7 @@ export default function App() {
       <PaletteHost />
       <MultiRunHost />
       <GitHubHost />
+      <PinDialogHost />
     </>
   );
 }

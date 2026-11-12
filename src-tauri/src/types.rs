@@ -54,6 +54,22 @@ pub struct ServerProfile {
     /// Terminales persistentes (tmux) de este servidor. None = usar el ajuste general.
     #[serde(default)]
     pub tmux: Option<TmuxMode>,
+    /// De dónde sale la contraseña de sudo (la guardada va en la bóveda o el llavero, nunca aquí).
+    #[serde(default)]
+    pub sudo_mode: SudoMode,
+}
+
+/// De dónde sale la contraseña de sudo de un servidor.
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum SudoMode {
+    /// Pedirla cada vez (solo vive en memoria durante la conexión).
+    #[default]
+    Ask,
+    /// Usar la contraseña de conexión guardada (solo si se entra con contraseña).
+    Login,
+    /// Usar la guardada aparte (id "<id>:sudo"); útil al entrar con llave SSH.
+    Saved,
 }
 
 /// Cuándo abrir las terminales dentro de tmux (sobreviven a cortes de red y al cierre de la app).

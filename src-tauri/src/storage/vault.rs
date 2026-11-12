@@ -1,9 +1,14 @@
-//! Bóveda de contraseñas: las contraseñas y frases guardadas (y el token de GitHub) cifradas con
-//! una llave que sale del PIN o contraseña maestra del usuario Y de una llave de este equipo.
+//! Bóveda de contraseñas: las contraseñas y frases guardadas (de conexión y de sudo, y el token de
+//! GitHub) cifradas con una llave que sale del PIN del usuario Y de una llave de este equipo.
 //!
 //! - Archivo: `vault.json` en la carpeta de configuración (escritura atómica, permisos 0600).
 //!   Es un sobre de `storage::cipher` (AES-256-GCM + Argon2id) con formato "terview-vault".
 //!   Dentro, cifrado: `{ "secrets": { "<id>": "<secreto>", … } }`.
+//! - El PIN es de 6 números (`check_new_pin`). El tipo va en la cabecera autenticada del sobre
+//!   (`kind`: "pin6"); las bóvedas creadas antes, con un PIN o contraseña libre, no la llevan y se
+//!   tratan como "text" (se abren con un campo de texto normal) hasta que se cambia el PIN.
+//!   Con la llave del equipo, 6 números bastan contra la copia del archivo: sin ella no se puede
+//!   probar ningún PIN, y las esperas tras fallos frenan a quien está delante del PC.
 //! - Llave del equipo: 32 bytes al azar guardados en el llavero del sistema (usuario
 //!   `vault-device-key`). Entra en Argon2id como su «secreto» (K), así que la llave de la bóveda
 //!   sale del PIN y de ella juntos: quien se lleve solo `vault.json` no puede probar PIN fuera de
@@ -43,9 +48,10 @@ pub const DEVICE_KEY_USER: &str = "vault-device-key";
 const DEVICE_KEY_LEN: usize = 32;
 pub const FORMAT: &str = "terview-vault";
 pub const VERSION: u32 = 1;
-/// Largo mínimo del PIN o contraseña maestra.
-pub const MIN_PIN: usize = 6;
-const MAX_PIN: usize = 256;
+/// Números del PIN.
+pub const PIN_LEN: usize = 6;
+/// Largo máximo de lo que se acepta al desbloquear (las bóvedas antiguas de tipo texto).
+const MAX_UNLOCK_LEN: usize = 256;
 
 /// Memoria de Argon2id: 64 MiB (como la copia sincronizada); 128 MiB en equipos rápidos.
 const BASE_M_KIB: u32 = 64 * 1024;
@@ -97,6 +103,36 @@ pub fn calibrate() -> KdfParams {
     }
 }
 
+/// Tipo de PIN de la bóveda (va en la cabecera autenticada del archivo).
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize)]
+pub enum PinKind {
+    /// 6 números (todas las bóvedas nuevas y tras cambiar el PIN).
+    #[default]
+    #[serde(rename = "pin6")]
+    Pin6,
+    /// Texto libre: bóvedas creadas antes de que el PIN fuera de 6 números.
+    #[serde(rename = "text")]
+    Text,
+}
+
+impl PinKind {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            PinKind::Pin6 => "pin6",
+            PinKind::Text => "text",
+        }
+    }
+
+    /// Lee la etiqueta del sobre. Sin etiqueta (bóveda antigua) o desconocida: texto libre, que
+    /// acepta cualquier cosa al desbloquear.
+    fn from_envelope(env: &Envelope) -> Self {
+        match env.kind.as_deref() {
+            Some("pin6") => PinKind::Pin6,
+            _ => PinKind::Text,
+        }
+    }
+}
+
 /// Lo que ve la interfaz.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -107,6 +143,8 @@ pub struct VaultStatus {
     pub locked: bool,
     /// Segundos que faltan para poder volver a probar un PIN (0 = ya).
     pub retry_after_secs: u32,
+    /// Cómo pedir el PIN al desbloquear (sin bóveda: "pin6", el de las nuevas).
+    pub pin_kind: PinKind,
 }
 
 type Secrets = BTreeMap<String, Zeroizing<String>>;
@@ -129,6 +167,7 @@ struct Open {
     key: Zeroizing<[u8; 32]>,
     params: KdfParams,
     salt_b64: String,
+    kind: PinKind,
     secrets: Secrets,
 }
 
@@ -189,6 +228,8 @@ pub struct Vault {
     attempts_path: Option<PathBuf>,
     device: Box<dyn DeviceKeyStore>,
     state: Mutex<State>,
+    /// Tipo de PIN del archivo (se sabe sin desbloquear: va en la cabecera).
+    pin_kind: Mutex<PinKind>,
     attempts: Mutex<Attempts>,
     /// Una operación larga a la vez (crear, desbloquear, cambiar PIN, desactivar, olvidar).
     ops: Mutex<()>,
@@ -214,21 +255,13 @@ fn env_error(e: EnvError) -> AppError {
     }
 }
 
-/// Comprueba el PIN nuevo: entre 6 y 256 caracteres (solo números o una contraseña).
+/// Comprueba un PIN nuevo: exactamente 6 números (0-9).
 pub fn check_new_pin(pin: &str) -> AppResult<()> {
-    let n = pin.chars().count();
-    if n < MIN_PIN {
-        return Err(AppError::Invalid(format!(
-            "El PIN o contraseña debe tener al menos {MIN_PIN} caracteres"
-        )));
+    if pin.len() == PIN_LEN && pin.bytes().all(|b| b.is_ascii_digit()) {
+        Ok(())
+    } else {
+        Err(AppError::Invalid(format!("El PIN debe tener {PIN_LEN} números")))
     }
-    if n > MAX_PIN {
-        return Err(AppError::Invalid("El PIN o contraseña es demasiado largo".into()));
-    }
-    if pin.trim().is_empty() {
-        return Err(AppError::Invalid("El PIN no puede ser solo espacios".into()));
-    }
-    Ok(())
 }
 
 fn read_envelope(path: &Path) -> AppResult<Envelope> {
@@ -245,13 +278,21 @@ fn read_envelope(path: &Path) -> AppResult<Envelope> {
 }
 
 /// Cifra y escribe los secretos (atómico, 0600).
-fn write_file(path: &Path, key: &[u8; 32], params: KdfParams, salt_b64: &str, secrets: &Secrets) -> AppResult<()> {
+fn write_file(path: &Path, open: &Open, secrets: &Secrets) -> AppResult<()> {
     let plain: BTreeMap<&str, &str> = secrets.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect();
     // Se reserva de antemano para que el texto en claro no deje copias al crecer.
     let cap = 32 + secrets.iter().map(|(k, v)| k.len() + 2 * v.len() + 8).sum::<usize>();
     let mut json = Zeroizing::new(Vec::with_capacity(cap));
     serde_json::to_writer(&mut *json, &ContentsRef { secrets: plain })?;
-    let env = cipher::seal(FORMAT, VERSION, key, params, salt_b64, &json)?;
+    let env = cipher::seal_with_kind(
+        FORMAT,
+        VERSION,
+        &open.key,
+        open.params,
+        &open.salt_b64,
+        Some(open.kind.as_str()),
+        &json,
+    )?;
     fsutil::write_json_atomic(path, &env)
 }
 
@@ -264,6 +305,9 @@ fn open_with_key(env: &Envelope, key: &[u8; 32]) -> AppResult<Secrets> {
 
 /// Lee el archivo, deriva la llave desde el PIN y la llave del equipo, y descifra.
 fn open_with_pin(path: &Path, pin: &str, device: &dyn DeviceKeyStore) -> AppResult<Open> {
+    if pin.is_empty() || pin.len() > MAX_UNLOCK_LEN {
+        return Err(AppError::AuthFailed("el PIN no es correcto".into()));
+    }
     let env = read_envelope(path)?;
     let (params, salt) = cipher::check(&env, FORMAT, VERSION).map_err(env_error)?;
     let dk = load_device_key(device)?;
@@ -272,6 +316,7 @@ fn open_with_pin(path: &Path, pin: &str, device: &dyn DeviceKeyStore) -> AppResu
     Ok(Open {
         key,
         params,
+        kind: PinKind::from_envelope(&env),
         salt_b64: env.kdf.salt,
         secrets,
     })
@@ -290,7 +335,7 @@ fn load_device_key(device: &dyn DeviceKeyStore) -> AppResult<Zeroizing<Vec<u8>>>
 
 /// Escribe y comprueba que lo escrito se vuelve a abrir con la misma llave y da lo mismo.
 fn write_verified(path: &Path, open: &Open) -> AppResult<()> {
-    write_file(path, &open.key, open.params, &open.salt_b64, &open.secrets)?;
+    write_file(path, open, &open.secrets)?;
     let back = open_with_key(&read_envelope(path)?, &open.key)?;
     if back != open.secrets {
         return Err(AppError::Io(
@@ -308,6 +353,12 @@ impl Vault {
             Some(p) if p.exists() => State::Locked,
             _ => State::Disabled,
         };
+        // El tipo de PIN se lee de la cabecera; si el archivo está dañado, texto libre (al
+        // desbloquear se verá el error).
+        let pin_kind = match (&state, &path) {
+            (State::Locked, Some(p)) => read_envelope(p).map_or(PinKind::Text, |e| PinKind::from_envelope(&e)),
+            _ => PinKind::Pin6,
+        };
         let attempts_path = path.as_ref().map(|p| p.with_file_name(ATTEMPTS_FILE));
         let attempts = attempts_path
             .as_deref()
@@ -319,6 +370,7 @@ impl Vault {
             attempts_path,
             device,
             state: Mutex::new(state),
+            pin_kind: Mutex::new(pin_kind),
             attempts: Mutex::new(attempts),
             ops: Mutex::new(()),
         }
@@ -351,6 +403,7 @@ impl Vault {
             enabled,
             locked,
             retry_after_secs: self.retry_after().map_or(0, |d| d.as_secs_f64().ceil() as u32),
+            pin_kind: if enabled { *guard(&self.pin_kind) } else { PinKind::Pin6 },
         }
     }
 
@@ -393,9 +446,7 @@ impl Vault {
         if next == open.secrets {
             return Some(Ok(()));
         }
-        let r = self
-            .path()
-            .and_then(|p| write_file(p, &open.key, open.params, &open.salt_b64, &next));
+        let r = self.path().and_then(|p| write_file(p, open, &next));
         if r.is_ok() {
             open.secrets = next;
         }
@@ -507,6 +558,16 @@ impl Vault {
         Ok(())
     }
 
+    /// Comprueba el PIN sin cambiar nada (p. ej. antes de mostrar una contraseña guardada).
+    /// Cuenta como intento: los fallos tienen la misma espera que al desbloquear.
+    pub fn check_pin(&self, pin: &str) -> AppResult<()> {
+        let _op = guard(&self.ops);
+        if !self.is_enabled() {
+            return Err(AppError::Invalid("no hay ninguna bóveda creada".into()));
+        }
+        self.verify_pin(pin).map(|_| ())
+    }
+
     // ───────── Crear, cambiar PIN, desactivar, olvidar ─────────
 
     /// Crea la bóveda con esos secretos y la deja desbloqueada. Escribe el archivo y comprueba que
@@ -536,6 +597,7 @@ impl Vault {
                 key,
                 params,
                 salt_b64,
+                kind: PinKind::Pin6,
                 secrets: secrets.into_iter().map(|(k, v)| (k, Zeroizing::new(v))).collect(),
             };
             write_verified(&path, &open)?;
@@ -549,11 +611,13 @@ impl Vault {
                 return Err(e);
             }
         };
+        *guard(&self.pin_kind) = PinKind::Pin6;
         *guard(&self.state) = State::Unlocked(open);
         Ok(())
     }
 
-    /// Cambia el PIN: vuelve a cifrar con sal y llave nuevas. Pide el PIN actual.
+    /// Cambia el PIN: vuelve a cifrar con sal y llave nuevas. Pide el PIN actual (de cualquier
+    /// tipo); el nuevo es siempre de 6 números.
     pub fn change_pin(&self, old: &str, new: &str, params: KdfParams) -> AppResult<()> {
         check_new_pin(new)?;
         let _op = guard(&self.ops);
@@ -575,9 +639,11 @@ impl Vault {
             key,
             params,
             salt_b64,
+            kind: PinKind::Pin6,
             secrets,
         };
         write_verified(&path, &open)?;
+        *guard(&self.pin_kind) = PinKind::Pin6;
         // Si se bloqueó mientras tanto, sigue bloqueada (el archivo ya tiene el PIN nuevo).
         if matches!(*st, State::Unlocked(_)) {
             *st = State::Unlocked(open);
@@ -609,6 +675,7 @@ impl Vault {
             Err(e) => return Err(AppError::Io(format!("no se pudo borrar {}: {e}", path.display()))),
         }
         *guard(&self.state) = State::Disabled;
+        *guard(&self.pin_kind) = PinKind::Pin6;
         // Sin bóveda la llave del equipo no sirve para nada (si el llavero no responde, se queda).
         if let Err(e) = self.device.delete() {
             log::warn!("bóveda: no se pudo borrar la llave del equipo del llavero: {e}");

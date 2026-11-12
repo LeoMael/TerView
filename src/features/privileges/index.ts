@@ -23,6 +23,10 @@ export {
   confirmSudo,
   forgetAllSudo,
   forgetSudo,
+  forgetSudoByUser,
+  sudoRejected,
+  useStoredSudoState,
+  type StoredSudoState,
   getSudoPassword,
   useElevation,
   useHasSudoPassword,
@@ -39,3 +43,4 @@ export {
   type ElevationFailure,
   type ExecRequest,
 } from "./elevate";
+export { sudoModeOf, useStoredSudo } from "./stored";

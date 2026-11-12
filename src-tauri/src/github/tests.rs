@@ -317,6 +317,30 @@ fn forbidden_keys_detected() {
     assert!(super::find_forbidden(&bad).is_some());
 }
 
+/// La copia en Gist lleva los servidores tal cual: con «Contraseña de sudo: Guardar» solo viaja el
+/// modo, nunca la contraseña (va en la bóveda o el llavero con id "<id>:sudo").
+#[test]
+fn synced_server_carries_sudo_mode_but_no_secret() {
+    let srv: crate::types::ServerProfile = serde_json::from_value(serde_json::json!({
+        "id": "s1", "name": "web", "host": "h", "port": 22, "username": "u", "auth": "key",
+        "keyPath": "~/.ssh/id_ed25519", "defaultPath": null, "color": null, "sudoMode": "saved"
+    }))
+    .unwrap();
+    let v = serde_json::to_value(&srv).unwrap();
+    assert_eq!(v["sudoMode"], "saved");
+    let payload = serde_json::json!({ "format": "terview-config", "servers": [v] });
+    assert!(super::find_forbidden(&payload).is_none());
+    let text = payload.to_string();
+    assert!(!text.contains(":sudo") && !text.to_lowercase().contains("password"), "{text}");
+    // Perfiles viejos (sin el campo) siguen leyéndose: «Pedir cada vez».
+    let old: crate::types::ServerProfile = serde_json::from_value(serde_json::json!({
+        "id": "s2", "name": "a", "host": "h", "port": 22, "username": "u", "auth": "password",
+        "keyPath": null, "defaultPath": null, "color": null
+    }))
+    .unwrap();
+    assert_eq!(old.sudo_mode, crate::types::SudoMode::Ask);
+}
+
 fn recipe(name: &str) -> DeployRecipe {
     DeployRecipe {
         id: String::new(),

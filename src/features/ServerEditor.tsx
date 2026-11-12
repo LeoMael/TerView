@@ -6,7 +6,7 @@ import { AlertTriangle, FolderOpen } from "lucide-react";
 import { Modal } from "../components/ui/Modal";
 import { profiles as profilesApi, sshAliases, type SshAliasInfo } from "../api/profiles";
 import { errorMessage } from "../api/core";
-import type { AuthMethod, ServerProfile, TmuxMode } from "../api/types";
+import type { AuthMethod, ServerProfile, SudoMode, TmuxMode } from "../api/types";
 import { useProfiles } from "../stores/profiles";
 import { useUi } from "../stores/ui";
 import { toast } from "../stores/toasts";
@@ -15,6 +15,10 @@ import { SSH_CONFIG_LABEL, SSH_KEY_EXAMPLE } from "../lib/platform";
 import { SshAliasMatches, describeMatch } from "./sshAliases";
 import { TMUX_MODE_HINTS, TMUX_MODE_LABELS } from "./tmux/logic";
 import { useSettings } from "../stores/settings";
+import { SecretInput } from "./SecretInput";
+
+/** Dónde van las contraseñas guardadas. */
+const SAVE_TIP = "Se guarda cifrada con tu PIN o, si no tienes PIN, en el llavero del sistema.";
 
 export function ServerEditorHost() {
   const editor = useUi((s) => s.serverEditor);
@@ -29,6 +33,12 @@ const AUTH_OPTIONS: { value: AuthMethod; label: string }[] = [
   { value: "password", label: "Contraseña" },
   { value: "key", label: "Llave SSH" },
   { value: "agent", label: "Agente SSH" },
+];
+
+const SUDO_OPTIONS: { value: SudoMode; label: string; hint: string }[] = [
+  { value: "ask", label: "Pedir cada vez", hint: "Se pide al administrar y se olvida al cerrar la conexión." },
+  { value: "login", label: "La de la conexión", hint: "Usa la contraseña de arriba (tiene que estar guardada)." },
+  { value: "saved", label: "Guardar", hint: "Útil si entras con llave SSH: sudo sigue pidiendo tu contraseña." },
 ];
 
 function ServerEditor({ initial, onClose }: { initial: ServerProfile | null; onClose: () => void }) {
@@ -57,6 +67,9 @@ function ServerEditor({ initial, onClose }: { initial: ServerProfile | null; onC
   const [saving, setSaving] = useState(false);
   /** null = desconocido (nuevo o llavero no disponible). */
   const [hasSecret, setHasSecret] = useState<boolean | null>(null);
+  const [sudoMode, setSudoMode] = useState<SudoMode>(initial?.sudoMode ?? "ask");
+  const [sudoSecret, setSudoSecret] = useState("");
+  const [hasSudoSecret, setHasSudoSecret] = useState<boolean | null>(null);
   const firstRef = useRef<HTMLInputElement>(null);
   const alias = useSshAlias(initial?.id ?? "", name, host);
 
@@ -70,6 +83,10 @@ function ServerEditor({ initial, onClose }: { initial: ServerProfile | null; onC
         if (alive) setHasSecret(v);
       })
       .catch(() => alive && setHasSecret(null));
+    profilesApi
+      .hasSecret(initial.id, "sudo")
+      .then((v) => alive && setHasSudoSecret(v))
+      .catch(() => alive && setHasSudoSecret(null));
     return () => {
       alive = false;
     };
@@ -124,6 +141,7 @@ function ServerEditor({ initial, onClose }: { initial: ServerProfile | null; onC
       defaultPath: defaultPath.trim() || null,
       color,
       tmux,
+      sudoMode: sudoMode === "login" && auth !== "password" ? "ask" : sudoMode,
     };
 
     // Qué hacer con el llavero: undefined = no tocar, "" = borrar, texto = guardar.
@@ -137,8 +155,16 @@ function ServerEditor({ initial, onClose }: { initial: ServerProfile | null; onC
       newSecret = "";
     }
 
+    // Contraseña de sudo guardada: solo con «Guardar»; si se cambia a otro modo, se borra.
+    let newSudoSecret: string | undefined;
+    if (server.sudoMode === "saved") {
+      if (sudoSecret !== "") newSudoSecret = sudoSecret;
+    } else if (hasSudoSecret) {
+      newSudoSecret = "";
+    }
+
     setSaving(true);
-    const saved = await saveServer(server, newSecret);
+    const saved = await saveServer(server, newSecret, newSudoSecret);
     if (!saved) {
       setSaving(false);
       return;
@@ -284,6 +310,7 @@ function ServerEditor({ initial, onClose }: { initial: ServerProfile | null; onC
                 onClick={() => {
                   setAuth(o.value);
                   setSecret("");
+                  if (o.value !== "password" && sudoMode === "login") setSudoMode("ask");
                 }}
               >
                 {o.label}
@@ -294,20 +321,21 @@ function ServerEditor({ initial, onClose }: { initial: ServerProfile | null; onC
 
         {auth === "password" && (
           <>
-            <label className="field">
+            <div className="field">
               <span>Contraseña</span>
-              <input
-                className="input"
-                type="password"
-                autoComplete="off"
+              <SecretInput
+                profileId={initial?.id ?? ""}
+                kind="login"
+                stored={!!hasSecret}
                 value={secret}
+                onChange={setSecret}
+                label="Contraseña"
                 placeholder={secretPlaceholder || "Opcional: se pedirá al conectar"}
-                onChange={(e) => setSecret(e.target.value)}
               />
-            </label>
-            <label className="checkbox cd-check">
+            </div>
+            <label className="checkbox cd-check" title={SAVE_TIP}>
               <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
-              Guardar en el llavero del sistema
+              Guardar contraseña
             </label>
           </>
         )}
@@ -333,20 +361,21 @@ function ServerEditor({ initial, onClose }: { initial: ServerProfile | null; onC
               </div>
               {errors.keyPath && <div className="cd-err">{errors.keyPath}</div>}
             </label>
-            <label className="field">
+            <div className="field">
               <span>Frase de la llave (opcional)</span>
-              <input
-                className="input"
-                type="password"
-                autoComplete="off"
+              <SecretInput
+                profileId={initial?.id ?? ""}
+                kind="login"
+                stored={!!hasSecret}
                 value={secret}
+                onChange={setSecret}
+                label="Frase de la llave"
                 placeholder={secretPlaceholder || "Si la llave está protegida"}
-                onChange={(e) => setSecret(e.target.value)}
               />
-            </label>
-            <label className="checkbox cd-check">
+            </div>
+            <label className="checkbox cd-check" title={SAVE_TIP}>
               <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
-              Guardar la frase en el llavero del sistema
+              Guardar la frase
             </label>
           </>
         )}
@@ -354,6 +383,40 @@ function ServerEditor({ initial, onClose }: { initial: ServerProfile | null; onC
         {auth === "agent" && (
           <div className="cd-hint">Se usarán las llaves cargadas en tu agente SSH (ssh-agent).</div>
         )}
+
+        <div className="field">
+          <span>Contraseña de sudo</span>
+          <div className="cd-segmented" role="radiogroup" aria-label="Contraseña de sudo">
+            {SUDO_OPTIONS.filter((o) => o.value !== "login" || auth === "password").map((o) => (
+              <button
+                key={o.value}
+                type="button"
+                role="radio"
+                aria-checked={sudoMode === o.value}
+                className={sudoMode === o.value ? "active" : ""}
+                onClick={() => setSudoMode(o.value)}
+              >
+                {o.label}
+              </button>
+            ))}
+          </div>
+          {sudoMode === "saved" && (
+            <SecretInput
+              profileId={initial?.id ?? ""}
+              kind="sudo"
+              stored={!!hasSudoSecret}
+              value={sudoSecret}
+              onChange={setSudoSecret}
+              label="Contraseña de sudo"
+              placeholder={hasSudoSecret ? "•••••• (guardada; escribe para cambiarla)" : "Tu contraseña en el servidor"}
+            />
+          )}
+          <small className="cd-field-hint">
+            {sudoMode === "login" && !remember
+              ? "Marca «Guardar contraseña» para usarla con sudo."
+              : SUDO_OPTIONS.find((o) => o.value === sudoMode)?.hint}
+          </small>
+        </div>
 
         <label className="field">
           <span>Carpeta inicial (opcional)</span>

@@ -25,7 +25,12 @@ export interface ServerProfile {
   color: string | null;
   /** Terminales persistentes (tmux) de este servidor. null/ausente = usar el ajuste general. */
   tmux?: TmuxMode | null;
+  /** De dónde sale la contraseña de sudo. Ausente = «ask». */
+  sudoMode?: SudoMode;
 }
+
+/** Contraseña de sudo: pedirla cada vez, usar la de la conexión o usar una guardada aparte. */
+export type SudoMode = "ask" | "login" | "saved";
 
 /** Cuándo abrir las terminales dentro de tmux: «auto» si está instalado, «always» (avisa si falta) o «never». */
 export type TmuxMode = "auto" | "always" | "never";

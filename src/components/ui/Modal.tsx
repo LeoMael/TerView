@@ -8,7 +8,8 @@ interface ModalProps {
   onClose: () => void;
   children: ReactNode;
   footer?: ReactNode;
-  width?: number;
+  /** Ancho en px o cualquier valor CSS (p. ej. `min(880px, 92vw)`). */
+  width?: number | string;
 }
 
 export function Modal({ open, title, onClose, children, footer, width = 460 }: ModalProps) {

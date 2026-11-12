@@ -40,7 +40,7 @@ import {
   type EngineStatus,
   type RunForm,
 } from "../../features/containers";
-import { usePrivilege, useElevation, type Elevation } from "../../features/privileges";
+import { usePrivilege, useElevation, useStoredSudo, useStoredSudoState, type Elevation } from "../../features/privileges";
 import { hasTerminal, sendToTerminal } from "../../stores/terminalBus";
 import { toast } from "../../stores/toasts";
 import { SudoDialog } from "../Admin/SudoDialog";
@@ -102,6 +102,7 @@ function emptyMap(): ResourceMap {
 export function ContainersPanel({ sessionId, profileId, active, disabled }: ContainersPanelProps) {
   const info = usePrivilege(sessionId);
   const elev = useElevation(sessionId, info);
+  useStoredSudo(sessionId, profileId, info, active && !disabled);
 
   const [det, setDet] = useState<{ loading: boolean; result: DetectResult | null; error: string | null }>({
     loading: false,
@@ -115,6 +116,11 @@ export function ContainersPanel({ sessionId, profileId, active, disabled }: Cont
   const [stats, setStats] = useState<ContainerStats[]>([]);
   const [review, setReview] = useState<ReviewRequest | null>(null);
   const [sudoOpen, setSudoOpen] = useState(false);
+  // La contraseña guardada (o la de la conexión) no sirvió para sudo: pedirla de nuevo.
+  const storedSudo = useStoredSudoState(sessionId);
+  useEffect(() => {
+    if (storedSudo === "failed" && active && !disabled) setSudoOpen(true);
+  }, [storedSudo, active, disabled]);
   const [logs, setLogs] = useState<LogsTarget | null>(null);
   const [inspectC, setInspectC] = useState<Container | null>(null);
   const [runForm, setRunForm] = useState<{ prefill?: Partial<RunForm> } | null>(null);
@@ -561,7 +567,9 @@ export function ContainersPanel({ sessionId, profileId, active, disabled }: Cont
             onFinished={onReviewFinished}
           />
         )}
-        {sudoOpen && <SudoDialog sessionId={sessionId} user={info?.user ?? null} onClose={() => setSudoOpen(false)} />}
+        {sudoOpen && (
+          <SudoDialog sessionId={sessionId} profileId={profileId} user={info?.user ?? null} onClose={() => setSudoOpen(false)} />
+        )}
       </div>
     </CtContext.Provider>
   );

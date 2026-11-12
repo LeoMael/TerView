@@ -232,3 +232,17 @@
   font-size: var(--fs);
   font-weight: 600;
 }
+
+/* Ventanas estrechas: menú lateral más corto y controles que pueden bajar de línea. */
+@media (max-width: 720px) {
+  .st-nav {
+    width: 140px;
+  }
+  .st-row {
+    flex-wrap: wrap;
+  }
+  .st-row-control {
+    flex-wrap: wrap;
+    max-width: 100%;
+  }
+}

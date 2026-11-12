@@ -1,5 +1,5 @@
-//! Secretos guardados: contraseña o frase de cada servidor (usuario = id del servidor) y el
-//! token de GitHub (usuario "github-token").
+//! Secretos guardados: contraseña o frase de cada servidor (usuario = id del servidor), su
+//! contraseña de sudo (usuario = "<id>:sudo") y el token de GitHub (usuario "github-token").
 //!
 //! Dónde se guardan:
 //! - Con la bóveda activa (`storage::vault`): en `vault.json`, cifrados con el PIN. Si está
@@ -15,7 +15,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use keyring::{Entry, Error as KrError};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use base64ct::{Base64, Encoding};
 use zeroize::Zeroizing;
@@ -35,28 +35,105 @@ fn check_user(user: &str) -> AppResult<()> {
 }
 
 pub fn get_secret(profile_id: &str) -> AppResult<Option<String>> {
-    check_user(profile_id)?;
-    match Vault::global().get(profile_id) {
-        Some(r) => r,
-        None => get_secret_in(SERVICE, profile_id),
-    }
+    get_with(Vault::global(), &SystemKeyring(SERVICE), profile_id)
 }
 
 pub fn set_secret(profile_id: &str, secret: &str) -> AppResult<()> {
-    check_user(profile_id)?;
-    match Vault::global().set(profile_id, secret) {
-        Some(r) => r,
-        None => set_secret_in(SERVICE, profile_id, secret),
-    }
+    set_with(Vault::global(), &SystemKeyring(SERVICE), profile_id, secret)
 }
 
 /// Borra el secreto. Si no existía, no es error.
 pub fn delete_secret(profile_id: &str) -> AppResult<()> {
-    check_user(profile_id)?;
-    match Vault::global().delete(profile_id) {
+    delete_with(Vault::global(), &SystemKeyring(SERVICE), profile_id)
+}
+
+/// Lee de la bóveda si existe; si no, del llavero.
+pub(crate) fn get_with(vault: &Vault, kr: &dyn Keyring, id: &str) -> AppResult<Option<String>> {
+    check_user(id)?;
+    match vault.get(id) {
         Some(r) => r,
-        None => delete_secret_in(SERVICE, profile_id),
+        None => kr.get(id),
     }
+}
+
+pub(crate) fn set_with(vault: &Vault, kr: &dyn Keyring, id: &str, secret: &str) -> AppResult<()> {
+    check_user(id)?;
+    match vault.set(id, secret) {
+        Some(r) => r,
+        None => kr.set(id, secret),
+    }
+}
+
+pub(crate) fn delete_with(vault: &Vault, kr: &dyn Keyring, id: &str) -> AppResult<()> {
+    check_user(id)?;
+    match vault.delete(id) {
+        Some(r) => r,
+        None => kr.delete(id),
+    }
+}
+
+// ───────── Secretos de un servidor: contraseña de conexión y contraseña de sudo ─────────
+
+/// Final del id de la contraseña de sudo de un servidor ("<id>:sudo").
+pub const SUDO_SUFFIX: &str = ":sudo";
+
+/// Id (en la bóveda o el llavero) de la contraseña de sudo guardada de un servidor.
+pub fn sudo_id(profile_id: &str) -> String {
+    format!("{profile_id}{SUDO_SUFFIX}")
+}
+
+/// Qué secreto de un servidor: el de conexión (contraseña o frase de la llave) o el de sudo.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum SecretKind {
+    #[default]
+    Login,
+    Sudo,
+}
+
+impl SecretKind {
+    /// Id donde se guarda ese secreto del servidor.
+    pub fn id(self, profile_id: &str) -> String {
+        match self {
+            SecretKind::Login => profile_id.to_string(),
+            SecretKind::Sudo => sudo_id(profile_id),
+        }
+    }
+}
+
+/// Todos los ids de secretos de un servidor.
+pub fn server_secret_ids(profile_id: &str) -> [String; 2] {
+    [profile_id.to_string(), sudo_id(profile_id)]
+}
+
+/// Borra los secretos de un servidor (conexión y sudo). Intenta todos; devuelve el primer error.
+pub(crate) fn delete_server_secrets_with(vault: &Vault, kr: &dyn Keyring, profile_id: &str) -> AppResult<()> {
+    let mut first = Ok(());
+    for id in server_secret_ids(profile_id) {
+        let r = delete_with(vault, kr, &id);
+        if first.is_ok() {
+            first = r;
+        }
+    }
+    first
+}
+
+/// Copia los secretos de un servidor (conexión y sudo) a otro (al duplicar).
+pub(crate) fn copy_server_secrets_with(vault: &Vault, kr: &dyn Keyring, from: &str, to: &str) -> AppResult<()> {
+    for kind in [SecretKind::Login, SecretKind::Sudo] {
+        if let Some(secret) = get_with(vault, kr, &kind.id(from))?.map(Zeroizing::new) {
+            set_with(vault, kr, &kind.id(to), &secret)?;
+        }
+    }
+    Ok(())
+}
+
+pub fn delete_server_secrets(profile_id: &str) -> AppResult<()> {
+    delete_server_secrets_with(Vault::global(), &SystemKeyring(SERVICE), profile_id)
+}
+
+pub fn copy_server_secrets(from: &str, to: &str) -> AppResult<()> {
+    copy_server_secrets_with(Vault::global(), &SystemKeyring(SERVICE), from, to)
 }
 
 /// Error si la bóveda está bloqueada (para cachés que no pasan por `get_secret`).
@@ -150,7 +227,8 @@ fn keyring_unavailable(e: &AppError) -> bool {
     matches!(e, AppError::Keyring(m) if m == UNAVAILABLE)
 }
 
-/// Crea la bóveda y mueve a ella los secretos del llavero de esos ids (+ token de GitHub).
+/// Crea la bóveda y mueve a ella los secretos del llavero de esos servidores (contraseña de
+/// conexión y de sudo) y el token de GitHub.
 ///
 /// Orden seguro: 1) leer todo del llavero (si algo falla, no se crea nada); 2) escribir la
 /// bóveda y comprobar que se descifra; 3) solo entonces borrar las copias del llavero. Si se corta
@@ -163,17 +241,18 @@ pub(crate) fn enable_vault(
     params: KdfParams,
 ) -> AppResult<MoveReport> {
     super::vault::check_new_pin(pin)?;
-    let users: BTreeSet<&str> = ids
+    let users: BTreeSet<String> = ids
         .iter()
         .map(String::as_str)
-        .chain([GITHUB_TOKEN_USER])
         .filter(|u| !u.trim().is_empty())
+        .flat_map(server_secret_ids)
+        .chain([GITHUB_TOKEN_USER.to_string()])
         .collect();
     let mut found = BTreeMap::new();
     for u in users {
-        match kr.get(u) {
+        match kr.get(&u) {
             Ok(Some(s)) if !s.is_empty() => {
-                found.insert(u.to_string(), s);
+                found.insert(u, s);
             }
             Ok(_) => {}
             // Sin llavero en el sistema no puede haber nada guardado en él.

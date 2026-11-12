@@ -77,13 +77,18 @@ fn get(v: &Vault, id: &str) -> AppResult<Option<String>> {
     v.get(id).expect("la bóveda debería estar activa")
 }
 
+/// Estado sin esperas y con PIN de 6 números.
+fn status(enabled: bool, locked: bool) -> VaultStatus {
+    VaultStatus { enabled, locked, retry_after_secs: 0, pin_kind: PinKind::Pin6 }
+}
+
 // ───────── Ida y vuelta, PIN, bloqueo ─────────
 
 #[test]
 fn roundtrip_and_reopen() {
     let dir = TempDir::new();
     let v = dir.vault();
-    assert_eq!(v.status(), VaultStatus { enabled: false, locked: false, retry_after_secs: 0 });
+    assert_eq!(v.status(), status(false, false));
     assert!(v.get("a").is_none(), "sin bóveda se usa el llavero");
 
     v.create(PIN, map(&[("srv-1", "clave ñ 1"), ("github-token", "ghp_x")]), FAST).unwrap();
@@ -103,7 +108,7 @@ fn roundtrip_and_reopen() {
 
     // Otra instancia (como al reiniciar la app): empieza bloqueada.
     let v2 = dir.vault();
-    assert_eq!(v2.status(), VaultStatus { enabled: true, locked: true, retry_after_secs: 0 });
+    assert_eq!(v2.status(), status(true, true));
     v2.unlock(PIN).unwrap();
     assert_eq!(v2.ids().unwrap(), vec!["srv-1".to_string(), "srv-2".to_string()]);
     assert_eq!(get(&v2, "srv-2").unwrap().as_deref(), Some("otra"));
@@ -146,9 +151,10 @@ fn change_pin_reencrypts() {
     v.create(PIN, map(&[("a", "1")]), FAST).unwrap();
     let before = fs::read_to_string(dir.vault_path()).unwrap();
 
-    assert!(matches!(v.change_pin("000000", "nuevo-pin", FAST), Err(AppError::AuthFailed(_))));
-    assert!(matches!(v.change_pin(PIN, "corto", FAST), Err(AppError::Invalid(_))));
-    v.change_pin(PIN, "nueva contraseña larga", FAST).unwrap();
+    assert!(matches!(v.change_pin("000000", "654321", FAST), Err(AppError::AuthFailed(_))));
+    assert!(matches!(v.change_pin(PIN, "12345", FAST), Err(AppError::Invalid(_))));
+    assert!(matches!(v.change_pin(PIN, "una frase larga", FAST), Err(AppError::Invalid(_))));
+    v.change_pin(PIN, "654321", FAST).unwrap();
     assert!(!v.status().locked, "sigue desbloqueada");
     assert_eq!(get(&v, "a").unwrap().as_deref(), Some("1"));
 
@@ -158,20 +164,134 @@ fn change_pin_reencrypts() {
 
     let v2 = dir.vault();
     assert!(matches!(v2.unlock(PIN), Err(AppError::AuthFailed(_))));
-    v2.unlock("nueva contraseña larga").unwrap();
+    v2.unlock("654321").unwrap();
     assert_eq!(get(&v2, "a").unwrap().as_deref(), Some("1"));
 }
 
 #[test]
 fn pin_rules() {
-    assert!(check_new_pin("12345").is_err());
-    assert!(check_new_pin("      ").is_err());
-    assert!(check_new_pin("123456").is_ok());
-    assert!(check_new_pin("una frase larga").is_ok());
-    assert!(check_new_pin(&"x".repeat(300)).is_err());
+    // Válidos: exactamente 6 números.
+    for ok in ["123456", "000000", "987654"] {
+        assert!(check_new_pin(ok).is_ok(), "{ok}");
+    }
+    // Inválidos: más corto, más largo, letras, espacios, signos o números no ASCII.
+    for bad in ["", "12345", "1234567", "12345a", "12 456", " 123456", "123456 ", "+12345", "١٢٣٤٥٦", "      ", "una frase larga"] {
+        assert!(matches!(check_new_pin(bad), Err(AppError::Invalid(_))), "«{bad}»");
+    }
     let dir = TempDir::new();
     assert!(matches!(dir.vault().create("123", BTreeMap::new(), FAST), Err(AppError::Invalid(_))));
+    assert!(matches!(dir.vault().create("abcdef", BTreeMap::new(), FAST), Err(AppError::Invalid(_))));
     assert!(!dir.vault_path().exists());
+    assert!(dir.1.key().is_none(), "ni siquiera se crea la llave del equipo");
+    // El enlace con el llavero también lo comprueba.
+    let kr = FakeKeyring::default();
+    assert!(matches!(secrets::enable_vault(&dir.vault(), &kr, &[], "frase", FAST), Err(AppError::Invalid(_))));
+}
+
+#[test]
+fn new_vault_is_pin6_in_authenticated_header() {
+    let dir = TempDir::new();
+    let v = dir.vault();
+    v.create(PIN, map(&[("a", "1")]), FAST).unwrap();
+    assert_eq!(v.status().pin_kind, PinKind::Pin6);
+    let env: Envelope = serde_json::from_str(&fs::read_to_string(dir.vault_path()).unwrap()).unwrap();
+    assert_eq!(env.kind.as_deref(), Some("pin6"));
+    let v2 = dir.vault();
+    assert_eq!(v2.status(), VaultStatus { pin_kind: PinKind::Pin6, ..status(true, true) });
+
+    // Cambiar o quitar la etiqueta rompe la cabecera autenticada: no abre ni con el PIN.
+    for edit in [
+        (|j: &mut serde_json::Value| j["kind"] = "text".into()) as fn(&mut serde_json::Value),
+        |j| {
+            j.as_object_mut().unwrap().remove("kind");
+        },
+        |j| j["kind"] = "pin6/x".into(),
+    ] {
+        let dir = TempDir::new();
+        dir.vault().create(PIN, map(&[("a", "1")]), FAST).unwrap();
+        tamper(&dir, edit);
+        let v = dir.vault();
+        let r = v.unlock(PIN);
+        assert!(matches!(r, Err(AppError::AuthFailed(_)) | Err(AppError::Invalid(_))), "{r:?}");
+        assert!(v.status().locked);
+    }
+}
+
+// ───────── Bóvedas antiguas (PIN o contraseña de texto, sin etiqueta) ─────────
+
+/// Escribe una bóveda como las de antes: sin `kind` y con un secreto de texto libre.
+fn write_legacy(dir: &TempDir, pin: &str, secrets: &[(&str, &str)]) {
+    let dk = cipher::random::<32>().unwrap();
+    dir.1.put(Some(dk.to_vec()));
+    let salt = cipher::new_salt_b64().unwrap();
+    let key = cipher::derive_key_keyed_b64(pin.as_bytes(), &salt, FAST, &dk).unwrap();
+    let json = serde_json::to_vec(&serde_json::json!({ "secrets": map(secrets) })).unwrap();
+    let env = cipher::seal(FORMAT, VERSION, &key, FAST, &salt, &json).unwrap();
+    assert!(env.kind.is_none());
+    fs::write(dir.vault_path(), serde_json::to_vec(&env).unwrap()).unwrap();
+}
+
+#[test]
+fn legacy_text_vault_still_opens() {
+    let dir = TempDir::new();
+    let old = "mi contraseña maestra";
+    write_legacy(&dir, old, &[("srv-1", "p1")]);
+
+    let v = dir.vault();
+    let st = v.status();
+    assert!(st.enabled && st.locked);
+    assert_eq!(st.pin_kind, PinKind::Text, "se pide con un campo de texto");
+    assert!(matches!(v.unlock("123456"), Err(AppError::AuthFailed(_))));
+    v.unlock(old).unwrap();
+    assert_eq!(get(&v, "srv-1").unwrap().as_deref(), Some("p1"));
+
+    // Guardar algo la mantiene de tipo texto (y se sigue abriendo con lo mismo).
+    v.set("srv-2", "p2").unwrap().unwrap();
+    let env: Envelope = serde_json::from_str(&fs::read_to_string(dir.vault_path()).unwrap()).unwrap();
+    assert_eq!(env.kind.as_deref(), Some("text"));
+    let v2 = dir.vault();
+    assert_eq!(v2.status().pin_kind, PinKind::Text);
+    v2.unlock(old).unwrap();
+    assert_eq!(get(&v2, "srv-2").unwrap().as_deref(), Some("p2"));
+
+    // Al cambiar el PIN, el nuevo es de 6 números (texto no vale) y la bóveda pasa a "pin6".
+    assert!(matches!(v2.change_pin(old, "otra frase", FAST), Err(AppError::Invalid(_))));
+    v2.change_pin(old, "246810", FAST).unwrap();
+    assert_eq!(v2.status().pin_kind, PinKind::Pin6);
+    let v3 = dir.vault();
+    assert_eq!(v3.status().pin_kind, PinKind::Pin6);
+    assert!(matches!(v3.unlock(old), Err(AppError::AuthFailed(_))));
+    v3.unlock("246810").unwrap();
+    assert_eq!(get(&v3, "srv-1").unwrap().as_deref(), Some("p1"));
+}
+
+#[test]
+fn legacy_text_vault_can_be_disabled_with_its_text() {
+    let dir = TempDir::new();
+    write_legacy(&dir, "frase vieja", &[("s1", "p1"), ("s1:sudo", "ps")]);
+    let v = dir.vault();
+    let kr = FakeKeyring::default();
+    secrets::disable_vault(&v, &kr, "frase vieja").unwrap();
+    assert_eq!(*kr.data.borrow(), map(&[("s1", "p1"), ("s1:sudo", "ps")]));
+    assert_eq!(v.status(), status(false, false));
+}
+
+#[test]
+fn check_pin_counts_as_attempt() {
+    let dir = TempDir::new();
+    let v = dir.vault();
+    v.create(PIN, map(&[("a", "1")]), FAST).unwrap();
+    v.check_pin(PIN).unwrap();
+    assert!(!v.status().locked, "comprobar no bloquea ni desbloquea");
+    for _ in 0..5 {
+        assert!(matches!(v.check_pin("999999"), Err(AppError::AuthFailed(_))));
+    }
+    assert!(matches!(v.check_pin("999999"), Err(AppError::AuthFailed(_))));
+    assert!(v.status().retry_after_secs > 0, "misma espera que al desbloquear");
+    assert!(matches!(v.check_pin(PIN), Err(AppError::Invalid(_))));
+    // Sin bóveda no hay PIN que comprobar.
+    let other = TempDir::new();
+    assert!(matches!(other.vault().check_pin(PIN), Err(AppError::Invalid(_))));
 }
 
 #[test]
@@ -328,7 +448,7 @@ fn copied_file_is_useless_on_another_device() {
     dir.vault().create(PIN, map(&[("a", "1")]), FAST).unwrap();
     // «Otro PC»: mismo archivo, llavero distinto (con su propia bóveda creada antes).
     let other = TempDir::new();
-    other.vault().create("otro-pin", BTreeMap::new(), FAST).unwrap();
+    other.vault().create("135790", BTreeMap::new(), FAST).unwrap();
     fs::copy(dir.vault_path(), other.vault_path()).unwrap();
     assert!(matches!(other.vault().unlock(PIN), Err(AppError::AuthFailed(_))));
 }
@@ -353,9 +473,9 @@ fn change_pin_keeps_device_binding() {
     let dir = TempDir::new();
     let v = dir.vault();
     v.create(PIN, map(&[("a", "1")]), FAST).unwrap();
-    v.change_pin(PIN, "nuevo-pin", FAST).unwrap();
+    v.change_pin(PIN, "654321", FAST).unwrap();
     dir.1.put(Some(vec![1u8; 32]));
-    assert!(matches!(dir.vault().unlock("nuevo-pin"), Err(AppError::AuthFailed(_))));
+    assert!(matches!(dir.vault().unlock("654321"), Err(AppError::AuthFailed(_))));
 }
 
 // ───────── «Olvidé mi PIN» ─────────
@@ -368,11 +488,11 @@ fn reset_removes_vault_and_falls_back_to_keyring() {
     assert!(v.status().locked);
     v.remove().unwrap();
     assert!(!dir.vault_path().exists());
-    assert_eq!(v.status(), VaultStatus { enabled: false, locked: false, retry_after_secs: 0 });
+    assert_eq!(v.status(), status(false, false));
     assert!(v.get("a").is_none(), "vuelve al llavero");
     assert!(v.set("a", "x").is_none());
     // Se puede crear otra con un PIN nuevo; la anterior se perdió.
-    v.create("otro-pin", BTreeMap::new(), FAST).unwrap();
+    v.create("135790", BTreeMap::new(), FAST).unwrap();
     assert_eq!(get(&v, "a").unwrap(), None);
     // Borrar sin archivo no es error.
     v.remove().unwrap();
@@ -449,14 +569,28 @@ fn enable_moves_secrets_from_keyring() {
     let dir = TempDir::new();
     let v = dir.vault();
     let kr = FakeKeyring::default();
-    kr.data.borrow_mut().extend(map(&[("s1", "p1"), ("s2", "p2"), ("github-token", "ghp"), ("otra-app", "x")]));
+    kr.data.borrow_mut().extend(map(&[
+        ("s1", "p1"),
+        ("s2", "p2"),
+        ("s2:sudo", "sudo2"),
+        ("s3:sudo", "sudo3"),
+        ("x:sudo", "de otro"),
+        ("github-token", "ghp"),
+        ("otra-app", "x"),
+    ]));
     let r = secrets::enable_vault(&v, &kr, &ids(&["s1", "s2", "s3"]), PIN, FAST).unwrap();
-    assert_eq!(r, MoveReport { moved: 3, left_in_keyring: 0 });
+    assert_eq!(r, MoveReport { moved: 5, left_in_keyring: 0 });
     // En el llavero solo queda lo que no es de un servidor conocido.
-    assert_eq!(kr.data.borrow().keys().cloned().collect::<Vec<_>>(), vec!["otra-app".to_string()]);
+    assert_eq!(
+        kr.data.borrow().keys().cloned().collect::<Vec<_>>(),
+        vec!["otra-app".to_string(), "x:sudo".to_string()]
+    );
     let v2 = dir.vault();
     v2.unlock(PIN).unwrap();
     assert_eq!(get(&v2, "s1").unwrap().as_deref(), Some("p1"));
+    assert_eq!(get(&v2, "s2:sudo").unwrap().as_deref(), Some("sudo2"));
+    assert_eq!(get(&v2, "s3:sudo").unwrap().as_deref(), Some("sudo3"));
+    assert_eq!(get(&v2, "s1:sudo").unwrap(), None);
     assert_eq!(get(&v2, "github-token").unwrap().as_deref(), Some("ghp"));
     assert_eq!(get(&v2, "s3").unwrap(), None);
 }
@@ -488,7 +622,7 @@ fn enable_keeps_copies_if_keyring_cannot_delete() {
 fn disable_returns_secrets_to_keyring() {
     let dir = TempDir::new();
     let v = dir.vault();
-    v.create(PIN, map(&[("s1", "p1"), ("github-token", "ghp")]), FAST).unwrap();
+    v.create(PIN, map(&[("s1", "p1"), ("s1:sudo", "ps1"), ("github-token", "ghp")]), FAST).unwrap();
     v.lock();
     let kr = FakeKeyring::default();
 
@@ -498,10 +632,10 @@ fn disable_returns_secrets_to_keyring() {
     assert!(kr.data.borrow().is_empty());
 
     let r = secrets::disable_vault(&v, &kr, PIN).unwrap();
-    assert_eq!(r.moved, 2);
+    assert_eq!(r.moved, 3);
     assert!(!dir.vault_path().exists());
     assert!(!v.is_enabled());
-    assert_eq!(*kr.data.borrow(), map(&[("s1", "p1"), ("github-token", "ghp")]));
+    assert_eq!(*kr.data.borrow(), map(&[("s1", "p1"), ("s1:sudo", "ps1"), ("github-token", "ghp")]));
 }
 
 #[test]
@@ -514,6 +648,77 @@ fn disable_keeps_vault_if_keyring_fails() {
     assert!(dir.vault_path().exists());
     assert!(v.is_enabled());
     assert_eq!(get(&v, "s1").unwrap().as_deref(), Some("p1"));
+}
+
+#[test]
+fn forgot_pin_drops_sudo_secrets_too() {
+    let dir = TempDir::new();
+    let v = dir.vault();
+    let kr = FakeKeyring::default();
+    kr.data.borrow_mut().extend(map(&[("s1", "p1"), ("s1:sudo", "ps1")]));
+    secrets::enable_vault(&v, &kr, &ids(&["s1"]), PIN, FAST).unwrap();
+    assert!(kr.data.borrow().is_empty());
+    v.lock();
+    v.remove().unwrap();
+    // Sin bóveda se lee del llavero: ya no hay nada, ni de conexión ni de sudo.
+    for id in ["s1", "s1:sudo"] {
+        assert_eq!(secrets::get_with(&v, &kr, id).unwrap(), None, "{id}");
+    }
+}
+
+// ───────── Secretos de un servidor (conexión + sudo) ─────────
+
+#[test]
+fn sudo_ids_and_kinds() {
+    assert_eq!(secrets::sudo_id("abc"), "abc:sudo");
+    assert_eq!(secrets::SecretKind::Login.id("abc"), "abc");
+    assert_eq!(secrets::SecretKind::Sudo.id("abc"), "abc:sudo");
+    assert_eq!(secrets::server_secret_ids("abc"), ["abc".to_string(), "abc:sudo".to_string()]);
+}
+
+#[test]
+fn delete_and_copy_server_secrets_in_keyring() {
+    let dir = TempDir::new();
+    let v = dir.vault(); // sin bóveda: llavero
+    let kr = FakeKeyring::default();
+    kr.data.borrow_mut().extend(map(&[("s1", "p1"), ("s1:sudo", "ps1"), ("s2", "p2"), ("s2:sudo", "ps2")]));
+
+    secrets::copy_server_secrets_with(&v, &kr, "s1", "c1").unwrap();
+    assert_eq!(secrets::get_with(&v, &kr, "c1").unwrap().as_deref(), Some("p1"));
+    assert_eq!(secrets::get_with(&v, &kr, "c1:sudo").unwrap().as_deref(), Some("ps1"));
+
+    secrets::delete_server_secrets_with(&v, &kr, "s1").unwrap();
+    let left: Vec<String> = kr.data.borrow().keys().cloned().collect();
+    assert_eq!(left, ["c1", "c1:sudo", "s2", "s2:sudo"].map(String::from).to_vec());
+    // Borrar lo que no existe no es error.
+    secrets::delete_server_secrets_with(&v, &kr, "s1").unwrap();
+}
+
+#[test]
+fn delete_and_copy_server_secrets_in_vault() {
+    let dir = TempDir::new();
+    let v = dir.vault();
+    v.create(PIN, map(&[("s1", "p1"), ("s1:sudo", "ps1"), ("s2:sudo", "ps2")]), FAST).unwrap();
+    let kr = FakeKeyring::default();
+
+    // Solo sudo guardado (servidor con llave): se copia igual.
+    secrets::copy_server_secrets_with(&v, &kr, "s2", "c2").unwrap();
+    assert_eq!(get(&v, "c2").unwrap(), None);
+    assert_eq!(get(&v, "c2:sudo").unwrap().as_deref(), Some("ps2"));
+
+    secrets::delete_server_secrets_with(&v, &kr, "s1").unwrap();
+    assert_eq!(v.ids().unwrap(), vec!["c2:sudo".to_string(), "s2:sudo".to_string()]);
+    assert!(kr.data.borrow().is_empty(), "con bóveda no se toca el llavero");
+
+    // Queda escrito en el archivo.
+    let v2 = dir.vault();
+    v2.unlock(PIN).unwrap();
+    assert_eq!(get(&v2, "s1:sudo").unwrap(), None);
+    assert_eq!(get(&v2, "c2:sudo").unwrap().as_deref(), Some("ps2"));
+
+    // Bloqueada: no se puede borrar nada (y se avisa).
+    v2.lock();
+    assert!(matches!(secrets::delete_server_secrets_with(&v2, &kr, "s2"), Err(AppError::Locked)));
 }
 
 // ───────── Mover secretos: llavero real ("terview-test") ─────────

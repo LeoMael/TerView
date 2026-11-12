@@ -7,17 +7,20 @@ siguen [Versionado Semántico](https://semver.org/lang/es/).
 ## [Sin publicar]
 
 ### Añadido
-- **PIN y bloqueo**: las contraseñas y frases guardadas y el token de GitHub pueden ir en una bóveda
-  cifrada (`vault.json`, AES-256-GCM + Argon2id) con tu PIN o frase y una llave de este equipo guardada
-  en el llavero, así copiar solo el archivo no sirve. Al crearla, las contraseñas del llavero se mueven
+- **PIN y bloqueo**: las contraseñas guardadas (de conexión y de sudo) y el token de GitHub pueden ir
+  en una bóveda cifrada (`vault.json`, AES-256-GCM + Argon2id) con un **PIN de 6 números** y una llave
+  de este equipo guardada en el llavero, así copiar solo el archivo no sirve. Al crearla, las contraseñas del llavero se mueven
   a ella sin riesgo de perderlas; al quitarla, vuelven al llavero. TerView se bloquea al abrirlo, tras
   5–60 min sin uso (15 por defecto) o con `Ctrl+Shift+L`, en todas las ventanas: se tapa la interfaz,
   se borran de la memoria las contraseñas descifradas y las de sudo, y el motor deja de dar contraseñas
   hasta que escribes el PIN. Las conexiones siguen vivas; una reconexión que necesita contraseña espera
   al desbloqueo. Tras 5 fallos hay que esperar 30 s, el doble cada vez hasta 15 min (se recuerda aunque
-  cierres la app). Medidor de fortaleza que recomienda una frase de 4 o 5 palabras. **«Olvidé mi PIN»**
-  borra la bóveda (escribiendo BORRAR) y conserva servidores, llaves, comandos, túneles y ajustes.
-  Pantalla para crearlo la primera vez, con «Ahora no»; todo en Ajustes → Seguridad.
+  cierres la app). El PIN se escribe en 6 casillas y se envía solo al completar; las bóvedas creadas
+  antes con una contraseña libre se siguen abriendo con un campo de texto hasta que cambias el PIN.
+  **«Olvidé mi PIN»** borra la bóveda (escribiendo BORRAR) y conserva servidores, llaves, comandos,
+  túneles y ajustes. Pantalla para crearlo la primera vez, con «Ahora no»; **candado en la barra de
+  pestañas** para bloquear, cambiar el PIN o ir a Ajustes → Seguridad. Textos cortos, con los detalles
+  en «¿Qué protege?».
 - **Terminales persistentes (tmux)**: si el servidor tiene tmux, cada terminal vive en su propia sesión
   y sigue corriendo aunque se corte la red o cierres la app; al reconectar, TerView vuelve a ella.
   Ajuste Automático / Siempre / Nunca (general y por servidor), indicador ∞ en la pestaña, lista de
@@ -29,9 +32,13 @@ siguen [Versionado Semántico](https://semver.org/lang/es/).
   PostgreSQL, MySQL, MariaDB, Redis, Adminer, Portainer), levantar y bajar proyectos **Compose**, y
   limpiar imágenes, volúmenes y redes que no se usan mostrando antes cuánto espacio se libera.
 - **Administración**: pestaña para gestionar usuarios (crear, editar, bloquear, eliminar, llaves SSH),
-  grupos, sesiones conectadas e historial de cambios. La contraseña de sudo se pide una vez por
-  sesión, se guarda solo en memoria y viaja siempre por la entrada estándar. Antes de cada cambio se
-  muestra el comando exacto.
+  grupos, sesiones conectadas e historial de cambios. La contraseña de sudo viaja siempre por la
+  entrada estándar. Antes de cada cambio se muestra el comando exacto.
+- **Contraseña de sudo por servidor** (editor de servidor): «Pedir cada vez» (por defecto, solo en
+  memoria), «La de la conexión» o «Guardar» (útil si entras con llave SSH), cifrada con el PIN o en el
+  llavero. Botón de ojo para ver la contraseña guardada (con PIN, lo pide antes). En Administración,
+  «Cambiar contraseña de sudo…»; si la guardada falla, se pide otra y se ofrece guardarla. Borrar,
+  duplicar y activar o quitar el PIN la tienen en cuenta; la copia en Gist solo lleva el modo.
 - **Detección de privilegios**: insignia **root** / **sudo** en la pestaña de la conexión, sin pedir
   contraseña ni dejar rastro en el servidor.
 - **Monitor**: gráficas en vivo de CPU, memoria, red y carga, discos, procesos (con botón Terminar),
@@ -65,6 +72,7 @@ siguen [Versionado Semántico](https://semver.org/lang/es/).
   Abre la configuración en el editor, comprueba la configuración y recarga el servicio con confirmación.
 
 ### Mejorado
+- **Ajustes** en una ventana un poco más ancha (se adapta a pantallas pequeñas).
 - **Cancelar ahora detiene el comando en el servidor**: en el panel de Comandos y en "Ejecutar en
   varios servidores" (también en las pestañas ya abiertas). Antes solo se dejaba de esperar y el
   comando seguía corriendo. Al vencer el tiempo límite también se detiene.

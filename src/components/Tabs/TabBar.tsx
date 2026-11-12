@@ -9,6 +9,7 @@ import { cancelReconnect, moveTab, reconnectTab, requestCloseTab, tabCurrentPath
 import { Logo } from "../ui/Logo";
 import { PopupMenu } from "./PopupMenu";
 import { PrivilegeBadge } from "./PrivilegeBadge";
+import { LockButton } from "./LockButton";
 import "./TabBar.css";
 import { shortcutLabel } from "../../lib/platform";
 
@@ -176,6 +177,7 @@ export function TabBar() {
           <Plus size={16} />
         </button>
       </div>
+      <LockButton />
       <button className="icon-btn tabs-side-btn" onClick={openSettings} title={`Ajustes (${shortcutLabel(",")})`} aria-label="Ajustes">
         <Settings size={16} />
       </button>

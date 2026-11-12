@@ -18,9 +18,17 @@ interface LockState {
   everOpen: boolean;
   /** Tras «Olvidé mi PIN»: ofrecer crear uno nuevo aunque antes se dijera «Ahora no». */
   offerSetup: boolean;
+  /** Diálogo del PIN abierto desde el candado de la barra de pestañas. */
+  pinDialog: PinDialog | null;
 }
 
-export const useLock = create<LockState>(() => ({ status: null, everOpen: false, offerSetup: false }));
+export type PinDialog = "setup" | "change";
+
+export const useLock = create<LockState>(() => ({ status: null, everOpen: false, offerSetup: false, pinDialog: null }));
+
+export function openPinDialog(d: PinDialog) {
+  useLock.setState({ pinDialog: d });
+}
 
 /** Clase de la pantalla de bloqueo: lo único que recibe teclas mientras está bloqueado. */
 export const LOCK_SCREEN_CLASS = "lock-screen";
@@ -52,7 +60,7 @@ export function applyVaultStatus(s: VaultStatus) {
 export async function lockNow() {
   const s = useLock.getState().status;
   if (!s?.enabled) {
-    toast.info("No hay PIN", "Actívalo en Ajustes → Seguridad para poder bloquear TerView.");
+    toast.info("No hay PIN", "Créalo con el candado de la barra de pestañas.");
     return;
   }
   try {
@@ -92,7 +100,7 @@ export function initLock(opts: { onLocked?: () => void } = {}) {
     .status()
     .then(applyVaultStatus)
     // Sin respuesta del motor no se puede bloquear nada: mejor dejar usar la app.
-    .catch(() => applyVaultStatus({ enabled: false, locked: false, retryAfterSecs: 0 }));
+    .catch(() => applyVaultStatus({ enabled: false, locked: false, retryAfterSecs: 0, pinKind: "pin6" }));
 
   // Fase de captura y registrado antes que nadie: va primero.
   window.addEventListener(

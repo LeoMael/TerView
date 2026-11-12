@@ -113,87 +113,97 @@
   text-decoration: underline;
 }
 
-/* «Olvidé mi PIN»: qué se pierde y qué se conserva */
-.lock-cols {
+/* Entrada de PIN: 6 casillas con puntos sobre un único campo numérico invisible. */
+.pin-code {
+  position: relative;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  font-size: var(--fs-sm);
+  grid-template-columns: repeat(6, 40px);
+  gap: 8px;
+  justify-content: center;
+  cursor: text;
 }
-.lock-cols ul {
-  margin: 6px 0 0;
-  padding-left: 18px;
-  color: var(--text-muted);
-  line-height: 1.5;
+.pin-box {
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--bg);
+  font-size: 22px;
+  line-height: 1;
+  color: var(--text);
+  transition: border-color 0.1s;
 }
-.lock-lose {
-  color: var(--red);
+.pin-box.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
 }
-.lock-keep {
-  color: var(--green);
+.pin-code.invalid .pin-box {
+  border-color: var(--red);
 }
-@media (max-width: 480px) {
-  .lock-cols {
-    grid-template-columns: 1fr;
+.pin-code.disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.pin-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  border: none;
+  padding: 0;
+  font-size: 16px;
+  cursor: text;
+}
+@media (max-width: 400px) {
+  .pin-code {
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
   }
 }
 
-/* Medidor de fortaleza */
-.lock-strength {
+.lock-center {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+}
+.lock-title-center {
+  justify-content: center;
+}
+
+/* «¿Qué protege?» y otros detalles plegables */
+.lock-details {
+  color: var(--text-muted);
   font-size: var(--fs-sm);
-  line-height: 1.4;
+  line-height: 1.5;
 }
-.lock-strength-bar {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
+.lock-details summary {
+  cursor: pointer;
+  color: var(--accent);
+  width: fit-content;
 }
-.lock-strength-bar > span {
-  height: 4px;
-  border-radius: 2px;
-  background: var(--surface-3);
+.lock-details ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
 }
-.lock-strength-bar.level-1 > span:nth-child(-n + 1) {
-  background: var(--red);
+.lock-details li {
+  margin: 2px 0;
 }
-.lock-strength-bar.level-2 > span:nth-child(-n + 2) {
-  background: var(--yellow);
-}
-.lock-strength-bar.level-3 > span {
-  background: var(--green);
+
+/* Botón y menú del candado en la barra de pestañas */
+.lock-btn.on {
+  color: var(--accent);
 }
 
 /* Ajustes → Seguridad */
-.sec-reminder {
-  margin-bottom: 6px;
-}
-.sec-reminder > svg {
-  color: var(--accent);
-}
 .sec-form {
   padding: 12px 14px;
   margin: 4px 0 8px;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius);
   background: var(--bg);
-}
-.sec-explain {
-  color: var(--text-muted);
-  font-size: var(--fs-sm);
-  line-height: 1.5;
-  user-select: text;
-}
-.sec-explain p {
-  margin: 8px 0 2px;
-  color: var(--text);
-}
-.sec-explain ul {
-  margin: 0;
-  padding-left: 18px;
-}
-.sec-explain li {
-  margin: 3px 0;
 }

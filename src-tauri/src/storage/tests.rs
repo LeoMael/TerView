@@ -35,6 +35,7 @@ fn server(name: &str) -> ServerProfile {
         default_path: None,
         color: None,
         tmux: None,
+        sudo_mode: Default::default(),
     }
 }
 

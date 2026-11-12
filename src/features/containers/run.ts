@@ -3,6 +3,7 @@ import type { ExecResult } from "../../api/types";
 import { errorMessage } from "../../api/core";
 import { runScript, ElevationError } from "../admin/run";
 import type { Elevation } from "../privileges";
+import { sudoRejected } from "../privileges/sudo";
 import { PATH_PREFIX } from "./detect";
 import { displayPrefix, renderCmd, type Cmd } from "./shell";
 
@@ -95,6 +96,7 @@ export async function runEngine(sessionId: string, cmds: Cmd[], el: Elevation, t
     return { ok: false, result: r, error: failureMessage(r), needSudo: false };
   } catch (e) {
     if (e instanceof ElevationError) {
+      if (e.failure === "bad-password") sudoRejected(sessionId);
       return {
         ok: false,
         result: null,
@@ -114,6 +116,7 @@ export async function runRaw(sessionId: string, script: string, el: Elevation, t
     return { ok: r.exitCode === 0, result: r, error: r.exitCode === 0 ? null : failureMessage(r), needSudo: false };
   } catch (e) {
     if (e instanceof ElevationError) {
+      if (e.failure === "bad-password") sudoRejected(sessionId);
       return { ok: false, result: null, error: e.message, needSudo: e.failure === "bad-password" || e.failure === "need-password" };
     }
     return { ok: false, result: null, error: errorMessage(e), needSudo: false };

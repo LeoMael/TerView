@@ -12,10 +12,11 @@ interface ProfilesState {
   connecting: Record<string, true>;
 
   load: () => Promise<void>;
-  /** Crea o actualiza. `secret`: contraseña/frase a guardar en el llavero ("" = borrar, undefined = no tocar). */
-  saveServer: (server: ServerProfile, secret?: string) => Promise<ServerProfile | null>;
+  /** Crea o actualiza. `secret`: contraseña/frase a guardar ("" = borrar, undefined = no tocar).
+   * `sudoSecret`: igual, para la contraseña de sudo guardada. Van a la bóveda o, sin PIN, al llavero. */
+  saveServer: (server: ServerProfile, secret?: string, sudoSecret?: string) => Promise<ServerProfile | null>;
   deleteServer: (id: string) => Promise<boolean>;
-  /** Copia el servidor (y su contraseña guardada). */
+  /** Copia el servidor (y sus contraseñas guardadas: conexión y sudo). */
   duplicateServer: (id: string) => Promise<ServerProfile | null>;
   /** Guarda varios servidores nuevos (p. ej. importados de ~/.ssh/config). Devuelve cuántos se guardaron. */
   importServers: (list: ServerProfile[]) => Promise<number>;
@@ -61,7 +62,7 @@ export const useProfiles = create<ProfilesState>((set, get) => ({
     return loading;
   },
 
-  saveServer: async (server, secret) => {
+  saveServer: async (server, secret, sudoSecret) => {
     let saved: ServerProfile;
     try {
       saved = await profiles.saveServer(server);
@@ -74,7 +75,14 @@ export const useProfiles = create<ProfilesState>((set, get) => ({
       try {
         await profiles.setSecret(saved.id, secret === "" ? null : secret);
       } catch (e) {
-        toast.error("Servidor guardado, pero no se pudo guardar la contraseña en el llavero", e);
+        toast.error("Servidor guardado, pero no la contraseña", e);
+      }
+    }
+    if (sudoSecret !== undefined) {
+      try {
+        await profiles.setSecret(saved.id, sudoSecret === "" ? null : sudoSecret, "sudo");
+      } catch (e) {
+        toast.error("Servidor guardado, pero no la contraseña de sudo", e);
       }
     }
     return saved;

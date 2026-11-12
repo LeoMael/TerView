@@ -5,8 +5,8 @@
 //!
 //! El sobre (`Envelope`) lleva todo lo necesario para descifrar salvo la frase o el PIN:
 //! parámetros de Argon2id, sal, nonce y el texto cifrado (base64). La cabecera va autenticada
-//! como datos asociados (AAD): si alguien cambia el formato, los parámetros o la sal, el
-//! descifrado falla.
+//! como datos asociados (AAD): si alguien cambia el formato, los parámetros, la sal o la
+//! etiqueta `kind`, el descifrado falla.
 
 use aes_gcm::aead::{Aead, KeyInit, Payload};
 use aes_gcm::{Aes256Gcm, Nonce};
@@ -55,8 +55,20 @@ pub struct Envelope {
     pub version: u32,
     pub kdf: KdfInfo,
     pub cipher: String,
+    /// Etiqueta corta opcional, en claro pero autenticada (la bóveda guarda aquí el tipo de PIN:
+    /// "pin6" o "text"). Los sobres sin ella (copias sincronizadas, bóvedas antiguas) no la
+    /// escriben y su cabecera autenticada es la de siempre.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub kind: Option<String>,
     pub nonce: String,
     pub data: String,
+}
+
+/// Largo máximo de `Envelope::kind`.
+const MAX_KIND: usize = 16;
+
+fn kind_ok(k: &str) -> bool {
+    !k.is_empty() && k.len() <= MAX_KIND && k.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-')
 }
 
 /// Por qué no se pudo abrir un sobre. Cada usuario lo traduce a su propio mensaje.
@@ -137,12 +149,18 @@ pub fn derive_key_keyed_b64(
     derive_key_keyed(secret, &salt, p, pepper)
 }
 
-/// Datos asociados: cabecera canónica (todo menos el nonce y el texto cifrado).
-fn aad(format: &str, version: u32, p: KdfParams, salt_b64: &str) -> String {
-    format!(
+/// Datos asociados: cabecera canónica (todo menos el nonce y el texto cifrado). Sin `kind`
+/// queda igual que antes de existir, así que los sobres antiguos se siguen abriendo.
+fn aad(format: &str, version: u32, p: KdfParams, salt_b64: &str, kind: Option<&str>) -> String {
+    let mut s = format!(
         "{format}/{version}/{ALG}/{}/{}/{}/{salt_b64}/{CIPHER}",
         p.m_kib, p.t, p.p
-    )
+    );
+    if let Some(k) = kind {
+        s.push_str("/kind=");
+        s.push_str(k);
+    }
+    s
 }
 
 /// Cifra `plaintext` con una llave ya derivada (nonce nuevo cada vez).
@@ -154,10 +172,26 @@ pub fn seal(
     salt_b64: &str,
     plaintext: &[u8],
 ) -> AppResult<Envelope> {
+    seal_with_kind(format, version, key, params, salt_b64, None, plaintext)
+}
+
+/// Igual que `seal`, con una etiqueta `kind` autenticada en la cabecera.
+pub fn seal_with_kind(
+    format: &str,
+    version: u32,
+    key: &[u8; 32],
+    params: KdfParams,
+    salt_b64: &str,
+    kind: Option<&str>,
+    plaintext: &[u8],
+) -> AppResult<Envelope> {
+    if kind.is_some_and(|k| !kind_ok(k)) {
+        return Err(AppError::Invalid("etiqueta de cifrado no válida".into()));
+    }
     let nonce = random::<NONCE_LEN>()?;
     let cipher =
         Aes256Gcm::new_from_slice(key).map_err(|_| AppError::Invalid("clave inválida".into()))?;
-    let header = aad(format, version, params, salt_b64);
+    let header = aad(format, version, params, salt_b64, kind);
     let ct = cipher
         .encrypt(
             &Nonce::from(nonce),
@@ -176,6 +210,7 @@ pub fn seal(
             salt: salt_b64.into(),
         },
         cipher: CIPHER.into(),
+        kind: kind.map(str::to_string),
         nonce: Base64::encode_string(&nonce),
         data: Base64::encode_string(&ct),
     })
@@ -189,6 +224,9 @@ pub fn check(env: &Envelope, format: &str, version: u32) -> Result<(KdfParams, V
     }
     if env.version != version || env.kdf.alg != ALG || env.cipher != CIPHER {
         return Err(EnvError::Unsupported);
+    }
+    if env.kind.as_deref().is_some_and(|k| !kind_ok(k)) {
+        return Err(EnvError::Damaged);
     }
     let p = env.kdf.params;
     if p.m_kib > MAX_M_KIB || p.t > MAX_T || p.p > MAX_P || p.t == 0 || p.p == 0 {
@@ -220,7 +258,7 @@ pub fn open(
         .map_err(|_| EnvError::Damaged)?;
     let ct = Base64::decode_vec(&env.data).map_err(|_| EnvError::Damaged)?;
     let cipher = Aes256Gcm::new_from_slice(key).map_err(|_| EnvError::BadKey)?;
-    let header = aad(format, version, p, &env.kdf.salt);
+    let header = aad(format, version, p, &env.kdf.salt, env.kind.as_deref());
     cipher
         .decrypt(
             &Nonce::from(nonce),

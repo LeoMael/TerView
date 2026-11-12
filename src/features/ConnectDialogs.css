@@ -119,6 +119,7 @@
 }
 .cd-inline-row {
   display: flex;
+  align-items: center;
   gap: 8px;
 }
 .cd-btn-spinner {
@@ -255,4 +256,22 @@
   color: var(--text-faint);
   font-size: var(--fs-sm);
   margin-top: -2px;
+}
+
+/* Ver una contraseña guardada: pide el PIN debajo del campo. */
+.cd-reveal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  margin-top: 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+.cd-reveal .lock-pin {
+  width: 100%;
 }

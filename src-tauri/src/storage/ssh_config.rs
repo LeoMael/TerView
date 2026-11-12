@@ -737,6 +737,7 @@ pub fn import_preview(env: &SshEnv, existing: &[ServerProfile]) -> AppResult<Vec
             default_path: None,
             color: None,
             tmux: None,
+            sudo_mode: Default::default(),
         };
         let Ok(candidate) = super::validate_server(candidate) else { continue };
         let key = same_key(&candidate.host, candidate.port, &candidate.username);
@@ -1149,6 +1150,7 @@ pub async fn ssh_config_alias_info(
         default_path: None,
         color: None,
         tmux: None,
+        sudo_mode: Default::default(),
     };
     blocking(move || alias_info(&SshEnv::user()?, &servers, draft, alias.as_deref())).await
 }
@@ -1226,6 +1228,7 @@ mod tests {
             default_path: None,
             color: None,
             tmux: None,
+            sudo_mode: Default::default(),
         }
     }
 

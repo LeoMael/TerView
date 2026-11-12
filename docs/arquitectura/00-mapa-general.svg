@@ -104,8 +104,8 @@
   <use href="#i-db" x="725" y="382" width="38" height="38" style="color:#facc15"/>
   <use href="#i-lock" x="885" y="384" width="22" height="22" style="color:#facc15"/>
   <text x="725" y="442" class="b">Bóveda (vault.json)</text>
-  <text x="725" y="464" class="xs">contraseñas, frases</text>
-  <text x="725" y="483" class="xs">y token de GitHub</text>
+  <text x="725" y="464" class="xs">contraseñas y frases</text>
+  <text x="725" y="483" class="xs">sudo guardado y token</text>
   <text x="725" y="502" class="xs">PIN + llave del equipo</text>
   <rect x="485" y="526" width="212" height="146" rx="14" class="disk"/>
   <use href="#i-db" x="501" y="538" width="38" height="38" style="color:#facc15"/>

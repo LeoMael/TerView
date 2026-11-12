@@ -30,10 +30,13 @@ import {
   type WebResult,
 } from "../../features/admin";
 import {
-  forgetSudo,
+  forgetSudoByUser,
   refreshPrivilege,
+  sudoRejected,
   useElevation,
   usePrivilege,
+  useStoredSudo,
+  useStoredSudoState,
   type Elevation,
 } from "../../features/privileges";
 import { AdminContext, type AdminContextValue, type PortsFilter, type RunOutcome, type ScanState } from "./context";
@@ -95,6 +98,7 @@ function useElevatedScan<T>(
       const r = await readElevated(sessionId, script, elevation, timeoutSecs);
       if (g !== gen.current) return;
       if (r.elevationError?.failure === "need-password") refreshPrivilege(sessionId);
+      if (r.elevationError?.failure === "bad-password") sudoRejected(sessionId);
       setState({
         data: parse(r.result.stdout),
         loading: false,
@@ -132,6 +136,8 @@ export function AdminPanel({
   const info = usePrivilege(sessionId);
   const elev = useElevation(sessionId, info);
   const elevation = elev.elevation;
+  // Contraseña de sudo guardada (o la de la conexión), si el servidor lo tiene así configurado.
+  useStoredSudo(sessionId, profileId, info, active && !disabled);
   const serverName = useTabs((s) => s.tabs.find((t) => t.sessionId === sessionId)?.title ?? "servidor");
   const addHistory = useAdminHistory((s) => s.add);
   const ensureHistory = useAdminHistory((s) => s.ensure);
@@ -142,8 +148,13 @@ export function AdminPanel({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [shadowError, setShadowError] = useState<string | null>(null);
-  const [sudoOpen, setSudoOpen] = useState(false);
+  const [sudoOpen, setSudoOpen] = useState<null | "ask" | "change">(null);
   const [stale, setStale] = useState(true);
+  // La contraseña guardada (o la de la conexión) no sirvió para sudo: pedirla de nuevo.
+  const storedSudo = useStoredSudoState(sessionId);
+  useEffect(() => {
+    if (storedSudo === "failed" && active && !disabled) setSudoOpen((o) => o ?? "ask");
+  }, [storedSudo, active, disabled]);
   const gen = useRef(0);
 
   const [ports, loadPorts] = useElevatedScan<PortsResult>(sessionId, elevation, PORTS_SCRIPT, parsePorts, 20);
@@ -172,6 +183,7 @@ export function AdminPanel({
           setShadow(null);
           setShadowError(errorMessage(e));
           if (e instanceof ElevationError && e.failure === "need-password") refreshPrivilege(sessionId);
+          if (e instanceof ElevationError && e.failure === "bad-password") sudoRejected(sessionId);
         }
       } else {
         setShadow(null);
@@ -247,6 +259,7 @@ export function AdminPanel({
         toast.error(`No se pudo: ${plan.action}`, msg);
         if (e instanceof ElevationError) {
           if (e.failure === "need-password") refreshPrivilege(sessionId);
+          if (e.failure === "bad-password") sudoRejected(sessionId);
           return { ok: false, result: null, error: msg, needSudo: e.failure === "bad-password" || e.failure === "need-password" };
         }
         return { ok: false, result: null, error: msg, needSudo: false };
@@ -255,7 +268,7 @@ export function AdminPanel({
     [disabled, elevation, elev.canAskSudo, sessionId, profileId, serverName, addHistory, load],
   );
 
-  const askSudo = useCallback(() => setSudoOpen(true), []);
+  const askSudo = useCallback(() => setSudoOpen("ask"), []);
   const refresh = useCallback(() => void load(), [load]);
   const reloadPorts = useCallback(() => void loadPorts(), [loadPorts]);
   const reloadWeb = useCallback(() => void loadWeb(), [loadWeb]);
@@ -373,16 +386,27 @@ export function AdminPanel({
               {elevation ? <ShieldCheck size={13} /> : <ShieldAlert size={13} />}
               {elevation ? elev.label : "Solo lectura"}
             </span>
-            {elev.hasPassword && (
+            {info?.hasSudo && info.level !== "root" && info.level !== "sudo-nopasswd" && (
               <button
                 className="btn btn-sm"
+                onClick={() => setSudoOpen("change")}
+                disabled={disabled}
+                title="Escribe la contraseña de sudo y guárdala para este servidor"
+              >
+                <KeyRound size={13} /> Cambiar contraseña de sudo…
+              </button>
+            )}
+            {elev.hasPassword && (
+              <button
+                className="icon-btn"
                 onClick={() => {
-                  forgetSudo(sessionId);
+                  forgetSudoByUser(sessionId);
                   toast.info("Contraseña de sudo olvidada");
                 }}
-                title="Borra de la memoria la contraseña de sudo de esta conexión"
+                title="Olvidar la contraseña de sudo de esta conexión (la guardada no se borra)"
+                aria-label="Olvidar la contraseña de sudo de esta conexión"
               >
-                <LogOut size={13} /> Olvidar contraseña de sudo
+                <LogOut size={14} />
               </button>
             )}
             <button
@@ -454,7 +478,15 @@ export function AdminPanel({
             <HistoryTab />
           )}
         </div>
-        {sudoOpen && <SudoDialog sessionId={sessionId} user={me} onClose={() => setSudoOpen(false)} />}
+        {sudoOpen && (
+          <SudoDialog
+            sessionId={sessionId}
+            profileId={profileId}
+            user={me}
+            change={sudoOpen === "change"}
+            onClose={() => setSudoOpen(null)}
+          />
+        )}
       </div>
     </AdminContext.Provider>
   );

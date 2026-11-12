@@ -1,5 +1,11 @@
-// Contraseña de sudo por sesión: SOLO en memoria (zustand sin persistencia). Se olvida con el botón
-// «Olvidar contraseña de sudo», al cerrar la pestaña o al perder la conexión (ver initPrivileges).
+// Contraseña de sudo por sesión: en memoria (zustand sin persistencia). Se olvida con el botón
+// «Olvidar contraseña de sudo», al cerrar la pestaña, al perder la conexión (ver initPrivileges) y al
+// bloquear TerView.
+//
+// Cada servidor elige de dónde sale (editor de servidor → «Contraseña de sudo»): pedirla cada vez, la
+// de la conexión o una guardada aparte (bóveda o llavero). Las dos últimas se leen del motor cuando
+// un panel la necesita (`useStoredSudo`, en stored.ts), se comprueban con `sudo -v` y quedan en memoria igual que si
+// se hubieran escrito. Si no sirven, se marca «failed» y el diálogo ofrece guardar la nueva.
 import { useMemo } from "react";
 import { create } from "zustand";
 import { snippets } from "../../api/snippets";
@@ -7,32 +13,68 @@ import { errorMessage } from "../../api/core";
 import type { PrivilegeInfo } from "./detect";
 import { buildExec, elevationFailure, elevationFailureMessage, type Elevation } from "./elevate";
 
+/**
+ * Contraseña guardada de la sesión: "loading" leyendo/comprobando, "ok" en memoria, "none" no hay o
+ * el servidor dice «Pedir cada vez», "failed" sudo la rechazó, "off" el usuario la olvidó a mano.
+ */
+export type StoredSudoState = "loading" | "ok" | "none" | "failed" | "off";
+
 interface SudoState {
   bySession: Record<string, string>;
+  stored: Record<string, StoredSudoState>;
   set: (sessionId: string, password: string) => void;
   clear: (sessionId: string) => void;
 }
 
+export function without<T>(m: Record<string, T>, k: string): Record<string, T> {
+  if (!(k in m)) return m;
+  const next = { ...m };
+  delete next[k];
+  return next;
+}
+
 export const useSudo = create<SudoState>((set) => ({
   bySession: {},
+  stored: {},
   set: (sessionId, password) => set((s) => ({ bySession: { ...s.bySession, [sessionId]: password } })),
   clear: (sessionId) =>
     set((s) => {
-      if (!(sessionId in s.bySession)) return s;
-      const bySession = { ...s.bySession };
-      delete bySession[sessionId];
-      return { bySession };
+      if (!(sessionId in s.bySession) && !(sessionId in s.stored)) return s;
+      return { bySession: without(s.bySession, sessionId), stored: without(s.stored, sessionId) };
     }),
 }));
 
-/** Olvida la contraseña de sudo guardada en memoria para esa sesión. */
+export function setStoredSudo(sessionId: string, st: StoredSudoState) {
+  useSudo.setState((s) => ({ stored: { ...s.stored, [sessionId]: st } }));
+}
+
+/** Olvida la contraseña de sudo en memoria de esa sesión (al cerrar o perder la conexión). */
 export function forgetSudo(sessionId: string): void {
   useSudo.getState().clear(sessionId);
 }
 
-/** Olvida todas las contraseñas de sudo en memoria (al bloquear TerView). */
+/** Botón «Olvidar»: además no la vuelve a leer de la guardada hasta reconectar. */
+export function forgetSudoByUser(sessionId: string): void {
+  useSudo.setState((s) => ({ bySession: without(s.bySession, sessionId), stored: { ...s.stored, [sessionId]: "off" } }));
+}
+
+/** Olvida todas las contraseñas de sudo en memoria (al bloquear TerView). Las guardadas se vuelven a
+ * leer al desbloquear. */
 export function forgetAllSudo(): void {
-  useSudo.setState({ bySession: {} });
+  useSudo.setState({ bySession: {}, stored: {} });
+}
+
+/** sudo rechazó la contraseña en memoria (p. ej. se cambió en el servidor): se olvida y se pide otra. */
+export function sudoRejected(sessionId: string): void {
+  const wasStored = useSudo.getState().stored[sessionId] === "ok";
+  useSudo.setState((s) => ({
+    bySession: without(s.bySession, sessionId),
+    stored: wasStored ? { ...s.stored, [sessionId]: "failed" } : s.stored,
+  }));
+}
+
+export function useStoredSudoState(sessionId: string): StoredSudoState | undefined {
+  return useSudo((s) => s.stored[sessionId]);
 }
 
 export function useHasSudoPassword(sessionId: string): boolean {
@@ -43,6 +85,8 @@ export function useHasSudoPassword(sessionId: string): boolean {
 export interface SudoConfirmResult {
   ok: boolean;
   message: string;
+  /** sudo dijo que la contraseña no es correcta. */
+  badPassword?: boolean;
 }
 
 /**
@@ -61,7 +105,7 @@ export async function confirmSudo(sessionId: string, password: string): Promise<
       return { ok: true, message: "Contraseña de sudo confirmada" };
     }
     const f = elevationFailure(r.exitCode, r.stderr);
-    if (f) return { ok: false, message: elevationFailureMessage(f) };
+    if (f) return { ok: false, message: elevationFailureMessage(f), badPassword: f === "bad-password" };
     if (/command not found|not found/i.test(r.stderr)) return { ok: false, message: "sudo no está instalado en el servidor" };
     return { ok: false, message: r.stderr.trim() || `sudo terminó con código ${r.exitCode ?? "desconocido"}` };
   } catch (e) {

@@ -21,8 +21,11 @@ use std::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 use tauri::{AppHandle, Manager, State};
 
+use secrets::SecretKind;
+use zeroize::Zeroizing;
+
 use crate::error::{AppError, AppResult};
-use crate::types::{AuthMethod, Bookmark, Project, ProfilesData, ServerProfile, Settings, SshConfigExport};
+use crate::types::{AuthMethod, Bookmark, Project, ProfilesData, ServerProfile, Settings, SshConfigExport, SudoMode};
 
 fn new_id() -> String {
     uuid::Uuid::new_v4().to_string()
@@ -222,6 +225,10 @@ fn validate_server(mut s: ServerProfile) -> AppResult<ServerProfile> {
         // La ruta de llave solo tiene sentido con auth = key.
         AuthMethod::Password | AuthMethod::Agent => s.key_path = None,
     }
+    // «La misma de la conexión» solo existe si se entra con contraseña.
+    if s.sudo_mode == SudoMode::Login && s.auth != AuthMethod::Password {
+        s.sudo_mode = SudoMode::Ask;
+    }
     Ok(s)
 }
 
@@ -374,13 +381,13 @@ pub async fn profiles_save_server(
     Ok(saved)
 }
 
-/// Borra el servidor, su secreto y sus referencias en proyectos.
+/// Borra el servidor, sus secretos (conexión y sudo) y sus referencias en proyectos.
 #[tauri::command]
 pub async fn profiles_delete_server(app: AppHandle, store: State<'_, ProfileStore>, id: String) -> AppResult<()> {
     store.delete_server(&id)?;
     sync_ssh_config(&app).await;
     // El servidor ya no existe: si el llavero no está disponible solo lo registramos.
-    if let Err(e) = blocking(move || secrets::delete_secret(&id)).await {
+    if let Err(e) = blocking(move || secrets::delete_server_secrets(&id)).await {
         log::warn!("No se pudo borrar el secreto del servidor: {e}");
     }
     Ok(())
@@ -396,19 +403,54 @@ pub async fn profiles_delete_project(store: State<'_, ProfileStore>, id: String)
     store.delete_project(&id)
 }
 
+/// ¿Hay secreto guardado? `kind`: "login" (por defecto) o "sudo".
 #[tauri::command]
-pub async fn profiles_has_secret(id: String) -> AppResult<bool> {
+pub async fn profiles_has_secret(id: String, kind: Option<SecretKind>) -> AppResult<bool> {
+    let id = kind.unwrap_or_default().id(&id);
     blocking(move || secrets::get_secret(&id).map(|s| s.is_some())).await
 }
 
-/// Some(x) guarda, None borra.
+/// Some(x) guarda, None borra. `kind`: "login" (por defecto) o "sudo".
 #[tauri::command]
-pub async fn profiles_set_secret(id: String, secret: Option<String>) -> AppResult<()> {
-    blocking(move || match secret {
-        Some(s) if !s.is_empty() => secrets::set_secret(&id, &s),
+pub async fn profiles_set_secret(id: String, secret: Option<String>, kind: Option<SecretKind>) -> AppResult<()> {
+    let id = kind.unwrap_or_default().id(&id);
+    let secret = secret.map(Zeroizing::new);
+    blocking(move || match secret.as_deref() {
+        Some(s) if !s.is_empty() => secrets::set_secret(&id, s),
         _ => secrets::delete_secret(&id),
     })
     .await
+}
+
+/// Muestra un secreto guardado de un servidor (botón del ojo). Con bóveda pide el PIN, que cuenta
+/// como intento (misma espera tras fallos que al desbloquear); sin bóveda lee del llavero.
+#[tauri::command]
+pub async fn profiles_reveal_secret(id: String, kind: SecretKind, pin: Option<String>) -> AppResult<Option<String>> {
+    let pin = pin.map(Zeroizing::new);
+    let id = kind.id(&id);
+    blocking(move || {
+        let v = vault::Vault::global();
+        if v.is_enabled() {
+            let pin = pin.ok_or_else(|| AppError::Invalid("Escribe tu PIN".into()))?;
+            v.check_pin(&pin)?;
+        }
+        secrets::get_secret(&id)
+    })
+    .await
+}
+
+/// Contraseña de sudo de un servidor según su ajuste: la de conexión, la guardada aparte o
+/// ninguna («Pedir cada vez»). Solo con TerView desbloqueado; nunca va a disco ni a logs.
+#[tauri::command]
+pub async fn profiles_sudo_password(store: State<'_, ProfileStore>, id: String) -> AppResult<Option<String>> {
+    let server = store.get_server(&id)?;
+    let secret_id = match server.sudo_mode {
+        SudoMode::Ask => return Ok(None),
+        SudoMode::Login if server.auth == AuthMethod::Password => SecretKind::Login.id(&id),
+        SudoMode::Login => return Ok(None),
+        SudoMode::Saved => SecretKind::Sudo.id(&id),
+    };
+    blocking(move || secrets::get_secret(&secret_id)).await
 }
 
 #[tauri::command]
@@ -446,7 +488,7 @@ async fn sync_ssh_config(app: &AppHandle) {
     }
 }
 
-/// Copia un servidor (nombre "… (copia)") y su secreto del llavero. Devuelve la copia.
+/// Copia un servidor (nombre "… (copia)") y sus secretos (conexión y sudo). Devuelve la copia.
 #[tauri::command]
 pub async fn profiles_duplicate_server(
     app: AppHandle,
@@ -457,11 +499,7 @@ pub async fn profiles_duplicate_server(
     sync_ssh_config(&app).await;
     let new_id = copy.id.clone();
     // La copia ya existe: si el llavero falla solo lo registramos (se pedirá la contraseña al conectar).
-    let r = blocking(move || match secrets::get_secret(&id)? {
-        Some(secret) => secrets::set_secret(&new_id, &secret),
-        None => Ok(()),
-    })
-    .await;
+    let r = blocking(move || secrets::copy_server_secrets(&id, &new_id)).await;
     if let Err(e) = r {
         log::warn!("No se pudo copiar el secreto del servidor duplicado: {e}");
     }

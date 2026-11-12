@@ -73,8 +73,8 @@ La app tiene dos mitades dentro del mismo programa:
 
 | Almacén | Qué guarda | Formato | Dónde | ¿Cifrado? | Quién lo lee y escribe |
 |---------|------------|---------|-------|-----------|------------------------|
-| **Llavero del sistema** | Servicio `terview`. **Con bóveda:** solo la llave del equipo (usuario `vault-device-key`, 32 bytes al azar). **Sin bóveda:** además la contraseña o frase de cada servidor (usuario = id del servidor) y el token de GitHub (usuario `github-token`). | Entradas del llavero | Linux: Secret Service (GNOME Keyring / KWallet) · Windows: Administrador de credenciales · macOS: Llavero | Sí, lo cifra el sistema | Motor: `storage/secrets.rs` (crate `keyring`), `storage/vault.rs` |
-| **Bóveda `vault.json`** (opcional) | Con PIN activo: contraseñas y frases de los servidores y el token de GitHub. | Sobre JSON `terview-vault`: parámetros de Argon2id, sal, nonce y texto cifrado (base64) | `<config>/terview/vault.json` | Sí: AES-256-GCM; llave = Argon2id(PIN, llave del equipo) | Motor: `storage/vault.rs`, `storage/cipher.rs`, `storage/lock.rs` |
+| **Llavero del sistema** | Servicio `terview`. **Con bóveda:** solo la llave del equipo (usuario `vault-device-key`, 32 bytes al azar). **Sin bóveda:** además la contraseña o frase de cada servidor (usuario = id del servidor), su contraseña de sudo guardada (usuario `<id>:sudo`) y el token de GitHub (usuario `github-token`). | Entradas del llavero | Linux: Secret Service (GNOME Keyring / KWallet) · Windows: Administrador de credenciales · macOS: Llavero | Sí, lo cifra el sistema | Motor: `storage/secrets.rs` (crate `keyring`), `storage/vault.rs` |
+| **Bóveda `vault.json`** (opcional) | Con PIN activo: contraseñas y frases de los servidores, sus contraseñas de sudo guardadas y el token de GitHub. | Sobre JSON `terview-vault`: parámetros de Argon2id, sal, tipo de PIN (`kind`), nonce y texto cifrado (base64) | `<config>/terview/vault.json` | Sí: AES-256-GCM; llave = Argon2id(PIN, llave del equipo) | Motor: `storage/vault.rs`, `storage/cipher.rs`, `storage/lock.rs` |
 | **`vault-attempts.json`** | Fallos de PIN y hora del próximo intento permitido (5 libres; luego 30 s, el doble cada vez, hasta 15 min). | JSON | `<config>/terview/vault-attempts.json` | No (no lleva secretos) | Motor: `storage/vault.rs` |
 | **`profiles.json`** | Servidores y proyectos (host, usuario, puerto, tipo de autenticación, ruta de la llave, marcadores). Nunca contraseñas. | JSON | `<config>/terview/profiles.json` | No (archivo 0600, carpeta 0700 en Unix) | Motor: `storage/` (`ProfileStore`) |
 | **`settings.json`** | Ajustes: tema, fuentes, transferencias simultáneas, política de conflictos, señal de vida, reconexión, tamaños de paneles (`layout`), sincronizar `~/.ssh/config`. | JSON | `<config>/terview/settings.json` | No | Motor: `storage/` (`SettingsStore`) |
@@ -299,8 +299,10 @@ y ver resultado"), la detección de privilegios y GitHub (clonar y desplegar).
   (`sudo -n` o `doas -n`) o con contraseña (`sudo -k -S -v` la comprueba y después
   `sudo -k -S sh -c …` ejecuta). Los fallos se reconocen por el código de salida (95 a 98) y una
   marca en stderr: exige terminal, sin permiso, contraseña incorrecta o pide contraseña.
-- **La contraseña de sudo solo vive en memoria**, una por conexión (`useSudo`). Se olvida al cerrar
-  la pestaña, al perder la conexión o si es incorrecta. El motor nunca registra el stdin y lo
+- **La contraseña de sudo vive en memoria**, una por conexión (`useSudo`). Se olvida al cerrar
+  la pestaña, al perder la conexión, al bloquear o si es incorrecta. Si el servidor tiene «La de la
+  conexión» o «Guardar», se lee del motor (`profiles_sudo_password`) cuando un panel la necesita, se
+  comprueba con `sudo -v` y, si falla, se pide otra y se ofrece guardarla. El motor nunca registra el stdin y lo
   sobrescribe con ceros al terminar.
 - **Cancelación real:** `exec_cancel(id)` → el motor pide TERM por el mismo canal y espera 1,5 s →
   si no se cierra, abre **otro** canal y ejecuta `kill -TERM -PID` (a todo el grupo de procesos) →
@@ -436,7 +438,23 @@ y ver resultado"), la detección de privilegios y GitHub (clonar y desplegar).
   AES-256-GCM (formato `terview-vault`) con la cabecera autenticada, escritura atómica, permisos 0600
   y un nonce nuevo en cada guardado. "Proteger con PIN" los mueve del llavero a la bóveda; "Quitar
   PIN" (pide el PIN) los devuelve.
-- **Cómo se saca la llave:** Argon2id recibe el PIN o la frase (mínimo 6 caracteres) y, como su
+- **Qué guarda:** por servidor, la contraseña o frase de conexión (id = id del servidor) y, si eliges
+  «Contraseña de sudo: Guardar», la de sudo (id `<id>:sudo`). Activar o quitar el PIN, «Olvidé mi PIN»,
+  borrar y duplicar un servidor mueven, borran o copian las dos (`secrets::server_secret_ids`). El modo
+  (`sudoMode`: `ask`, `login` o `saved`) va en el perfil; la contraseña, nunca (tampoco en el Gist).
+  En el editor del servidor se elige «Contraseña de sudo»: **Pedir cada vez** (`ask`), **La de la
+  conexión** (`login`) o **Guardar** (`saved`). Sin bóveda, la de sudo guardada va al llavero con el
+  mismo id `<id>:sudo`.
+- **Ver una contraseña guardada:** el botón de ojo de los campos de contraseña (`features/SecretInput.tsx`)
+  llama a `profiles_reveal_secret`, que con bóveda pide y comprueba el PIN en el motor antes de devolverla.
+- **Candado en la barra de pestañas** (`components/Tabs/LockButton.tsx`): bloquear ahora, cambiar el
+  PIN y abrir Ajustes → Seguridad.
+- **El PIN es de 6 números** (`vault::check_new_pin`, también en el motor). El tipo va en la cabecera
+  autenticada del sobre (`kind: "pin6"`): cambiarlo o quitarlo rompe el descifrado. Las bóvedas de antes,
+  creadas con una contraseña libre, no lo llevan: se tratan como `text` y la pantalla de bloqueo muestra
+  un campo de texto hasta que se cambia el PIN. 6 números bastan porque sin la llave del equipo no se
+  puede probar ningún PIN contra el archivo, y en el equipo frenan las esperas tras fallos.
+- **Cómo se saca la llave:** Argon2id recibe el PIN y, como su
   "secreto" K, una **llave del equipo** de 32 bytes al azar guardada en el llavero (usuario
   `vault-device-key`). El coste se calibra en tu equipo para tardar unos 0,75 s (64 o 128 MiB, de 3 a
   20 pasadas) y queda guardado en el archivo. La llave AES-256 solo vive en memoria
@@ -454,7 +472,8 @@ y ver resultado"), la detección de privilegios y GitHub (clonar y desplegar).
   bloquea por inactividad.
 - **Al bloquear se borra de memoria** la llave y los secretos (`Zeroizing` los pisa con ceros), el
   token de GitHub en caché y las contraseñas de sudo de todas las conexiones (`forgetAllSudo`). Las
-  conexiones abiertas siguen vivas; una reconexión que necesita contraseña espera al desbloqueo
+  conexiones abiertas siguen vivas; las contraseñas de sudo guardadas se vuelven a leer (y comprobar con
+  `sudo -v`) al desbloquear, cuando un panel las necesita (`features/privileges/stored.ts`); una reconexión que necesita contraseña espera al desbloqueo
   ("esperando a que desbloquees TerView") y sigue sola después (`ssh/reconnect.rs`).
 - **Qué protege:**
 
@@ -462,7 +481,7 @@ y ver resultado"), la detección de privilegios y GitHub (clonar y desplegar).
 |-------------|-------------|---------|
 | Alguien sentado en tu PC | Sí | Pantalla de bloqueo en todas las ventanas, PIN y esperas crecientes. Ojo: las conexiones abiertas siguen vivas, solo se tapa la pantalla. |
 | Alguien que copia `vault.json` a otro PC | Sí | Allí falta la llave del equipo, así que no puede probar PIN fuera de tu equipo. Cambiar la cabecera rompe el descifrado. |
-| Un programa malicioso con tu usuario | En parte | Ya no lee las contraseñas directamente del llavero, pero podría ver el PIN al escribirlo o leer la memoria mientras está desbloqueado. Una frase de 4 o 5 palabras resiste los ataques al archivo. |
+| Un programa malicioso con tu usuario | En parte | Ya no lee las contraseñas directamente del llavero, pero podría ver el PIN al escribirlo, leer la memoria mientras está desbloqueado o copiar también la llave del equipo del llavero. |
 
   No se cifran aquí servidores, ajustes ni tus llaves de `~/.ssh` (las llaves se protegen con su propia frase).
 
@@ -511,13 +530,14 @@ y ver resultado"), la detección de privilegios y GitHub (clonar y desplegar).
 
 ## 17. Seguridad
 
-- **Contraseñas, frases y token de GitHub** en el llavero del sistema o, con PIN, en la bóveda
-  cifrada (`vault.json`, AES-256-GCM con llave Argon2id del PIN y de una llave del equipo). Nunca en
+- **Contraseñas, frases, contraseñas de sudo guardadas y token de GitHub** en el llavero del sistema o, con PIN, en la bóveda
+  cifrada (`vault.json`, AES-256-GCM con llave Argon2id del PIN de 6 dígitos y de una llave del equipo). Nunca en
   archivos sin cifrar ni en la interfaz.
 - **Bloqueo con PIN** (opcional): el estado vive en el motor, que no entrega secretos mientras está
   bloqueado; todas las ventanas se tapan; al bloquear se borran de la memoria la llave, los secretos,
   el token en caché y las contraseñas de sudo. Esperas crecientes tras 5 PIN incorrectos.
-- **Contraseña de sudo** solo en memoria, por conexión; viaja siempre por stdin, nunca en la línea
+- **Contraseña de sudo** en memoria, por conexión (y, si lo eliges, guardada como un secreto más
+  del servidor, `<id>:sudo`); viaja siempre por stdin, nunca en la línea
   de comandos ni en el historial. El motor borra el búfer al terminar.
 - **Verificación de huella** del servidor con `~/.ssh/known_hosts`, igual que `ssh`.
 - **Antes de cambiar algo como root** se muestra el comando exacto (Plan) y lo peligroso pide confirmación escrita.

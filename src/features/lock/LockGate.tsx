@@ -10,7 +10,8 @@ import { Logo } from "../../components/ui/Logo";
 import { useSettings } from "../../stores/settings";
 import { toast } from "../../stores/toasts";
 import { applyVaultStatus, dismissVaultPrompt, LOCK_SCREEN_CLASS, useLock } from "./lockStore";
-import { SetupPinForm } from "./PinForms";
+import { SetupPinForm, WhatItProtects } from "./PinForms";
+import { PinField } from "./PinCode";
 import "./Lock.css";
 
 export function LockGate({ main, children }: { main: boolean; children: ReactNode }) {
@@ -87,14 +88,14 @@ function UnlockForm({ status, main, onForgot }: { status: VaultStatus; main: boo
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const wait = useRetryCountdown(status);
+  const pin6 = status.pinKind === "pin6";
 
-  const submit = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!pin || busy || wait > 0) return;
+  const unlock = async (value: string) => {
+    if (!value || busy || wait > 0) return;
     setBusy(true);
     setError(null);
     try {
-      applyVaultStatus(await vault.unlock(pin));
+      applyVaultStatus(await vault.unlock(value));
     } catch (err) {
       setError(isApiError(err, "AuthFailed") ? "PIN incorrecto." : errorMessage(err));
       setPin("");
@@ -106,36 +107,47 @@ function UnlockForm({ status, main, onForgot }: { status: VaultStatus; main: boo
   };
 
   return (
-    <form className="lock-form" onSubmit={(e) => void submit(e)}>
-      <h2 className="lock-title">
-        <Lock size={18} /> TerView está bloqueado
+    <form
+      className="lock-form"
+      onSubmit={(e: FormEvent) => {
+        e.preventDefault();
+        void unlock(pin);
+      }}
+    >
+      <h2 className="lock-title lock-title-center">
+        <Lock size={18} /> Escribe tu PIN
       </h2>
-      <p className="lock-text">Escribe tu PIN para seguir. Tus conexiones siguen abiertas.</p>
-      <input
-        className="input lock-pin"
-        type="password"
-        autoComplete="off"
-        spellCheck={false}
-        autoFocus
-        aria-label="PIN"
-        placeholder="PIN o contraseña maestra"
+      <PinField
+        kind={status.pinKind}
         value={pin}
-        disabled={busy}
-        onChange={(e) => setPin(e.target.value)}
+        onChange={(v) => {
+          setPin(v);
+          setError(null);
+        }}
+        onSubmit={(v) => void unlock(v)}
+        label="PIN"
+        autoFocus
+        disabled={busy || wait > 0}
+        invalid={!!error}
       />
-      {error && <div className="lock-error">{error}</div>}
-      {wait > 0 && (
-        <div className="lock-error">Demasiados intentos fallidos. Podrás volver a probar en {formatWait(wait)}.</div>
+      {busy && pin6 && (
+        <div className="lock-hint lock-center">
+          <span className="spinner" /> Comprobando…
+        </div>
       )}
-      <button type="submit" className="btn btn-primary lock-submit" disabled={busy || !pin || wait > 0}>
-        {busy ? <span className="spinner" /> : <KeyRound size={15} />} {busy ? "Comprobando…" : "Desbloquear"}
-      </button>
+      {error && <div className="lock-error lock-center">{error}</div>}
+      {wait > 0 && <div className="lock-error lock-center">Demasiados intentos. Espera {formatWait(wait)}.</div>}
+      {!pin6 && (
+        <button type="submit" className="btn btn-primary lock-submit" disabled={busy || !pin || wait > 0}>
+          {busy ? <span className="spinner" /> : <KeyRound size={15} />} {busy ? "Comprobando…" : "Desbloquear"}
+        </button>
+      )}
       {main ? (
         <button type="button" className="lock-link" onClick={onForgot}>
           Olvidé mi PIN
         </button>
       ) : (
-        <p className="lock-hint">¿Olvidaste el PIN? Usa «Olvidé mi PIN» en la ventana principal.</p>
+        <p className="lock-hint lock-center">¿Olvidaste el PIN? Ve a la ventana principal.</p>
       )}
     </form>
   );
@@ -155,7 +167,7 @@ function ForgotPin({ onBack }: { onBack: () => void }) {
       await vault.reset();
       useLock.setState({ offerSetup: true });
       applyVaultStatus(await vault.status());
-      toast.info("Bóveda borrada", "Vuelve a escribir las contraseñas de tus servidores cuando te las pida.");
+      toast.info("Bóveda borrada", "TerView te pedirá las contraseñas otra vez.");
     } catch (err) {
       toast.error("No se pudo borrar la bóveda", err);
       setBusy(false);
@@ -165,30 +177,15 @@ function ForgotPin({ onBack }: { onBack: () => void }) {
   return (
     <div className="lock-form">
       <h2 className="lock-title">Olvidé mi PIN</h2>
-      <p className="lock-text">
-        Sin el PIN nadie puede abrir la bóveda, ni siquiera TerView. Puedes borrarla y empezar de nuevo:
-      </p>
-      <div className="lock-cols">
-        <div>
-          <strong className="lock-lose">Se pierde</strong>
-          <ul>
-            <li>Las contraseñas y frases guardadas de tus servidores</li>
-            <li>El token de GitHub (tendrás que conectar la cuenta otra vez)</li>
-          </ul>
-        </div>
-        <div>
-          <strong className="lock-keep">Se conserva</strong>
-          <ul>
-            <li>Servidores y proyectos</li>
-            <li>Tus llaves de ~/.ssh</li>
-            <li>Comandos, túneles y ajustes</li>
-            <li>Tu copia en Gist</li>
-          </ul>
-        </div>
-      </div>
-      <p className="lock-text">
-        Las conexiones abiertas siguen funcionando; las que usan contraseña te la volverán a pedir al reconectar.
-      </p>
+      <p className="lock-text">Se borran las contraseñas guardadas y el token de GitHub. Lo demás se conserva.</p>
+      <details className="lock-details">
+        <summary>¿Qué se conserva?</summary>
+        <ul>
+          <li>Servidores, proyectos, comandos, túneles y ajustes.</li>
+          <li>Tus llaves de ~/.ssh y tu copia en Gist.</li>
+          <li>Las conexiones abiertas (al reconectar te pedirán la contraseña).</li>
+        </ul>
+      </details>
       <label className="field">
         <span>
           Escribe <strong>{CONFIRM_WORD}</strong> para confirmar
@@ -239,10 +236,8 @@ function SetupPrompt() {
         <h2 className="lock-title">
           <ShieldCheck size={20} /> {offer ? "Crea un PIN nuevo" : "Protege tus contraseñas con un PIN"}
         </h2>
-        <p className="lock-text">
-          Las contraseñas que guardes quedarán cifradas con tu PIN, y TerView se bloqueará al abrirlo y tras un rato sin
-          uso. Puedes cambiarlo cuando quieras en Ajustes → Seguridad.
-        </p>
+        <p className="lock-text">TerView se bloqueará al abrirlo y tras un rato sin uso.</p>
+        <WhatItProtects />
         <SetupPinForm
           autoFocus
           cancelLabel="Ahora no"

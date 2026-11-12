@@ -1,4 +1,7 @@
 import { call } from "./core";
+
+/** Secreto de un servidor: el de conexión (contraseña o frase de la llave) o la contraseña de sudo. */
+export type SecretKind = "login" | "sudo";
 import type { Project, ProfilesData, ServerProfile, Settings, SshConfigExport } from "./types";
 
 export const profiles = {
@@ -9,9 +12,16 @@ export const profiles = {
   deleteServer: (id: string) => call<void>("profiles_delete_server", { id }),
   saveProject: (project: Project) => call<Project>("profiles_save_project", { project }),
   deleteProject: (id: string) => call<void>("profiles_delete_project", { id }),
-  hasSecret: (id: string) => call<boolean>("profiles_has_secret", { id }),
+  /** ¿Hay secreto guardado? kind: "login" (conexión, por defecto) o "sudo". */
+  hasSecret: (id: string, kind: SecretKind = "login") => call<boolean>("profiles_has_secret", { id, kind }),
   /** null = borrar */
-  setSecret: (id: string, secret: string | null) => call<void>("profiles_set_secret", { id, secret }),
+  setSecret: (id: string, secret: string | null, kind: SecretKind = "login") =>
+    call<void>("profiles_set_secret", { id, secret, kind }),
+  /** Muestra un secreto guardado. Con bóveda hace falta el PIN (cuenta como intento). */
+  revealSecret: (id: string, kind: SecretKind, pin?: string) =>
+    call<string | null>("profiles_reveal_secret", { id, kind, pin: pin ?? null }),
+  /** Contraseña de sudo según el ajuste del servidor (null = «Pedir cada vez» o no hay guardada). */
+  sudoPassword: (id: string) => call<string | null>("profiles_sudo_password", { id }),
   /** Copia el servidor (y su secreto guardado). Devuelve la copia. */
   duplicateServer: (id: string) => call<ServerProfile>("profiles_duplicate_server", { id }),
   /** Escribe el bloque de TerView en ~/.ssh/config. */

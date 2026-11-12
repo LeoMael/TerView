@@ -133,7 +133,8 @@ pub async fn vault_lock(app: AppHandle) -> AppResult<()> {
     Ok(())
 }
 
-/// Crea la bóveda con ese PIN y mueve a ella los secretos del llavero (servidores + GitHub).
+/// Crea la bóveda con ese PIN (6 números) y mueve a ella los secretos del llavero: contraseñas de
+/// conexión y de sudo de cada servidor, y el token de GitHub.
 #[tauri::command]
 pub async fn vault_enable(
     app: AppHandle,
@@ -169,7 +170,7 @@ pub async fn vault_disable(app: AppHandle, pin: String) -> AppResult<MoveReport>
     Ok(report)
 }
 
-/// Cambia el PIN (vuelve a cifrar la bóveda con sal y llave nuevas).
+/// Cambia el PIN (vuelve a cifrar la bóveda con sal y llave nuevas). El nuevo, siempre de 6 números.
 #[tauri::command]
 pub async fn vault_change_pin(old_pin: String, new_pin: String) -> AppResult<()> {
     let old_pin = Zeroizing::new(old_pin);

@@ -104,6 +104,8 @@ pub fn run() {
             storage::profiles_save_project,
             storage::profiles_delete_project,
             storage::profiles_has_secret,
+            storage::profiles_reveal_secret,
+            storage::profiles_sudo_password,
             storage::profiles_set_secret,
             storage::settings_load,
             storage::settings_save,

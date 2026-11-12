@@ -47,6 +47,8 @@ export function parsePayload(v: unknown): SyncPayload {
       defaultPath: str(s.defaultPath),
       color: str(s.color),
       tmux: parseTmuxMode(s.tmux),
+      // Solo el modo: la contraseña de sudo guardada nunca viaja en la copia.
+      sudoMode: s.sudoMode === "login" || s.sudoMode === "saved" ? s.sudoMode : "ask",
     }));
   const projects: Project[] = arr("projects")
     .filter((p) => str(p.id) && str(p.name))

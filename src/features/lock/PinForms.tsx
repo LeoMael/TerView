@@ -1,127 +1,100 @@
-// Formularios del PIN: crear (primera vez y Ajustes), cambiar y desactivar.
-import { useState, type FormEvent, type ReactNode } from "react";
+// Formularios del PIN (6 números): crear (primera vez y Ajustes), cambiar y quitar.
+import { useRef, useState, type FormEvent } from "react";
 import { TriangleAlert } from "lucide-react";
-import { errorMessage } from "../../api/core";
-import { MIN_PIN, vault, type MoveReport } from "../../api/vault";
+import { errorMessage, isApiError } from "../../api/core";
+import { isValidPin, PIN_LENGTH, vault, type MoveReport } from "../../api/vault";
 import { toast } from "../../stores/toasts";
-import { applyVaultStatus } from "./lockStore";
+import { applyVaultStatus, useLock } from "./lockStore";
+import { PinCode, PinField, type PinCodeHandle } from "./PinCode";
 
-/** Texto corto sobre qué se pierde si se olvida el PIN. */
+/** Una línea sobre qué se pierde si se olvida el PIN. */
 export function ForgetWarning() {
   return (
-    <div className="lock-warn">
+    <div className="lock-warn" title="Servidores, proyectos y ajustes no se pierden.">
       <TriangleAlert size={16} />
-      <span>
-        <strong>Si olvidas el PIN, se pierden las contraseñas guardadas</strong> (también el token de GitHub). Nadie puede
-        recuperarlas. Tus servidores, proyectos y ajustes no se pierden: solo tendrías que volver a escribir las contraseñas.
-      </span>
+      <span>Si lo olvidas, se pierden las contraseñas guardadas.</span>
     </div>
   );
 }
 
-export function pinProblem(pin: string): string | null {
-  if ([...pin].length < MIN_PIN) return `Usa al menos ${MIN_PIN} caracteres.`;
-  if (!pin.trim()) return "No puede ser solo espacios.";
-  return null;
-}
-
-// ───────── Fortaleza ─────────
-
-export interface Strength {
-  /** 0 vacío · 1 débil · 2 aceptable · 3 fuerte */
-  level: 0 | 1 | 2 | 3;
-  label: string;
-  tip: string;
-}
-
-/** Estimación sencilla (no exacta): bits según el tipo de caracteres, con castigo a repeticiones. */
-export function pinStrength(pin: string): Strength {
-  const chars = [...pin];
-  if (!chars.length) return { level: 0, label: "", tip: "" };
-  const digitsOnly = /^\d+$/.test(pin);
-  let pool = 0;
-  if (/[a-z]/.test(pin)) pool += 26;
-  if (/[A-Z]/.test(pin)) pool += 26;
-  if (/\d/.test(pin)) pool += 10;
-  if (/[^a-zA-Z\d]/.test(pin)) pool += 33;
-  let bits = chars.length * Math.log2(Math.max(pool, 2));
-  const unique = new Set(chars).size;
-  if (unique <= 2) bits = Math.min(bits, 10);
-  else if (unique < chars.length / 3) bits /= 2;
-  const words = pin.trim().split(/[\s\-_.,]+/).filter((w) => [...w].length >= 3).length;
-
-  if (digitsOnly && chars.length < 10) {
-    return {
-      level: 1,
-      label: "Débil",
-      tip: "Un PIN de números basta frente a alguien en tu PC. Para más seguridad, usa una frase de 4 o 5 palabras.",
-    };
-  }
-  if (words >= 4 && bits >= 60) return { level: 3, label: "Fuerte", tip: "Buena frase: fácil de recordar y difícil de adivinar." };
-  if (bits >= 70) return { level: 3, label: "Fuerte", tip: "Difícil de adivinar." };
-  if (bits >= 45) {
-    return { level: 2, label: "Aceptable", tip: "Mejor aún: una frase de 4 o 5 palabras que puedas recordar." };
-  }
-  return { level: 1, label: "Débil", tip: "Fácil de adivinar. Prueba con una frase de 4 o 5 palabras." };
-}
-
-function StrengthMeter({ pin }: { pin: string }) {
-  const s = pinStrength(pin);
+/** «¿Qué protege?» plegable: todo lo que antes era texto fijo. */
+export function WhatItProtects() {
   return (
-    <div className="lock-strength" aria-live="polite">
-      <div className={`lock-strength-bar level-${s.level}`}>
-        <span />
-        <span />
-        <span />
-      </div>
-      {s.level > 0 && (
-        <small>
-          <strong>{s.label}.</strong> {s.tip}
-        </small>
-      )}
-      <small className="lock-hint">
-        Un PIN corto te protege de alguien sentado en tu PC; una frase de 4 o 5 palabras te protege también si alguien
-        ataca el archivo de la bóveda.
-      </small>
-    </div>
+    <details className="lock-details">
+      <summary>¿Qué protege?</summary>
+      <ul>
+        <li>Cifra las contraseñas guardadas (de conexión y de sudo) y el token de GitHub con tu PIN y una llave de este equipo.</li>
+        <li>Quien copie el archivo a otro PC no puede abrirlo.</li>
+        <li>Tras 5 fallos hay que esperar, cada vez más (hasta 15 min). Nunca se borra nada por fallar.</li>
+        <li>Al bloquear se tapan las ventanas; las conexiones siguen abiertas.</li>
+        <li>No cifra servidores, ajustes ni tus llaves de ~/.ssh.</li>
+      </ul>
+    </details>
   );
 }
 
-function PinInput({
-  label,
-  value,
-  onChange,
-  autoFocus,
-  hint,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  autoFocus?: boolean;
-  hint?: ReactNode;
-}) {
-  return (
-    <label className="field">
-      <span>{label}</span>
-      <input
-        className="input"
-        type="password"
-        autoComplete="off"
-        spellCheck={false}
-        value={value}
-        autoFocus={autoFocus}
-        onChange={(e) => onChange(e.target.value)}
-      />
-      {hint && <small className="lock-hint">{hint}</small>}
-    </label>
-  );
+function pinError(err: unknown): string {
+  return isApiError(err, "AuthFailed") ? "PIN incorrecto." : errorMessage(err);
 }
 
-function movedText(r: MoveReport): string {
+function movedText(r: MoveReport): string | undefined {
+  if (r.moved === 0) return undefined;
   const n = r.moved === 1 ? "1 contraseña protegida" : `${r.moved} contraseñas protegidas`;
-  return r.leftInKeyring > 0
-    ? `${n}. ${r.leftInKeyring} copia(s) no se pudieron borrar del llavero del sistema.`
-    : `${n}. Ya no están en el llavero del sistema.`;
+  return r.leftInKeyring > 0 ? `${n} (${r.leftInKeyring} copia(s) siguen en el llavero).` : `${n}.`;
+}
+
+/** PIN nuevo + repetición, con salto automático a la segunda casilla. */
+function NewPinPair({
+  pin,
+  setPin,
+  again,
+  setAgain,
+  autoFocus,
+  onReady,
+  disabled,
+}: {
+  pin: string;
+  setPin: (v: string) => void;
+  again: string;
+  setAgain: (v: string) => void;
+  autoFocus?: boolean;
+  onReady: (pin: string, again: string) => void;
+  disabled?: boolean;
+}) {
+  const second = useRef<PinCodeHandle>(null);
+  return (
+    <>
+      <div className="field">
+        <span>PIN nuevo ({PIN_LENGTH} números)</span>
+        <PinCode
+          value={pin}
+          onChange={setPin}
+          onComplete={() => second.current?.focus()}
+          label="PIN nuevo"
+          autoFocus={autoFocus}
+          disabled={disabled}
+        />
+      </div>
+      <div className="field">
+        <span>Repítelo</span>
+        <PinCode
+          ref={second}
+          value={again}
+          onChange={setAgain}
+          onComplete={(v) => onReady(pin, v)}
+          onEnter={() => onReady(pin, again)}
+          label="Repite el PIN"
+          disabled={disabled}
+        />
+      </div>
+    </>
+  );
+}
+
+function checkPair(pin: string, again: string): string | null {
+  if (!isValidPin(pin)) return `El PIN debe tener ${PIN_LENGTH} números.`;
+  if (pin !== again) return "Los dos PIN no coinciden.";
+  return null;
 }
 
 /** Crear el PIN (y mover las contraseñas del llavero a la bóveda). */
@@ -141,15 +114,18 @@ export function SetupPinForm({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const submit = async (e: FormEvent) => {
-    e.preventDefault();
-    const p = pinProblem(pin);
-    if (p) return setError(p);
-    if (pin !== again) return setError("Los dos PIN no coinciden.");
+  const create = async (p: string, a: string) => {
+    if (busy) return;
+    const problem = checkPair(p, a);
+    if (problem) {
+      setError(problem);
+      setAgain("");
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
-      const r = await vault.enable(pin);
+      const r = await vault.enable(p);
       applyVaultStatus(await vault.status());
       toast.success("PIN creado", movedText(r));
       onDone?.();
@@ -161,16 +137,28 @@ export function SetupPinForm({
   };
 
   return (
-    <form className="lock-form" onSubmit={(e) => void submit(e)}>
-      <PinInput
-        label="PIN o contraseña maestra"
-        value={pin}
-        onChange={setPin}
+    <form
+      className="lock-form"
+      onSubmit={(e: FormEvent) => {
+        e.preventDefault();
+        void create(pin, again);
+      }}
+    >
+      <NewPinPair
+        pin={pin}
+        setPin={(v) => {
+          setPin(v);
+          setError(null);
+        }}
+        again={again}
+        setAgain={(v) => {
+          setAgain(v);
+          setError(null);
+        }}
         autoFocus={autoFocus}
-        hint={`Al menos ${MIN_PIN} caracteres: números o, mejor, una frase de varias palabras.`}
+        onReady={(p, a) => void create(p, a)}
+        disabled={busy}
       />
-      <StrengthMeter pin={pin} />
-      <PinInput label="Repite el PIN" value={again} onChange={setAgain} />
       <ForgetWarning />
       {error && <div className="lock-error">{error}</div>}
       <div className="lock-actions">
@@ -180,34 +168,36 @@ export function SetupPinForm({
           </button>
         )}
         <button type="submit" className="btn btn-primary" disabled={busy || !pin || !again}>
-          {busy ? <span className="spinner" /> : null} {busy ? "Protegiendo…" : "Crear PIN"}
+          {busy ? <span className="spinner" /> : null} {busy ? "Creando…" : "Crear PIN"}
         </button>
       </div>
     </form>
   );
 }
 
-/** Cambiar el PIN (vuelve a cifrar la bóveda). */
+/** Cambiar el PIN (vuelve a cifrar la bóveda). El actual puede ser de texto (bóvedas antiguas). */
 export function ChangePinForm({ onDone, onCancel }: { onDone: () => void; onCancel: () => void }) {
+  const kind = useLock((s) => s.status?.pinKind ?? "pin6");
   const [old, setOld] = useState("");
   const [pin, setPin] = useState("");
   const [again, setAgain] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const submit = async (e: FormEvent) => {
-    e.preventDefault();
-    const p = pinProblem(pin);
-    if (p) return setError(p);
-    if (pin !== again) return setError("Los dos PIN nuevos no coinciden.");
+  const change = async (p: string, a: string) => {
+    if (busy) return;
+    const problem = !old ? "Escribe el PIN actual." : checkPair(p, a);
+    if (problem) return setError(problem);
     setBusy(true);
     setError(null);
     try {
-      await vault.changePin(old, pin);
-      toast.success("PIN cambiado", "Usa el nuevo la próxima vez que desbloquees TerView.");
+      await vault.changePin(old, p);
+      applyVaultStatus(await vault.status());
+      toast.success("PIN cambiado");
       onDone();
     } catch (err) {
-      setError(errorMessage(err));
+      setError(pinError(err));
+      setOld("");
       vault.status().then(applyVaultStatus).catch(() => {});
     } finally {
       setBusy(false);
@@ -215,11 +205,25 @@ export function ChangePinForm({ onDone, onCancel }: { onDone: () => void; onCanc
   };
 
   return (
-    <form className="lock-form" onSubmit={(e) => void submit(e)}>
-      <PinInput label="PIN actual" value={old} onChange={setOld} autoFocus />
-      <PinInput label="PIN nuevo" value={pin} onChange={setPin} hint={`Al menos ${MIN_PIN} caracteres.`} />
-      <StrengthMeter pin={pin} />
-      <PinInput label="Repite el PIN nuevo" value={again} onChange={setAgain} />
+    <form
+      className="lock-form"
+      onSubmit={(e: FormEvent) => {
+        e.preventDefault();
+        void change(pin, again);
+      }}
+    >
+      <div className="field">
+        <span>PIN actual</span>
+        <PinField kind={kind} value={old} onChange={setOld} label="PIN actual" autoFocus disabled={busy} />
+      </div>
+      <NewPinPair
+        pin={pin}
+        setPin={setPin}
+        again={again}
+        setAgain={setAgain}
+        onReady={(p, a) => void change(p, a)}
+        disabled={busy}
+      />
       {error && <div className="lock-error">{error}</div>}
       <div className="lock-actions">
         <button type="button" className="btn" onClick={onCancel} disabled={busy}>
@@ -235,24 +239,23 @@ export function ChangePinForm({ onDone, onCancel }: { onDone: () => void; onCanc
 
 /** Quitar el PIN: las contraseñas vuelven al llavero del sistema. */
 export function DisablePinForm({ onDone, onCancel }: { onDone: () => void; onCancel: () => void }) {
+  const kind = useLock((s) => s.status?.pinKind ?? "pin6");
   const [pin, setPin] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const submit = async (e: FormEvent) => {
-    e.preventDefault();
+  const disable = async (p: string) => {
+    if (busy || !p) return;
     setBusy(true);
     setError(null);
     try {
-      const r = await vault.disable(pin);
+      await vault.disable(p);
       applyVaultStatus(await vault.status());
-      toast.success(
-        "PIN desactivado",
-        r.moved === 1 ? "1 contraseña volvió al llavero del sistema." : `${r.moved} contraseñas volvieron al llavero del sistema.`,
-      );
+      toast.success("PIN quitado", "Las contraseñas volvieron al llavero del sistema.");
       onDone();
     } catch (err) {
-      setError(errorMessage(err));
+      setError(pinError(err));
+      setPin("");
       vault.status().then(applyVaultStatus).catch(() => {});
     } finally {
       setBusy(false);
@@ -260,11 +263,18 @@ export function DisablePinForm({ onDone, onCancel }: { onDone: () => void; onCan
   };
 
   return (
-    <form className="lock-form" onSubmit={(e) => void submit(e)}>
-      <p className="lock-text">
-        Las contraseñas guardadas vuelven al llavero del sistema y TerView deja de bloquearse. Escribe tu PIN para confirmar.
-      </p>
-      <PinInput label="PIN actual" value={pin} onChange={setPin} autoFocus />
+    <form
+      className="lock-form"
+      onSubmit={(e: FormEvent) => {
+        e.preventDefault();
+        void disable(pin);
+      }}
+    >
+      <p className="lock-text">Las contraseñas vuelven al llavero del sistema.</p>
+      <div className="field">
+        <span>PIN actual</span>
+        <PinField kind={kind} value={pin} onChange={setPin} label="PIN actual" autoFocus disabled={busy} />
+      </div>
       {error && <div className="lock-error">{error}</div>}
       <div className="lock-actions">
         <button type="button" className="btn" onClick={onCancel} disabled={busy}>

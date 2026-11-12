@@ -11,7 +11,11 @@ export interface VaultStatus {
   locked: boolean;
   /** Segundos que faltan para poder volver a probar un PIN (0 = ya). */
   retryAfterSecs: number;
+  /** Cómo se pide el PIN: "pin6" (6 números) o "text" (bóvedas antiguas con contraseña libre). */
+  pinKind: PinKind;
 }
+
+export type PinKind = "pin6" | "text";
 
 export interface MoveReport {
   /** Contraseñas movidas. */
@@ -20,8 +24,13 @@ export interface MoveReport {
   leftInKeyring: number;
 }
 
-/** Largo mínimo del PIN o contraseña maestra. */
-export const MIN_PIN = 6;
+/** Números del PIN. */
+export const PIN_LENGTH = 6;
+
+/** PIN nuevo válido: exactamente 6 números. */
+export function isValidPin(pin: string): boolean {
+  return new RegExp(`^[0-9]{${PIN_LENGTH}}$`).test(pin);
+}
 
 export const vault = {
   status: () => call<VaultStatus>("vault_status"),

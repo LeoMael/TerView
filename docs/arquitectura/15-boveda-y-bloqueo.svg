@@ -51,8 +51,8 @@
   <!-- PIN -->
   <rect x="60" y="172" width="320" height="88" rx="12" class="mem"/>
   <use href="#i-user" x="74" y="186" width="34" height="34" style="color:#a78bfa"/>
-  <text x="120" y="208" class="b">PIN o frase</text>
-  <text x="120" y="232" class="xs">lo escribes (mínimo 6 caracteres)</text>
+  <text x="120" y="208" class="b">PIN de 6 dígitos</text>
+  <text x="120" y="232" class="xs">solo números; marcado «pin6»</text>
   <text x="120" y="250" class="xs">nunca se guarda</text>
 
   <!-- Llave del equipo -->
@@ -111,7 +111,8 @@
   <text x="1086" y="356" class="xs" style="fill:#facc15">Dentro, cifrado:</text>
   <text x="1086" y="380" class="s" style="fill:#e2e8f0">contraseñas y frases</text>
   <text x="1086" y="400" class="s" style="fill:#e2e8f0">de tus servidores</text>
-  <text x="1086" y="424" class="s" style="fill:#e2e8f0">token de GitHub</text>
+  <text x="1086" y="422" class="s" style="fill:#e2e8f0">contraseñas de sudo</text>
+  <text x="1086" y="444" class="s" style="fill:#e2e8f0">token de GitHub</text>
 
   <!-- vault-attempts.json -->
   <rect x="1340" y="172" width="200" height="292" rx="14" class="disk"/>
@@ -235,8 +236,8 @@
   <text x="1084" y="1040" class="s">ya no lee las contraseñas del llavero,</text>
   <text x="1084" y="1064" class="s">pero podría ver el PIN al escribirlo</text>
   <text x="1084" y="1088" class="s">o la memoria mientras está abierta</text>
-  <text x="1084" y="1128" class="s" style="fill:#e2e8f0">una frase de 4–5 palabras resiste</text>
-  <text x="1084" y="1148" class="s" style="fill:#e2e8f0">los ataques al archivo</text>
+  <text x="1084" y="1128" class="s" style="fill:#e2e8f0">con el archivo y la llave del equipo</text>
+  <text x="1084" y="1148" class="s" style="fill:#e2e8f0">podría probar PIN; Argon2id lo frena</text>
 
   <text x="60" y="1190" style="font-size:16px;fill:#94a3b8">No se cifra aquí: servidores, ajustes ni tus llaves de ~/.ssh (las llaves se protegen con su propia frase).</text>
 </svg>

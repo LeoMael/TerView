@@ -158,8 +158,8 @@ defecto), dividido o ventana aparte.
 
 ## Seguridad
 
-- Las **contraseñas** y frases de llaves se guardan cifradas con tu **PIN** (si lo activas) o en el
-  llavero del sistema (GNOME Keyring o KWallet en Linux, Administrador de credenciales en Windows).
+- Las **contraseñas** (de conexión y de sudo) y frases de llaves se guardan cifradas con tu **PIN**
+  (si lo activas) o en el llavero del sistema (GNOME Keyring o KWallet en Linux, Administrador de credenciales en Windows).
   Nunca en archivos sin cifrar.
 - Si la **huella** de un servidor cambia, TerView bloquea la conexión y te avisa, igual que `ssh`.
 - El editor guarda de forma segura: primero en un archivo temporal y luego lo reemplaza,
@@ -176,30 +176,21 @@ defecto), dividido o ventana aparte.
 
 ### PIN y bloqueo
 
-Al abrir TerView por primera vez te ofrece crear un **PIN** (puedes decir «Ahora no» y activarlo
-después en Ajustes → Seguridad). Con el PIN:
+Al abrir TerView por primera vez te ofrece crear un **PIN de 6 números** («Ahora no» lo deja para
+después). Lo cambias o bloqueas desde el **candado** de la barra de pestañas o en Ajustes → Seguridad.
 
-- Las contraseñas y frases guardadas y el token de GitHub van **cifrados** en `vault.json`. Otros
-  programas ya no pueden leerlos del llavero del sistema.
-- La llave de la bóveda sale de tu PIN **y** de una llave de este equipo que se guarda en el llavero.
-  Si alguien copia solo `vault.json` a otro PC, no puede abrirlo aunque adivine el PIN.
-- TerView se **bloquea** al abrirlo y tras un rato sin uso (15 min por defecto; 5, 10, 30, 60 o nunca),
-  o cuando pulsas `Ctrl+Shift+L`. Se tapan todas las ventanas, también las de editor aparte, y se borran
-  de la memoria las contraseñas descifradas y las de sudo. Las conexiones abiertas siguen vivas; si una
-  se cae, espera a que desbloquees para reconectar con su contraseña guardada.
-- Tras **5 PIN incorrectos** hay que esperar 30 s, luego el doble cada vez, hasta 15 min. La espera se
-  mantiene aunque cierres TerView. Nunca se borra nada por fallar.
-- Un PIN corto de números te protege de alguien sentado en tu PC. Una **frase de 4 o 5 palabras** te
-  protege también si un programa malicioso logra copiar la bóveda y la llave del equipo.
+- Las contraseñas guardadas y el token de GitHub van **cifrados** en `vault.json`, con tu PIN **y** una
+  llave de este equipo (en el llavero). Copiar solo el archivo a otro PC no sirve.
+- TerView se **bloquea** al abrirlo, tras un rato sin uso (15 min por defecto) o con `Ctrl+Shift+L`.
+  Las conexiones siguen abiertas; las contraseñas de sudo en memoria se olvidan.
+- Tras **5 PIN incorrectos** hay que esperar, cada vez más (hasta 15 min). Nunca se borra nada por fallar.
+- No cifra servidores, ajustes ni tus llaves de `~/.ssh`.
 
-Lo que **no** protege: las conexiones abiertas siguen funcionando mientras está bloqueado (solo se tapa
-la pantalla); servidores, ajustes y tus llaves de `~/.ssh` no se cifran aquí; y un programa malicioso
-que ya controla tu usuario podría ver el PIN al escribirlo.
+**Contraseña de sudo:** en el editor de servidor eliges «Pedir cada vez», «La de la conexión» o
+«Guardar» (lo habitual si entras con llave SSH). El botón del ojo muestra la guardada (pide el PIN).
 
-**Si olvidas el PIN:** en la pantalla de bloqueo pulsa **«Olvidé mi PIN»** y escribe `BORRAR`. Se
-borran la bóveda y la llave del equipo: pierdes las contraseñas guardadas y el token de GitHub, pero
-conservas servidores, proyectos, llaves de `~/.ssh`, comandos, túneles, ajustes y tu copia en Gist.
-Después puedes crear un PIN nuevo y volver a escribir las contraseñas cuando TerView te las pida.
+**Si olvidas el PIN:** en la pantalla de bloqueo pulsa **«Olvidé mi PIN»** y escribe `BORRAR`. Pierdes
+las contraseñas guardadas y el token de GitHub; conservas todo lo demás.
 
 ## Solución de problemas
 
