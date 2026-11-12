@@ -109,7 +109,7 @@ pub struct TransferManager {
 }
 
 impl TransferManager {
-    fn engine(&self, app: &AppHandle) -> Arc<Engine> {
+    pub(crate) fn engine(&self, app: &AppHandle) -> Arc<Engine> {
         self.engine
             .get_or_init(|| {
                 let engine = Engine::new(Arc::new(TauriEnv { app: app.clone() }));
@@ -136,6 +136,11 @@ impl TransferManager {
             let id = session_id.to_string();
             tauri::async_runtime::spawn(async move { engine.resume_session(&id) });
         }
+    }
+
+    /// Trabajos de la cola (vacío si aún no se usó).
+    pub fn list(&self) -> Vec<TransferJob> {
+        self.engine.get().map(|e| e.list()).unwrap_or_default()
     }
 
     /// Suelta los canales SFTP de una sesión que se cerró (si el motor ya existe).

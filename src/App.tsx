@@ -20,6 +20,9 @@ import { initTabsListeners, useTabs } from "./stores/tabs";
 import { initTransfersStore } from "./stores/transfers";
 import { initPrivileges } from "./features/privileges";
 import { PinDialogHost } from "./features/lock/PinDialog";
+import { initMcp } from "./features/mcp/store";
+import { ApprovalDialogHost } from "./features/mcp/ApprovalDialog";
+import { McpActivity } from "./components/McpActivity/McpActivity";
 import { useUi } from "./stores/ui";
 import { idleQueue, preloadable } from "./lib/lazy";
 import { isMac, isModKey } from "./lib/platform";
@@ -58,6 +61,7 @@ function initApp() {
   void initTabsListeners();
   void initTransfersStore();
   initPrivileges(); // root / sudo / usuario normal de cada conexión (en segundo plano)
+  initMcp(); // asistentes de IA: permisos, actividad y peticiones del motor
 
   // Recordar servidores usados (para la pantalla de bienvenida).
   useTabs.subscribe((s, prev) => {
@@ -276,6 +280,8 @@ export default function App() {
       <MultiRunHost />
       <GitHubHost />
       <PinDialogHost />
+      <McpActivity />
+      <ApprovalDialogHost />
     </>
   );
 }

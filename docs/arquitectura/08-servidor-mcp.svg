@@ -18,7 +18,7 @@
   </style>
   <rect width="1600" height="900" fill="#0f172a"/>
 
-  <text x="60" y="62" class="t">Servidor MCP <tspan style="font-size:18px;font-weight:600;fill:#facc15">· próximamente</tspan></text>
+  <text x="60" y="62" class="t">Servidor MCP <tspan style="font-size:18px;font-weight:600;fill:#22c55e">· v0.5.0</tspan></text>
   <text x="60" y="94" class="st">Un asistente de IA usa tus servidores a través de TerView, siempre con tu permiso.</text>
 
   <!-- Asistente -->
@@ -34,12 +34,19 @@
   <text x="85" y="438" class="mono" style="font-size:13px;fill:#cbd5e1">list_servers  run_command</text>
   <text x="85" y="460" class="mono" style="font-size:13px;fill:#cbd5e1">read_file     write_file</text>
   <text x="85" y="482" class="mono" style="font-size:13px;fill:#cbd5e1">upload        download</text>
-  <text x="85" y="504" class="mono" style="font-size:13px;fill:#cbd5e1">analyze_server  …</text>
+  <text x="85" y="504" class="mono" style="font-size:13px;fill:#cbd5e1">list_ports  list_containers …</text>
 
   <line x1="394" y1="300" x2="546" y2="300" stroke="#a78bfa" stroke-width="3.5" marker-start="url(#mp)" marker-end="url(#mp)"/>
   <text x="470" y="284" text-anchor="middle" style="font-size:18px;font-weight:700;fill:#a78bfa">MCP</text>
-  <text x="470" y="326" text-anchor="middle" class="s">solo en tu PC</text>
+  <text x="470" y="326" text-anchor="middle" class="s">HTTP 127.0.0.1</text>
   <text x="470" y="344" text-anchor="middle" class="s">+ token</text>
+  <rect x="404" y="372" width="132" height="62" rx="10" fill="#1e1838" stroke="#a78bfa" stroke-dasharray="5 4"/>
+  <text x="470" y="396" text-anchor="middle" class="mono" style="font-size:12px;fill:#c4b5fd">terview-mcp</text>
+  <text x="470" y="416" text-anchor="middle" class="s" style="font-size:12px">puente stdio</text>
+  <line x1="394" y1="403" x2="402" y2="403" stroke="#a78bfa" stroke-width="2"/>
+  <path d="M538,403 C548,403 548,320 548,312" fill="none" stroke="#a78bfa" stroke-width="2" stroke-dasharray="5 4"/>
+  <text x="470" y="458" text-anchor="middle" class="s" style="font-size:12px">si TerView está cerrado:</text>
+  <text x="470" y="476" text-anchor="middle" class="s" style="font-size:12px">«Abre TerView…»</text>
 
   <!-- TerView -->
   <rect x="550" y="140" width="620" height="560" rx="18" fill="#10243a" stroke="#38bdf8" stroke-width="2.5"/>
@@ -48,24 +55,26 @@
 
   <rect x="575" y="200" width="270" height="90" rx="12" fill="#1e293b" stroke="#a78bfa"/>
   <text x="595" y="232" class="b">Servidor MCP</text>
-  <text x="595" y="256" class="s">recibe la petición del</text>
-  <text x="595" y="274" class="s">asistente</text>
+  <text x="595" y="256" class="s">SDK rmcp · token · solo 127.0.0.1</text>
+  <text x="595" y="274" class="s">¿bloqueado con PIN? → rechaza todo</text>
 
   <line x1="710" y1="292" x2="710" y2="318" stroke="#94a3b8" stroke-width="2.5" marker-end="url(#mm)"/>
 
-  <rect x="575" y="322" width="270" height="130" rx="12" fill="#2e2a0e" stroke="#facc15"/>
+  <rect x="575" y="322" width="270" height="150" rx="12" fill="#2e2a0e" stroke="#facc15"/>
   <text x="595" y="352" class="b">Control de permisos</text>
   <circle cx="601" cy="378" r="5" fill="#22c55e"/><text x="614" y="383" class="s">Lectura: pasa</text>
   <circle cx="601" cy="404" r="5" fill="#facc15"/><text x="614" y="409" class="s">Cambios: te pregunta</text>
   <circle cx="601" cy="430" r="5" fill="#f43f5e"/><text x="614" y="435" class="s">Peligroso: siempre pregunta</text>
+  <circle cx="601" cy="456" r="5" fill="#64748b"/><text x="614" y="461" class="s">Sin respuesta a tiempo: se deniega</text>
 
-  <line x1="710" y1="454" x2="710" y2="480" stroke="#94a3b8" stroke-width="2.5" marker-end="url(#mm)"/>
+  <line x1="710" y1="474" x2="710" y2="500" stroke="#94a3b8" stroke-width="2.5" marker-end="url(#mm)"/>
 
-  <rect x="575" y="484" width="270" height="110" rx="12" fill="#2a1a10" stroke="#f97316"/>
-  <text x="595" y="514" class="b">Motor TerView</text>
-  <text x="595" y="538" class="s">SSH · SFTP · transferencias</text>
-  <text x="595" y="558" class="s">biblioteca de comandos</text>
-  <text x="595" y="578" class="s">(usa tus conexiones guardadas)</text>
+  <rect x="575" y="504" width="270" height="130" rx="12" fill="#2a1a10" stroke="#f97316"/>
+  <text x="595" y="534" class="b">Motor TerView</text>
+  <text x="595" y="558" class="s">SSH · SFTP · transferencias</text>
+  <text x="595" y="578" class="s">biblioteca de comandos</text>
+  <text x="595" y="598" class="s">(usa tus conexiones abiertas;</text>
+  <text x="595" y="618" class="s">connect abre una pestaña)</text>
 
   <path d="M847,380 C870,380 870,250 880,250" fill="none" stroke="#facc15" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#my)"/>
 
@@ -87,7 +96,7 @@
   <circle cx="908" cy="552" r="5" fill="#22c55e"/><text x="920" y="557" class="mono" style="font-size:12px">podman logs web</text><text x="1132" y="557" text-anchor="end" class="s" style="font-size:11px">lectura</text>
   <circle cx="908" cy="580" r="5" fill="#22c55e"/><text x="920" y="585" class="mono" style="font-size:12px">df -h</text><text x="1132" y="585" text-anchor="end" class="s" style="font-size:11px">lectura</text>
   <circle cx="908" cy="608" r="5" fill="#facc15"/><text x="920" y="613" class="mono" style="font-size:12px">podman restart web</text><text x="1132" y="613" text-anchor="end" class="s" style="font-size:11px">aprobado</text>
-  <text x="902" y="660" class="s" style="font-size:12px">Guardado en mcp-audit.log</text>
+  <text x="902" y="660" class="s" style="font-size:12px">Guardado en mcp-audit.jsonl</text>
 
   <!-- servidores -->
   <line x1="1170" y1="325" x2="1256" y2="325" stroke="#22c55e" stroke-width="3" marker-end="url(#mg)"/>
@@ -119,8 +128,8 @@
 
   <rect x="800" y="740" width="340" height="110" rx="14" fill="#111827" stroke="#334155"/>
   <text x="824" y="776" class="b">Las contraseñas no salen</text>
-  <text x="824" y="802" class="s">El asistente usa conexiones,</text>
-  <text x="824" y="822" class="s">nunca ve credenciales ni llaves.</text>
+  <text x="824" y="802" class="s">El asistente usa conexiones, nunca</text>
+  <text x="824" y="822" class="s">credenciales. Bloqueado: no hace nada.</text>
 
   <rect x="1170" y="740" width="370" height="110" rx="14" fill="#111827" stroke="#334155"/>
   <text x="1194" y="776" class="b">Todo queda registrado</text>

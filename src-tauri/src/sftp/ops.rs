@@ -160,6 +160,38 @@ pub async fn read_text(s: &SftpSession, path: &str, max_bytes: u64) -> OpResult<
     })
 }
 
+/// Trozo de un archivo: hasta `max_bytes` desde `offset` (para el asistente: sin error si es grande).
+pub async fn read_part(s: &SftpSession, path: &str, offset: u64, max_bytes: u64) -> OpResult<FilePart> {
+    use tokio::io::AsyncSeekExt;
+    let p = absolute(s, path).await?;
+    let attrs = s.metadata(p.as_str()).await.ctx(&p)?;
+    match util::kind_of(attrs.permissions) {
+        FileKind::Dir => return Err(invalid(format!("«{}» es una carpeta", util::basename(&p)))),
+        FileKind::Other => return Err(invalid(format!("«{}» no es un archivo normal", util::basename(&p)))),
+        _ => {}
+    }
+    let size = attrs.size.unwrap_or(0);
+    let mut file = s.open(p.as_str()).await.ctx(&p)?;
+    if offset > 0 {
+        file.seek(std::io::SeekFrom::Start(offset)).await.ctx(&p)?;
+    }
+    let mut buf = Vec::new();
+    let mut limited = file.take(max_bytes);
+    limited.read_to_end(&mut buf).await.ctx(&p)?;
+    let file = limited.into_inner();
+    let _ = file.close().await;
+    Ok(FilePart { path: p, size, offset, data: buf })
+}
+
+/// Resultado de [`read_part`].
+pub struct FilePart {
+    pub path: String,
+    /// Tamaño total del archivo.
+    pub size: u64,
+    pub offset: u64,
+    pub data: Vec<u8>,
+}
+
 // ───────────────────────── Creación / cambios ─────────────────────────
 
 pub async fn mkdir(s: &SftpSession, path: &str) -> OpResult<()> {

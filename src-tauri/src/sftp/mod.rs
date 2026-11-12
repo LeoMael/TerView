@@ -25,6 +25,8 @@ use crate::types::{FileEntry, RemoteText};
 
 use util::{Fail, OpResult};
 
+pub use ops::FilePart;
+
 const POSIX_RENAME: &str = "posix-rename@openssh.com";
 
 /// Canal "crudo" usado solo para extensiones que la API de alto nivel no expone
@@ -209,6 +211,10 @@ impl SftpStore {
         with_sftp!(self, ssh, |s| ops::read_text(&s, path, max_bytes).await)
     }
 
+    /// Hasta `max_bytes` desde `offset`, sin error si el archivo es más grande (asistente MCP).
+    pub async fn read_part(&self, ssh: &Arc<SshSession>, path: &str, offset: u64, max_bytes: u64) -> AppResult<ops::FilePart> {
+        with_sftp!(self, ssh, |s| ops::read_part(&s, path, offset, max_bytes).await)
+    }
     pub async fn write_text(&self, ssh: &Arc<SshSession>, path: &str, content: &str) -> AppResult<FileEntry> {
         with_sftp!(self, ssh, |s| ops::write_text(self, ssh, &s, path, content).await)
     }
