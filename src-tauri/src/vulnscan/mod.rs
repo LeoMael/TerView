@@ -15,7 +15,8 @@
 //! - `commands`: comandos Tauri; `scan`: análisis completo sin sudo desde el motor (pruebas, MCP).
 //!
 //! Para reutilizar desde otros módulos: [`store::latest_report`] (último informe de un servidor) y
-//! [`scan::scan_session`] (analizar por una sesión SSH abierta, sin sudo).
+//! [`scan::scan_session`] (analizar por una sesión SSH abierta, sin sudo). El servidor MCP los usa en
+//! `get_vuln_report` y `scan_vulnerabilities` (`mcp/core.rs`).
 
 pub mod analyze;
 pub mod cache;
@@ -25,8 +26,7 @@ pub mod export;
 pub mod model;
 pub mod osv;
 pub mod parse;
-// API para el futuro servidor MCP (`scan_vulnerabilities`) y para las pruebas: aún sin conectar.
-#[allow(dead_code)]
+// Lo usan el servidor MCP (`scan_vulnerabilities`) y las pruebas.
 pub mod scan;
 pub mod scripts;
 pub mod settings;

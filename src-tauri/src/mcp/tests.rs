@@ -18,6 +18,7 @@ use super::backend::Backend;
 use super::config::{McpConfig, McpConfigStore};
 use super::core::{CatalogEntry, McpCore, ToolOutput, DISABLED_MSG, LOCKED_MSG};
 use super::policy::{self, Access, Action, Verdict};
+use super::vuln::fixtures as vuln_fixtures;
 use super::{bridge, diff, http, template};
 use crate::error::{AppError, AppResult};
 use crate::sftp::FilePart;
@@ -25,6 +26,9 @@ use crate::types::{
     AuthMethod, ExecResult, FileEntry, FileKind, ProfilesData, Project, ServerProfile, SessionInfo, Snippet,
     TransferJob,
 };
+use crate::vulnscan::model::{Report, Severity};
+use crate::vulnscan::scan::ScanOptions;
+use crate::vulnscan::VulnScanSettings;
 
 // ───────────────────────── Motor simulado ─────────────────────────
 
@@ -47,6 +51,13 @@ struct Mock {
     stdout: Mutex<String>,
     files: Mutex<HashMap<String, String>>,
     ui_calls: Mutex<Vec<String>>,
+    /// Escáner: ajustes, último informe guardado, cuánto tarda un análisis y lo que se pidió.
+    vuln_settings: Mutex<VulnScanSettings>,
+    vuln_saved: Mutex<HashMap<String, Report>>,
+    scan_takes: Mutex<Duration>,
+    scans: Mutex<Vec<(String, ScanOptions)>>,
+    /// Análisis en curso por exec_id (para `cancel_exec`, el «Detener» del panel).
+    scan_stops: Mutex<HashMap<String, CancellationToken>>,
 }
 
 fn server(id: &str, name: &str) -> ServerProfile {
@@ -99,6 +110,11 @@ impl Mock {
             stdout: Mutex::new("hola\n".into()),
             files: Mutex::new(HashMap::new()),
             ui_calls: Mutex::new(Vec::new()),
+            vuln_settings: Mutex::new(VulnScanSettings::default()),
+            vuln_saved: Mutex::new(HashMap::new()),
+            scan_takes: Mutex::new(Duration::from_secs(5)),
+            scans: Mutex::new(Vec::new()),
+            scan_stops: Mutex::new(HashMap::new()),
         }
     }
 }
@@ -139,8 +155,14 @@ impl Backend for Mock {
             timed_out: false,
         })
     }
-    fn cancel_exec(&self, _id: &str) -> bool {
-        false
+    fn cancel_exec(&self, id: &str) -> bool {
+        match self.scan_stops.lock().unwrap().get(id) {
+            Some(t) => {
+                t.cancel();
+                true
+            }
+            None => false,
+        }
     }
     async fn list_dir(&self, _sid: &str, path: &str) -> AppResult<Vec<FileEntry>> {
         Ok(vec![entry(&format!("{path}/a.txt"), 3)])
@@ -171,6 +193,36 @@ impl Backend for Mock {
     }
     fn snippets(&self) -> Vec<Snippet> {
         Vec::new()
+    }
+    fn vuln_settings(&self) -> VulnScanSettings {
+        self.vuln_settings.lock().unwrap().clone()
+    }
+    async fn vuln_latest(&self, server_id: &str) -> AppResult<Option<Report>> {
+        Ok(self.vuln_saved.lock().unwrap().get(server_id).cloned())
+    }
+    async fn vuln_scan(&self, sid: &str, opts: ScanOptions, exec_id: &str, cancel: &CancellationToken) -> AppResult<Report> {
+        self.scans.lock().unwrap().push((sid.to_string(), opts.clone()));
+        self.scan_stops.lock().unwrap().insert(exec_id.to_string(), cancel.clone());
+        let takes = *self.scan_takes.lock().unwrap();
+        let finished = tokio::select! {
+            () = tokio::time::sleep(takes) => true,
+            () = cancel.cancelled() => false,
+        };
+        self.scan_stops.lock().unwrap().remove(exec_id);
+        if !finished {
+            return Err(AppError::Canceled);
+        }
+        let mut r = vuln_fixtures::report(vec![
+            vuln_fixtures::finding("CVE-2024-0001", Severity::Critical, true, Some(9.8)),
+            vuln_fixtures::finding("CVE-2024-0002", Severity::Low, false, None),
+        ]);
+        r.server_id = opts.server_id.clone();
+        r.summary.critical = 1;
+        r.summary.low = 1;
+        if opts.save {
+            self.vuln_saved.lock().unwrap().insert(opts.server_id.clone(), r.clone());
+        }
+        Ok(r)
     }
     async fn ui_request(&self, kind: &str, _payload: Value, _t: Duration) -> AppResult<Value> {
         self.ui_calls.lock().unwrap().push(kind.to_string());
@@ -895,4 +947,158 @@ fn sse_parser() {
     let mut p = bridge::SseParser::default();
     assert!(p.push(&msg[..cut]).is_empty());
     assert_eq!(p.push(&msg[cut..]), vec![r#"{"t":"ñandú"}"#.to_string()]);
+}
+
+// ───────────────────────── Vulnerabilidades ─────────────────────────
+
+fn scans(core: &McpCore<Mock>) -> usize {
+    core.backend.scans.lock().unwrap().len()
+}
+
+#[tokio::test]
+async fn vuln_report_is_a_read_with_access_rules() {
+    let core = core();
+    // Sin informe: no es un error; dice cómo conseguir uno. No pregunta nada (es lectura).
+    let out = call(&core, "get_vuln_report", json!({ "server": "db-server" })).await;
+    assert!(!out.is_error, "{}", out.text);
+    assert!(out.text.contains("no tiene ningún análisis") && out.text.contains("scan_vulnerabilities"), "{}", out.text);
+
+    let mut r = vuln_fixtures::report(
+        (0..30).map(|i| vuln_fixtures::finding(&format!("CVE-2024-{i:04}"), Severity::High, true, Some(7.5))).collect(),
+    );
+    r.summary.high = 30;
+    core.backend.vuln_saved.lock().unwrap().insert("s-read".into(), r);
+    let out = call(&core, "get_vuln_report", json!({ "server": "db-server", "limit": 5 })).await;
+    assert!(!out.is_error, "{}", out.text);
+    let v: Value = serde_json::from_str(&out.text).unwrap();
+    assert_eq!(v["server"], "db-server");
+    assert_eq!(v["summary"]["high"], 30);
+    assert_eq!(v["topFindings"].as_array().unwrap().len(), 5, "resumido, no el informe entero");
+    assert_eq!(v["of"], 30);
+    assert_eq!(asked(&core), 0);
+    // No necesita conexión: lee el historial de este PC.
+    let no_sessions = Mock { sessions: vec![], ..Mock::new() };
+    no_sessions.vuln_saved.lock().unwrap().insert("s-full".into(), vuln_fixtures::report(vec![]));
+    let core2 = core_with(no_sessions, config());
+    let out = call(&core2, "get_vuln_report", json!({ "server": "web-prod" })).await;
+    assert!(!out.is_error, "{}", out.text);
+
+    // Sin acceso: rechazado y sin leer nada.
+    let out = call(&core, "get_vuln_report", json!({ "server": "vps-personal" })).await;
+    assert!(out.is_error && out.text.contains("no tiene acceso"), "{}", out.text);
+    let log = core.audit.list();
+    assert!(log.iter().any(|e| e.tool == "get_vuln_report" && e.status == AuditStatus::Denied));
+    assert!(log.iter().any(|e| e.tool == "get_vuln_report" && e.approved_by.as_deref() == Some(policy::AUTO_READ)));
+}
+
+#[tokio::test(start_paused = true)]
+async fn vuln_scan_asks_once_then_always_even_read_only() {
+    let core = core();
+    core.backend.vuln_settings.lock().unwrap().use_osv = false;
+    set_answer(&core, Answer::Give(Decision::Always));
+    // Servidor de solo lectura: permitido, pero con permiso.
+    let out = call(&core, "scan_vulnerabilities", json!({ "server": "db-server" })).await;
+    assert!(!out.is_error, "{}", out.text);
+    assert_eq!(asked(&core), 1);
+    let req = core.backend.asked.lock().unwrap()[0].clone();
+    assert_eq!(req.tool, "scan_vulnerabilities");
+    assert!(req.can_remember, "se ofrece «Permitir siempre»");
+    assert!(req.command.contains("SIN sudo") && req.command.contains("deploy"), "{}", req.command);
+    assert!(!req.command.contains("OSV"), "OSV apagado en Ajustes: no se menciona: {}", req.command);
+    // Resumen: recuento y la lista principal.
+    let v: Value = serde_json::from_str(&out.text).unwrap();
+    assert_eq!(v["summary"]["critical"], 1);
+    assert_eq!(v["topFindings"][0]["id"], "CVE-2024-0001");
+    // Opciones: las de Ajustes, sin sudo, guardando el informe, con la conexión del servidor.
+    let (sid, opts) = core.backend.scans.lock().unwrap()[0].clone();
+    assert_eq!(sid, "ss-read");
+    assert!(!opts.use_osv && opts.save && opts.server_id == "s-read");
+
+    // Segunda vez: regla «siempre», sin preguntar.
+    let out = call(&core, "scan_vulnerabilities", json!({ "server": "db-server" })).await;
+    assert!(!out.is_error, "{}", out.text);
+    assert_eq!(asked(&core), 1);
+    assert_eq!(scans(&core), 2);
+    let log = core.audit.list();
+    assert!(log.iter().any(|e| e.tool == "scan_vulnerabilities" && e.approved_by.as_deref() == Some(policy::REMEMBERED)));
+    // Y queda como último informe.
+    let out = call(&core, "get_vuln_report", json!({ "server": "db-server" })).await;
+    assert!(out.text.contains("CVE-2024-0001"), "{}", out.text);
+}
+
+#[tokio::test]
+async fn vuln_scan_denied_or_without_connection() {
+    let core = core();
+    set_answer(&core, Answer::Give(Decision::Deny));
+    let out = call(&core, "scan_vulnerabilities", json!({ "server": "web-prod" })).await;
+    assert!(out.is_error && out.text.contains("denegó"), "{}", out.text);
+    assert_eq!(scans(&core), 0);
+    let out = call(&core, "scan_vulnerabilities", json!({ "server": "vps-personal" })).await;
+    assert!(out.is_error && out.text.contains("no tiene acceso"), "{}", out.text);
+
+    let core = core_with(Mock { sessions: vec![], ..Mock::new() }, config());
+    let out = call(&core, "scan_vulnerabilities", json!({ "server": "web-prod" })).await;
+    assert!(out.is_error && out.text.contains("connect"), "{}", out.text);
+    assert_eq!(asked(&core), 0);
+}
+
+#[tokio::test(start_paused = true)]
+async fn vuln_scan_has_a_time_limit() {
+    let core = core();
+    *core.backend.scan_takes.lock().unwrap() = Duration::from_secs(3600);
+    // Por debajo del mínimo: se usan 60 s.
+    let out = call(&core, "scan_vulnerabilities", json!({ "server": "web-prod", "timeout_secs": 1 })).await;
+    assert!(out.is_error && out.text.contains("pasó de 60 s") && out.text.contains("se detuvo"), "{}", out.text);
+    assert!(core.backend.scan_stops.lock().unwrap().is_empty(), "el análisis se detuvo");
+    assert!(core.backend.vuln_saved.lock().unwrap().is_empty());
+    let last = core.audit.list().into_iter().find(|e| e.tool == "scan_vulnerabilities").unwrap();
+    assert_eq!(last.status, AuditStatus::Error);
+}
+
+#[tokio::test(start_paused = true)]
+async fn vuln_scan_cancel_and_one_at_a_time() {
+    let core = core();
+    *core.backend.scan_takes.lock().unwrap() = Duration::from_secs(300);
+    let first = call(&core, "scan_vulnerabilities", json!({ "server": "web-prod" }));
+    let second = async {
+        // Espera a que el primero esté analizando.
+        while core.backend.scan_stops.lock().unwrap().is_empty() {
+            tokio::time::sleep(Duration::from_millis(10)).await;
+        }
+        let busy = call(&core, "scan_vulnerabilities", json!({ "server": "web-prod" })).await;
+        // «Detener» del panel de actividad: cancel_exec con el exec_id del análisis.
+        let id = core.backend.scan_stops.lock().unwrap().keys().next().cloned().unwrap();
+        assert!(core.backend.cancel_exec(&id));
+        busy
+    };
+    let (first, busy) = tokio::join!(first, second);
+    assert!(busy.is_error && busy.text.contains("en curso"), "{}", busy.text);
+    assert!(first.is_error && first.text.contains("Se canceló el análisis"), "{}", first.text);
+    assert_eq!(scans(&core), 1);
+
+    // El cliente cancela la petición: también se detiene.
+    let ct = CancellationToken::new();
+    let c2 = ct.clone();
+    let (out, ()) = tokio::join!(
+        core.call("scan_vulnerabilities", json!({ "server": "web-prod" }), None, ct),
+        async move {
+            tokio::time::sleep(Duration::from_secs(5)).await;
+            c2.cancel();
+        }
+    );
+    assert!(out.is_error && out.text.contains("Se canceló"), "{}", out.text);
+    // Ya no está «en curso»: se puede volver a analizar.
+    *core.backend.scan_takes.lock().unwrap() = Duration::from_secs(1);
+    let out = call(&core, "scan_vulnerabilities", json!({ "server": "web-prod" })).await;
+    assert!(!out.is_error, "{}", out.text);
+}
+
+#[test]
+fn vuln_tools_are_announced_as_reads() {
+    let tools = super::server::tools();
+    for name in ["get_vuln_report", "scan_vulnerabilities"] {
+        let t = tools.iter().find(|t| t.name == name).unwrap_or_else(|| panic!("falta {name}"));
+        assert_eq!(t.annotations.as_ref().and_then(|a| a.read_only_hint), Some(true), "{name}");
+    }
+    assert_eq!(tools.len(), 19);
 }

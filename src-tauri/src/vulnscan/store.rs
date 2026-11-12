@@ -118,9 +118,8 @@ impl History {
     }
 }
 
-/// Último informe de un servidor (para reutilizar desde otros módulos, p. ej. el servidor MCP
-/// como `get_vuln_report`). None si nunca se analizó.
-#[allow(dead_code)] // API para el futuro servidor MCP (aún sin conectar).
+/// Último informe de un servidor (lo usa el servidor MCP en `get_vuln_report`). None si nunca se
+/// analizó.
 pub fn latest_report(server_id: &str) -> AppResult<Option<Report>> {
     History::system().latest(server_id)
 }

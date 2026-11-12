@@ -184,8 +184,9 @@ defecto), dividido o ventana aparte.
 Al abrir TerView por primera vez te ofrece crear un **PIN de 6 números** («Ahora no» lo deja para
 después). Lo cambias o bloqueas desde el **candado** de la barra de pestañas o en Ajustes → Seguridad.
 
-- Las contraseñas guardadas y el token de GitHub van **cifrados** en `vault.json`, con tu PIN **y** una
-  llave de este equipo (en el llavero). Copiar solo el archivo a otro PC no sirve.
+- Las contraseñas guardadas y los tokens (GitHub, asistentes de IA e IA de informes) van **cifrados**
+  en `vault.json`, con tu PIN **y** una llave de este equipo (en el llavero). Copiar solo el archivo a
+  otro PC no sirve.
 - TerView se **bloquea** al abrirlo, tras un rato sin uso (15 min por defecto) o con `Ctrl+Shift+L`.
   Las conexiones siguen abiertas; las contraseñas de sudo en memoria se olvidan.
 - Tras **5 PIN incorrectos** hay que esperar, cada vez más (hasta 15 min). Nunca se borra nada por fallar.
@@ -195,7 +196,8 @@ después). Lo cambias o bloqueas desde el **candado** de la barra de pestañas o
 «Guardar» (lo habitual si entras con llave SSH). El botón del ojo muestra la guardada (pide el PIN).
 
 **Si olvidas el PIN:** en la pantalla de bloqueo pulsa **«Olvidé mi PIN»** y escribe `BORRAR`. Pierdes
-las contraseñas guardadas y el token de GitHub; conservas todo lo demás.
+las contraseñas guardadas y los tokens (GitHub, asistentes de IA e IA de informes); conservas todo lo
+demás. El token del MCP se crea de nuevo: vuelve a copiar la configuración en tu asistente.
 
 ## Usar TerView con un asistente de IA (MCP)
 
@@ -213,6 +215,19 @@ a través de TerView. Usa las conexiones que ya tienes y **nunca ve tus contrase
    Para Claude Desktop, TerView te da el bloque JSON para `claude_desktop_config.json`.
 4. Deja TerView abierto y pide algo al asistente, por ejemplo: «revisa por qué se cayó el contenedor
    web en web-prod».
+
+Qué puede hacer el asistente (siempre dentro del acceso que le diste):
+
+| Herramientas | Qué hacen | Permiso |
+|--------------|-----------|---------|
+| `list_servers`, `list_projects`, `list_sessions` | Ver tus servidores, proyectos y conexiones (sin contraseñas) | Pasa solo |
+| `connect` | Abrir una conexión (aparece como pestaña) | Te pregunta |
+| `run_command`, `run_catalog_command`, `list_catalog` | Ejecutar comandos o los de la Biblioteca | Te pregunta (los 📊 de solo lectura pasan solos) |
+| `list_dir`, `stat`, `read_file` | Explorar y leer archivos | Pasa solo |
+| `write_file`, `upload`, `download`, `transfer_status` | Guardar archivos y transferir | Te pregunta (con las diferencias) |
+| `list_ports`, `list_sites`, `list_containers` | Puertos, sitios web y contenedores | Pasa solo |
+| `get_vuln_report` | Último análisis de vulnerabilidades guardado, resumido | Pasa solo |
+| `scan_vulnerabilities` | Analizar ahora, sin sudo (tarda minutos; consulta OSV.dev desde tu PC) | Te pregunta la primera vez; puedes elegir «Permitir siempre» |
 
 Qué esperar:
 - Lo que solo **lee** (listar, leer archivos, ver logs) pasa solo.
@@ -342,6 +357,8 @@ src-tauri/src/    Motor (Rust)
   storage/        Servidores, ajustes, llavero, ~/.ssh/config
   snippets/       Mis comandos y ejecución con captura
   mcp/            Servidor MCP para asistentes de IA (permisos, aprobación, registro)
+  vulnscan/       Escáner de vulnerabilidades (scripts, OSV.dev, herramientas de la distro, historial)
+  ai/             IA opcional que solo explica los informes del escáner
   bin/            terview-mcp: puente stdio hacia la app abierta
 docs/             Arquitectura, diagramas, pendientes y catálogo de comandos
 ```

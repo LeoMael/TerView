@@ -30,6 +30,9 @@ use crate::snippets::{exec, ExecRegistry};
 use crate::ssh::connect::testutil::{connect_test_server, test_profile};
 use crate::ssh::SessionStore;
 use crate::types::{ExecResult, FileEntry, ProfilesData, SessionInfo, Snippet, TransferJob};
+use crate::vulnscan::model::Report;
+use crate::vulnscan::scan::ScanOptions;
+use crate::vulnscan::VulnScanSettings;
 
 const TOKEN: &str = "tv_e2e";
 
@@ -40,6 +43,8 @@ struct Real {
     registry: ExecRegistry,
     data: ProfilesData,
     asked: Mutex<Vec<ApprovalRequest>>,
+    /// Último informe de vulnerabilidades (en memoria: las pruebas no tocan el historial real).
+    vuln_saved: Mutex<Option<Report>>,
 }
 
 impl Backend for Real {
@@ -88,6 +93,23 @@ impl Backend for Real {
     fn snippets(&self) -> Vec<Snippet> {
         Vec::new()
     }
+    fn vuln_settings(&self) -> VulnScanSettings {
+        VulnScanSettings::default()
+    }
+    async fn vuln_latest(&self, _: &str) -> AppResult<Option<Report>> {
+        Ok(self.vuln_saved.lock().unwrap().clone())
+    }
+    async fn vuln_scan(&self, sid: &str, mut opts: ScanOptions, exec_id: &str, cancel: &CancellationToken) -> AppResult<Report> {
+        let ticket = self.registry.register(exec_id)?;
+        let s = self.sessions.get(sid).await?;
+        let keep = opts.save;
+        opts.save = false;
+        let r = super::backend::scan_with_stop(&s, &opts, cancel, &ticket.token).await?;
+        if keep {
+            *self.vuln_saved.lock().unwrap() = Some(r.clone());
+        }
+        Ok(r)
+    }
     async fn ui_request(&self, _: &str, _: Value, _: Duration) -> AppResult<Value> {
         Ok(json!([]))
     }
@@ -130,6 +152,7 @@ async fn start() -> Env {
         registry: ExecRegistry::default(),
         data: ProfilesData { servers: vec![profile], projects: vec![] },
         asked: Mutex::new(Vec::new()),
+        vuln_saved: Mutex::new(None),
     };
     let core = Arc::new(McpCore::new(real, McpConfigStore::in_memory(cfg), AuditLog::at(None)));
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
@@ -166,7 +189,7 @@ async fn rmcp_client_end_to_end() {
     assert_eq!(info.server_info.as_ref().map(|s| s.name.as_str()), Some("terview"));
 
     let tools = client.list_all_tools().await.unwrap();
-    assert!(tools.len() >= 17, "{}", tools.len());
+    assert!(tools.len() >= 19, "{}", tools.len());
     let run = tools.iter().find(|t| t.name == "run_command").unwrap();
     assert_eq!(run.annotations.as_ref().and_then(|a| a.read_only_hint), Some(false));
 
@@ -254,7 +277,7 @@ async fn raw_jsonrpc_end_to_end() {
     let r = post(json!({ "jsonrpc": "2.0", "method": "notifications/initialized" })).await.unwrap();
     assert_eq!(r.status().as_u16(), 202);
     let v: Value = post(json!({ "jsonrpc": "2.0", "id": 2, "method": "tools/list" })).await.unwrap().json().await.unwrap();
-    assert!(v["result"]["tools"].as_array().unwrap().len() >= 17);
+    assert!(v["result"]["tools"].as_array().unwrap().len() >= 19);
     let v: Value = post(json!({ "jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": {
         "name": "list_servers", "arguments": {} } }))
     .await
@@ -313,5 +336,48 @@ async fn stdio_bridge_end_to_end() {
     assert!(done.load(Ordering::SeqCst));
     let log = env.core.audit.list();
     assert!(log[0].client.as_deref().unwrap_or("").contains("puente-e2e"));
+    env.cleanup().await;
+}
+
+/// Vulnerabilidades por MCP contra el servidor de pruebas (Alpine, sin sudo; consulta OSV.dev, necesita
+/// red): sin informe → análisis con permiso → resumen → último informe.
+#[tokio::test]
+#[ignore]
+async fn vuln_tools_end_to_end() {
+    let env = start().await;
+    let url = format!("http://127.0.0.1:{}/mcp", env.port);
+    let transport = StreamableHttpClientTransport::from_config(StreamableHttpClientTransportConfig::with_uri(url).auth_header(TOKEN));
+    let client = ClientConfig::default().serve(transport).await.expect("initialize");
+    let call = |name: &'static str, args: Value| {
+        let args = args.as_object().cloned().unwrap_or_default();
+        CallToolRequestParams::new(name).with_arguments(args)
+    };
+
+    let r = client.call_tool(call("get_vuln_report", json!({ "server": "test-profile" }))).await.unwrap();
+    assert_ne!(r.is_error, Some(true));
+    assert!(text_of(&r).contains("no tiene ningún análisis"), "{}", text_of(&r));
+
+    let r = client
+        .call_tool(call("scan_vulnerabilities", json!({ "server": "test-profile", "limit": 5 })))
+        .await
+        .unwrap();
+    let text = text_of(&r);
+    assert_ne!(r.is_error, Some(true), "{text}");
+    let v: Value = serde_json::from_str(&text).unwrap();
+    assert!(v["os"].as_str().unwrap_or("").to_lowercase().contains("alpine"), "{text}");
+    assert_eq!(v["withSudo"], false);
+    assert!(v["summary"]["total"].is_u64());
+    assert!(v["topFindings"].as_array().unwrap().len() <= 5);
+    assert!(v["sources"].as_array().unwrap().iter().any(|s| s["name"] == "OSV.dev" && s["used"] == true), "{text}");
+    eprintln!("scan_vulnerabilities: {}", v["summary"]["text"]);
+
+    let asked = env.core.backend.asked.lock().unwrap().clone();
+    assert!(asked.iter().any(|a| a.tool == "scan_vulnerabilities" && a.can_remember));
+
+    let r = client.call_tool(call("get_vuln_report", json!({ "server": "test-profile" }))).await.unwrap();
+    let v2: Value = serde_json::from_str(&text_of(&r)).unwrap();
+    assert_eq!(v2["reportId"], v["reportId"]);
+
+    let _ = client.cancel().await;
     env.cleanup().await;
 }

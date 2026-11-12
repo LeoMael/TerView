@@ -45,6 +45,7 @@ function alwaysLabel(r: McpApprovalRequest): string {
   if (r.tool === "run_command" || r.tool === "run_catalog_command") return "Permitir siempre este comando en este servidor";
   if (r.tool === "write_file") return "Permitir siempre en este archivo";
   if (r.tool === "connect") return "Permitir siempre conectar";
+  if (r.tool === "scan_vulnerabilities") return "Permitir siempre analizar este servidor";
   return "Permitir siempre esto en este servidor";
 }
 

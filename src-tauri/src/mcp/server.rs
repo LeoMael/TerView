@@ -15,14 +15,16 @@ use super::backend::Backend;
 use super::core::{
     CatalogListParams, CatalogRunParams, ConnectParams, DownloadParams, ListDirParams, McpCore, NoParams,
     PathParams, ReadFileParams, RunCommandParams, ServerParams, TransferStatusParams, UploadParams,
-    WriteFileParams,
+    VulnReportParams, VulnScanParams, WriteFileParams,
 };
 
 const INSTRUCTIONS: &str = "TerView da acceso a los servidores SSH que el usuario guardó en la app, sin \
 mostrar contraseñas ni llaves. Empieza con list_servers. Para trabajar en un servidor hace falta una \
 conexión abierta (connect abre una pestaña en TerView). Las lecturas pasan solas; todo lo que cambia algo \
 (run_command, write_file, upload…) muestra un diálogo en TerView y espera a que el usuario lo permita. \
-Prefiere run_catalog_command con comandos de solo lectura (ver list_catalog) para diagnosticar.";
+Prefiere run_catalog_command con comandos de solo lectura (ver list_catalog) para diagnosticar. \
+Para vulnerabilidades, mira primero get_vuln_report (último informe guardado) y usa scan_vulnerabilities \
+solo si no hay informe o es viejo: tarda minutos y pide permiso.";
 
 /// Una herramienta: nombre, descripción, esquema de parámetros y si solo lee.
 fn tool<T: rmcp::schemars::JsonSchema + 'static>(name: &'static str, description: &'static str, read_only: bool) -> Tool {
@@ -55,6 +57,8 @@ pub fn tools() -> Vec<Tool> {
         tool::<ServerParams>("list_ports", "Puertos en escucha del servidor (TCP/UDP) con su proceso, servicio o contenedor.", true),
         tool::<ServerParams>("list_sites", "Sitios web de nginx o Caddy del servidor: dominios, puertos, destinos y certificados.", true),
         tool::<ServerParams>("list_containers", "Contenedores de Podman y/o Docker del servidor con su estado, imagen y puertos.", true),
+        tool::<VulnReportParams>("get_vuln_report", "Último análisis de vulnerabilidades guardado del servidor (hecho en TerView o con scan_vulnerabilities): recuento por gravedad, fuentes y las vulnerabilidades más graves (limit, por defecto 20). No necesita conexión.", true),
+        tool::<VulnScanParams>("scan_vulnerabilities", "Analiza ahora las vulnerabilidades del servidor sin sudo (paquetes, programas e imágenes de contenedores; OSV.dev, la herramienta de la distro y Trivy). No cambia el servidor, pero tarda minutos: pide permiso la primera vez. Devuelve el mismo resumen que get_vuln_report y guarda el informe.", true),
     ]
 }
 

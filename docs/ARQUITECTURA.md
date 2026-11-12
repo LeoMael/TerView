@@ -75,8 +75,8 @@ La app tiene dos mitades dentro del mismo programa:
 
 | Almacén | Qué guarda | Formato | Dónde | ¿Cifrado? | Quién lo lee y escribe |
 |---------|------------|---------|-------|-----------|------------------------|
-| **Llavero del sistema** | Servicio `terview`. **Con bóveda:** solo la llave del equipo (usuario `vault-device-key`, 32 bytes al azar). **Sin bóveda:** además la contraseña o frase de cada servidor (usuario = id del servidor), su contraseña de sudo guardada (usuario `<id>:sudo`), el token de GitHub (usuario `github-token`) y el token de los asistentes de IA (usuario `mcp-token`). | Entradas del llavero | Linux: Secret Service (GNOME Keyring / KWallet) · Windows: Administrador de credenciales · macOS: Llavero | Sí, lo cifra el sistema | Motor: `storage/secrets.rs` (crate `keyring`), `storage/vault.rs` |
-| **Bóveda `vault.json`** (opcional) | Con PIN activo: contraseñas y frases de los servidores, sus contraseñas de sudo guardadas y el token de GitHub. | Sobre JSON `terview-vault`: parámetros de Argon2id, sal, tipo de PIN (`kind`), nonce y texto cifrado (base64) | `<config>/terview/vault.json` | Sí: AES-256-GCM; llave = Argon2id(PIN, llave del equipo) | Motor: `storage/vault.rs`, `storage/cipher.rs`, `storage/lock.rs` |
+| **Llavero del sistema** | Servicio `terview`. **Con bóveda:** solo la llave del equipo (usuario `vault-device-key`, 32 bytes al azar). **Sin bóveda:** además la contraseña o frase de cada servidor (usuario = id del servidor), su contraseña de sudo guardada (usuario `<id>:sudo`), el token de GitHub (usuario `github-token`), el de los asistentes de IA (usuario `mcp-token`) y el de la IA que explica informes (usuario `ai-token`). | Entradas del llavero | Linux: Secret Service (GNOME Keyring / KWallet) · Windows: Administrador de credenciales · macOS: Llavero | Sí, lo cifra el sistema | Motor: `storage/secrets.rs` (crate `keyring`), `storage/vault.rs` |
+| **Bóveda `vault.json`** (opcional) | Con PIN activo: contraseñas y frases de los servidores, sus contraseñas de sudo guardadas y los tokens de GitHub (`github-token`), del servidor MCP (`mcp-token`) y de la IA que explica informes (`ai-token`). | Sobre JSON `terview-vault`: parámetros de Argon2id, sal, tipo de PIN (`kind`), nonce y texto cifrado (base64) | `<config>/terview/vault.json` | Sí: AES-256-GCM; llave = Argon2id(PIN, llave del equipo) | Motor: `storage/vault.rs`, `storage/cipher.rs`, `storage/lock.rs` |
 | **`vault-attempts.json`** | Fallos de PIN y hora del próximo intento permitido (5 libres; luego 30 s, el doble cada vez, hasta 15 min). | JSON | `<config>/terview/vault-attempts.json` | No (no lleva secretos) | Motor: `storage/vault.rs` |
 | **`profiles.json`** | Servidores y proyectos (host, usuario, puerto, tipo de autenticación, ruta de la llave, marcadores). Nunca contraseñas. | JSON | `<config>/terview/profiles.json` | No (archivo 0600, carpeta 0700 en Unix) | Motor: `storage/` (`ProfileStore`) |
 | **`settings.json`** | Ajustes: tema, fuentes, transferencias simultáneas, política de conflictos, señal de vida, reconexión, tamaños de paneles (`layout`), sincronizar `~/.ssh/config`. | JSON | `<config>/terview/settings.json` | No | Motor: `storage/` (`SettingsStore`) |
@@ -444,7 +444,7 @@ y ver resultado"), la detección de privilegios y GitHub (clonar y desplegar).
 ![Bóveda y bloqueo](arquitectura/15-boveda-y-bloqueo.png)
 
 - **Es opcional** (Ajustes → Seguridad). Sin bóveda todo sigue como antes: contraseñas, frases y
-  token de GitHub en el llavero del sistema (`storage/secrets.rs`).
+  tokens (GitHub, MCP e IA de informes) en el llavero del sistema (`storage/secrets.rs`).
 - **Con bóveda**, esos secretos salen del llavero y pasan a `<config>/terview/vault.json`: un sobre
   AES-256-GCM (formato `terview-vault`) con la cabecera autenticada, escritura atómica, permisos 0600
   y un nonce nuevo en cada guardado. "Proteger con PIN" los mueve del llavero a la bóveda; "Quitar
@@ -475,7 +475,7 @@ y ver resultado"), la detección de privilegios y GitHub (clonar y desplegar).
 - **Estados:** sin bóveda → desbloqueado ⇄ bloqueado. Se bloquea al abrir la app, tras 5–60 min sin
   uso (15 por defecto; el tiempo con el equipo suspendido también cuenta), con Ctrl+Shift+L o con el
   botón. "Olvidé mi PIN" (escribiendo BORRAR) borra la bóveda: se pierden las contraseñas guardadas
-  y el token, y se conservan servidores, llaves de `~/.ssh`, comandos, túneles, ajustes y la copia en Gist.
+  y los tokens (el del MCP se vuelve a crear), y se conservan servidores, llaves de `~/.ssh`, comandos, túneles, ajustes y la copia en Gist.
 - **El bloqueo vive en el motor** (`storage/lock.rs`): mientras está bloqueado, `secrets::*` responde
   `Locked` aunque una ventana siga a la vista. Cada cambio se avisa con `vault://state` a todas las
   ventanas, incluidos los editores aparte, que se tapan y dejan de recibir teclas (`features/lock/`).
@@ -547,7 +547,7 @@ Apagado por defecto (Ajustes → Asistentes de IA (MCP)). Detalle, herramientas 
 2. **Puerta** (`mcp/http.rs`): cabecera `Origin` → 403; TerView bloqueado → error «TerView está bloqueado:
    desbloquéalo para continuar»; token `Bearer` distinto → 401. El token se lee de la bóveda o el llavero
    (`mcp-token`) y se olvida al bloquear.
-3. **SDK** (`mcp/server.rs`, crate `rmcp` 3.9): sin sesiones y con respuestas JSON; anuncia 17 herramientas
+3. **SDK** (`mcp/server.rs`, crate `rmcp` 3.9): sin sesiones y con respuestas JSON; anuncia 19 herramientas
    con su esquema y pasa cada llamada a `McpCore`.
 4. **Reglas** (`mcp/core.rs` + `mcp/policy.rs`): el servidor tiene que tener acceso (Sin acceso / Solo lectura /
    Completo, en `mcp.json`); las lecturas pasan; los cambios abren el diálogo `mcp://approval` en la ventana
@@ -556,9 +556,23 @@ Apagado por defecto (Ajustes → Asistentes de IA (MCP)). Detalle, herramientas 
 5. **Motor** (`mcp/backend.rs`): exec cancelable con `ExecRegistry` (id `mcp-…`, se puede detener desde el panel),
    `SftpStore` (lectura por trozos y guardado atómico) y la cola de transferencias. Lo que vive en TypeScript se
    pide a la interfaz con `mcp://ui-request` → `mcp_ui_reply`: abrir la pestaña de conexión, el catálogo de la
-   Biblioteca y los escaneos de puertos, sitios y contenedores.
+   Biblioteca y los escaneos de puertos, sitios y contenedores. Las vulnerabilidades van directo al motor
+   del escáner (sección 16b).
 6. **Registro** (`mcp/audit.rs`): cada acción, también las rechazadas, va a `mcp-audit.jsonl` y al panel
    «Actividad del asistente» (evento `mcp://activity`).
+
+**Herramientas**
+
+| Herramientas | Permiso |
+|--------------|---------|
+| `list_servers`, `list_projects`, `list_sessions`, `list_catalog`, `transfer_status` | Lectura (pasa sola) |
+| `list_dir`, `stat`, `read_file`, `list_ports`, `list_sites`, `list_containers` | Lectura (pasa sola) |
+| `get_vuln_report` (último informe del escáner, resumido) | Lectura (pasa sola, también en Solo lectura) |
+| `connect`, `download`, `scan_vulnerabilities` (análisis sin sudo, 600 s por defecto, cancelable) | Pregunta, con «Permitir siempre»; también en Solo lectura |
+| `run_command`, `run_catalog_command` (los 📊 pasan solos), `write_file`, `upload` | Pregunta; en Solo lectura, rechazado |
+
+Lo peligroso pregunta siempre, sin «Permitir siempre». Detalle y límites de cada una en
+[PENDIENTES.md](PENDIENTES.md#herramientas).
 
 ## 16b. Escáner de vulnerabilidades (v0.5.0 · diagrama 17)
 
@@ -601,21 +615,25 @@ insertar en la terminal sin Enter). Detalle, pruebas y cambios respecto al dise�
 Docker `docker create` + `docker cp`. Con sudo se entra como cada usuario con `runuser -u` / `sudo -u -H`
 / `su`. Cada hallazgo dice su imagen y qué contenedores la usan.
 
-**IA opcional (`src-tauri/src/ai/`), solo para explicar:** endpoint compatible con OpenAI. URL base y
-modelo en `settings.json` (`ai`), token `ai-token` en la bóveda o el llavero (bloqueado = sin IA). HTTPS
+**IA opcional (`src-tauri/src/ai/`), solo para explicar** (Ajustes → IA para explicar informes; no es el
+MCP: aquí TerView le pregunta a la IA): endpoint compatible con OpenAI. URL base y modelo en
+`settings.json` (`ai`), token `ai-token` en la bóveda o el llavero (bloqueado = sin IA). HTTPS
 obligatorio salvo `localhost`; sin redirecciones; el token solo va a la URL guardada. Antes de enviar se
 muestra el texto exacto (el servidor se llama «servidor-1»; sin IP, usuarios, rutas, contenedores ni
 secretos) y hay que confirmar. Los comandos que proponga nunca se ejecutan solos.
 
-**Para reutilizar** (p. ej. el servidor MCP, sin conectar aún): `vulnscan::store::latest_report(id)` da el
-último informe de un servidor y `vulnscan::scan::scan_session(sesión, opciones)` hace un análisis completo
-sin sudo desde el motor, con los mismos scripts.
+**Desde el servidor MCP:** `get_vuln_report` usa `vulnscan::store::latest_report(id)` (el último informe de
+un servidor) y `scan_vulnerabilities` usa `vulnscan::scan::scan_session(sesión, opciones)` (un análisis
+completo sin sudo desde el motor, con los mismos scripts y los ajustes del escáner). Al asistente le llega
+un resumen (`mcp/vuln.rs`): recuento por gravedad, fuentes, avisos y los hallazgos más graves (20 por
+defecto, máximo 100). El análisis pide permiso la primera vez, tiene tiempo límite y se puede detener.
 
 ---
 
 ## 17. Seguridad
 
-- **Contraseñas, frases, contraseñas de sudo guardadas y token de GitHub** en el llavero del sistema o, con PIN, en la bóveda
+- **Contraseñas, frases, contraseñas de sudo guardadas y tokens** (GitHub, `mcp-token` del servidor MCP y
+  `ai-token` de la IA que explica informes) en el llavero del sistema o, con PIN, en la bóveda
   cifrada (`vault.json`, AES-256-GCM con llave Argon2id del PIN de 6 dígitos y de una llave del equipo). Nunca en
   archivos sin cifrar ni en la interfaz.
 - **Bloqueo con PIN** (opcional): el estado vive en el motor, que no entrega secretos mientras está

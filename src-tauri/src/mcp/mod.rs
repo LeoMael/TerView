@@ -7,6 +7,7 @@
 //! - `core`: permisos, aprobación, ejecución con límites y registro (sin Tauri: se prueba aparte).
 //! - `policy`: reglas de acceso y comandos peligrosos. `config`: `mcp.json`. `audit`: registro.
 //! - `approval` y `ui`: diálogos y peticiones a la interfaz. `backend`: el motor de la app.
+//! - `vuln`: resumen de los informes del escáner de vulnerabilidades para el asistente.
 //! - `bridge`: puente stdio (`terview-mcp`), compartido con `src/bin/terview-mcp.rs`.
 //!
 //! Apagado por defecto. Se activa en Ajustes → Asistentes de IA (MCP).
@@ -25,6 +26,7 @@ pub mod policy;
 pub mod server;
 pub mod template;
 pub mod ui;
+pub mod vuln;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]

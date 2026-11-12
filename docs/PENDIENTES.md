@@ -173,6 +173,8 @@ Archivos: `ssh/commands.rs` (vigilante + bucle de reintentos), `ssh/mod.rs` (`Se
 | `upload` / `download` | Con la cola de transferencias de la app (rutas locales absolutas) | Pide permiso (descargar también en solo lectura) |
 | `transfer_status` | Progreso de un lote o de todas | Lectura |
 | `list_ports` / `list_sites` / `list_containers` | Los escaneos de Administración y Contenedores, como el usuario conectado (sin sudo) | Lectura |
+| `get_vuln_report` | Último informe del escáner de vulnerabilidades guardado en este PC (hecho en la app o por MCP), **resumido**: recuento por gravedad, fuentes, avisos y los `limit` hallazgos más graves (20 por defecto, máx. 100). No necesita conexión | Lectura (también en solo lectura) |
+| `scan_vulnerabilities` | Análisis nuevo **sin sudo** con `vulnscan::scan::scan_session` y los ajustes del escáner (OSV, distro, Trivy, imágenes). Tiempo límite 600 s por defecto (60–1800); se detiene también en el servidor al vencer, si el cliente cancela o con «Detener» en Actividad. Uno a la vez por servidor. Guarda el informe en el historial y devuelve el mismo resumen que `get_vuln_report` | Pide permiso la primera vez, con «Permitir siempre» (también en solo lectura) |
 
 ### Seguridad
 - **Apagado por defecto**; al encenderlo se crea el token (`tv_` + 64 hex). Se guarda con la API de
@@ -219,6 +221,12 @@ Archivos: `ssh/commands.rs` (vigilante + bucle de reintentos), `ssh/mod.rs` (`Se
   permisos y el texto final del comando siguen en Rust.
 - **Nuevas herramientas**: `list_catalog`, `list_ports`, `list_sites`, `list_containers`. `analyze_server` y los
   recursos MCP quedan fuera (el análisis vive en la interfaz; se puede añadir igual que los escaneos).
+- **Vulnerabilidades** (`get_vuln_report`, `scan_vulnerabilities`), añadidas al unir el escáner. El análisis no
+  cambia el servidor, pero no pasa solo como las demás lecturas: tarda minutos, ocupa la conexión y manda
+  nombres y versiones de paquetes a OSV.dev desde el PC. Por eso es una «lectura con permiso»
+  (`Action::change_on_read`, como `connect` y `download`): pregunta la primera vez y ofrece «Permitir
+  siempre». Sin sudo (la elevación se queda en la interfaz). Al asistente le llega un resumen, nunca el
+  informe entero (puede tener miles de filas); la lista completa y el comando para actualizar están en la app.
 - **Comandos interactivos** (`top`, `tail -f`…) se rechazan con una pista; los valores de variables no pueden empezar por «-».
 - **Registro en JSONL** (`mcp-audit.jsonl`) en vez de `mcp-audit.log`, con rotación simple.
 - **Con TerView bloqueado se rechaza todo**, incluidas las listas.
@@ -228,10 +236,14 @@ Archivos: `ssh/commands.rs` (vigilante + bucle de reintentos), `ssh/mod.rs` (`Se
   simulado, tiempo límite, bloqueo (también mientras espera), MCP apagado, servidor sin acceso, solo
   lectura, peligrosos que siempre preguntan, variables citadas, límites de salida y de lectura,
   diferencias, registro con rotación, token incorrecto / `Origin` / bloqueo en HTTP y el puente stdio
-  (reenvío, token malo, app cerrada que luego se abre).
+  (reenvío, token malo, app cerrada que luego se abre). Vulnerabilidades: `get_vuln_report` como lectura
+  (sin informe, resumido con límite, sin conexión, sin acceso), `scan_vulnerabilities` con permiso y
+  «Permitir siempre» en solo lectura, denegado, sin conexión, tiempo límite (reloj simulado), «Detener»,
+  cancelación del cliente y uno a la vez por servidor (`mcp/vuln.rs`: orden y límite del resumen).
 - `cargo test --lib mcp::e2e -- --ignored --test-threads=1` contra `terview-sshd`: cliente oficial de
   `rmcp` (initialize, tools/list, list_servers, run_command, tiempo límite, peligroso denegado,
-  write_file/read_file/list_dir), JSON-RPC a mano como `curl` y el puente stdio.
+  write_file/read_file/list_dir), JSON-RPC a mano como `curl`, el puente stdio y
+  `get_vuln_report` + `scan_vulnerabilities` de verdad (Alpine sin sudo, con OSV.dev).
 
 ### Sin verificar
 - Con **Claude Code y Claude Desktop reales** (solo se probó con el cliente de `rmcp`, JSON-RPC a mano y el puente).
@@ -826,10 +838,13 @@ mejor que ninguno). Sin internet en el PC: fases 1–4 igual, y el informe dice 
 - **Apagada por defecto.** Ajustes → «IA para explicar informes»: URL base (p. ej. `https://api.openai.com/v1`,
   un Ollama local `http://localhost:11434/v1` o cualquier servicio **compatible con OpenAI**), modelo y
   token. Botón «Probar» (`GET <base>/models`).
+- **No es el MCP.** Aquí TerView le pregunta a una IA para que explique un informe; en «Asistentes de
+  IA (MCP)» ([sección 3](#3-servidor-mcp-conectar-asistentes-de-ia)) es el asistente quien usa TerView. Por
+  eso la sección de Ajustes se llama «IA para explicar informes» y no «Asistente de IA».
 - **Token** en la bóveda/llavero con `secrets::set_secret("ai-token", …)` y `get_secret`. Con la bóveda
-  **bloqueada** responde `Locked` y el botón se desactiva («Desbloquea TerView para usar la IA»). Hay que
-  añadir `ai-token` a la lista de ids que se mueven al activar/desactivar el PIN (`enable_vault` en
-  `storage/secrets.rs` hoy solo mueve los servidores y `github-token`).
+  **bloqueada** responde `Locked` y el botón se desactiva («Desbloquea TerView para usar la IA»).
+  `enable_vault` (`storage/secrets.rs`) mueve a la bóveda los secretos de los servidores, `github-token`,
+  `mcp-token` y `ai-token`; desactivar el PIN los devuelve todos al llavero y «Olvidé mi PIN» los borra.
 - El HTTP sale **del motor** (reqwest + rustls), nunca de la interfaz (la CSP lo impide). Cliente propio:
   el de GitHub solo permite hosts de GitHub (`ALLOWED_HOSTS`) y así debe seguir. HTTPS obligatorio salvo
   `localhost`/`127.0.0.1` (para modelos locales).
@@ -908,6 +923,9 @@ importan, mejor en la carpeta de configuración.
   (repos de la distro, `security-tracker.debian.org`, Canonical, el registro de donde Trivy baja su base): es lo
   mismo que ya hace el servidor al actualizarse. Se dice en la fase correspondiente.
 - La **IA** solo recibe lo que el usuario ve y confirma en el diálogo (10.8).
+- Por **MCP**, `scan_vulnerabilities` consulta OSV.dev igual (desde tu PC, solo si está activado) y se
+  aprueba en TerView; el asistente recibe un resumen (recuento, fuentes y los hallazgos más graves con su
+  paquete y objetivo), no el informe entero.
 - Nada sale del PC si las fuentes están desactivadas en Ajustes (modo «solo herramientas del servidor»).
 
 ### 10.12 Cómo está construido
@@ -922,7 +940,7 @@ importan, mejor en la carpeta de configuración.
 | 6. Juntar | `vulnscan/analyze.rs` | Une OSV, la herramienta de la distro y Trivy en una fila por CVE, paquete fuente y objetivo |
 | 7. Historial y exportar | `vulnscan/store.rs`, `vulnscan/export.rs` | `<config>/terview/vulnscan/<idServidor>.json` (20 análisis, 0600, se borra con el servidor); JSON y Markdown |
 | 8. Comandos Tauri | `vulnscan/commands.rs`, `lib.rs` | `vulnscan_script`, `vulnscan_plan`, `vulnscan_parse_users`, `vulnscan_parse_images`, `vulnscan_analyze` (+ evento `vulnscan://progress`), `vulnscan_cancel`, `vulnscan_history_list/get/delete`, `vulnscan_latest`, `vulnscan_set_ai`, `vulnscan_export`, `vulnscan_vuln_detail` |
-| 9. Análisis sin sudo desde el motor | `vulnscan/scan.rs` | `scan_session(sesión, opciones)`: las mismas fases sin la interfaz. Lo usan las pruebas y lo podrá usar el servidor MCP (`scan_vulnerabilities`); `store::latest_report(id)` sirve para `get_vuln_report`. **Aún no conectado al MCP** |
+| 9. Análisis sin sudo desde el motor | `vulnscan/scan.rs` | `scan_session(sesión, opciones)`: las mismas fases sin la interfaz. Lo usan las pruebas y el servidor MCP (`scan_vulnerabilities`); `store::latest_report(id)` lo usa `get_vuln_report` (ver [sección 3](#3-servidor-mcp-conectar-asistentes-de-ia)) |
 | 10. IA | `src-tauri/src/ai/mod.rs` | `ai_status`, `ai_set_token`, `ai_test` (`GET /models`), `ai_chat` (`POST /chat/completions`, cancelable con `ai_cancel`). Token `ai-token`, que `enable_vault` mueve a la bóveda |
 | 11. Fases en la interfaz | `src/features/vulnscan/run.ts` | Ejecuta cada fase con `runScript` + `execId` (con o sin sudo), Cancelar, y pasa las salidas a `vulnscan_analyze` |
 | 12. Interfaz | `src/components/Admin/VulnsTab.tsx`, `VulnSummary.tsx`, `VulnDetail.tsx`, `VulnsDialogs.tsx`, `AiExplainDialog.tsx`, `MiniMarkdown.tsx`, `vulnUi.tsx`, `Vulns.css`; `src/api/vulnscan.ts` | Lo de 10.9. Las opciones del escáner (fuentes, imágenes, límite) están en «Opciones» dentro de la pestaña |
@@ -979,6 +997,8 @@ TSV, `zypper --xmlout list-patches`.
 - Kernel de Debian/Ubuntu en un servidor real (`linux-signed-*` se consulta también como `linux`).
 - Tiempos en servidores grandes (miles de paquetes, decenas de imágenes) y disco de las cachés de
   dnf/debsecan en `$HOME` al ir sin root.
+- `scan_vulnerabilities` por MCP con Claude Code o Claude Desktop reales (probado con el cliente de `rmcp`)
+  y la «Actividad del asistente» con el botón Detener durante un análisis en la app real.
 - La IA: que modelos distintos respeten «no inventes CVE». Por eso el panel lo marca como texto de IA y
   la tabla nunca se toca.
 
@@ -1028,7 +1048,7 @@ el diseño y respuestas reales de OSV en `fixtures/osv/`).
 ### 10.16 Cambios respecto al diseño
 
 - **Los scripts del servidor están en el motor** (`vulnscan/scripts.rs`), no en `scripts.ts`: así la
-  interfaz, las pruebas de Rust y el futuro MCP usan exactamente los mismos. La interfaz los pide con
+  interfaz, las pruebas de Rust y el MCP usan exactamente los mismos. La interfaz los pide con
   `vulnscan_script` y sigue ejecutándolos ella con `runScript` (su elevación y su `execId`).
 - **Comandos distintos a los previstos**: en vez de `vulnscan_query_osv(packages)` hay `vulnscan_analyze`
   (recibe las salidas en bruto: el motor las lee, consulta OSV, junta y guarda). Hay además

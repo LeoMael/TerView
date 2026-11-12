@@ -7,6 +7,7 @@ use std::time::Duration;
 
 use serde_json::Value;
 use tauri::{AppHandle, Emitter, Manager};
+use tokio_util::sync::CancellationToken;
 
 use super::approval::{ApprovalRequest, Decision, PendingApprovals};
 use super::ui::UiBridge;
@@ -15,9 +16,12 @@ use crate::sftp::{FilePart, SftpStore};
 use crate::snippets::{exec, ExecRegistry, SnippetStore};
 use crate::ssh::SessionStore;
 use crate::storage::vault::Vault;
-use crate::storage::ProfileStore;
+use crate::storage::{ProfileStore, SettingsStore};
 use crate::transfer::TransferManager;
 use crate::types::{ExecResult, FileEntry, ProfilesData, SessionInfo, Snippet, TransferJob};
+use crate::vulnscan::model::Report;
+use crate::vulnscan::scan::{scan_session, ScanOptions};
+use crate::vulnscan::{store as vuln_store, VulnScanSettings};
 
 /// Evento: nueva petición de aprobación (payload `ApprovalRequest`).
 pub const EV_APPROVAL: &str = "mcp://approval";
@@ -54,6 +58,20 @@ pub trait Backend: Send + Sync + 'static {
     fn transfers(&self) -> Vec<TransferJob>;
     /// «Mis comandos».
     fn snippets(&self) -> Vec<Snippet>;
+    /// Ajustes del escáner de vulnerabilidades (los mismos que usa la interfaz).
+    fn vuln_settings(&self) -> VulnScanSettings;
+    /// Último informe de vulnerabilidades guardado de un servidor (None si nunca se analizó).
+    fn vuln_latest(&self, server_id: &str) -> impl Future<Output = AppResult<Option<Report>>> + Send;
+    /// Análisis de vulnerabilidades SIN sudo por la conexión `session_id` (lo guarda en el historial
+    /// si `opts.save`). Se detiene, también en el servidor, al cancelar `cancel` o con
+    /// `cancel_exec(exec_id)` (botón «Detener» del panel de actividad).
+    fn vuln_scan(
+        &self,
+        session_id: &str,
+        opts: ScanOptions,
+        exec_id: &str,
+        cancel: &CancellationToken,
+    ) -> impl Future<Output = AppResult<Report>> + Send;
     /// Pide algo a la interfaz (abrir una pestaña, el catálogo, puertos…). Ver `ui.rs`.
     fn ui_request(&self, kind: &str, payload: Value, timeout: Duration) -> impl Future<Output = AppResult<Value>> + Send;
     /// Muestra el diálogo de permiso y espera la respuesta (el tiempo límite lo pone quien llama).
@@ -175,6 +193,27 @@ impl Backend for TauriBackend {
         self.app.try_state::<SnippetStore>().map(|s| s.list()).unwrap_or_default()
     }
 
+    fn vuln_settings(&self) -> VulnScanSettings {
+        self.app.try_state::<SettingsStore>().map(|s| s.get().vulnscan.sanitized()).unwrap_or_default()
+    }
+
+    async fn vuln_latest(&self, server_id: &str) -> AppResult<Option<Report>> {
+        let id = server_id.to_string();
+        tokio::task::spawn_blocking(move || vuln_store::latest_report(&id))
+            .await
+            .map_err(|e| AppError::Io(format!("no se pudo leer el historial: {e}")))?
+    }
+
+    async fn vuln_scan(&self, session_id: &str, opts: ScanOptions, exec_id: &str, cancel: &CancellationToken) -> AppResult<Report> {
+        let registry = self
+            .app
+            .try_state::<ExecRegistry>()
+            .ok_or_else(|| AppError::Invalid("TerView aún está arrancando".into()))?;
+        let ticket = registry.register(exec_id)?;
+        let session = self.ssh(session_id).await?;
+        scan_with_stop(&session, &opts, cancel, &ticket.token).await
+    }
+
     async fn ui_request(&self, kind: &str, payload: Value, timeout: Duration) -> AppResult<Value> {
         self.ui.request(&self.app, kind, payload, timeout).await
     }
@@ -191,5 +230,25 @@ impl Backend for TauriBackend {
     fn approval_done(&self, id: &str) {
         self.pending.remove(id);
         let _ = self.app.emit(EV_APPROVAL_DONE, id);
+    }
+}
+
+/// `scan_session` que también se detiene con `stop` (el token del registro de ejecuciones, que usa
+/// el botón «Detener» del panel de actividad).
+pub(crate) async fn scan_with_stop(
+    session: &crate::ssh::SshSession,
+    opts: &ScanOptions,
+    cancel: &CancellationToken,
+    stop: &CancellationToken,
+) -> AppResult<Report> {
+    let quiet = |_: &str, _: usize, _: usize, _: &str| {};
+    let scan = scan_session(session, opts, cancel, &quiet);
+    tokio::pin!(scan);
+    tokio::select! {
+        r = &mut scan => r,
+        () = stop.cancelled() => {
+            cancel.cancel();
+            scan.await
+        }
     }
 }

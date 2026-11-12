@@ -1,8 +1,8 @@
 //! Análisis completo desde el motor, SIN sudo (como el usuario de la conexión).
 //!
-//! La interfaz no lo usa (ella ejecuta las fases con su elevación y `execId`), pero sirve para las
-//! pruebas contra el servidor de pruebas y para reutilizarlo desde otros módulos (p. ej. un servidor
-//! MCP que ofrezca `scan_vulnerabilities`). Hace las mismas fases con los mismos scripts.
+//! La interfaz no lo usa (ella ejecuta las fases con su elevación y `execId`); lo usan el servidor MCP
+//! (`scan_vulnerabilities`) y las pruebas contra el servidor de pruebas. Hace las mismas fases con los
+//! mismos scripts.
 
 use std::time::Instant;
 

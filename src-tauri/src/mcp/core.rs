@@ -26,6 +26,7 @@ use super::policy::{self, Access, Action, Verdict};
 use super::{diff, template};
 use crate::error::AppError;
 use crate::types::{ExecResult, FileEntry, FileKind, ServerProfile, SessionInfo, SnippetScope, TransferJob};
+use crate::vulnscan::scan::ScanOptions;
 
 pub const LOCKED_MSG: &str = "TerView está bloqueado: desbloquéalo para continuar.";
 pub const DISABLED_MSG: &str =
@@ -48,6 +49,12 @@ pub const MAX_SCAN_BYTES: usize = 200 * 1024;
 /// Tiempo de espera de la interfaz al abrir una pestaña (puede pedir contraseña o huella).
 const UI_CONNECT_TIMEOUT: Duration = Duration::from_secs(180);
 const UI_SCAN_TIMEOUT: Duration = Duration::from_secs(90);
+/// Tiempo límite de `scan_vulnerabilities` (s): por defecto, mínimo y máximo.
+pub const DEFAULT_VULN_SCAN_SECS: u32 = 600;
+pub const MIN_VULN_SCAN_SECS: u32 = 60;
+pub const MAX_VULN_SCAN_SECS: u32 = 1800;
+/// Margen para que el análisis termine de detenerse en el servidor tras el tiempo límite.
+const VULN_STOP_GRACE: Duration = Duration::from_secs(30);
 
 // ───────────────────────── Parámetros de las herramientas ─────────────────────────
 
@@ -61,6 +68,30 @@ pub struct ServerParams {
     /// Conexión concreta (ver list_sessions). Si no se da, se usa la más reciente de ese servidor.
     #[serde(default)]
     pub session_id: Option<String>,
+}
+
+#[derive(Debug, Deserialize, JsonSchema)]
+pub struct VulnReportParams {
+    /// Nombre o id del servidor (ver list_servers).
+    pub server: String,
+    /// Hallazgos a mostrar, de más a menos grave (1-100, por defecto 20).
+    #[serde(default)]
+    pub limit: Option<u32>,
+}
+
+#[derive(Debug, Deserialize, JsonSchema)]
+pub struct VulnScanParams {
+    /// Nombre o id del servidor (ver list_servers). Hace falta una conexión abierta (connect).
+    pub server: String,
+    /// Conexión concreta (ver list_sessions). Si no se da, se usa la más reciente de ese servidor.
+    #[serde(default)]
+    pub session_id: Option<String>,
+    /// Tiempo límite en segundos (60-1800, por defecto 600). Al vencer se detiene también en el servidor.
+    #[serde(default)]
+    pub timeout_secs: Option<u32>,
+    /// Hallazgos a mostrar, de más a menos grave (1-100, por defecto 20).
+    #[serde(default)]
+    pub limit: Option<u32>,
 }
 
 #[derive(Debug, Deserialize, JsonSchema)]
@@ -276,11 +307,13 @@ pub struct McpCore<B: Backend> {
     pub audit: AuditLog,
     /// Catálogo base (lo manda la interfaz la primera vez que hace falta).
     catalog: Mutex<Option<Vec<CatalogEntry>>>,
+    /// Servidores con un `scan_vulnerabilities` en curso (uno a la vez por servidor).
+    vuln_scans: Mutex<BTreeSet<String>>,
 }
 
 impl<B: Backend> McpCore<B> {
     pub fn new(backend: B, config: McpConfigStore, audit: AuditLog) -> Self {
-        McpCore { backend, config, audit, catalog: Mutex::new(None) }
+        McpCore { backend, config, audit, catalog: Mutex::new(None), vuln_scans: Mutex::new(BTreeSet::new()) }
     }
 
     /// Ejecuta una herramienta. `cancel` se dispara si el cliente cancela la petición.
@@ -352,6 +385,8 @@ impl<B: Backend> McpCore<B> {
             "list_ports" => self.scan("ports", parse(args)?, rec).await,
             "list_sites" => self.scan("sites", parse(args)?, rec).await,
             "list_containers" => self.scan("containers", parse(args)?, rec).await,
+            "get_vuln_report" => self.vuln_report(parse(args)?, rec).await,
+            "scan_vulnerabilities" => self.vuln_scan(parse(args)?, rec, cancel).await,
             other => Err(Fail::Error(format!("Herramienta desconocida: {other}"))),
         }
     }
@@ -956,6 +991,136 @@ impl<B: Backend> McpCore<B> {
         let v = self.backend.ui_request(kind, json!({ "sessionId": sid }), UI_SCAN_TIMEOUT).await?;
         let text = serde_json::to_string_pretty(&v).unwrap_or_default();
         Ok(clip_middle(&text, MAX_SCAN_BYTES))
+    }
+
+    // ───────────── Vulnerabilidades ─────────────
+
+    /// Último informe guardado (de la interfaz o de `scan_vulnerabilities`), resumido. No hace falta
+    /// conexión: se lee del historial de este PC.
+    async fn vuln_report(&self, p: VulnReportParams, rec: &mut Rec) -> Res<String> {
+        rec.entry.detail = "último informe".into();
+        let t = self.target(&p.server, None, rec).await?;
+        self.authorize(rec, &t, Action::read("get_vuln_report"), "", "", None).await?;
+        match self.backend.vuln_latest(&t.server.id).await? {
+            Some(r) => {
+                rec.entry.message = Some(format!("informe del {}", r.created_at));
+                Ok(pretty(&super::vuln::summarize(&t.server.name, &r, p.limit)))
+            }
+            None => Ok(format!(
+                "«{}» no tiene ningún análisis de vulnerabilidades guardado. Usa scan_vulnerabilities \
+                 (o pide al usuario que pulse Analizar en TerView → Administración → Vulnerabilidades).",
+                t.server.name
+            )),
+        }
+    }
+
+    /// Análisis nuevo SIN sudo. No cambia el servidor, pero tarda minutos y consulta OSV.dev desde
+    /// este PC: pide permiso (con «Permitir siempre»), también en servidores de solo lectura.
+    async fn vuln_scan(&self, p: VulnScanParams, rec: &mut Rec, cancel: &CancellationToken) -> Res<String> {
+        let t = self.target(&p.server, p.session_id.as_deref(), rec).await?;
+        let sid = t.session_id()?.to_string();
+        let timeout = p.timeout_secs.unwrap_or(DEFAULT_VULN_SCAN_SECS).clamp(MIN_VULN_SCAN_SECS, MAX_VULN_SCAN_SECS);
+        rec.entry.detail = format!("análisis sin sudo (máx. {timeout} s)");
+        let settings = self.backend.vuln_settings();
+        let mut opts = ScanOptions::new(&t.server.id);
+        opts.use_osv = settings.use_osv;
+        opts.use_distro_tool = settings.use_distro_tool;
+        opts.use_trivy = settings.use_trivy;
+        opts.scan_images = settings.scan_images;
+        opts.image_limit = settings.image_limit as usize;
+        opts.save = true;
+
+        let mut shown = vec![format!(
+            "Análisis de vulnerabilidades SIN sudo como «{}». No cambia nada en el servidor:",
+            t.server.username
+        )];
+        shown.push("• lee la lista de paquetes y programas instalados".into());
+        if opts.use_distro_tool {
+            shown.push("• usa la herramienta de seguridad de la distro si la hay (dnf, debsecan, pro, zypper)".into());
+        }
+        if opts.scan_images {
+            shown.push(format!(
+                "• lee hasta {} imágenes de contenedores del usuario sin arrancarlas{}",
+                opts.image_limit,
+                if opts.use_trivy { " (con Trivy si está instalado)" } else { "" }
+            ));
+        }
+        if opts.use_osv {
+            shown.push("• desde este PC consulta OSV.dev (solo nombres y versiones de paquetes)".into());
+        }
+        shown.push(format!("Tiempo máximo: {timeout} s. El informe se guarda en el historial."));
+
+        {
+            let running = self.vuln_scans.lock().unwrap_or_else(|p| p.into_inner());
+            if running.contains(&t.server.id) {
+                return Err(Fail::Error(format!(
+                    "Ya hay un análisis de vulnerabilidades en curso en «{}»: espera a que termine.",
+                    t.server.name
+                )));
+            }
+        }
+        let title = "quiere buscar vulnerabilidades (sin sudo; tarda unos minutos)";
+        self.authorize(rec, &t, Action::change_on_read("scan_vulnerabilities"), title, &shown.join("\n"), None).await?;
+
+        // Uno a la vez por servidor (se comprueba otra vez: la aprobación pudo tardar).
+        if !self.vuln_scans.lock().unwrap_or_else(|p| p.into_inner()).insert(t.server.id.clone()) {
+            return Err(Fail::Error(format!(
+                "Ya hay un análisis de vulnerabilidades en curso en «{}»: espera a que termine.",
+                t.server.name
+            )));
+        }
+        let _running = RunningScan { set: &self.vuln_scans, id: t.server.id.clone() };
+
+        let exec_id = format!("mcp-{}", uuid::Uuid::new_v4().simple());
+        rec.entry.exec_id = Some(exec_id.clone());
+        rec.entry.message = Some("Analizando (puede tardar unos minutos)".into());
+        self.audit.record(rec.entry.clone());
+        rec.entry.message = None;
+
+        let stop = CancellationToken::new();
+        let run = self.backend.vuln_scan(&sid, opts, &exec_id, &stop);
+        tokio::pin!(run);
+        let mut timed_out = false;
+        let result = tokio::select! {
+            r = &mut run => r,
+            () = cancel.cancelled() => {
+                stop.cancel();
+                tokio::time::timeout(VULN_STOP_GRACE, &mut run).await.unwrap_or(Err(AppError::Canceled))
+            }
+            () = tokio::time::sleep(Duration::from_secs(u64::from(timeout))) => {
+                timed_out = true;
+                stop.cancel();
+                tokio::time::timeout(VULN_STOP_GRACE, &mut run).await.unwrap_or(Err(AppError::Canceled))
+            }
+        };
+        match result {
+            Ok(r) => {
+                let s = &r.summary;
+                rec.entry.message = Some(format!(
+                    "{} vulnerabilidades ({} críticas, {} altas)",
+                    s.total, s.critical, s.high
+                ));
+                Ok(pretty(&super::vuln::summarize(&t.server.name, &r, p.limit)))
+            }
+            Err(AppError::Canceled) if timed_out => Err(Fail::Error(format!(
+                "El análisis pasó de {timeout} s y se detuvo (también en el servidor). Vuelve a intentarlo con un \
+                 timeout_secs mayor (máximo {MAX_VULN_SCAN_SECS}) o pide al usuario que lo haga desde TerView."
+            ))),
+            Err(AppError::Canceled) => Err(Fail::Error("Se canceló el análisis (y se detuvo en el servidor).".into())),
+            Err(e) => Err(e.into()),
+        }
+    }
+}
+
+/// Quita el servidor de los análisis en curso al terminar (también si se cancela o falla).
+struct RunningScan<'a> {
+    set: &'a Mutex<BTreeSet<String>>,
+    id: String,
+}
+
+impl Drop for RunningScan<'_> {
+    fn drop(&mut self) {
+        self.set.lock().unwrap_or_else(|p| p.into_inner()).remove(&self.id);
     }
 }
 
