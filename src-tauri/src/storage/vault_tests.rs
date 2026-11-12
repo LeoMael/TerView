@@ -576,10 +576,11 @@ fn enable_moves_secrets_from_keyring() {
         ("s3:sudo", "sudo3"),
         ("x:sudo", "de otro"),
         ("github-token", "ghp"),
+        ("ai-token", "sk-ia"),
         ("otra-app", "x"),
     ]));
     let r = secrets::enable_vault(&v, &kr, &ids(&["s1", "s2", "s3"]), PIN, FAST).unwrap();
-    assert_eq!(r, MoveReport { moved: 5, left_in_keyring: 0 });
+    assert_eq!(r, MoveReport { moved: 6, left_in_keyring: 0 });
     // En el llavero solo queda lo que no es de un servidor conocido.
     assert_eq!(
         kr.data.borrow().keys().cloned().collect::<Vec<_>>(),
@@ -592,6 +593,7 @@ fn enable_moves_secrets_from_keyring() {
     assert_eq!(get(&v2, "s3:sudo").unwrap().as_deref(), Some("sudo3"));
     assert_eq!(get(&v2, "s1:sudo").unwrap(), None);
     assert_eq!(get(&v2, "github-token").unwrap().as_deref(), Some("ghp"));
+    assert_eq!(get(&v2, "ai-token").unwrap().as_deref(), Some("sk-ia"));
     assert_eq!(get(&v2, "s3").unwrap(), None);
 }
 

@@ -1,6 +1,7 @@
 //! Punto de entrada del motor: registra estado global, plugins y todos los comandos.
 //! Archivo de BASE: los agentes no lo editan; los comandos ya están todos registrados.
 
+mod ai;
 mod diagnostics;
 mod dragout;
 mod error;
@@ -15,6 +16,7 @@ mod terminal;
 mod transfer;
 mod tunnels;
 mod types;
+mod vulnscan;
 
 use tauri::Manager;
 
@@ -172,6 +174,26 @@ pub fn run() {
             tunnels::tunnels_status,
             // diagnóstico (Ajustes → Avanzado)
             diagnostics::app_diagnostics,
+            // escáner de vulnerabilidades (Administración → Vulnerabilidades)
+            vulnscan::vulnscan_script,
+            vulnscan::vulnscan_plan,
+            vulnscan::vulnscan_parse_users,
+            vulnscan::vulnscan_parse_images,
+            vulnscan::vulnscan_analyze,
+            vulnscan::vulnscan_cancel,
+            vulnscan::vulnscan_history_list,
+            vulnscan::vulnscan_history_get,
+            vulnscan::vulnscan_latest,
+            vulnscan::vulnscan_history_delete,
+            vulnscan::vulnscan_set_ai,
+            vulnscan::vulnscan_export,
+            vulnscan::vulnscan_vuln_detail,
+            // asistente de IA opcional (solo explica informes)
+            ai::ai_status,
+            ai::ai_set_token,
+            ai::ai_test,
+            ai::ai_chat,
+            ai::ai_cancel,
         ])
         .run(tauri::generate_context!())
         .expect("error al iniciar TerView");

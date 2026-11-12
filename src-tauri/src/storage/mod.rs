@@ -338,6 +338,8 @@ fn sanitize_settings(mut s: Settings) -> Settings {
     if !lock::LOCK_MINUTES.contains(&s.lock_minutes) {
         s.lock_minutes = def.lock_minutes;
     }
+    s.vulnscan = s.vulnscan.sanitized();
+    s.ai = s.ai.sanitized();
     s
 }
 
@@ -385,11 +387,13 @@ pub async fn profiles_save_server(
 #[tauri::command]
 pub async fn profiles_delete_server(app: AppHandle, store: State<'_, ProfileStore>, id: String) -> AppResult<()> {
     store.delete_server(&id)?;
+    let id_for_history = id.clone();
     sync_ssh_config(&app).await;
     // El servidor ya no existe: si el llavero no está disponible solo lo registramos.
     if let Err(e) = blocking(move || secrets::delete_server_secrets(&id)).await {
         log::warn!("No se pudo borrar el secreto del servidor: {e}");
     }
+    crate::vulnscan::store::forget_server(&id_for_history);
     Ok(())
 }
 

@@ -50,6 +50,8 @@ chrono = "0.4"
 # Bóveda de contraseñas (`storage::vault`): pisa con ceros la llave y los secretos al bloquear.
 # Ya estaba en el árbol (aes-gcm, argon2, russh).
 zeroize = "1.8"
+# Escáner de vulnerabilidades (`vulnscan`): puntuación CVSS v2/v3/v4 (solo cálculo, sin red).
+cvss = "3"
 
 # Windows: aws-lc-sys (cripto de russh) necesita NASM para x86_64; con `prebuilt-nasm` usa los
 # objetos ya ensamblados que trae el crate, así el build de CI no depende de tener NASM instalado.

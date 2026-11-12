@@ -1,0 +1,3154 @@
+CVE-2026-109518 (fixed)
+  On Debian, Ubuntu, and derivative Linux distributions, an on-path atta ...
+  installed: apt 2.6.1
+             (built from apt 2.6.1)
+  fixed in unstable: apt 3.3.6 (source package)
+  fixed on branch:   apt 2.6.2 (source package)
+  fixed on branch:   apt 3.0.4 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2024-28085 (fixed)
+  wall in util-linux through 2.40, often installed with setgid tty permi ...
+  installed: bsdutils 1:2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.39.3-11 (source package)
+  fixed on branch:   util-linux 2.33.1-0.1+deb10u1 (source package)
+  fixed on branch:   util-linux 2.36.1-8+deb11u2 (source package)
+  fixed on branch:   util-linux 2.38.1-5+deb12u1 (source package)
+  fixed on branch:   util-linux 2.38.1-5+deb12u3 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-13595
+  A flaw was found in the libblkid library of util-linux. During nested  ...
+  installed: bsdutils 1:2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42.2-1 (source package)
+  fixed on branch:   util-linux 2.41.5-0+deb13u1 (source package)
+
+CVE-2026-27456
+  util-linux is a random collection of Linux utilities. Prior to version ...
+  installed: bsdutils 1:2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42-1 (source package)
+  fixed on branch:   util-linux 2.41.5-0+deb13u1 (source package)
+
+CVE-2026-3184
+  A flaw was found in util-linux. Improper hostname canonicalization in  ...
+  installed: bsdutils 1:2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42-1 (source package)
+  fixed on branch:   util-linux 2.42~rc1-1 (source package)
+
+CVE-2026-53613
+  util-linux is a random collection of Linux utilities. In util-linux 2. ...
+  installed: bsdutils 1:2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42.2-1 (source package)
+  fixed on branch:   util-linux 2.41.5-0+deb13u1 (source package)
+
+CVE-2026-53615
+  util-linux is a random collection of Linux utilities. Before util-linu ...
+  installed: bsdutils 1:2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42-1 (source package)
+  fixed on branch:   util-linux 2.41.5-0+deb13u1 (source package)
+
+CVE-2026-78410
+  A flaw was found in util-linux. Restricted bind mounts take the source ...
+  installed: bsdutils 1:2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42.3-1 (source package)
+
+CVE-2016-2781 (low urgency)
+  chroot in GNU coreutils, when used with --userspec, allows local users ...
+  installed: coreutils 9.1-1
+             (built from coreutils 9.1-1)
+  fixed in unstable: coreutils 9.4-1 (source package)
+
+CVE-2025-6297 (fixed)
+  It was discovered that dpkg-deb does not properly sanitize directory p ...
+  installed: dpkg 1.21.22
+             (built from dpkg 1.21.22)
+  fixed in unstable: dpkg 1.22.21 (source package)
+  fixed on branch:   dpkg 1.20.14 (source package)
+  fixed on branch:   dpkg 1.21.23 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-102010
+  A flaw was found in GCC. When an application calls the erase_if functi ...
+  installed: gcc-12-base 12.2.0-14
+             (built from gcc-12 12.2.0-14)
+  fixed in unstable: gcc-12 12.5.0-11 (source package)
+
+CVE-2026-114690
+  A flaw was found in GCC. An out-of-bounds memory access vulnerability  ...
+  installed: gcc-12-base 12.2.0-14
+             (built from gcc-12 12.2.0-14)
+
+CVE-2026-114691
+  A flaw was found in the libstdc++ component of GCC. An attacker who ca ...
+  installed: gcc-12-base 12.2.0-14
+             (built from gcc-12 12.2.0-14)
+
+CVE-2026-115456
+  A flaw was found in gcc. An attacker could cause a Denial of Service ( ...
+  installed: gcc-12-base 12.2.0-14
+             (built from gcc-12 12.2.0-14)
+
+CVE-2026-95619
+  A flaw was found in libstdc++. An integer overflow can occur when proc ...
+  installed: gcc-12-base 12.2.0-14
+             (built from gcc-12 12.2.0-14)
+
+CVE-2025-30258
+  In GnuPG before 2.5.5, if a user chooses to import a certificate with  ...
+  installed: gpgv 2.2.40-1.1
+             (built from gnupg2 2.2.40-1.1)
+  fixed in unstable: gnupg2 2.2.46-5 (source package)
+
+CVE-2025-68972
+  In GnuPG through 2.4.8, if a signed message has \f at the end of a pla ...
+  installed: gpgv 2.2.40-1.1
+             (built from gnupg2 2.2.40-1.1)
+
+CVE-2025-68973 (fixed)
+  In GnuPG before 2.4.9, armor_filter in g10/armor.c has two increments  ...
+  installed: gpgv 2.2.40-1.1
+             (built from gnupg2 2.2.40-1.1)
+  fixed in unstable: gnupg2 2.4.8-5 (source package)
+  fixed on branch:   gnupg2 2.2.27-2+deb11u3 (source package)
+  fixed on branch:   gnupg2 2.2.40-1.1+deb12u2 (source package)
+  fixed on branch:   gnupg2 2.4.7-21+deb13u1 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-105712
+  gpgtar in GnuPG before 2.5.19 can allow file overwrite via crafted dat ...
+  installed: gpgv 2.2.40-1.1
+             (built from gnupg2 2.2.40-1.1)
+  fixed in unstable: gnupg2 2.4.9-8 (source package)
+
+CVE-2026-41991
+  GNU gzip contains a vulnerability in the gzexe utility related to inse ...
+  installed: gzip 1.12-1
+             (built from gzip 1.12-1)
+  fixed in unstable: gzip 1.14-1 (source package)
+  fixed on branch:   gzip 1.13-1+deb13u1 (source package)
+
+CVE-2026-41992
+  GNU gzip contains a global buffer overflow vulnerability in the LZH de ...
+  installed: gzip 1.12-1
+             (built from gzip 1.12-1)
+  fixed in unstable: gzip 1.14-1 (source package)
+  fixed on branch:   gzip 1.13-1+deb13u1 (source package)
+
+CVE-2026-54369
+  acl before version 2.4.0 contains a symlink traversal vulnerability in ...
+  installed: libacl1 2.3.1-3
+             (built from acl 2.3.1-3)
+  fixed in unstable: acl 2.4.0-1 (source package)
+
+CVE-2026-54370
+  acl before version 2.4.0 contains a time-of-check to time-of-use (TOCT ...
+  installed: libacl1 2.3.1-3
+             (built from acl 2.3.1-3)
+  fixed in unstable: acl 2.4.0-1 (source package)
+
+CVE-2026-109518 (fixed)
+  On Debian, Ubuntu, and derivative Linux distributions, an on-path atta ...
+  installed: libapt-pkg6.0 2.6.1
+             (built from apt 2.6.1)
+  fixed in unstable: apt 3.3.6 (source package)
+  fixed on branch:   apt 2.6.2 (source package)
+  fixed on branch:   apt 3.0.4 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-54371
+  attr before version 2.6.0 contains a symlink traversal vulnerability i ...
+  installed: libattr1 1:2.5.1-4
+             (built from attr 1:2.5.1-4)
+  fixed in unstable: attr 1:2.6.0-1 (source package)
+
+CVE-2024-28085 (fixed)
+  wall in util-linux through 2.40, often installed with setgid tty permi ...
+  installed: libblkid1 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.39.3-11 (source package)
+  fixed on branch:   util-linux 2.33.1-0.1+deb10u1 (source package)
+  fixed on branch:   util-linux 2.36.1-8+deb11u2 (source package)
+  fixed on branch:   util-linux 2.38.1-5+deb12u1 (source package)
+  fixed on branch:   util-linux 2.38.1-5+deb12u3 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-13595
+  A flaw was found in the libblkid library of util-linux. During nested  ...
+  installed: libblkid1 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42.2-1 (source package)
+  fixed on branch:   util-linux 2.41.5-0+deb13u1 (source package)
+
+CVE-2026-27456
+  util-linux is a random collection of Linux utilities. Prior to version ...
+  installed: libblkid1 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42-1 (source package)
+  fixed on branch:   util-linux 2.41.5-0+deb13u1 (source package)
+
+CVE-2026-3184
+  A flaw was found in util-linux. Improper hostname canonicalization in  ...
+  installed: libblkid1 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42-1 (source package)
+  fixed on branch:   util-linux 2.42~rc1-1 (source package)
+
+CVE-2026-53613
+  util-linux is a random collection of Linux utilities. In util-linux 2. ...
+  installed: libblkid1 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42.2-1 (source package)
+  fixed on branch:   util-linux 2.41.5-0+deb13u1 (source package)
+
+CVE-2026-53615
+  util-linux is a random collection of Linux utilities. Before util-linu ...
+  installed: libblkid1 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42-1 (source package)
+  fixed on branch:   util-linux 2.41.5-0+deb13u1 (source package)
+
+CVE-2026-78410
+  A flaw was found in util-linux. Restricted bind mounts take the source ...
+  installed: libblkid1 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42.3-1 (source package)
+
+CVE-2026-42250
+  bzip2 contains an off\u2011by\u2011one error in the bzip2recover utili ...
+  installed: libbz2-1.0 1.0.8-5+b1
+             (built from bzip2 1.0.8-5)
+
+CVE-2023-4806 (fixed)
+  A flaw has been identified in glibc. In an extremely rare situation, t ...
+  installed: libc-bin 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.37-10 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u10 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u11 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u13 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u14 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u3 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u4 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u6 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u7 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2024-2961 (fixed)
+  The iconv() function in the GNU C Library versions 2.39 and older may  ...
+  installed: libc-bin 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.37-18 (source package)
+  fixed on branch:   glibc 2.28-10+deb10u3 (source package)
+  fixed on branch:   glibc 2.28-10+deb10u4 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u10 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u12 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u13 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u14 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u9 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u10 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u11 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u13 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u14 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u6 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u7 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2024-33599 (fixed)
+  nscd: Stack-based buffer overflow in netgroup cache  If the Name Servi ...
+  installed: libc-bin 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.37-19 (source package)
+  fixed on branch:   glibc 2.28-10+deb10u4 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u10 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u12 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u13 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u14 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u10 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u11 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u13 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u14 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u7 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2024-33600 (fixed)
+  nscd: Null pointer crashes after notfound response  If the Name Servic ...
+  installed: libc-bin 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.37-19 (source package)
+  fixed on branch:   glibc 2.28-10+deb10u4 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u10 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u12 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u13 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u14 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u10 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u11 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u13 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u14 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u7 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2024-33601 (fixed)
+  nscd: netgroup cache may terminate daemon on memory allocation failure ...
+  installed: libc-bin 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.37-19 (source package)
+  fixed on branch:   glibc 2.28-10+deb10u4 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u10 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u12 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u13 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u14 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u10 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u11 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u13 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u14 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u7 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2024-33602 (fixed)
+  nscd: netgroup cache assumes NSS callback uses in-buffer strings  The  ...
+  installed: libc-bin 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.37-19 (source package)
+  fixed on branch:   glibc 2.28-10+deb10u4 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u10 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u12 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u13 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u14 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u10 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u11 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u13 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u14 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u7 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2025-0395 (fixed)
+  When the assert() function in the GNU C Library versions 2.13 to 2.40  ...
+  installed: libc-bin 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.40-6 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u12 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u13 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u14 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u10 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u11 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u13 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u14 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2025-15281 (fixed)
+  Calling wordexp with WRDE_REUSE in conjunction with WRDE_APPEND in the ...
+  installed: libc-bin 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.42-11 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u14 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u14 (source package)
+  fixed on branch:   glibc 2.41-12+deb13u2 (source package)
+  fixed on branch:   glibc 2.41-12+deb13u3 (source package)
+  fixed on branch:   glibc 2.41-12+deb13u4 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2025-4802 (fixed)
+  Untrusted LD_LIBRARY_PATH environment variable vulnerability in the GN ...
+  installed: libc-bin 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.39-4 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u13 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u14 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u11 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u13 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u14 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2025-8058 (fixed)
+  The regcomp function in the GNU C library version from 2.4 to 2.41 is  ...
+  installed: libc-bin 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.41-11 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u14 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u13 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u14 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-0861 (fixed)
+  Passing too large an alignment to the memalign suite of functions (mem ...
+  installed: libc-bin 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.42-8 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u14 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u14 (source package)
+  fixed on branch:   glibc 2.41-12+deb13u2 (source package)
+  fixed on branch:   glibc 2.41-12+deb13u3 (source package)
+  fixed on branch:   glibc 2.41-12+deb13u4 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-0915 (fixed)
+  Calling getnetbyaddr or getnetbyaddr_r with a configured nsswitch.conf ...
+  installed: libc-bin 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.42-8 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u14 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u14 (source package)
+  fixed on branch:   glibc 2.41-12+deb13u2 (source package)
+  fixed on branch:   glibc 2.41-12+deb13u3 (source package)
+  fixed on branch:   glibc 2.41-12+deb13u4 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-100290
+  The regcomp and regexec functions in the GNU C Library version 2.3 to  ...
+  installed: libc-bin 2.36-9
+             (built from glibc 2.36-9)
+
+CVE-2026-115819
+  Calling the wide scanf family of functions (swscanf, fwscanf, wscanf,  ...
+  installed: libc-bin 2.36-9
+             (built from glibc 2.36-9)
+
+CVE-2026-18374
+  Passing an effectively empty string to the `,ccs=` syntax extension of ...
+  installed: libc-bin 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.43-5 (source package)
+
+CVE-2026-19499
+  Calling strfmon and strfmon_l in the GNU C Library version 2.38 to 2.4 ...
+  installed: libc-bin 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.43-5 (source package)
+
+CVE-2026-19542
+  Calling tdelete on a sufficiently deep tree in the GNU C Library versi ...
+  installed: libc-bin 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.43-4 (source package)
+
+CVE-2026-4046 (fixed)
+  The iconv() function in the GNU C Library versions 2.43 and earlier ma ...
+  installed: libc-bin 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.42-15 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u14 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u14 (source package)
+  fixed on branch:   glibc 2.41-12+deb13u3 (source package)
+  fixed on branch:   glibc 2.41-12+deb13u4 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-5435
+  The deprecated functions ns_printrrf, ns_printrr and fp_nquery in the  ...
+  installed: libc-bin 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.43-3 (source package)
+
+CVE-2026-5450
+  Calling the scanf family of functions with a %mc (malloc'd character m ...
+  installed: libc-bin 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.42-17 (source package)
+  fixed on branch:   glibc 2.41-12+deb13u4 (source package)
+
+CVE-2026-5928
+  Calling the ungetwc function on a FILE stream with wide characters enc ...
+  installed: libc-bin 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.42-17 (source package)
+  fixed on branch:   glibc 2.41-12+deb13u4 (source package)
+
+CVE-2026-6238
+  The deprecated functions ns_printrrf, ns_printrr and fp_nquery in the  ...
+  installed: libc-bin 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.43-3 (source package)
+
+CVE-2026-6368
+  Calling wordexp with WRDE_APPEND in the GNU C Library version 2.0 to v ...
+  installed: libc-bin 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.43-4 (source package)
+
+CVE-2026-6791
+  When expanding paths that begin with a tilde (~) followed by a usernam ...
+  installed: libc-bin 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.43-3 (source package)
+
+CVE-2026-77117
+  Converting crafted SHIFT_JISX0213 input to UCS-4 or the internal wide  ...
+  installed: libc-bin 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.43-5 (source package)
+
+CVE-2026-80489
+  Converting crafted EUC_JISX0213 input to UCS-4 or the internal wide ch ...
+  installed: libc-bin 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.43-5 (source package)
+
+CVE-2026-84243
+  The gettext family of functions in the GNU C Library version 2.0 and l ...
+  installed: libc-bin 2.36-9
+             (built from glibc 2.36-9)
+
+CVE-2026-8674
+  Initializing the DNS stub resolver from an /etc/resolv.conf file, or a ...
+  installed: libc-bin 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.43-6 (source package)
+
+CVE-2026-86805
+  A time-of-check to time-of-use (TOCTOU) race condition in the dynamic  ...
+  installed: libc-bin 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.43-7 (source package)
+
+CVE-2026-89092
+  The nscd service in the GNU C Library 2.3.4 onwards may crash due to a ...
+  installed: libc-bin 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.43-7 (source package)
+
+CVE-2026-95818
+  A stack-based buffer overflow in the dynamic loader (ld.so) of the GNU ...
+  installed: libc-bin 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.43-7 (source package)
+
+CVE-2026-97399
+  The strncasecmp function in the GNU C Library 2.24 and later optimized ...
+  installed: libc-bin 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.43-7 (source package)
+
+CVE-2023-4806 (fixed)
+  A flaw has been identified in glibc. In an extremely rare situation, t ...
+  installed: libc6 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.37-10 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u10 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u11 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u13 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u14 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u3 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u4 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u6 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u7 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2024-2961 (fixed)
+  The iconv() function in the GNU C Library versions 2.39 and older may  ...
+  installed: libc6 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.37-18 (source package)
+  fixed on branch:   glibc 2.28-10+deb10u3 (source package)
+  fixed on branch:   glibc 2.28-10+deb10u4 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u10 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u12 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u13 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u14 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u9 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u10 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u11 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u13 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u14 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u6 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u7 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2024-33599 (fixed)
+  nscd: Stack-based buffer overflow in netgroup cache  If the Name Servi ...
+  installed: libc6 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.37-19 (source package)
+  fixed on branch:   glibc 2.28-10+deb10u4 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u10 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u12 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u13 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u14 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u10 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u11 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u13 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u14 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u7 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2024-33600 (fixed)
+  nscd: Null pointer crashes after notfound response  If the Name Servic ...
+  installed: libc6 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.37-19 (source package)
+  fixed on branch:   glibc 2.28-10+deb10u4 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u10 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u12 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u13 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u14 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u10 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u11 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u13 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u14 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u7 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2024-33601 (fixed)
+  nscd: netgroup cache may terminate daemon on memory allocation failure ...
+  installed: libc6 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.37-19 (source package)
+  fixed on branch:   glibc 2.28-10+deb10u4 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u10 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u12 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u13 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u14 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u10 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u11 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u13 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u14 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u7 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2024-33602 (fixed)
+  nscd: netgroup cache assumes NSS callback uses in-buffer strings  The  ...
+  installed: libc6 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.37-19 (source package)
+  fixed on branch:   glibc 2.28-10+deb10u4 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u10 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u12 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u13 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u14 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u10 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u11 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u13 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u14 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u7 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2025-0395 (fixed)
+  When the assert() function in the GNU C Library versions 2.13 to 2.40  ...
+  installed: libc6 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.40-6 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u12 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u13 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u14 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u10 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u11 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u13 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u14 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2025-15281 (fixed)
+  Calling wordexp with WRDE_REUSE in conjunction with WRDE_APPEND in the ...
+  installed: libc6 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.42-11 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u14 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u14 (source package)
+  fixed on branch:   glibc 2.41-12+deb13u2 (source package)
+  fixed on branch:   glibc 2.41-12+deb13u3 (source package)
+  fixed on branch:   glibc 2.41-12+deb13u4 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2025-4802 (fixed)
+  Untrusted LD_LIBRARY_PATH environment variable vulnerability in the GN ...
+  installed: libc6 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.39-4 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u13 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u14 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u11 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u13 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u14 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2025-8058 (fixed)
+  The regcomp function in the GNU C library version from 2.4 to 2.41 is  ...
+  installed: libc6 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.41-11 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u14 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u13 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u14 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-0861 (fixed)
+  Passing too large an alignment to the memalign suite of functions (mem ...
+  installed: libc6 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.42-8 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u14 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u14 (source package)
+  fixed on branch:   glibc 2.41-12+deb13u2 (source package)
+  fixed on branch:   glibc 2.41-12+deb13u3 (source package)
+  fixed on branch:   glibc 2.41-12+deb13u4 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-0915 (fixed)
+  Calling getnetbyaddr or getnetbyaddr_r with a configured nsswitch.conf ...
+  installed: libc6 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.42-8 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u14 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u14 (source package)
+  fixed on branch:   glibc 2.41-12+deb13u2 (source package)
+  fixed on branch:   glibc 2.41-12+deb13u3 (source package)
+  fixed on branch:   glibc 2.41-12+deb13u4 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-100290
+  The regcomp and regexec functions in the GNU C Library version 2.3 to  ...
+  installed: libc6 2.36-9
+             (built from glibc 2.36-9)
+
+CVE-2026-115819
+  Calling the wide scanf family of functions (swscanf, fwscanf, wscanf,  ...
+  installed: libc6 2.36-9
+             (built from glibc 2.36-9)
+
+CVE-2026-18374
+  Passing an effectively empty string to the `,ccs=` syntax extension of ...
+  installed: libc6 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.43-5 (source package)
+
+CVE-2026-19499
+  Calling strfmon and strfmon_l in the GNU C Library version 2.38 to 2.4 ...
+  installed: libc6 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.43-5 (source package)
+
+CVE-2026-19542
+  Calling tdelete on a sufficiently deep tree in the GNU C Library versi ...
+  installed: libc6 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.43-4 (source package)
+
+CVE-2026-4046 (fixed)
+  The iconv() function in the GNU C Library versions 2.43 and earlier ma ...
+  installed: libc6 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.42-15 (source package)
+  fixed on branch:   glibc 2.31-13+deb11u14 (source package)
+  fixed on branch:   glibc 2.36-9+deb12u14 (source package)
+  fixed on branch:   glibc 2.41-12+deb13u3 (source package)
+  fixed on branch:   glibc 2.41-12+deb13u4 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-5435
+  The deprecated functions ns_printrrf, ns_printrr and fp_nquery in the  ...
+  installed: libc6 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.43-3 (source package)
+
+CVE-2026-5450
+  Calling the scanf family of functions with a %mc (malloc'd character m ...
+  installed: libc6 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.42-17 (source package)
+  fixed on branch:   glibc 2.41-12+deb13u4 (source package)
+
+CVE-2026-5928
+  Calling the ungetwc function on a FILE stream with wide characters enc ...
+  installed: libc6 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.42-17 (source package)
+  fixed on branch:   glibc 2.41-12+deb13u4 (source package)
+
+CVE-2026-6238
+  The deprecated functions ns_printrrf, ns_printrr and fp_nquery in the  ...
+  installed: libc6 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.43-3 (source package)
+
+CVE-2026-6368
+  Calling wordexp with WRDE_APPEND in the GNU C Library version 2.0 to v ...
+  installed: libc6 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.43-4 (source package)
+
+CVE-2026-6791
+  When expanding paths that begin with a tilde (~) followed by a usernam ...
+  installed: libc6 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.43-3 (source package)
+
+CVE-2026-77117
+  Converting crafted SHIFT_JISX0213 input to UCS-4 or the internal wide  ...
+  installed: libc6 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.43-5 (source package)
+
+CVE-2026-80489
+  Converting crafted EUC_JISX0213 input to UCS-4 or the internal wide ch ...
+  installed: libc6 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.43-5 (source package)
+
+CVE-2026-84243
+  The gettext family of functions in the GNU C Library version 2.0 and l ...
+  installed: libc6 2.36-9
+             (built from glibc 2.36-9)
+
+CVE-2026-8674
+  Initializing the DNS stub resolver from an /etc/resolv.conf file, or a ...
+  installed: libc6 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.43-6 (source package)
+
+CVE-2026-86805
+  A time-of-check to time-of-use (TOCTOU) race condition in the dynamic  ...
+  installed: libc6 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.43-7 (source package)
+
+CVE-2026-89092
+  The nscd service in the GNU C Library 2.3.4 onwards may crash due to a ...
+  installed: libc6 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.43-7 (source package)
+
+CVE-2026-95818
+  A stack-based buffer overflow in the dynamic loader (ld.so) of the GNU ...
+  installed: libc6 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.43-7 (source package)
+
+CVE-2026-97399
+  The strncasecmp function in the GNU C Library 2.24 and later optimized ...
+  installed: libc6 2.36-9
+             (built from glibc 2.36-9)
+  fixed in unstable: glibc 2.43-7 (source package)
+
+CVE-2025-1390 (fixed)
+  The PAM module pam_cap.so of libcap configuration supports group names ...
+  installed: libcap2 1:2.66-4
+             (built from libcap2 1:2.66-4)
+  fixed in unstable: libcap2 1:2.73-4 (source package)
+  fixed on branch:   libcap2 1:2.44-1+deb11u1 (source package)
+  fixed on branch:   libcap2 1:2.66-4+deb12u1 (source package)
+  fixed on branch:   libcap2 1:2.66-4+deb12u3 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-4878 (fixed)
+  A flaw was found in libcap. A local unprivileged user can exploit a Ti ...
+  installed: libcap2 1:2.66-4
+             (built from libcap2 1:2.66-4)
+  fixed in unstable: libcap2 1:2.78-1 (source package)
+  fixed on branch:   libcap2 1:2.66-4+deb12u3 (source package)
+  fixed on branch:   libcap2 1:2.75-10+deb13u1 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2025-66382
+  In libexpat through 2.7.3, a crafted file with an approximate size of  ...
+  installed: libexpat1 2.5.0-1+deb12u5
+             (built from expat 2.5.0-1+deb12u5)
+
+CVE-2026-113351
+  libexpat 2.7.2 through 2.9.0 contains a denial of service vulnerabilit ...
+  installed: libexpat1 2.5.0-1+deb12u5
+             (built from expat 2.5.0-1+deb12u5)
+  fixed in unstable: expat 2.10.0-1 (source package)
+
+CVE-2026-115506
+  libexpat through 2.9.0 contains a denial of service vulnerability beca ...
+  installed: libexpat1 2.5.0-1+deb12u5
+             (built from expat 2.5.0-1+deb12u5)
+  fixed in unstable: expat 2.10.0-1 (source package)
+
+CVE-2026-117610
+  libexpat through 2.9.0 contains a NULL pointer dereference vulnerabili ...
+  installed: libexpat1 2.5.0-1+deb12u5
+             (built from expat 2.5.0-1+deb12u5)
+  fixed in unstable: expat 2.10.0-1 (source package)
+
+CVE-2026-118370
+  libexpat through 2.9.0 contains a signed integer overflow vulnerabilit ...
+  installed: libexpat1 2.5.0-1+deb12u5
+             (built from expat 2.5.0-1+deb12u5)
+  fixed in unstable: expat 2.10.0-1 (source package)
+
+CVE-2026-124317
+  libexpat through 2.10.0 contains an out-of-bounds read vulnerability i ...
+  installed: libexpat1 2.5.0-1+deb12u5
+             (built from expat 2.5.0-1+deb12u5)
+
+CVE-2026-41080
+  libexpat before 2.8.0 uses insufficient entropy, and thus hash floodin ...
+  installed: libexpat1 2.5.0-1+deb12u5
+             (built from expat 2.5.0-1+deb12u5)
+  fixed in unstable: expat 2.8.0-1 (source package)
+  fixed on branch:   expat 2.8.2-1~deb13u1 (source package)
+  fixed on branch:   expat 2.8.3-1~deb13u1 (source package)
+  fixed on branch:   expat 2.9.0-1~deb13u1 (source package)
+
+CVE-2026-102010
+  A flaw was found in GCC. When an application calls the erase_if functi ...
+  installed: libgcc-s1 12.2.0-14
+             (built from gcc-12 12.2.0-14)
+  fixed in unstable: gcc-12 12.5.0-11 (source package)
+
+CVE-2026-114690
+  A flaw was found in GCC. An out-of-bounds memory access vulnerability  ...
+  installed: libgcc-s1 12.2.0-14
+             (built from gcc-12 12.2.0-14)
+
+CVE-2026-114691
+  A flaw was found in the libstdc++ component of GCC. An attacker who ca ...
+  installed: libgcc-s1 12.2.0-14
+             (built from gcc-12 12.2.0-14)
+
+CVE-2026-115456
+  A flaw was found in gcc. An attacker could cause a Denial of Service ( ...
+  installed: libgcc-s1 12.2.0-14
+             (built from gcc-12 12.2.0-14)
+
+CVE-2026-95619
+  A flaw was found in libstdc++. An integer overflow can occur when proc ...
+  installed: libgcc-s1 12.2.0-14
+             (built from gcc-12 12.2.0-14)
+
+CVE-2023-5981 (fixed)
+  A vulnerability was found that the response times to malformed ciphert ...
+  installed: libgnutls30 3.7.9-2
+             (built from gnutls28 3.7.9-2)
+  fixed in unstable: gnutls28 3.8.2-1 (source package)
+  fixed on branch:   gnutls28 3.6.7-4+deb10u11 (source package)
+  fixed on branch:   gnutls28 3.6.7-4+deb10u12 (source package)
+  fixed on branch:   gnutls28 3.7.1-5+deb11u10 (source package)
+  fixed on branch:   gnutls28 3.7.1-5+deb11u4 (source package)
+  fixed on branch:   gnutls28 3.7.1-5+deb11u5 (source package)
+  fixed on branch:   gnutls28 3.7.1-5+deb11u6 (source package)
+  fixed on branch:   gnutls28 3.7.1-5+deb11u7 (source package)
+  fixed on branch:   gnutls28 3.7.1-5+deb11u8 (source package)
+  fixed on branch:   gnutls28 3.7.1-5+deb11u9 (source package)
+  fixed on branch:   gnutls28 3.7.9-2+deb12u1 (source package)
+  fixed on branch:   gnutls28 3.7.9-2+deb12u2 (source package)
+  fixed on branch:   gnutls28 3.7.9-2+deb12u3 (source package)
+  fixed on branch:   gnutls28 3.7.9-2+deb12u4 (source package)
+  fixed on branch:   gnutls28 3.7.9-2+deb12u5 (source package)
+  fixed on branch:   gnutls28 3.7.9-2+deb12u6 (source package)
+  fixed on branch:   gnutls28 3.7.9-2+deb12u7 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2024-0553 (fixed)
+  A vulnerability was found in GnuTLS. The response times to malformed c ...
+  installed: libgnutls30 3.7.9-2
+             (built from gnutls28 3.7.9-2)
+  fixed in unstable: gnutls28 3.8.3-1 (source package)
+  fixed on branch:   gnutls28 3.6.7-4+deb10u12 (source package)
+  fixed on branch:   gnutls28 3.7.1-5+deb11u10 (source package)
+  fixed on branch:   gnutls28 3.7.1-5+deb11u5 (source package)
+  fixed on branch:   gnutls28 3.7.1-5+deb11u6 (source package)
+  fixed on branch:   gnutls28 3.7.1-5+deb11u7 (source package)
+  fixed on branch:   gnutls28 3.7.1-5+deb11u8 (source package)
+  fixed on branch:   gnutls28 3.7.1-5+deb11u9 (source package)
+  fixed on branch:   gnutls28 3.7.9-2+deb12u2 (source package)
+  fixed on branch:   gnutls28 3.7.9-2+deb12u3 (source package)
+  fixed on branch:   gnutls28 3.7.9-2+deb12u4 (source package)
+  fixed on branch:   gnutls28 3.7.9-2+deb12u5 (source package)
+  fixed on branch:   gnutls28 3.7.9-2+deb12u6 (source package)
+  fixed on branch:   gnutls28 3.7.9-2+deb12u7 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2024-12243 (fixed)
+  A flaw was found in GnuTLS, which relies on libtasn1 for ASN.1 data pr ...
+  installed: libgnutls30 3.7.9-2
+             (built from gnutls28 3.7.9-2)
+  fixed in unstable: gnutls28 3.8.9-2 (source package)
+  fixed on branch:   gnutls28 3.7.1-5+deb11u10 (source package)
+  fixed on branch:   gnutls28 3.7.1-5+deb11u7 (source package)
+  fixed on branch:   gnutls28 3.7.1-5+deb11u8 (source package)
+  fixed on branch:   gnutls28 3.7.1-5+deb11u9 (source package)
+  fixed on branch:   gnutls28 3.7.9-2+deb12u4 (source package)
+  fixed on branch:   gnutls28 3.7.9-2+deb12u5 (source package)
+  fixed on branch:   gnutls28 3.7.9-2+deb12u6 (source package)
+  fixed on branch:   gnutls28 3.7.9-2+deb12u7 (source package)
+  fixed on branch:   gnutls28 3.8.11-1 (source package)
+  fixed on branch:   gnutls28 3.8.9-1 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2025-14831 (fixed)
+  A flaw was found in GnuTLS. This vulnerability allows a denial of serv ...
+  installed: libgnutls30 3.7.9-2
+             (built from gnutls28 3.7.9-2)
+  fixed in unstable: gnutls28 3.8.12-1 (source package)
+  fixed on branch:   gnutls28 3.7.1-5+deb11u10 (source package)
+  fixed on branch:   gnutls28 3.7.1-5+deb11u9 (source package)
+  fixed on branch:   gnutls28 3.7.9-2+deb12u6 (source package)
+  fixed on branch:   gnutls28 3.7.9-2+deb12u7 (source package)
+  fixed on branch:   gnutls28 3.8.9-3+deb13u2 (source package)
+  fixed on branch:   gnutls28 3.8.9-3+deb13u4 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2025-32988 (fixed)
+  A flaw was found in GnuTLS. A double-free vulnerability exists in GnuT ...
+  installed: libgnutls30 3.7.9-2
+             (built from gnutls28 3.7.9-2)
+  fixed in unstable: gnutls28 3.8.9-3 (source package)
+  fixed on branch:   gnutls28 3.7.1-5+deb11u10 (source package)
+  fixed on branch:   gnutls28 3.7.1-5+deb11u8 (source package)
+  fixed on branch:   gnutls28 3.7.1-5+deb11u9 (source package)
+  fixed on branch:   gnutls28 3.7.9-2+deb12u5 (source package)
+  fixed on branch:   gnutls28 3.7.9-2+deb12u6 (source package)
+  fixed on branch:   gnutls28 3.7.9-2+deb12u7 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2025-32990 (fixed)
+  A heap-buffer-overflow (off-by-one) flaw was found in the GnuTLS softw ...
+  installed: libgnutls30 3.7.9-2
+             (built from gnutls28 3.7.9-2)
+  fixed in unstable: gnutls28 3.8.9-3 (source package)
+  fixed on branch:   gnutls28 3.7.1-5+deb11u10 (source package)
+  fixed on branch:   gnutls28 3.7.1-5+deb11u8 (source package)
+  fixed on branch:   gnutls28 3.7.1-5+deb11u9 (source package)
+  fixed on branch:   gnutls28 3.7.9-2+deb12u5 (source package)
+  fixed on branch:   gnutls28 3.7.9-2+deb12u6 (source package)
+  fixed on branch:   gnutls28 3.7.9-2+deb12u7 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2025-6395 (fixed)
+  A NULL pointer dereference flaw was found in the GnuTLS software in _g ...
+  installed: libgnutls30 3.7.9-2
+             (built from gnutls28 3.7.9-2)
+  fixed in unstable: gnutls28 3.8.9-3 (source package)
+  fixed on branch:   gnutls28 3.7.1-5+deb11u10 (source package)
+  fixed on branch:   gnutls28 3.7.1-5+deb11u8 (source package)
+  fixed on branch:   gnutls28 3.7.1-5+deb11u9 (source package)
+  fixed on branch:   gnutls28 3.7.9-2+deb12u5 (source package)
+  fixed on branch:   gnutls28 3.7.9-2+deb12u6 (source package)
+  fixed on branch:   gnutls28 3.7.9-2+deb12u7 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2025-9820 (fixed)
+  A flaw was found in the GnuTLS library, specifically in the gnutls_pkc ...
+  installed: libgnutls30 3.7.9-2
+             (built from gnutls28 3.7.9-2)
+  fixed in unstable: gnutls28 3.8.11-3 (source package)
+  fixed on branch:   gnutls28 3.7.1-5+deb11u10 (source package)
+  fixed on branch:   gnutls28 3.7.1-5+deb11u9 (source package)
+  fixed on branch:   gnutls28 3.7.9-2+deb12u6 (source package)
+  fixed on branch:   gnutls28 3.7.9-2+deb12u7 (source package)
+  fixed on branch:   gnutls28 3.8.11-1 (source package)
+  fixed on branch:   gnutls28 3.8.9-3+deb13u1 (source package)
+  fixed on branch:   gnutls28 3.8.9-3+deb13u2 (source package)
+  fixed on branch:   gnutls28 3.8.9-3+deb13u4 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-33845 (fixed)
+  A flaw in GnuTLS DTLS handshake parsing allows malformed fragments wit ...
+  installed: libgnutls30 3.7.9-2
+             (built from gnutls28 3.7.9-2)
+  fixed in unstable: gnutls28 3.8.13-1 (source package)
+  fixed on branch:   gnutls28 3.7.1-5+deb11u10 (source package)
+  fixed on branch:   gnutls28 3.7.9-2+deb12u7 (source package)
+  fixed on branch:   gnutls28 3.8.9-3+deb13u4 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-33846 (fixed)
+  A heap buffer overflow vulnerability exists in the DTLS handshake frag ...
+  installed: libgnutls30 3.7.9-2
+             (built from gnutls28 3.7.9-2)
+  fixed in unstable: gnutls28 3.8.13-1 (source package)
+  fixed on branch:   gnutls28 3.7.1-5+deb11u10 (source package)
+  fixed on branch:   gnutls28 3.7.9-2+deb12u7 (source package)
+  fixed on branch:   gnutls28 3.8.9-3+deb13u4 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-3833 (fixed)
+  A flaw was found in gnutls. This vulnerability occurs because gnutls p ...
+  installed: libgnutls30 3.7.9-2
+             (built from gnutls28 3.7.9-2)
+  fixed in unstable: gnutls28 3.8.13-1 (source package)
+  fixed on branch:   gnutls28 3.7.1-5+deb11u10 (source package)
+  fixed on branch:   gnutls28 3.7.9-2+deb12u7 (source package)
+  fixed on branch:   gnutls28 3.8.9-3+deb13u4 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-42009 (fixed)
+  A flaw was found in gnutls. A remote attacker could exploit an issue i ...
+  installed: libgnutls30 3.7.9-2
+             (built from gnutls28 3.7.9-2)
+  fixed in unstable: gnutls28 3.8.13-1 (source package)
+  fixed on branch:   gnutls28 3.7.1-5+deb11u10 (source package)
+  fixed on branch:   gnutls28 3.7.9-2+deb12u7 (source package)
+  fixed on branch:   gnutls28 3.8.9-3+deb13u4 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-42010 (fixed)
+  A flaw was found in gnutls. Servers configured with RSA-PSK (Rivest\u2 ...
+  installed: libgnutls30 3.7.9-2
+             (built from gnutls28 3.7.9-2)
+  fixed in unstable: gnutls28 3.8.13-1 (source package)
+  fixed on branch:   gnutls28 3.7.1-5+deb11u10 (source package)
+  fixed on branch:   gnutls28 3.7.9-2+deb12u7 (source package)
+  fixed on branch:   gnutls28 3.8.9-3+deb13u4 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-42011 (fixed)
+  A flaw was found in gnutls. This vulnerability occurs because permitte ...
+  installed: libgnutls30 3.7.9-2
+             (built from gnutls28 3.7.9-2)
+  fixed in unstable: gnutls28 3.8.13-1 (source package)
+  fixed on branch:   gnutls28 3.7.1-5+deb11u10 (source package)
+  fixed on branch:   gnutls28 3.7.9-2+deb12u7 (source package)
+  fixed on branch:   gnutls28 3.8.9-3+deb13u4 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-42012 (fixed)
+  A flaw was found in gnutls. A remote attacker could exploit this vulne ...
+  installed: libgnutls30 3.7.9-2
+             (built from gnutls28 3.7.9-2)
+  fixed in unstable: gnutls28 3.8.13-1 (source package)
+  fixed on branch:   gnutls28 3.7.1-5+deb11u10 (source package)
+  fixed on branch:   gnutls28 3.7.9-2+deb12u7 (source package)
+  fixed on branch:   gnutls28 3.8.9-3+deb13u4 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-42013 (fixed)
+  A flaw was found in gnutls. When validating certificates, an oversized ...
+  installed: libgnutls30 3.7.9-2
+             (built from gnutls28 3.7.9-2)
+  fixed in unstable: gnutls28 3.8.13-1 (source package)
+  fixed on branch:   gnutls28 3.7.1-5+deb11u10 (source package)
+  fixed on branch:   gnutls28 3.7.9-2+deb12u7 (source package)
+  fixed on branch:   gnutls28 3.8.9-3+deb13u4 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-42014 (fixed)
+  A flaw was found in GnuTLS. The `gnutls_pkcs11_token_set_pin` function ...
+  installed: libgnutls30 3.7.9-2
+             (built from gnutls28 3.7.9-2)
+  fixed in unstable: gnutls28 3.8.13-1 (source package)
+  fixed on branch:   gnutls28 3.7.1-5+deb11u10 (source package)
+  fixed on branch:   gnutls28 3.7.9-2+deb12u7 (source package)
+  fixed on branch:   gnutls28 3.8.9-3+deb13u4 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-42015 (fixed)
+  A flaw was found in gnutls. An off-by-one error exists in the PKCS#12  ...
+  installed: libgnutls30 3.7.9-2
+             (built from gnutls28 3.7.9-2)
+  fixed in unstable: gnutls28 3.8.13-1 (source package)
+  fixed on branch:   gnutls28 3.7.1-5+deb11u10 (source package)
+  fixed on branch:   gnutls28 3.7.9-2+deb12u7 (source package)
+  fixed on branch:   gnutls28 3.8.9-3+deb13u4 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-5260 (fixed)
+  A flaw was found in libgnutls. A remote attacker, by sending an extrem ...
+  installed: libgnutls30 3.7.9-2
+             (built from gnutls28 3.7.9-2)
+  fixed in unstable: gnutls28 3.8.13-1 (source package)
+  fixed on branch:   gnutls28 3.7.1-5+deb11u10 (source package)
+  fixed on branch:   gnutls28 3.7.9-2+deb12u7 (source package)
+  fixed on branch:   gnutls28 3.8.9-3+deb13u4 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-107364
+  
+  installed: libgssapi-krb5-2 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-107708
+  MIT krb5 through 1.22.2 contains a NULL pointer dereference vulnerabil ...
+  installed: libgssapi-krb5-2 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-107778
+  MIT Kerberos 5 (krb5) through 1.22.2 contains a NULL pointer dereferen ...
+  installed: libgssapi-krb5-2 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-107884
+  Check for the lockdown_keys attribute when processing password change protocol requests in kadmind
+  installed: libgssapi-krb5-2 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-111423
+  Fix a logic error when checking PAC server checksums
+  installed: libgssapi-krb5-2 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-112314
+  clnttcp_call() in lib/rpc/clnt_tcp.c in MIT Kerberos 5 (aka krb5) does ...
+  installed: libgssapi-krb5-2 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-112315
+  The RPCSEC_GSS authentication routines in lib/rpc/authgss_prot.c in MI ...
+  installed: libgssapi-krb5-2 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-112316
+  xdr_krb5_tl_data() in lib/kadm5/kadm_rpc_xdr.c in MIT Kerberos 5 (aka  ...
+  installed: libgssapi-krb5-2 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-112317
+  krb5_ktkdb_get_entry() in lib/kdb/keytab.c in MIT Kerberos 5 (aka krb5 ...
+  installed: libgssapi-krb5-2 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-112318
+  The policy RPC stubs in kadmin/server/server_stubs.c in MIT Kerberos 5 ...
+  installed: libgssapi-krb5-2 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-112319
+  The GSS-RPC layer in MIT Kerberos 5 (aka krb5) does not enforce size l ...
+  installed: libgssapi-krb5-2 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-112320
+  The GSS-RPC transport layer in MIT Kerberos 5 (aka krb5) 1.4 and later ...
+  installed: libgssapi-krb5-2 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-112321
+  The AUTH_GSSAPI handler in lib/rpc/svc_auth_gssapi.c in MIT Kerberos 5 ...
+  installed: libgssapi-krb5-2 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-112322
+  clean_client() in lib/rpc/svc_auth_gssapi.c in MIT Kerberos 5 (aka krb ...
+  installed: libgssapi-krb5-2 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-112323
+  The AUTH_GSSAPI handler in lib/rpc/svc_auth_gssapi.c in MIT Kerberos 5 ...
+  installed: libgssapi-krb5-2 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-118380
+  
+  installed: libgssapi-krb5-2 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-119079
+  decode_sequence_of() in lib/krb5/asn.1/asn1_encode.c in MIT Kerberos 5 ...
+  installed: libgssapi-krb5-2 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-71199
+  Check for unkeyed checksums when validating CAMMAC verifiers
+  installed: libgssapi-krb5-2 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-71200
+  
+  installed: libgssapi-krb5-2 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-107364
+  
+  installed: libk5crypto3 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-107708
+  MIT krb5 through 1.22.2 contains a NULL pointer dereference vulnerabil ...
+  installed: libk5crypto3 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-107778
+  MIT Kerberos 5 (krb5) through 1.22.2 contains a NULL pointer dereferen ...
+  installed: libk5crypto3 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-107884
+  Check for the lockdown_keys attribute when processing password change protocol requests in kadmind
+  installed: libk5crypto3 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-111423
+  Fix a logic error when checking PAC server checksums
+  installed: libk5crypto3 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-112314
+  clnttcp_call() in lib/rpc/clnt_tcp.c in MIT Kerberos 5 (aka krb5) does ...
+  installed: libk5crypto3 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-112315
+  The RPCSEC_GSS authentication routines in lib/rpc/authgss_prot.c in MI ...
+  installed: libk5crypto3 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-112316
+  xdr_krb5_tl_data() in lib/kadm5/kadm_rpc_xdr.c in MIT Kerberos 5 (aka  ...
+  installed: libk5crypto3 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-112317
+  krb5_ktkdb_get_entry() in lib/kdb/keytab.c in MIT Kerberos 5 (aka krb5 ...
+  installed: libk5crypto3 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-112318
+  The policy RPC stubs in kadmin/server/server_stubs.c in MIT Kerberos 5 ...
+  installed: libk5crypto3 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-112319
+  The GSS-RPC layer in MIT Kerberos 5 (aka krb5) does not enforce size l ...
+  installed: libk5crypto3 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-112320
+  The GSS-RPC transport layer in MIT Kerberos 5 (aka krb5) 1.4 and later ...
+  installed: libk5crypto3 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-112321
+  The AUTH_GSSAPI handler in lib/rpc/svc_auth_gssapi.c in MIT Kerberos 5 ...
+  installed: libk5crypto3 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-112322
+  clean_client() in lib/rpc/svc_auth_gssapi.c in MIT Kerberos 5 (aka krb ...
+  installed: libk5crypto3 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-112323
+  The AUTH_GSSAPI handler in lib/rpc/svc_auth_gssapi.c in MIT Kerberos 5 ...
+  installed: libk5crypto3 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-118380
+  
+  installed: libk5crypto3 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-119079
+  decode_sequence_of() in lib/krb5/asn.1/asn1_encode.c in MIT Kerberos 5 ...
+  installed: libk5crypto3 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-71199
+  Check for unkeyed checksums when validating CAMMAC verifiers
+  installed: libk5crypto3 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-71200
+  
+  installed: libk5crypto3 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-107364
+  
+  installed: libkrb5-3 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-107708
+  MIT krb5 through 1.22.2 contains a NULL pointer dereference vulnerabil ...
+  installed: libkrb5-3 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-107778
+  MIT Kerberos 5 (krb5) through 1.22.2 contains a NULL pointer dereferen ...
+  installed: libkrb5-3 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-107884
+  Check for the lockdown_keys attribute when processing password change protocol requests in kadmind
+  installed: libkrb5-3 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-111423
+  Fix a logic error when checking PAC server checksums
+  installed: libkrb5-3 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-112314
+  clnttcp_call() in lib/rpc/clnt_tcp.c in MIT Kerberos 5 (aka krb5) does ...
+  installed: libkrb5-3 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-112315
+  The RPCSEC_GSS authentication routines in lib/rpc/authgss_prot.c in MI ...
+  installed: libkrb5-3 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-112316
+  xdr_krb5_tl_data() in lib/kadm5/kadm_rpc_xdr.c in MIT Kerberos 5 (aka  ...
+  installed: libkrb5-3 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-112317
+  krb5_ktkdb_get_entry() in lib/kdb/keytab.c in MIT Kerberos 5 (aka krb5 ...
+  installed: libkrb5-3 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-112318
+  The policy RPC stubs in kadmin/server/server_stubs.c in MIT Kerberos 5 ...
+  installed: libkrb5-3 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-112319
+  The GSS-RPC layer in MIT Kerberos 5 (aka krb5) does not enforce size l ...
+  installed: libkrb5-3 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-112320
+  The GSS-RPC transport layer in MIT Kerberos 5 (aka krb5) 1.4 and later ...
+  installed: libkrb5-3 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-112321
+  The AUTH_GSSAPI handler in lib/rpc/svc_auth_gssapi.c in MIT Kerberos 5 ...
+  installed: libkrb5-3 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-112322
+  clean_client() in lib/rpc/svc_auth_gssapi.c in MIT Kerberos 5 (aka krb ...
+  installed: libkrb5-3 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-112323
+  The AUTH_GSSAPI handler in lib/rpc/svc_auth_gssapi.c in MIT Kerberos 5 ...
+  installed: libkrb5-3 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-118380
+  
+  installed: libkrb5-3 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-119079
+  decode_sequence_of() in lib/krb5/asn.1/asn1_encode.c in MIT Kerberos 5 ...
+  installed: libkrb5-3 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-71199
+  Check for unkeyed checksums when validating CAMMAC verifiers
+  installed: libkrb5-3 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-71200
+  
+  installed: libkrb5-3 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-107364
+  
+  installed: libkrb5support0 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-107708
+  MIT krb5 through 1.22.2 contains a NULL pointer dereference vulnerabil ...
+  installed: libkrb5support0 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-107778
+  MIT Kerberos 5 (krb5) through 1.22.2 contains a NULL pointer dereferen ...
+  installed: libkrb5support0 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-107884
+  Check for the lockdown_keys attribute when processing password change protocol requests in kadmind
+  installed: libkrb5support0 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-111423
+  Fix a logic error when checking PAC server checksums
+  installed: libkrb5support0 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-112314
+  clnttcp_call() in lib/rpc/clnt_tcp.c in MIT Kerberos 5 (aka krb5) does ...
+  installed: libkrb5support0 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-112315
+  The RPCSEC_GSS authentication routines in lib/rpc/authgss_prot.c in MI ...
+  installed: libkrb5support0 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-112316
+  xdr_krb5_tl_data() in lib/kadm5/kadm_rpc_xdr.c in MIT Kerberos 5 (aka  ...
+  installed: libkrb5support0 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-112317
+  krb5_ktkdb_get_entry() in lib/kdb/keytab.c in MIT Kerberos 5 (aka krb5 ...
+  installed: libkrb5support0 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-112318
+  The policy RPC stubs in kadmin/server/server_stubs.c in MIT Kerberos 5 ...
+  installed: libkrb5support0 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-112319
+  The GSS-RPC layer in MIT Kerberos 5 (aka krb5) does not enforce size l ...
+  installed: libkrb5support0 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-112320
+  The GSS-RPC transport layer in MIT Kerberos 5 (aka krb5) 1.4 and later ...
+  installed: libkrb5support0 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-112321
+  The AUTH_GSSAPI handler in lib/rpc/svc_auth_gssapi.c in MIT Kerberos 5 ...
+  installed: libkrb5support0 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-112322
+  clean_client() in lib/rpc/svc_auth_gssapi.c in MIT Kerberos 5 (aka krb ...
+  installed: libkrb5support0 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-112323
+  The AUTH_GSSAPI handler in lib/rpc/svc_auth_gssapi.c in MIT Kerberos 5 ...
+  installed: libkrb5support0 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-118380
+  
+  installed: libkrb5support0 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-119079
+  decode_sequence_of() in lib/krb5/asn.1/asn1_encode.c in MIT Kerberos 5 ...
+  installed: libkrb5support0 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-71199
+  Check for unkeyed checksums when validating CAMMAC verifiers
+  installed: libkrb5support0 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-71200
+  
+  installed: libkrb5support0 1.20.1-2+deb12u5
+             (built from krb5 1.20.1-2+deb12u5)
+
+CVE-2026-34743 (fixed)
+  XZ Utils provide a general-purpose data-compression library plus comma ...
+  installed: liblzma5 5.4.1-0.2
+             (built from xz-utils 5.4.1-0.2)
+  fixed in unstable: xz-utils 5.8.3-1 (source package)
+  fixed on branch:   xz-utils 5.2.5-2.1~deb11u2 (source package)
+  fixed on branch:   xz-utils 5.4.1-1+deb12u1 (source package)
+  fixed on branch:   xz-utils 5.4.1-1+deb12u2 (source package)
+  fixed on branch:   xz-utils 5.8.1-1+deb13u1 (source package)
+  fixed on branch:   xz-utils 5.8.1-1+deb13u2 (source package)
+  fix is available for the selected suite (bookworm)
+
+TEMP-1147318-639065 (fixed)
+  GHSA-5qpq-xqfv-j9pg: Invalid write if a decoder is reinitialized after allocation failure
+  installed: liblzma5 5.4.1-0.2
+             (built from xz-utils 5.4.1-0.2)
+  fixed in unstable: xz-utils 5.8.4-1 (source package)
+  fixed on branch:   xz-utils 5.4.1-1+deb12u2 (source package)
+  fixed on branch:   xz-utils 5.8.1-1+deb13u2 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2024-28085 (fixed)
+  wall in util-linux through 2.40, often installed with setgid tty permi ...
+  installed: libmount1 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.39.3-11 (source package)
+  fixed on branch:   util-linux 2.33.1-0.1+deb10u1 (source package)
+  fixed on branch:   util-linux 2.36.1-8+deb11u2 (source package)
+  fixed on branch:   util-linux 2.38.1-5+deb12u1 (source package)
+  fixed on branch:   util-linux 2.38.1-5+deb12u3 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-13595
+  A flaw was found in the libblkid library of util-linux. During nested  ...
+  installed: libmount1 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42.2-1 (source package)
+  fixed on branch:   util-linux 2.41.5-0+deb13u1 (source package)
+
+CVE-2026-27456
+  util-linux is a random collection of Linux utilities. Prior to version ...
+  installed: libmount1 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42-1 (source package)
+  fixed on branch:   util-linux 2.41.5-0+deb13u1 (source package)
+
+CVE-2026-3184
+  A flaw was found in util-linux. Improper hostname canonicalization in  ...
+  installed: libmount1 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42-1 (source package)
+  fixed on branch:   util-linux 2.42~rc1-1 (source package)
+
+CVE-2026-53613
+  util-linux is a random collection of Linux utilities. In util-linux 2. ...
+  installed: libmount1 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42.2-1 (source package)
+  fixed on branch:   util-linux 2.41.5-0+deb13u1 (source package)
+
+CVE-2026-53615
+  util-linux is a random collection of Linux utilities. Before util-linu ...
+  installed: libmount1 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42-1 (source package)
+  fixed on branch:   util-linux 2.41.5-0+deb13u1 (source package)
+
+CVE-2026-78410
+  A flaw was found in util-linux. Restricted bind mounts take the source ...
+  installed: libmount1 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42.3-1 (source package)
+
+CVE-2023-50495
+  NCurse v6.4-20230418 was discovered to contain a segmentation fault vi ...
+  installed: libncursesw6 6.4-4
+             (built from ncurses 6.4-4)
+  fixed in unstable: ncurses 6.4+20230625-1 (source package)
+
+CVE-2025-6141
+  A vulnerability has been found in GNU ncurses up to 6.5-20250322 and c ...
+  installed: libncursesw6 6.4-4
+             (built from ncurses 6.4-4)
+  fixed in unstable: ncurses 6.5+20251115-2 (source package)
+  fixed on branch:   ncurses 6.5+20251115-1 (source package)
+
+CVE-2025-69720
+  The infocmp command-line tool in ncurses before 6.5-20251213 has a sta ...
+  installed: libncursesw6 6.4-4
+             (built from ncurses 6.4-4)
+  fixed in unstable: ncurses 6.6+20251231-1 (source package)
+
+CVE-2026-13757
+  A flaw was found in p11-kit. The RPC message attribute parsing functio ...
+  installed: libp11-kit0 0.24.1-2
+             (built from p11-kit 0.24.1-2)
+  fixed in unstable: p11-kit 0.26.4-1 (source package)
+
+CVE-2026-18938
+  A flaw was found in p11-kit. A local attacker, or one with equivalent  ...
+  installed: libp11-kit0 0.24.1-2
+             (built from p11-kit 0.24.1-2)
+  fixed in unstable: p11-kit 0.26.5-1 (source package)
+
+CVE-2024-10041
+  A vulnerability was found in PAM. The secret information is stored in  ...
+  installed: libpam-modules 1.5.2-6
+             (built from pam 1.5.2-6)
+  fixed in unstable: pam 1.7.0-2 (source package)
+  fixed on branch:   pam 1.7.0-1 (source package)
+  fixed on branch:   pam 1.7.0-4 (source package)
+
+CVE-2024-22365 (fixed)
+  linux-pam (aka Linux PAM) before 1.6.0 allows attackers to cause a den ...
+  installed: libpam-modules 1.5.2-6
+             (built from pam 1.5.2-6)
+  fixed in unstable: pam 1.5.3-4 (source package)
+  fixed on branch:   pam 1.4.0-9+deb11u2 (source package)
+  fixed on branch:   pam 1.5.2-6+deb12u2 (source package)
+  fixed on branch:   pam 1.5.3-2 (source package)
+  fixed on branch:   pam 1.7.0-1 (source package)
+  fixed on branch:   pam 1.7.0-4 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2025-6020 (fixed)
+  A flaw was found in linux-pam. The module pam_namespace may use access ...
+  installed: libpam-modules 1.5.2-6
+             (built from pam 1.5.2-6)
+  fixed in unstable: pam 1.7.0-5 (source package)
+  fixed on branch:   pam 1.4.0-9+deb11u2 (source package)
+  fixed on branch:   pam 1.5.2-6+deb12u2 (source package)
+  fixed on branch:   pam 1.7.0-4 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2025-8941
+  A flaw was found in linux-pam. The pam_namespace module may improperly ...
+  installed: libpam-modules 1.5.2-6
+             (built from pam 1.5.2-6)
+  fixed in unstable: pam undetermined (source package)
+
+CVE-2026-54411
+  Linux-PAM through 1.7.2 contains an observable timing discrepancy (CWE ...
+  installed: libpam-modules 1.5.2-6
+             (built from pam 1.5.2-6)
+
+CVE-2024-10041
+  A vulnerability was found in PAM. The secret information is stored in  ...
+  installed: libpam-modules-bin 1.5.2-6
+             (built from pam 1.5.2-6)
+  fixed in unstable: pam 1.7.0-2 (source package)
+  fixed on branch:   pam 1.7.0-1 (source package)
+  fixed on branch:   pam 1.7.0-4 (source package)
+
+CVE-2024-22365 (fixed)
+  linux-pam (aka Linux PAM) before 1.6.0 allows attackers to cause a den ...
+  installed: libpam-modules-bin 1.5.2-6
+             (built from pam 1.5.2-6)
+  fixed in unstable: pam 1.5.3-4 (source package)
+  fixed on branch:   pam 1.4.0-9+deb11u2 (source package)
+  fixed on branch:   pam 1.5.2-6+deb12u2 (source package)
+  fixed on branch:   pam 1.5.3-2 (source package)
+  fixed on branch:   pam 1.7.0-1 (source package)
+  fixed on branch:   pam 1.7.0-4 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2025-6020 (fixed)
+  A flaw was found in linux-pam. The module pam_namespace may use access ...
+  installed: libpam-modules-bin 1.5.2-6
+             (built from pam 1.5.2-6)
+  fixed in unstable: pam 1.7.0-5 (source package)
+  fixed on branch:   pam 1.4.0-9+deb11u2 (source package)
+  fixed on branch:   pam 1.5.2-6+deb12u2 (source package)
+  fixed on branch:   pam 1.7.0-4 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2025-8941
+  A flaw was found in linux-pam. The pam_namespace module may improperly ...
+  installed: libpam-modules-bin 1.5.2-6
+             (built from pam 1.5.2-6)
+  fixed in unstable: pam undetermined (source package)
+
+CVE-2026-54411
+  Linux-PAM through 1.7.2 contains an observable timing discrepancy (CWE ...
+  installed: libpam-modules-bin 1.5.2-6
+             (built from pam 1.5.2-6)
+
+CVE-2024-10041
+  A vulnerability was found in PAM. The secret information is stored in  ...
+  installed: libpam-runtime 1.5.2-6
+             (built from pam 1.5.2-6)
+  fixed in unstable: pam 1.7.0-2 (source package)
+  fixed on branch:   pam 1.7.0-1 (source package)
+  fixed on branch:   pam 1.7.0-4 (source package)
+
+CVE-2024-22365 (fixed)
+  linux-pam (aka Linux PAM) before 1.6.0 allows attackers to cause a den ...
+  installed: libpam-runtime 1.5.2-6
+             (built from pam 1.5.2-6)
+  fixed in unstable: pam 1.5.3-4 (source package)
+  fixed on branch:   pam 1.4.0-9+deb11u2 (source package)
+  fixed on branch:   pam 1.5.2-6+deb12u2 (source package)
+  fixed on branch:   pam 1.5.3-2 (source package)
+  fixed on branch:   pam 1.7.0-1 (source package)
+  fixed on branch:   pam 1.7.0-4 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2025-6020 (fixed)
+  A flaw was found in linux-pam. The module pam_namespace may use access ...
+  installed: libpam-runtime 1.5.2-6
+             (built from pam 1.5.2-6)
+  fixed in unstable: pam 1.7.0-5 (source package)
+  fixed on branch:   pam 1.4.0-9+deb11u2 (source package)
+  fixed on branch:   pam 1.5.2-6+deb12u2 (source package)
+  fixed on branch:   pam 1.7.0-4 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2025-8941
+  A flaw was found in linux-pam. The pam_namespace module may improperly ...
+  installed: libpam-runtime 1.5.2-6
+             (built from pam 1.5.2-6)
+  fixed in unstable: pam undetermined (source package)
+
+CVE-2026-54411
+  Linux-PAM through 1.7.2 contains an observable timing discrepancy (CWE ...
+  installed: libpam-runtime 1.5.2-6
+             (built from pam 1.5.2-6)
+
+CVE-2024-10041
+  A vulnerability was found in PAM. The secret information is stored in  ...
+  installed: libpam0g 1.5.2-6
+             (built from pam 1.5.2-6)
+  fixed in unstable: pam 1.7.0-2 (source package)
+  fixed on branch:   pam 1.7.0-1 (source package)
+  fixed on branch:   pam 1.7.0-4 (source package)
+
+CVE-2024-22365 (fixed)
+  linux-pam (aka Linux PAM) before 1.6.0 allows attackers to cause a den ...
+  installed: libpam0g 1.5.2-6
+             (built from pam 1.5.2-6)
+  fixed in unstable: pam 1.5.3-4 (source package)
+  fixed on branch:   pam 1.4.0-9+deb11u2 (source package)
+  fixed on branch:   pam 1.5.2-6+deb12u2 (source package)
+  fixed on branch:   pam 1.5.3-2 (source package)
+  fixed on branch:   pam 1.7.0-1 (source package)
+  fixed on branch:   pam 1.7.0-4 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2025-6020 (fixed)
+  A flaw was found in linux-pam. The module pam_namespace may use access ...
+  installed: libpam0g 1.5.2-6
+             (built from pam 1.5.2-6)
+  fixed in unstable: pam 1.7.0-5 (source package)
+  fixed on branch:   pam 1.4.0-9+deb11u2 (source package)
+  fixed on branch:   pam 1.5.2-6+deb12u2 (source package)
+  fixed on branch:   pam 1.7.0-4 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2025-8941
+  A flaw was found in linux-pam. The pam_namespace module may improperly ...
+  installed: libpam0g 1.5.2-6
+             (built from pam 1.5.2-6)
+  fixed in unstable: pam undetermined (source package)
+
+CVE-2026-54411
+  Linux-PAM through 1.7.2 contains an observable timing discrepancy (CWE ...
+  installed: libpam0g 1.5.2-6
+             (built from pam 1.5.2-6)
+
+CVE-2026-103111 (fixed)
+  PCRE2 before 10.49, when there is an attacker-controlled regular expre ...
+  installed: libpcre2-8-0 10.42-1
+             (built from pcre2 10.42-1)
+  fixed in unstable: pcre2 10.48-3.1 (source package)
+  fixed on branch:   pcre2 10.42-1+deb12u2 (source package)
+  fixed on branch:   pcre2 10.46-1~deb13u3 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-86145 (fixed)
+  PCRE2 before 10.48 allows a pcre2_dfa_match out-of-bounds write becaus ...
+  installed: libpcre2-8-0 10.42-1
+             (built from pcre2 10.42-1)
+  fixed in unstable: pcre2 10.48-1 (source package)
+  fixed on branch:   pcre2 10.42-1+deb12u1 (source package)
+  fixed on branch:   pcre2 10.42-1+deb12u2 (source package)
+  fixed on branch:   pcre2 10.46-1~deb13u2 (source package)
+  fixed on branch:   pcre2 10.46-1~deb13u3 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-89156 (fixed)
+  PCRE2 before 10.48 has a pcre2_match out-of-bounds read after a JIT fa ...
+  installed: libpcre2-8-0 10.42-1
+             (built from pcre2 10.42-1)
+  fixed in unstable: pcre2 10.48-1 (source package)
+  fixed on branch:   pcre2 10.42-1+deb12u1 (source package)
+  fixed on branch:   pcre2 10.42-1+deb12u2 (source package)
+  fixed on branch:   pcre2 10.46-1~deb13u2 (source package)
+  fixed on branch:   pcre2 10.46-1~deb13u3 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-89157 (fixed)
+  PCRE2 before 10.48, on 32-bit platforms, has a pcre2_pattern_convert o ...
+  installed: libpcre2-8-0 10.42-1
+             (built from pcre2 10.42-1)
+  fixed in unstable: pcre2 10.48-1 (source package)
+  fixed on branch:   pcre2 10.42-1+deb12u1 (source package)
+  fixed on branch:   pcre2 10.42-1+deb12u2 (source package)
+  fixed on branch:   pcre2 10.46-1~deb13u2 (source package)
+  fixed on branch:   pcre2 10.46-1~deb13u3 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-89158 (fixed)
+  PCRE2 before 10.48, on 32-bit platforms, has a pcre2_compile_32 intege ...
+  installed: libpcre2-8-0 10.42-1
+             (built from pcre2 10.42-1)
+  fixed in unstable: pcre2 10.48-1 (source package)
+  fixed on branch:   pcre2 10.42-1+deb12u1 (source package)
+  fixed on branch:   pcre2 10.42-1+deb12u2 (source package)
+  fixed on branch:   pcre2 10.46-1~deb13u2 (source package)
+  fixed on branch:   pcre2 10.46-1~deb13u3 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-89160 (fixed)
+  PCRE2 before 10.48 has a pcre2_match out-of-bounds read during the PCR ...
+  installed: libpcre2-8-0 10.42-1
+             (built from pcre2 10.42-1)
+  fixed in unstable: pcre2 10.48-1 (source package)
+  fixed on branch:   pcre2 10.42-1+deb12u1 (source package)
+  fixed on branch:   pcre2 10.42-1+deb12u2 (source package)
+  fixed on branch:   pcre2 10.46-1~deb13u2 (source package)
+  fixed on branch:   pcre2 10.46-1~deb13u3 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-89161 (fixed)
+  In PCRE2 before 10.48, pcre2_jit_match mishandles a previously copied  ...
+  installed: libpcre2-8-0 10.42-1
+             (built from pcre2 10.42-1)
+  fixed in unstable: pcre2 10.48-1 (source package)
+  fixed on branch:   pcre2 10.42-1+deb12u1 (source package)
+  fixed on branch:   pcre2 10.42-1+deb12u2 (source package)
+  fixed on branch:   pcre2 10.46-1~deb13u2 (source package)
+  fixed on branch:   pcre2 10.46-1~deb13u3 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2025-12781
+  When passing data to the b64decode(), standard_b64decode(), and urlsaf ...
+  installed: libpython3.11-minimal 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2025-15366
+  The imaplib module, when passed a user-controlled command, can have ad ...
+  installed: libpython3.11-minimal 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2025-15367
+  The poplib module, when passed a user-controlled command, can have add ...
+  installed: libpython3.11-minimal 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2026-0864
+  When using the "configparser" module to write configuration files cont ...
+  installed: libpython3.11-minimal 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2026-114583
+  tarfile.tar_filter could be bypassed using crafted link entries, inclu ...
+  installed: libpython3.11-minimal 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2026-116566
+  socket.getaddrinfo() previously accepted null bytes within *host* and  ...
+  installed: libpython3.11-minimal 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2026-11940
+  tarfile.extractall() with the 'data' or 'tar'  filter could be bypasse ...
+  installed: libpython3.11-minimal 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2026-11972
+  When using the "tarfile" module with a file opened in "streaming mode" ...
+  installed: libpython3.11-minimal 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2026-12345
+  The cleanup of tempfile.TemporaryDirectory is vulnerable to a race con ...
+  installed: libpython3.11-minimal 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2026-19552
+  When ca_certs parameter was supplied to ssl.get_server_certificate() f ...
+  installed: libpython3.11-minimal 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2026-3446
+  When calling base64.b64decode() or related functions the decoding proc ...
+  installed: libpython3.11-minimal 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2026-6879
+  `Element.findall()` and fully-consumed `Element.iterfind()` exhibit `O ...
+  installed: libpython3.11-minimal 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2026-7210
+  `xml.parsers.expat` and `xml.etree.ElementTree` use insufficient entro ...
+  installed: libpython3.11-minimal 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2025-12781
+  When passing data to the b64decode(), standard_b64decode(), and urlsaf ...
+  installed: libpython3.11-stdlib 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2025-15366
+  The imaplib module, when passed a user-controlled command, can have ad ...
+  installed: libpython3.11-stdlib 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2025-15367
+  The poplib module, when passed a user-controlled command, can have add ...
+  installed: libpython3.11-stdlib 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2026-0864
+  When using the "configparser" module to write configuration files cont ...
+  installed: libpython3.11-stdlib 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2026-114583
+  tarfile.tar_filter could be bypassed using crafted link entries, inclu ...
+  installed: libpython3.11-stdlib 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2026-116566
+  socket.getaddrinfo() previously accepted null bytes within *host* and  ...
+  installed: libpython3.11-stdlib 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2026-11940
+  tarfile.extractall() with the 'data' or 'tar'  filter could be bypasse ...
+  installed: libpython3.11-stdlib 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2026-11972
+  When using the "tarfile" module with a file opened in "streaming mode" ...
+  installed: libpython3.11-stdlib 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2026-12345
+  The cleanup of tempfile.TemporaryDirectory is vulnerable to a race con ...
+  installed: libpython3.11-stdlib 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2026-19552
+  When ca_certs parameter was supplied to ssl.get_server_certificate() f ...
+  installed: libpython3.11-stdlib 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2026-3446
+  When calling base64.b64decode() or related functions the decoding proc ...
+  installed: libpython3.11-stdlib 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2026-6879
+  `Element.findall()` and fully-consumed `Element.iterfind()` exhibit `O ...
+  installed: libpython3.11-stdlib 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2026-7210
+  `xml.parsers.expat` and `xml.etree.ElementTree` use insufficient entro ...
+  installed: libpython3.11-stdlib 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2024-28085 (fixed)
+  wall in util-linux through 2.40, often installed with setgid tty permi ...
+  installed: libsmartcols1 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.39.3-11 (source package)
+  fixed on branch:   util-linux 2.33.1-0.1+deb10u1 (source package)
+  fixed on branch:   util-linux 2.36.1-8+deb11u2 (source package)
+  fixed on branch:   util-linux 2.38.1-5+deb12u1 (source package)
+  fixed on branch:   util-linux 2.38.1-5+deb12u3 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-13595
+  A flaw was found in the libblkid library of util-linux. During nested  ...
+  installed: libsmartcols1 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42.2-1 (source package)
+  fixed on branch:   util-linux 2.41.5-0+deb13u1 (source package)
+
+CVE-2026-27456
+  util-linux is a random collection of Linux utilities. Prior to version ...
+  installed: libsmartcols1 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42-1 (source package)
+  fixed on branch:   util-linux 2.41.5-0+deb13u1 (source package)
+
+CVE-2026-3184
+  A flaw was found in util-linux. Improper hostname canonicalization in  ...
+  installed: libsmartcols1 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42-1 (source package)
+  fixed on branch:   util-linux 2.42~rc1-1 (source package)
+
+CVE-2026-53613
+  util-linux is a random collection of Linux utilities. In util-linux 2. ...
+  installed: libsmartcols1 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42.2-1 (source package)
+  fixed on branch:   util-linux 2.41.5-0+deb13u1 (source package)
+
+CVE-2026-53615
+  util-linux is a random collection of Linux utilities. Before util-linu ...
+  installed: libsmartcols1 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42-1 (source package)
+  fixed on branch:   util-linux 2.41.5-0+deb13u1 (source package)
+
+CVE-2026-78410
+  A flaw was found in util-linux. Restricted bind mounts take the source ...
+  installed: libsmartcols1 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42.3-1 (source package)
+
+CVE-2026-11822
+  SQLite before 3.53.2 contains an out-of-bounds read vulnerability in t ...
+  installed: libsqlite3-0 3.40.1-2+deb12u2
+             (built from sqlite3 3.40.1-2+deb12u2)
+  fixed in unstable: sqlite3 3.53.2-1 (source package)
+  fixed on branch:   sqlite3 3.46.1-7+deb13u2 (source package)
+
+CVE-2026-11824
+  SQLite before 3.53.2 contains a heap-based buffer overflow vulnerabili ...
+  installed: libsqlite3-0 3.40.1-2+deb12u2
+             (built from sqlite3 3.40.1-2+deb12u2)
+  fixed in unstable: sqlite3 3.53.2-1 (source package)
+  fixed on branch:   sqlite3 3.46.1-7+deb13u2 (source package)
+
+CVE-2026-119371
+  SQLite before 3.54.0 contains a stack exhaustion vulnerability that al ...
+  installed: libsqlite3-0 3.40.1-2+deb12u2
+             (built from sqlite3 3.40.1-2+deb12u2)
+  fixed in unstable: sqlite3 3.54.1-1 (source package)
+
+CVE-2026-119372
+  SQLite before 3.54.0 built with FTS3/FTS4 and SQLITE_ENABLE_FTS3_PAREN ...
+  installed: libsqlite3-0 3.40.1-2+deb12u2
+             (built from sqlite3 3.40.1-2+deb12u2)
+  fixed in unstable: sqlite3 3.54.1-1 (source package)
+
+CVE-2026-119373
+  SQLite before 3.54.0 built with FTS5 contains a heap buffer overflow i ...
+  installed: libsqlite3-0 3.40.1-2+deb12u2
+             (built from sqlite3 3.40.1-2+deb12u2)
+  fixed in unstable: sqlite3 3.54.1-1 (source package)
+
+CVE-2026-119374
+  SQLite before 3.54.0 built with FTS5 contains a heap buffer overflow i ...
+  installed: libsqlite3-0 3.40.1-2+deb12u2
+             (built from sqlite3 3.40.1-2+deb12u2)
+  fixed in unstable: sqlite3 3.54.1-1 (source package)
+
+CVE-2026-119375
+  SQLite before 3.54.0 contains an information disclosure vulnerability  ...
+  installed: libsqlite3-0 3.40.1-2+deb12u2
+             (built from sqlite3 3.40.1-2+deb12u2)
+  fixed in unstable: sqlite3 3.54.1-1 (source package)
+
+CVE-2026-119376
+  SQLite before 3.54.0 contains a stack exhaustion vulnerability that al ...
+  installed: libsqlite3-0 3.40.1-2+deb12u2
+             (built from sqlite3 3.40.1-2+deb12u2)
+  fixed in unstable: sqlite3 3.54.1-1 (source package)
+
+CVE-2026-119377
+  SQLite before 3.54.0 contains an authorization bypass vulnerability in ...
+  installed: libsqlite3-0 3.40.1-2+deb12u2
+             (built from sqlite3 3.40.1-2+deb12u2)
+  fixed in unstable: sqlite3 3.54.1-1 (source package)
+
+CVE-2026-119378
+  SQLite before 3.54.0 contains a use-after-free vulnerability in the R- ...
+  installed: libsqlite3-0 3.40.1-2+deb12u2
+             (built from sqlite3 3.40.1-2+deb12u2)
+  fixed in unstable: sqlite3 3.54.1-1 (source package)
+
+CVE-2026-119379
+  SQLite before 3.54.0 built with the session extension contains a heap  ...
+  installed: libsqlite3-0 3.40.1-2+deb12u2
+             (built from sqlite3 3.40.1-2+deb12u2)
+  fixed in unstable: sqlite3 3.54.1-1 (source package)
+
+CVE-2026-119586
+  SQLite command-line shell through 3.54.1 contains a command injection  ...
+  installed: libsqlite3-0 3.40.1-2+deb12u2
+             (built from sqlite3 3.40.1-2+deb12u2)
+  fixed in unstable: sqlite3 undetermined (source package)
+
+CVE-2026-119591
+  SQLite before 3.54.0 contains a stack exhaustion vulnerability in coun ...
+  installed: libsqlite3-0 3.40.1-2+deb12u2
+             (built from sqlite3 3.40.1-2+deb12u2)
+  fixed in unstable: sqlite3 3.54.1-1 (source package)
+
+CVE-2026-50812
+  A NULL pointer dereference in the SQLite Session Extension in SQLite 3 ...
+  installed: libsqlite3-0 3.40.1-2+deb12u2
+             (built from sqlite3 3.40.1-2+deb12u2)
+  fixed in unstable: sqlite3 3.53.2-1 (source package)
+
+CVE-2026-50813
+  An issue in SQLite before Fossil check-in 869a51ae84df allows a local  ...
+  installed: libsqlite3-0 3.40.1-2+deb12u2
+             (built from sqlite3 3.40.1-2+deb12u2)
+  fixed in unstable: sqlite3 3.53.4-2 (source package)
+
+CVE-2026-107496
+  Issue summary: Encrypting a CMS message to an EC certificate whose gro ...
+  installed: libssl3 3.0.22-1~deb12u2
+             (built from openssl 3.0.22-1~deb12u2)
+
+CVE-2026-88822
+  Issue summary: QUIC, when performing automated peer detection, may all ...
+  installed: libssl3 3.0.22-1~deb12u2
+             (built from openssl 3.0.22-1~deb12u2)
+
+CVE-2026-88823
+  Issue summary: The AES-GCM-SIV implementation treats a zero-length Add ...
+  installed: libssl3 3.0.22-1~deb12u2
+             (built from openssl 3.0.22-1~deb12u2)
+
+CVE-2026-95691
+  Issue summary: A retransmitted QUIC CRYPTO frame can release packet st ...
+  installed: libssl3 3.0.22-1~deb12u2
+             (built from openssl 3.0.22-1~deb12u2)
+
+CVE-2026-95692
+  Issue summary: Setting an AES-GCM-SIV IV shorter than the expected non ...
+  installed: libssl3 3.0.22-1~deb12u2
+             (built from openssl 3.0.22-1~deb12u2)
+
+CVE-2026-102010
+  A flaw was found in GCC. When an application calls the erase_if functi ...
+  installed: libstdc++6 12.2.0-14
+             (built from gcc-12 12.2.0-14)
+  fixed in unstable: gcc-12 12.5.0-11 (source package)
+
+CVE-2026-114690
+  A flaw was found in GCC. An out-of-bounds memory access vulnerability  ...
+  installed: libstdc++6 12.2.0-14
+             (built from gcc-12 12.2.0-14)
+
+CVE-2026-114691
+  A flaw was found in the libstdc++ component of GCC. An attacker who ca ...
+  installed: libstdc++6 12.2.0-14
+             (built from gcc-12 12.2.0-14)
+
+CVE-2026-115456
+  A flaw was found in gcc. An attacker could cause a Denial of Service ( ...
+  installed: libstdc++6 12.2.0-14
+             (built from gcc-12 12.2.0-14)
+
+CVE-2026-95619
+  A flaw was found in libstdc++. An integer overflow can occur when proc ...
+  installed: libstdc++6 12.2.0-14
+             (built from gcc-12 12.2.0-14)
+
+CVE-2023-50387 (fixed)
+  Certain DNSSEC aspects of the DNS protocol (in RFC 4033, 4034, 4035, 6 ...
+  installed: libsystemd0 252.6-1
+             (built from systemd 252.6-1)
+  fixed in unstable: systemd 255.4-1 (source package)
+  fixed on branch:   systemd 247.3-7+deb11u6 (source package)
+  fixed on branch:   systemd 247.3-7+deb11u7 (source package)
+  fixed on branch:   systemd 247.3-7+deb11u8 (source package)
+  fixed on branch:   systemd 252.23-1~deb12u1 (source package)
+  fixed on branch:   systemd 252.38-1~deb12u1 (source package)
+  fixed on branch:   systemd 252.39-1~deb12u2 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2023-50868 (fixed)
+  The Closest Encloser Proof aspect of the DNS protocol (in RFC 5155 whe ...
+  installed: libsystemd0 252.6-1
+             (built from systemd 252.6-1)
+  fixed in unstable: systemd 255.4-1 (source package)
+  fixed on branch:   systemd 247.3-7+deb11u6 (source package)
+  fixed on branch:   systemd 247.3-7+deb11u7 (source package)
+  fixed on branch:   systemd 247.3-7+deb11u8 (source package)
+  fixed on branch:   systemd 252.23-1~deb12u1 (source package)
+  fixed on branch:   systemd 252.38-1~deb12u1 (source package)
+  fixed on branch:   systemd 252.39-1~deb12u2 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2023-7008 (fixed)
+  A vulnerability was found in systemd-resolved. This issue may allow sy ...
+  installed: libsystemd0 252.6-1
+             (built from systemd 252.6-1)
+  fixed in unstable: systemd 255.1-3 (source package)
+  fixed on branch:   systemd 247.3-7+deb11u6 (source package)
+  fixed on branch:   systemd 247.3-7+deb11u7 (source package)
+  fixed on branch:   systemd 247.3-7+deb11u8 (source package)
+  fixed on branch:   systemd 252.21-1~deb12u1 (source package)
+  fixed on branch:   systemd 252.23-1~deb12u1 (source package)
+  fixed on branch:   systemd 252.38-1~deb12u1 (source package)
+  fixed on branch:   systemd 252.39-1~deb12u2 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2025-4598 (fixed)
+  A vulnerability was found in systemd-coredump. This flaw allows an att ...
+  installed: libsystemd0 252.6-1
+             (built from systemd 252.6-1)
+  fixed in unstable: systemd 257.6-1 (source package)
+  fixed on branch:   systemd 247.3-7+deb11u7 (source package)
+  fixed on branch:   systemd 247.3-7+deb11u8 (source package)
+  fixed on branch:   systemd 252.38-1~deb12u1 (source package)
+  fixed on branch:   systemd 252.39-1~deb12u2 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-15059
+  Local unprivileged users can terminate arbitrary local processes via a ...
+  installed: libsystemd0 252.6-1
+             (built from systemd 252.6-1)
+  fixed in unstable: systemd 261~rc3-1 (source package)
+
+CVE-2026-16742
+  systemd-homed contains a local privilege escalation bug via arbitrary  ...
+  installed: libsystemd0 252.6-1
+             (built from systemd 252.6-1)
+  fixed in unstable: systemd 261.2-1 (source package)
+
+CVE-2026-29111 (fixed)
+  systemd, a system and service manager, (as PID 1) hits an assert and f ...
+  installed: libsystemd0 252.6-1
+             (built from systemd 252.6-1)
+  fixed in unstable: systemd 260~rc2-1 (source package)
+  fixed on branch:   systemd 247.3-7+deb11u8 (source package)
+  fixed on branch:   systemd 252.39-1~deb12u2 (source package)
+  fixed on branch:   systemd 257.13-1~deb13u1 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-40225 (fixed)
+  In udev in systemd before 260, local root execution can occur via mali ...
+  installed: libsystemd0 252.6-1
+             (built from systemd 252.6-1)
+  fixed in unstable: systemd 260~rc4-1 (source package)
+  fixed on branch:   systemd 247.3-7+deb11u8 (source package)
+  fixed on branch:   systemd 252.39-1~deb12u2 (source package)
+  fixed on branch:   systemd 257.13-1~deb13u1 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-40226 (fixed)
+  In nspawn in systemd 233 through 259 before 260, an escape-to-host act ...
+  installed: libsystemd0 252.6-1
+             (built from systemd 252.6-1)
+  fixed in unstable: systemd 260~rc3-1 (source package)
+  fixed on branch:   systemd 247.3-7+deb11u8 (source package)
+  fixed on branch:   systemd 252.39-1~deb12u2 (source package)
+  fixed on branch:   systemd 257.13-1~deb13u1 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-40228
+  In systemd 259, systemd-journald can send ANSI escape sequences to the ...
+  installed: libsystemd0 252.6-1
+             (built from systemd 252.6-1)
+
+CVE-2026-4105 (fixed)
+  A flaw was found in systemd. The systemd-machined service contains an  ...
+  installed: libsystemd0 252.6-1
+             (built from systemd 252.6-1)
+  fixed in unstable: systemd 260~rc3-1 (source package)
+  fixed on branch:   systemd 247.3-7+deb11u8 (source package)
+  fixed on branch:   systemd 252.39-1~deb12u2 (source package)
+  fixed on branch:   systemd 257.13-1~deb13u1 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2024-12133 (fixed)
+  A flaw in libtasn1 causes inefficient handling of specific certificate ...
+  installed: libtasn1-6 4.19.0-2
+             (built from libtasn1-6 4.19.0-2)
+  fixed in unstable: libtasn1-6 4.20.0-1 (source package)
+  fixed on branch:   libtasn1-6 4.16.0-2+deb11u2 (source package)
+  fixed on branch:   libtasn1-6 4.19.0-2+deb12u1 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2025-13151
+  Stack-based buffer overflow in libtasn1 version: v4.20.0. The function ...
+  installed: libtasn1-6 4.19.0-2
+             (built from libtasn1-6 4.19.0-2)
+  fixed in unstable: libtasn1-6 4.21.0-2 (source package)
+  fixed on branch:   libtasn1-6 4.20.0-2+deb13u1 (source package)
+  fixed on branch:   libtasn1-6 4.21.0-1 (source package)
+
+CVE-2023-50495
+  NCurse v6.4-20230418 was discovered to contain a segmentation fault vi ...
+  installed: libtinfo6 6.4-4
+             (built from ncurses 6.4-4)
+  fixed in unstable: ncurses 6.4+20230625-1 (source package)
+
+CVE-2025-6141
+  A vulnerability has been found in GNU ncurses up to 6.5-20250322 and c ...
+  installed: libtinfo6 6.4-4
+             (built from ncurses 6.4-4)
+  fixed in unstable: ncurses 6.5+20251115-2 (source package)
+  fixed on branch:   ncurses 6.5+20251115-1 (source package)
+
+CVE-2025-69720
+  The infocmp command-line tool in ncurses before 6.5-20251213 has a sta ...
+  installed: libtinfo6 6.4-4
+             (built from ncurses 6.4-4)
+  fixed in unstable: ncurses 6.6+20251231-1 (source package)
+
+CVE-2026-85231
+  A flaw was found in libtirpc. An authenticated remote attacker could e ...
+  installed: libtirpc-common 1.3.3+ds-1
+             (built from libtirpc 1.3.3+ds-1)
+
+CVE-2026-85977
+  A flaw was found in libtirpc. A remote attacker can exploit this vulne ...
+  installed: libtirpc-common 1.3.3+ds-1
+             (built from libtirpc 1.3.3+ds-1)
+
+CVE-2026-85231
+  A flaw was found in libtirpc. An authenticated remote attacker could e ...
+  installed: libtirpc3 1.3.3+ds-1
+             (built from libtirpc 1.3.3+ds-1)
+
+CVE-2026-85977
+  A flaw was found in libtirpc. A remote attacker can exploit this vulne ...
+  installed: libtirpc3 1.3.3+ds-1
+             (built from libtirpc 1.3.3+ds-1)
+
+CVE-2023-50387 (fixed)
+  Certain DNSSEC aspects of the DNS protocol (in RFC 4033, 4034, 4035, 6 ...
+  installed: libudev1 252.6-1
+             (built from systemd 252.6-1)
+  fixed in unstable: systemd 255.4-1 (source package)
+  fixed on branch:   systemd 247.3-7+deb11u6 (source package)
+  fixed on branch:   systemd 247.3-7+deb11u7 (source package)
+  fixed on branch:   systemd 247.3-7+deb11u8 (source package)
+  fixed on branch:   systemd 252.23-1~deb12u1 (source package)
+  fixed on branch:   systemd 252.38-1~deb12u1 (source package)
+  fixed on branch:   systemd 252.39-1~deb12u2 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2023-50868 (fixed)
+  The Closest Encloser Proof aspect of the DNS protocol (in RFC 5155 whe ...
+  installed: libudev1 252.6-1
+             (built from systemd 252.6-1)
+  fixed in unstable: systemd 255.4-1 (source package)
+  fixed on branch:   systemd 247.3-7+deb11u6 (source package)
+  fixed on branch:   systemd 247.3-7+deb11u7 (source package)
+  fixed on branch:   systemd 247.3-7+deb11u8 (source package)
+  fixed on branch:   systemd 252.23-1~deb12u1 (source package)
+  fixed on branch:   systemd 252.38-1~deb12u1 (source package)
+  fixed on branch:   systemd 252.39-1~deb12u2 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2023-7008 (fixed)
+  A vulnerability was found in systemd-resolved. This issue may allow sy ...
+  installed: libudev1 252.6-1
+             (built from systemd 252.6-1)
+  fixed in unstable: systemd 255.1-3 (source package)
+  fixed on branch:   systemd 247.3-7+deb11u6 (source package)
+  fixed on branch:   systemd 247.3-7+deb11u7 (source package)
+  fixed on branch:   systemd 247.3-7+deb11u8 (source package)
+  fixed on branch:   systemd 252.21-1~deb12u1 (source package)
+  fixed on branch:   systemd 252.23-1~deb12u1 (source package)
+  fixed on branch:   systemd 252.38-1~deb12u1 (source package)
+  fixed on branch:   systemd 252.39-1~deb12u2 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2025-4598 (fixed)
+  A vulnerability was found in systemd-coredump. This flaw allows an att ...
+  installed: libudev1 252.6-1
+             (built from systemd 252.6-1)
+  fixed in unstable: systemd 257.6-1 (source package)
+  fixed on branch:   systemd 247.3-7+deb11u7 (source package)
+  fixed on branch:   systemd 247.3-7+deb11u8 (source package)
+  fixed on branch:   systemd 252.38-1~deb12u1 (source package)
+  fixed on branch:   systemd 252.39-1~deb12u2 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-15059
+  Local unprivileged users can terminate arbitrary local processes via a ...
+  installed: libudev1 252.6-1
+             (built from systemd 252.6-1)
+  fixed in unstable: systemd 261~rc3-1 (source package)
+
+CVE-2026-16742
+  systemd-homed contains a local privilege escalation bug via arbitrary  ...
+  installed: libudev1 252.6-1
+             (built from systemd 252.6-1)
+  fixed in unstable: systemd 261.2-1 (source package)
+
+CVE-2026-29111 (fixed)
+  systemd, a system and service manager, (as PID 1) hits an assert and f ...
+  installed: libudev1 252.6-1
+             (built from systemd 252.6-1)
+  fixed in unstable: systemd 260~rc2-1 (source package)
+  fixed on branch:   systemd 247.3-7+deb11u8 (source package)
+  fixed on branch:   systemd 252.39-1~deb12u2 (source package)
+  fixed on branch:   systemd 257.13-1~deb13u1 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-40225 (fixed)
+  In udev in systemd before 260, local root execution can occur via mali ...
+  installed: libudev1 252.6-1
+             (built from systemd 252.6-1)
+  fixed in unstable: systemd 260~rc4-1 (source package)
+  fixed on branch:   systemd 247.3-7+deb11u8 (source package)
+  fixed on branch:   systemd 252.39-1~deb12u2 (source package)
+  fixed on branch:   systemd 257.13-1~deb13u1 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-40226 (fixed)
+  In nspawn in systemd 233 through 259 before 260, an escape-to-host act ...
+  installed: libudev1 252.6-1
+             (built from systemd 252.6-1)
+  fixed in unstable: systemd 260~rc3-1 (source package)
+  fixed on branch:   systemd 247.3-7+deb11u8 (source package)
+  fixed on branch:   systemd 252.39-1~deb12u2 (source package)
+  fixed on branch:   systemd 257.13-1~deb13u1 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-40228
+  In systemd 259, systemd-journald can send ANSI escape sequences to the ...
+  installed: libudev1 252.6-1
+             (built from systemd 252.6-1)
+
+CVE-2026-4105 (fixed)
+  A flaw was found in systemd. The systemd-machined service contains an  ...
+  installed: libudev1 252.6-1
+             (built from systemd 252.6-1)
+  fixed in unstable: systemd 260~rc3-1 (source package)
+  fixed on branch:   systemd 247.3-7+deb11u8 (source package)
+  fixed on branch:   systemd 252.39-1~deb12u2 (source package)
+  fixed on branch:   systemd 257.13-1~deb13u1 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2024-28085 (fixed)
+  wall in util-linux through 2.40, often installed with setgid tty permi ...
+  installed: libuuid1 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.39.3-11 (source package)
+  fixed on branch:   util-linux 2.33.1-0.1+deb10u1 (source package)
+  fixed on branch:   util-linux 2.36.1-8+deb11u2 (source package)
+  fixed on branch:   util-linux 2.38.1-5+deb12u1 (source package)
+  fixed on branch:   util-linux 2.38.1-5+deb12u3 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-13595
+  A flaw was found in the libblkid library of util-linux. During nested  ...
+  installed: libuuid1 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42.2-1 (source package)
+  fixed on branch:   util-linux 2.41.5-0+deb13u1 (source package)
+
+CVE-2026-27456
+  util-linux is a random collection of Linux utilities. Prior to version ...
+  installed: libuuid1 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42-1 (source package)
+  fixed on branch:   util-linux 2.41.5-0+deb13u1 (source package)
+
+CVE-2026-3184
+  A flaw was found in util-linux. Improper hostname canonicalization in  ...
+  installed: libuuid1 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42-1 (source package)
+  fixed on branch:   util-linux 2.42~rc1-1 (source package)
+
+CVE-2026-53613
+  util-linux is a random collection of Linux utilities. In util-linux 2. ...
+  installed: libuuid1 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42.2-1 (source package)
+  fixed on branch:   util-linux 2.41.5-0+deb13u1 (source package)
+
+CVE-2026-53615
+  util-linux is a random collection of Linux utilities. Before util-linu ...
+  installed: libuuid1 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42-1 (source package)
+  fixed on branch:   util-linux 2.41.5-0+deb13u1 (source package)
+
+CVE-2026-78410
+  A flaw was found in util-linux. Restricted bind mounts take the source ...
+  installed: libuuid1 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42.3-1 (source package)
+
+CVE-2023-29383 (fixed)
+  In Shadow 4.13, it is possible to inject control characters into field ...
+  installed: login 1:4.13+dfsg1-1+b1
+             (built from shadow 1:4.13+dfsg1-1)
+  fixed in unstable: shadow 1:4.13+dfsg1-2 (source package)
+  fixed on branch:   shadow 1:4.13+dfsg1-1+deb12u1 (source package)
+  fixed on branch:   shadow 1:4.13+dfsg1-1+deb12u2 (source package)
+  fixed on branch:   shadow 1:4.8.1-1+deb11u1 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2023-4641 (fixed)
+  A flaw was found in shadow-utils. When asking for a new password, shad ...
+  installed: login 1:4.13+dfsg1-1+b1
+             (built from shadow 1:4.13+dfsg1-1)
+  fixed in unstable: shadow 1:4.13+dfsg1-2 (source package)
+  fixed on branch:   shadow 1:4.13+dfsg1-1+deb12u1 (source package)
+  fixed on branch:   shadow 1:4.13+dfsg1-1+deb12u2 (source package)
+  fixed on branch:   shadow 1:4.8.1-1+deb11u1 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2024-56433
+  shadow-utils (aka shadow) 4.4 through 4.17.0 establishes a default /et ...
+  installed: login 1:4.13+dfsg1-1+b1
+             (built from shadow 1:4.13+dfsg1-1)
+
+CVE-2024-28085 (fixed)
+  wall in util-linux through 2.40, often installed with setgid tty permi ...
+  installed: mount 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.39.3-11 (source package)
+  fixed on branch:   util-linux 2.33.1-0.1+deb10u1 (source package)
+  fixed on branch:   util-linux 2.36.1-8+deb11u2 (source package)
+  fixed on branch:   util-linux 2.38.1-5+deb12u1 (source package)
+  fixed on branch:   util-linux 2.38.1-5+deb12u3 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-13595
+  A flaw was found in the libblkid library of util-linux. During nested  ...
+  installed: mount 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42.2-1 (source package)
+  fixed on branch:   util-linux 2.41.5-0+deb13u1 (source package)
+
+CVE-2026-27456
+  util-linux is a random collection of Linux utilities. Prior to version ...
+  installed: mount 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42-1 (source package)
+  fixed on branch:   util-linux 2.41.5-0+deb13u1 (source package)
+
+CVE-2026-3184
+  A flaw was found in util-linux. Improper hostname canonicalization in  ...
+  installed: mount 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42-1 (source package)
+  fixed on branch:   util-linux 2.42~rc1-1 (source package)
+
+CVE-2026-53613
+  util-linux is a random collection of Linux utilities. In util-linux 2. ...
+  installed: mount 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42.2-1 (source package)
+  fixed on branch:   util-linux 2.41.5-0+deb13u1 (source package)
+
+CVE-2026-53615
+  util-linux is a random collection of Linux utilities. Before util-linu ...
+  installed: mount 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42-1 (source package)
+  fixed on branch:   util-linux 2.41.5-0+deb13u1 (source package)
+
+CVE-2026-78410
+  A flaw was found in util-linux. Restricted bind mounts take the source ...
+  installed: mount 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42.3-1 (source package)
+
+CVE-2023-50495
+  NCurse v6.4-20230418 was discovered to contain a segmentation fault vi ...
+  installed: ncurses-base 6.4-4
+             (built from ncurses 6.4-4)
+  fixed in unstable: ncurses 6.4+20230625-1 (source package)
+
+CVE-2025-6141
+  A vulnerability has been found in GNU ncurses up to 6.5-20250322 and c ...
+  installed: ncurses-base 6.4-4
+             (built from ncurses 6.4-4)
+  fixed in unstable: ncurses 6.5+20251115-2 (source package)
+  fixed on branch:   ncurses 6.5+20251115-1 (source package)
+
+CVE-2025-69720
+  The infocmp command-line tool in ncurses before 6.5-20251213 has a sta ...
+  installed: ncurses-base 6.4-4
+             (built from ncurses 6.4-4)
+  fixed in unstable: ncurses 6.6+20251231-1 (source package)
+
+CVE-2023-50495
+  NCurse v6.4-20230418 was discovered to contain a segmentation fault vi ...
+  installed: ncurses-bin 6.4-4
+             (built from ncurses 6.4-4)
+  fixed in unstable: ncurses 6.4+20230625-1 (source package)
+
+CVE-2025-6141
+  A vulnerability has been found in GNU ncurses up to 6.5-20250322 and c ...
+  installed: ncurses-bin 6.4-4
+             (built from ncurses 6.4-4)
+  fixed in unstable: ncurses 6.5+20251115-2 (source package)
+  fixed on branch:   ncurses 6.5+20251115-1 (source package)
+
+CVE-2025-69720
+  The infocmp command-line tool in ncurses before 6.5-20251213 has a sta ...
+  installed: ncurses-bin 6.4-4
+             (built from ncurses 6.4-4)
+  fixed in unstable: ncurses 6.6+20251231-1 (source package)
+
+CVE-2026-107496
+  Issue summary: Encrypting a CMS message to an EC certificate whose gro ...
+  installed: openssl 3.0.22-1~deb12u2
+             (built from openssl 3.0.22-1~deb12u2)
+
+CVE-2026-88822
+  Issue summary: QUIC, when performing automated peer detection, may all ...
+  installed: openssl 3.0.22-1~deb12u2
+             (built from openssl 3.0.22-1~deb12u2)
+
+CVE-2026-88823
+  Issue summary: The AES-GCM-SIV implementation treats a zero-length Add ...
+  installed: openssl 3.0.22-1~deb12u2
+             (built from openssl 3.0.22-1~deb12u2)
+
+CVE-2026-95691
+  Issue summary: A retransmitted QUIC CRYPTO frame can release packet st ...
+  installed: openssl 3.0.22-1~deb12u2
+             (built from openssl 3.0.22-1~deb12u2)
+
+CVE-2026-95692
+  Issue summary: Setting an AES-GCM-SIV IV shorter than the expected non ...
+  installed: openssl 3.0.22-1~deb12u2
+             (built from openssl 3.0.22-1~deb12u2)
+
+CVE-2023-29383 (fixed)
+  In Shadow 4.13, it is possible to inject control characters into field ...
+  installed: passwd 1:4.13+dfsg1-1+b1
+             (built from shadow 1:4.13+dfsg1-1)
+  fixed in unstable: shadow 1:4.13+dfsg1-2 (source package)
+  fixed on branch:   shadow 1:4.13+dfsg1-1+deb12u1 (source package)
+  fixed on branch:   shadow 1:4.13+dfsg1-1+deb12u2 (source package)
+  fixed on branch:   shadow 1:4.8.1-1+deb11u1 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2023-4641 (fixed)
+  A flaw was found in shadow-utils. When asking for a new password, shad ...
+  installed: passwd 1:4.13+dfsg1-1+b1
+             (built from shadow 1:4.13+dfsg1-1)
+  fixed in unstable: shadow 1:4.13+dfsg1-2 (source package)
+  fixed on branch:   shadow 1:4.13+dfsg1-1+deb12u1 (source package)
+  fixed on branch:   shadow 1:4.13+dfsg1-1+deb12u2 (source package)
+  fixed on branch:   shadow 1:4.8.1-1+deb11u1 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2024-56433
+  shadow-utils (aka shadow) 4.4 through 4.17.0 establishes a default /et ...
+  installed: passwd 1:4.13+dfsg1-1+b1
+             (built from shadow 1:4.13+dfsg1-1)
+
+CVE-2023-31484 (fixed)
+  CPAN.pm before 2.35 does not verify TLS certificates when downloading  ...
+  installed: perl-base 5.36.0-7
+             (built from perl 5.36.0-7)
+  fixed in unstable: perl 5.38.2-2 (source package)
+  fixed on branch:   perl 5.32.1-4+deb11u4 (source package)
+  fixed on branch:   perl 5.32.1-4+deb11u5 (source package)
+  fixed on branch:   perl 5.36.0-7+deb12u3 (source package)
+  fixed on branch:   perl 5.36.0-7+deb12u4 (source package)
+  fixed on branch:   perl 5.38.0~rc2-1 (source package)
+  fixed on branch:   perl 5.40.1-4 (source package)
+  fixed on branch:   perl 5.44.0-1 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2025-15649 (fixed)
+  IO::Uncompress::Unzip versions before 2.215 for Perl propagate uncaugh ...
+  installed: perl-base 5.36.0-7
+             (built from perl 5.36.0-7)
+  fixed in unstable: perl 5.40.1-8 (source package)
+  fixed on branch:   perl 5.36.0-7+deb12u4 (source package)
+  fixed on branch:   perl 5.40.1-6+deb13u1 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2025-40909 (fixed)
+  Perl threads have a working directory race condition where file operat ...
+  installed: perl-base 5.36.0-7
+             (built from perl 5.36.0-7)
+  fixed in unstable: perl 5.40.1-5 (source package)
+  fixed on branch:   perl 5.32.1-4+deb11u5 (source package)
+  fixed on branch:   perl 5.36.0-7+deb12u3 (source package)
+  fixed on branch:   perl 5.36.0-7+deb12u4 (source package)
+  fixed on branch:   perl 5.40.1-4 (source package)
+  fixed on branch:   perl 5.44.0-1 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-12087 (fixed)
+  Socket versions before 2.041 for Perl have an out-of-bounds heap read. ...
+  installed: perl-base 5.36.0-7
+             (built from perl 5.36.0-7)
+  fixed in unstable: perl 5.42.3-1 (source package)
+  fixed on branch:   perl 5.36.0-7+deb12u4 (source package)
+  fixed on branch:   perl 5.40.1-6+deb13u1 (source package)
+  fixed on branch:   perl 5.44.0-1 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-13221 (fixed)
+  Perl versions before 5.40.5-RC1, from 5.41.0 before 5.42.3-RC1, from 5 ...
+  installed: perl-base 5.36.0-7
+             (built from perl 5.36.0-7)
+  fixed in unstable: perl 5.42.3-1 (source package)
+  fixed on branch:   perl 5.36.0-7+deb12u4 (source package)
+  fixed on branch:   perl 5.40.1-6+deb13u1 (source package)
+  fixed on branch:   perl 5.44.0-1 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-15534
+  Perl versions through 5.45.1 have out-of-bounds heap reads and writes  ...
+  installed: perl-base 5.36.0-7
+             (built from perl 5.36.0-7)
+
+CVE-2026-19487 (fixed)
+  Perl versions from 5.9.4 before 5.41.9 produce incorrect regular expre ...
+  installed: perl-base 5.36.0-7
+             (built from perl 5.36.0-7)
+  fixed in unstable: perl 5.42.2-3 (source package)
+  fixed on branch:   perl 5.36.0-7+deb12u4 (source package)
+  fixed on branch:   perl 5.40.1-6+deb13u1 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-42496 (fixed)
+  Archive::Tar versions before 3.08 for Perl extract symlinks with attac ...
+  installed: perl-base 5.36.0-7
+             (built from perl 5.36.0-7)
+  fixed in unstable: perl 5.42.3-1 (source package)
+  fixed on branch:   perl 5.36.0-7+deb12u4 (source package)
+  fixed on branch:   perl 5.40.1-6+deb13u1 (source package)
+  fixed on branch:   perl 5.44.0-1 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-42497 (fixed)
+  Archive::Tar versions before 3.08 for Perl extract hardlinks to attack ...
+  installed: perl-base 5.36.0-7
+             (built from perl 5.36.0-7)
+  fixed in unstable: perl 5.42.3-1 (source package)
+  fixed on branch:   perl 5.36.0-7+deb12u4 (source package)
+  fixed on branch:   perl 5.40.1-6+deb13u1 (source package)
+  fixed on branch:   perl 5.44.0-1 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-48959 (fixed)
+  IO::Uncompress::Unzip versions before 2.220 for Perl allow CPU exhaust ...
+  installed: perl-base 5.36.0-7
+             (built from perl 5.36.0-7)
+  fixed in unstable: perl 5.40.1-8 (source package)
+  fixed on branch:   perl 5.36.0-7+deb12u4 (source package)
+  fixed on branch:   perl 5.40.1-6+deb13u1 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-48962 (fixed)
+  IO::Compress versions before 2.220 for Perl can execute arbitrary code ...
+  installed: perl-base 5.36.0-7
+             (built from perl 5.36.0-7)
+  fixed in unstable: perl 5.40.1-8 (source package)
+  fixed on branch:   perl 5.36.0-7+deb12u4 (source package)
+  fixed on branch:   perl 5.40.1-6+deb13u1 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-57432 (fixed)
+  Perl versions before 5.40.5-RC1, from 5.41.0 before 5.42.3-RC1, from 5 ...
+  installed: perl-base 5.36.0-7
+             (built from perl 5.36.0-7)
+  fixed in unstable: perl 5.40.1-8 (source package)
+  fixed on branch:   perl 5.36.0-7+deb12u4 (source package)
+  fixed on branch:   perl 5.40.1-6+deb13u1 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-57433 (fixed)
+  Storable versions before 3.41 for Perl have a signed integer overflow  ...
+  installed: perl-base 5.36.0-7
+             (built from perl 5.36.0-7)
+  fixed in unstable: perl 5.40.1-8 (source package)
+  fixed on branch:   perl 5.36.0-7+deb12u4 (source package)
+  fixed on branch:   perl 5.40.1-6+deb13u1 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-7010 (fixed)
+  HTTP::Tiny versions before 0.093 for Perl do not validate CRLF in HTTP ...
+  installed: perl-base 5.36.0-7
+             (built from perl 5.36.0-7)
+  fixed in unstable: perl 5.40.1-8 (source package)
+  fixed on branch:   perl 5.36.0-7+deb12u4 (source package)
+  fixed on branch:   perl 5.40.1-6+deb13u1 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-7017 (fixed)
+  HTTP::Tiny versions before 0.095 for Perl forward credential headers t ...
+  installed: perl-base 5.36.0-7
+             (built from perl 5.36.0-7)
+  fixed in unstable: perl 5.42.3-1 (source package)
+  fixed on branch:   perl 5.36.0-7+deb12u4 (source package)
+  fixed on branch:   perl 5.40.1-6+deb13u1 (source package)
+  fixed on branch:   perl 5.44.0-1 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-82560
+  Pod::Text versions before 6.1.1 for Perl allow CPU and memory exhausti ...
+  installed: perl-base 5.36.0-7
+             (built from perl 5.36.0-7)
+
+CVE-2026-8376 (fixed)
+  Perl versions before 5.40.5-RC1, from 5.41.0 before 5.42.3-RC1, from 5 ...
+  installed: perl-base 5.36.0-7
+             (built from perl 5.36.0-7)
+  fixed in unstable: perl 5.40.1-8 (source package)
+  fixed on branch:   perl 5.36.0-7+deb12u4 (source package)
+  fixed on branch:   perl 5.40.1-6+deb13u1 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-9538
+  Archive::Tar versions before 3.10 for Perl allow memory exhaustion via ...
+  installed: perl-base 5.36.0-7
+             (built from perl 5.36.0-7)
+  fixed in unstable: perl 5.42.3-1 (source package)
+  fixed on branch:   perl 5.44.0-1 (source package)
+
+CVE-2025-6966
+  NULL pointer dereference in TagSection.keys() in python-apt on APT-bas ...
+  installed: python-apt-common 2.6.0
+             (built from python-apt 2.6.0)
+  fixed in unstable: python-apt 3.1.0 (source package)
+  fixed on branch:   python-apt 2.2.1.1 (source package)
+
+CVE-2025-6966
+  NULL pointer dereference in TagSection.keys() in python-apt on APT-bas ...
+  installed: python3-apt 2.6.0
+             (built from python-apt 2.6.0)
+  fixed in unstable: python-apt 3.1.0 (source package)
+  fixed on branch:   python-apt 2.2.1.1 (source package)
+
+CVE-2025-12781
+  When passing data to the b64decode(), standard_b64decode(), and urlsaf ...
+  installed: python3.11 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2025-15366
+  The imaplib module, when passed a user-controlled command, can have ad ...
+  installed: python3.11 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2025-15367
+  The poplib module, when passed a user-controlled command, can have add ...
+  installed: python3.11 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2026-0864
+  When using the "configparser" module to write configuration files cont ...
+  installed: python3.11 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2026-114583
+  tarfile.tar_filter could be bypassed using crafted link entries, inclu ...
+  installed: python3.11 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2026-116566
+  socket.getaddrinfo() previously accepted null bytes within *host* and  ...
+  installed: python3.11 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2026-11940
+  tarfile.extractall() with the 'data' or 'tar'  filter could be bypasse ...
+  installed: python3.11 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2026-11972
+  When using the "tarfile" module with a file opened in "streaming mode" ...
+  installed: python3.11 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2026-12345
+  The cleanup of tempfile.TemporaryDirectory is vulnerable to a race con ...
+  installed: python3.11 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2026-19552
+  When ca_certs parameter was supplied to ssl.get_server_certificate() f ...
+  installed: python3.11 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2026-3446
+  When calling base64.b64decode() or related functions the decoding proc ...
+  installed: python3.11 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2026-6879
+  `Element.findall()` and fully-consumed `Element.iterfind()` exhibit `O ...
+  installed: python3.11 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2026-7210
+  `xml.parsers.expat` and `xml.etree.ElementTree` use insufficient entro ...
+  installed: python3.11 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2025-12781
+  When passing data to the b64decode(), standard_b64decode(), and urlsaf ...
+  installed: python3.11-minimal 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2025-15366
+  The imaplib module, when passed a user-controlled command, can have ad ...
+  installed: python3.11-minimal 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2025-15367
+  The poplib module, when passed a user-controlled command, can have add ...
+  installed: python3.11-minimal 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2026-0864
+  When using the "configparser" module to write configuration files cont ...
+  installed: python3.11-minimal 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2026-114583
+  tarfile.tar_filter could be bypassed using crafted link entries, inclu ...
+  installed: python3.11-minimal 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2026-116566
+  socket.getaddrinfo() previously accepted null bytes within *host* and  ...
+  installed: python3.11-minimal 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2026-11940
+  tarfile.extractall() with the 'data' or 'tar'  filter could be bypasse ...
+  installed: python3.11-minimal 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2026-11972
+  When using the "tarfile" module with a file opened in "streaming mode" ...
+  installed: python3.11-minimal 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2026-12345
+  The cleanup of tempfile.TemporaryDirectory is vulnerable to a race con ...
+  installed: python3.11-minimal 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2026-19552
+  When ca_certs parameter was supplied to ssl.get_server_certificate() f ...
+  installed: python3.11-minimal 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2026-3446
+  When calling base64.b64decode() or related functions the decoding proc ...
+  installed: python3.11-minimal 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2026-6879
+  `Element.findall()` and fully-consumed `Element.iterfind()` exhibit `O ...
+  installed: python3.11-minimal 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2026-7210
+  `xml.parsers.expat` and `xml.etree.ElementTree` use insufficient entro ...
+  installed: python3.11-minimal 3.11.2-6+deb12u9
+             (built from python3.11 3.11.2-6+deb12u9)
+
+CVE-2026-5958 (fixed)
+  When sed is invoked with both -i (in-place edit) and --follow-symlinks ...
+  installed: sed 4.9-1
+             (built from sed 4.9-1)
+  fixed in unstable: sed 4.9-3 (source package)
+  fixed on branch:   sed 4.9-1+deb12u1 (source package)
+  fixed on branch:   sed 4.9-2+deb13u1 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2023-39804 (fixed)
+  In GNU tar before 1.35, mishandled extension attributes in a PAX archi ...
+  installed: tar 1.34+dfsg-1.2
+             (built from tar 1.34+dfsg-1.2)
+  fixed in unstable: tar 1.34+dfsg-1.3 (source package)
+  fixed on branch:   tar 1.30+dfsg-6+deb10u1 (source package)
+  fixed on branch:   tar 1.34+dfsg-1+deb11u1 (source package)
+  fixed on branch:   tar 1.34+dfsg-1.2+deb12u1 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-18477
+  A TOCTOU (Time-of-Check Time-of-Use) vulnerability in GNU tar's increm ...
+  installed: tar 1.34+dfsg-1.2
+             (built from tar 1.34+dfsg-1.2)
+
+CVE-2026-18508
+  A flaw was found in GNU tar. When extracting an archive with the --one ...
+  installed: tar 1.34+dfsg-1.2
+             (built from tar 1.34+dfsg-1.2)
+
+CVE-2026-5704
+  A flaw was found in tar. A remote attacker could exploit this vulnerab ...
+  installed: tar 1.34+dfsg-1.2
+             (built from tar 1.34+dfsg-1.2)
+
+CVE-2024-28085 (fixed)
+  wall in util-linux through 2.40, often installed with setgid tty permi ...
+  installed: util-linux 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.39.3-11 (source package)
+  fixed on branch:   util-linux 2.33.1-0.1+deb10u1 (source package)
+  fixed on branch:   util-linux 2.36.1-8+deb11u2 (source package)
+  fixed on branch:   util-linux 2.38.1-5+deb12u1 (source package)
+  fixed on branch:   util-linux 2.38.1-5+deb12u3 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-13595
+  A flaw was found in the libblkid library of util-linux. During nested  ...
+  installed: util-linux 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42.2-1 (source package)
+  fixed on branch:   util-linux 2.41.5-0+deb13u1 (source package)
+
+CVE-2026-27456
+  util-linux is a random collection of Linux utilities. Prior to version ...
+  installed: util-linux 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42-1 (source package)
+  fixed on branch:   util-linux 2.41.5-0+deb13u1 (source package)
+
+CVE-2026-3184
+  A flaw was found in util-linux. Improper hostname canonicalization in  ...
+  installed: util-linux 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42-1 (source package)
+  fixed on branch:   util-linux 2.42~rc1-1 (source package)
+
+CVE-2026-53613
+  util-linux is a random collection of Linux utilities. In util-linux 2. ...
+  installed: util-linux 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42.2-1 (source package)
+  fixed on branch:   util-linux 2.41.5-0+deb13u1 (source package)
+
+CVE-2026-53615
+  util-linux is a random collection of Linux utilities. Before util-linu ...
+  installed: util-linux 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42-1 (source package)
+  fixed on branch:   util-linux 2.41.5-0+deb13u1 (source package)
+
+CVE-2026-78410
+  A flaw was found in util-linux. Restricted bind mounts take the source ...
+  installed: util-linux 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42.3-1 (source package)
+
+CVE-2024-28085 (fixed)
+  wall in util-linux through 2.40, often installed with setgid tty permi ...
+  installed: util-linux-extra 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.39.3-11 (source package)
+  fixed on branch:   util-linux 2.33.1-0.1+deb10u1 (source package)
+  fixed on branch:   util-linux 2.36.1-8+deb11u2 (source package)
+  fixed on branch:   util-linux 2.38.1-5+deb12u1 (source package)
+  fixed on branch:   util-linux 2.38.1-5+deb12u3 (source package)
+  fix is available for the selected suite (bookworm)
+
+CVE-2026-13595
+  A flaw was found in the libblkid library of util-linux. During nested  ...
+  installed: util-linux-extra 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42.2-1 (source package)
+  fixed on branch:   util-linux 2.41.5-0+deb13u1 (source package)
+
+CVE-2026-27456
+  util-linux is a random collection of Linux utilities. Prior to version ...
+  installed: util-linux-extra 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42-1 (source package)
+  fixed on branch:   util-linux 2.41.5-0+deb13u1 (source package)
+
+CVE-2026-3184
+  A flaw was found in util-linux. Improper hostname canonicalization in  ...
+  installed: util-linux-extra 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42-1 (source package)
+  fixed on branch:   util-linux 2.42~rc1-1 (source package)
+
+CVE-2026-53613
+  util-linux is a random collection of Linux utilities. In util-linux 2. ...
+  installed: util-linux-extra 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42.2-1 (source package)
+  fixed on branch:   util-linux 2.41.5-0+deb13u1 (source package)
+
+CVE-2026-53615
+  util-linux is a random collection of Linux utilities. Before util-linu ...
+  installed: util-linux-extra 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42-1 (source package)
+  fixed on branch:   util-linux 2.41.5-0+deb13u1 (source package)
+
+CVE-2026-78410
+  A flaw was found in util-linux. Restricted bind mounts take the source ...
+  installed: util-linux-extra 2.38.1-5+b1
+             (built from util-linux 2.38.1-5)
+  fixed in unstable: util-linux 2.42.3-1 (source package)
+
+CVE-2023-45853
+  MiniZip in zlib through 1.3 has an integer overflow and resultant heap ...
+  installed: zlib1g 1:1.2.13.dfsg-1
+             (built from zlib 1:1.2.13.dfsg-1)
+  fixed in unstable: zlib 1:1.3.dfsg-2 (source package)
+
+CVE-2026-76844
+  zlib 1.2.11 through 1.3.2 contains a heap buffer overflow: after an un ...
+  installed: zlib1g 1:1.2.13.dfsg-1
+             (built from zlib 1:1.2.13.dfsg-1)
+  fixed in unstable: zlib 1:1.3.dfsg+really1.3.2-4 (source package)
+  fixed on branch:   zlib 1:1.3.dfsg+really1.3.1-1+deb13u1 (source package)
+
+CVE-2026-85091
+  zlib versions 1.3.1.2 through 1.3.2 contain a heap buffer overflow vul ...
+  installed: zlib1g 1:1.2.13.dfsg-1
+             (built from zlib 1:1.2.13.dfsg-1)
+  fixed in unstable: zlib 1:1.3.dfsg+really1.3.2-4 (source package)
+  fixed on branch:   zlib 1:1.3.dfsg+really1.3.1-1+deb13u1 (source package)
+

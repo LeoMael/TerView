@@ -228,7 +228,7 @@ fn keyring_unavailable(e: &AppError) -> bool {
 }
 
 /// Crea la bóveda y mueve a ella los secretos del llavero de esos servidores (contraseña de
-/// conexión y de sudo) y el token de GitHub.
+/// conexión y de sudo), el token de GitHub y el de la IA (`ai-token`).
 ///
 /// Orden seguro: 1) leer todo del llavero (si algo falla, no se crea nada); 2) escribir la
 /// bóveda y comprobar que se descifra; 3) solo entonces borrar las copias del llavero. Si se corta
@@ -246,7 +246,7 @@ pub(crate) fn enable_vault(
         .map(String::as_str)
         .filter(|u| !u.trim().is_empty())
         .flat_map(server_secret_ids)
-        .chain([GITHUB_TOKEN_USER.to_string()])
+        .chain([GITHUB_TOKEN_USER.to_string(), crate::ai::AI_TOKEN_USER.to_string()])
         .collect();
     let mut found = BTreeMap::new();
     for u in users {
