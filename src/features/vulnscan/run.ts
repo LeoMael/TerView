@@ -318,10 +318,8 @@ async function imageContexts(o: ScanOptions, plan: ScanPlan, notes: ScanNote[]):
     ...(plan.podman ? [{ engine: "podman" as const, user: null, owner: null, el: none }] : []),
     ...(plan.docker ? [{ engine: "docker" as const, user: null, owner: null, el: none }] : []),
   ];
-  if (!el) {
-    notes.push({ phase: "images", level: "info", text: "Sin sudo: solo se ven los contenedores de tu usuario" });
-    return own();
-  }
+  // Sin sudo: solo lo del usuario conectado (el motor ya añade el aviso al informe).
+  if (!el) return own();
   let users: UsersView;
   try {
     setProgress(o.sessionId, "Buscando usuarios con contenedores…");
