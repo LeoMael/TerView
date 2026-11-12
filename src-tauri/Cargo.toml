@@ -4,6 +4,8 @@ version = "0.3.0"
 description = "Cliente SSH/SFTP visual"
 authors = []
 edition = "2024"
+# Hay dos programas: la app (`terview`) y el puente MCP por stdio (`terview-mcp`, en src/bin/).
+default-run = "terview"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -50,6 +52,22 @@ chrono = "0.4"
 # Bóveda de contraseñas (`storage::vault`): pisa con ceros la llave y los secretos al bloquear.
 # Ya estaba en el árbol (aes-gcm, argon2, russh).
 zeroize = "1.8"
+# Servidor MCP para asistentes de IA (módulo `mcp`): SDK oficial de MCP para Rust y un servidor
+# HTTP mínimo solo en 127.0.0.1 (hyper ya estaba en el árbol por reqwest).
+rmcp = { version = "3.9", default-features = false, features = ["server", "macros", "transport-streamable-http-server"] }
+hyper = { version = "1", features = ["server", "client", "http1"] }
+hyper-util = { version = "0.1", features = ["tokio"] }
+http-body-util = "0.1"
+http = "1"
+bytes = "1"
+tower-service = "0.3"
+regex = "1"
+
+[dev-dependencies]
+# Pruebas de punta a punta del servidor MCP con el cliente oficial.
+rmcp = { version = "3.9", default-features = false, features = ["client", "transport-streamable-http-client-reqwest"] }
+# Relojes simulados (tiempo límite de las aprobaciones sin esperar de verdad).
+tokio = { version = "1.54.1", features = ["full", "test-util"] }
 
 # Windows: aws-lc-sys (cripto de russh) necesita NASM para x86_64; con `prebuilt-nasm` usa los
 # objetos ya ensamblados que trae el crate, así el build de CI no depende de tener NASM instalado.

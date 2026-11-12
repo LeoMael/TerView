@@ -166,6 +166,11 @@ pub fn delete_github_token() -> AppResult<()> {
     delete_secret(GITHUB_TOKEN_USER)
 }
 
+// ───────── Token del servidor MCP (usuario "mcp-token") ─────────
+
+/// Usuario del llavero (o id en la bóveda) del token que usan los asistentes de IA (módulo `mcp`).
+pub const MCP_TOKEN_USER: &str = "mcp-token";
+
 // ───────── Mover secretos entre el llavero y la bóveda ─────────
 
 /// Dónde se leen y escriben los secretos fuera de la bóveda (el llavero; en tests, memoria).
@@ -246,7 +251,7 @@ pub(crate) fn enable_vault(
         .map(String::as_str)
         .filter(|u| !u.trim().is_empty())
         .flat_map(server_secret_ids)
-        .chain([GITHUB_TOKEN_USER.to_string()])
+        .chain([GITHUB_TOKEN_USER.to_string(), MCP_TOKEN_USER.to_string()])
         .collect();
     let mut found = BTreeMap::new();
     for u in users {

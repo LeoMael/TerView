@@ -58,6 +58,7 @@ fn vault() -> &'static Vault {
 /// Avisa a todas las ventanas del estado actual y olvida lo que se guardó aparte en memoria.
 fn notify(app: &AppHandle) {
     crate::github::forget_token_cache();
+    crate::mcp::on_vault_change(app);
     let _ = app.emit(EV_VAULT_STATE, vault().status());
 }
 

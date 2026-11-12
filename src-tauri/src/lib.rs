@@ -6,6 +6,7 @@ mod dragout;
 mod error;
 mod github;
 mod localfs;
+mod mcp;
 mod platform;
 mod sftp;
 mod snippets;
@@ -56,6 +57,9 @@ pub fn run() {
             app.state::<tunnels::TunnelManager>().start_watcher(app.handle().clone());
             // Arrastrar al sistema: borra lo preparado hace más de un día.
             dragout::clean_on_start(app.handle());
+            // Servidor MCP para asistentes de IA (apagado por defecto).
+            app.manage(mcp::McpState::new(app.handle()));
+            mcp::start_if_enabled(app.handle());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -172,6 +176,22 @@ pub fn run() {
             tunnels::tunnels_status,
             // diagnóstico (Ajustes → Avanzado)
             diagnostics::app_diagnostics,
+            // asistentes de IA (MCP)
+            mcp::mcp_status,
+            mcp::mcp_set_enabled,
+            mcp::mcp_set_port,
+            mcp::mcp_set_approval_timeout,
+            mcp::mcp_config,
+            mcp::mcp_set_access,
+            mcp::mcp_forget_rule,
+            mcp::mcp_get_token,
+            mcp::mcp_regenerate_token,
+            mcp::mcp_client_config,
+            mcp::mcp_pending_approvals,
+            mcp::mcp_approval_reply,
+            mcp::mcp_ui_reply,
+            mcp::mcp_activity,
+            mcp::mcp_activity_clear,
         ])
         .run(tauri::generate_context!())
         .expect("error al iniciar TerView");
