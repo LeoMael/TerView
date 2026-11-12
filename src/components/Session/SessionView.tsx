@@ -61,6 +61,7 @@ import {
 } from "../Editor/editorWindows";
 import { cancelReconnect, reconnectTab, requestCloseTab, setSessionPath, useEditorDirty } from "./sessionState";
 import "./SessionView.css";
+import { useVulnNav } from "../../features/vulnscan/nav";
 
 const RemoteEditor = lazy(() => import("../Editor/RemoteEditor"));
 /** Biblioteca de comandos (catálogo grande): se carga la primera vez que se abre la pestaña «Comandos». */
@@ -315,6 +316,12 @@ export const SessionView = memo(function SessionView({ tab, active }: SessionVie
     setSide(id);
     setFocus("fixed");
   }, []);
+
+  // «Ver vulnerabilidades» desde Contenedores → Imágenes: ir a Administración.
+  const vulnNav = useVulnNav((s) => s.request);
+  useEffect(() => {
+    if (vulnNav?.sessionId === sessionId) showFixed("admin");
+  }, [vulnNav, sessionId, showFixed]);
 
   // Un archivo vuelve de su ventana con «Volver a la pestaña principal»: mostrarlo.
   const reveal = useDetachedEditors((s) => s.reveal);

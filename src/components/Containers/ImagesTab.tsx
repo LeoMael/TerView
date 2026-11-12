@@ -1,6 +1,6 @@
 // Imágenes: listar, descargar (pull), eliminar, crear contenedor y limpiar las que no se usan.
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AlertTriangle, Brush, Download, Rocket, RefreshCw, Search, TerminalSquare, Trash2, X } from "lucide-react";
+import { AlertTriangle, Brush, Bug, Download, Rocket, RefreshCw, Search, TerminalSquare, Trash2, X } from "lucide-react";
 import {
   ago,
   pullImage,
@@ -15,6 +15,7 @@ import { formatBytes } from "../../lib/format";
 import { toast } from "../../stores/toasts";
 import { AdmModal } from "../Admin/AdmModal";
 import { useCt } from "./context";
+import { useVulnNav } from "../../features/vulnscan/nav";
 
 /** Normaliza una referencia para comparar («nginx» = «docker.io/library/nginx:latest»). */
 export function normRef(ref: string): string {
@@ -217,6 +218,15 @@ export function ImagesTab() {
                           tabIndex={-1}
                         >
                           <Download size={13} />
+                        </button>
+                        <button
+                          className="icon-btn"
+                          title="Ver vulnerabilidades (Administración → Vulnerabilidades)"
+                          aria-label="Ver vulnerabilidades de la imagen"
+                          onClick={() => useVulnNav.getState().open(ct.sessionId, img.id, img.tags[0] ?? img.shortId)}
+                          tabIndex={-1}
+                        >
+                          <Bug size={13} />
                         </button>
                         <button className="icon-btn ct-danger" title="Eliminar" aria-label="Eliminar imagen" onClick={() => remove(img)} tabIndex={-1}>
                           <Trash2 size={13} />
