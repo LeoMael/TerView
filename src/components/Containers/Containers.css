@@ -424,6 +424,30 @@
 .ct-col-ports {
   width: 18%;
 }
+/* Contenedores: el nombre cede sitio a imagen, estado y puertos (la barra lateral abierta deja ~1000 px). */
+.ct-table-containers .ct-col-name {
+  width: 18%;
+}
+.ct-table-containers .ct-col-image {
+  width: 22%;
+}
+.ct-table-containers .ct-col-state {
+  width: 19%;
+}
+.ct-table-containers .ct-col-ports {
+  width: 22%;
+}
+/* Si no cabe, se recorta antes la etiqueta del proyecto Compose (con «…») que el nombre. */
+.ct-table-containers .ct-col-name .ct-strong {
+  flex: none;
+  max-width: calc(100% - 14px);
+}
+.ct-table-containers .ct-col-name .ct-tag {
+  display: block;
+  line-height: 16px;
+  flex: 0 1 auto;
+  min-width: 0;
+}
 .ct-col-created {
   width: 96px;
 }

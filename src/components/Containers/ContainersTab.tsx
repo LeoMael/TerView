@@ -420,7 +420,7 @@ export function ContainersTab() {
             </button>
           </div>
         ) : (
-          <table className="ct-table">
+          <table className="ct-table ct-table-containers">
             <thead>
               <tr>
                 <th className="ct-col-chk">
