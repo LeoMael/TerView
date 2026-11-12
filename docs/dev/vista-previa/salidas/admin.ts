@@ -242,6 +242,7 @@ types {
 # Todo lo que llega por HTTP va a HTTPS.
 server {
 	listen 80 default_server;
+	listen [::]:80 default_server;
 	server_name _;
 	return 301 https://$host$request_uri;
 }
@@ -249,6 +250,7 @@ server {
 # configuration file /etc/nginx/sites-enabled/tienda.example.com:
 server {
 	listen 443 ssl;
+	listen [::]:443 ssl;
 	http2 on;
 	server_name tienda.example.com www.tienda.example.com;
 
@@ -277,6 +279,7 @@ upstream tienda_api {
 
 server {
 	listen 443 ssl;
+	listen [::]:443 ssl;
 	http2 on;
 	server_name api.example.com;
 
@@ -296,6 +299,7 @@ server {
 # configuration file /etc/nginx/sites-enabled/estado.example.com:
 server {
 	listen 443 ssl;
+	listen [::]:443 ssl;
 	server_name estado.example.com;
 
 	ssl_certificate /etc/letsencrypt/live/estado.example.com/fullchain.pem;

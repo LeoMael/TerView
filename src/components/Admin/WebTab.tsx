@@ -24,6 +24,7 @@ import {
   isLocalHost,
   readElevated,
   reloadSteps,
+  uniqueListens,
   type ListenPort,
   type Plan,
   type ServerInfo,
@@ -154,7 +155,7 @@ function SiteCard({ site }: { site: Site }) {
       <dl className="adm-site-info">
         <dt>Puertos</dt>
         <dd className="adm-site-ports">
-          {site.listens.map((l, i) => (
+          {uniqueListens(site.listens).map((l, i) => (
             <button
               key={i}
               className="adm-port-chip"

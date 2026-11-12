@@ -381,6 +381,17 @@ function defaultPort(scheme: string): number | null {
   return null;
 }
 
+/** Puertos de un sitio para mostrar, sin repetidos: `listen 443 ssl` + `listen [::]:443 ssl` → un solo «443 HTTPS». */
+export function uniqueListens(listens: Listen[]): Listen[] {
+  const seen = new Set<string>();
+  return listens.filter((l) => {
+    const k = `${l.host ?? ""}|${l.port}|${l.https}`;
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
+}
+
 /** `listen 443 ssl`, `listen [::]:80 default_server`, `listen 127.0.0.1:8080`. */
 export function parseNginxListen(args: string[]): Listen & { isDefault: boolean } {
   const a = args[0] ?? "80";
