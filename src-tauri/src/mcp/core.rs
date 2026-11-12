@@ -315,7 +315,8 @@ impl<B: Backend> McpCore<B> {
         rec.entry.status = status;
         rec.entry.exec_id = None;
         rec.entry.duration_ms = Some(rec.started.elapsed().as_millis() as u64);
-        if rec.entry.message.is_none() || is_error {
+        // Errores y rechazos: el motivo. Si salió bien, el resumen que dejó la herramienta (si dejó uno).
+        if is_error {
             rec.entry.message = Some(super::audit::clip(first_line(&text), 300));
         }
         self.audit.record(rec.entry);
