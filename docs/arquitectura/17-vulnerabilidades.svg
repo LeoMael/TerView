@@ -1,0 +1,254 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1350" viewBox="0 0 1600 1350">
+  <defs>
+    <marker id="mo" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#f97316"/></marker>
+    <marker id="mp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#a78bfa"/></marker>
+    <marker id="my" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#facc15"/></marker>
+    <marker id="mg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#22c55e"/></marker>
+    <marker id="mk" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#f472b6"/></marker>
+    <!-- ICONOS (48x48, trazo; el color se da con style="color:#..." en <use>) -->
+    <symbol id="i-pc" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="7" width="38" height="26" rx="3"/><path d="M18 41h12M24 33v8"/></g></symbol>
+    <symbol id="i-window" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><rect x="4" y="7" width="40" height="34" rx="4"/><path d="M4 16h40"/></g><g fill="currentColor"><circle cx="10" cy="11.5" r="1.8"/><circle cx="16" cy="11.5" r="1.8"/><circle cx="22" cy="11.5" r="1.8"/></g></symbol>
+    <symbol id="i-gear" viewBox="0 0 48 48"><g fill="currentColor"><rect x="20" y="3" width="8" height="10" rx="2"/><rect x="20" y="35" width="8" height="10" rx="2"/><rect x="3" y="20" width="10" height="8" rx="2"/><rect x="35" y="20" width="10" height="8" rx="2"/><rect x="20" y="3" width="8" height="10" rx="2" transform="rotate(45 24 24)"/><rect x="20" y="35" width="8" height="10" rx="2" transform="rotate(45 24 24)"/><rect x="3" y="20" width="10" height="8" rx="2" transform="rotate(45 24 24)"/><rect x="35" y="20" width="10" height="8" rx="2" transform="rotate(45 24 24)"/></g><circle cx="24" cy="24" r="13" fill="currentColor"/><circle cx="24" cy="24" r="5.5" fill="#0f172a"/></symbol>
+    <symbol id="i-server" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><rect x="6" y="5" width="36" height="11" rx="2.5"/><rect x="6" y="19" width="36" height="11" rx="2.5"/><rect x="6" y="33" width="36" height="11" rx="2.5"/></g><g fill="currentColor"><circle cx="35" cy="10.5" r="2"/><circle cx="35" cy="24.5" r="2"/><circle cx="35" cy="38.5" r="2"/><rect x="11" y="9" width="14" height="3" rx="1.5"/><rect x="11" y="23" width="14" height="3" rx="1.5"/><rect x="11" y="37" width="14" height="3" rx="1.5"/></g></symbol>
+    <symbol id="i-cloud" viewBox="0 0 48 48"><path d="M14 38h22a9 9 0 0 0 1-17.9A12 12 0 0 0 14.3 17 10.5 10.5 0 0 0 14 38z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/></symbol>
+    <symbol id="i-db" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3"><ellipse cx="24" cy="10" rx="16" ry="6"/><path d="M8 10v28c0 3.3 7.2 6 16 6s16-2.7 16-6V10"/><path d="M8 19c0 3.3 7.2 6 16 6s16-2.7 16-6M8 28.5c0 3.3 7.2 6 16 6s16-2.7 16-6"/></g></symbol>
+    <symbol id="i-file" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><path d="M12 4h17l9 9v31H12z"/><path d="M29 4v9h9M18 24h14M18 31h14"/></g></symbol>
+    <symbol id="i-lock" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><rect x="9" y="21" width="30" height="22" rx="3"/><path d="M15 21v-6a9 9 0 0 1 18 0v6"/></g><circle cx="24" cy="32" r="3" fill="currentColor"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"><path d="M24 4 40 10v12c0 10-7 18-16 22C15 40 8 32 8 22V10z"/><path d="M17 24l5 5 9-10"/></g></symbol>
+    <symbol id="i-box" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><path d="M24 4 42 13v22L24 44 6 35V13z"/><path d="M6 13l18 9 18-9M24 22v22"/></g></symbol>
+    <symbol id="i-term" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="40" height="34" rx="4"/><path d="M12 18l7 6-7 6M23 31h12"/></g></symbol>
+    <symbol id="i-chart" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6v36h36"/><path d="M12 32l9-10 7 6 12-15"/></g></symbol>
+    <symbol id="i-globe" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3"><circle cx="24" cy="24" r="19"/><ellipse cx="24" cy="24" rx="8" ry="19"/><path d="M5 24h38M8 14h32M8 34h32"/></g></symbol>
+    <symbol id="i-history" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 24a17 17 0 1 0 5-12"/><path d="M6 6v8h8M24 14v11l7 4"/></g></symbol>
+    <symbol id="i-eye" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><path d="M3 24s8-14 21-14 21 14 21 14-8 14-21 14S3 24 3 24z"/><circle cx="24" cy="24" r="6"/></g></symbol>
+    <symbol id="i-user" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><circle cx="24" cy="15" r="8"/><path d="M8 43c0-9 7-15 16-15s16 6 16 15"/></g></symbol>
+  </defs>
+  <style>
+    text{font-family:'Noto Sans','DejaVu Sans',sans-serif;fill:#e2e8f0}
+    .t{font-size:34px;font-weight:700}
+    .st{font-size:18px;fill:#94a3b8}
+    .h{font-size:20px;font-weight:700}
+    .b{font-size:16px;font-weight:600}
+    .s{font-size:14px;fill:#94a3b8}
+    .xs{font-size:13px;fill:#94a3b8}
+    .mono{font-family:'Noto Sans Mono','DejaVu Sans Mono',monospace}
+    .z{font-size:15px;font-weight:700;letter-spacing:2px}
+    .ui{fill:#10243a;stroke:#38bdf8;stroke-width:2.5}
+    .eng{fill:#2a1a10;stroke:#f97316;stroke-width:2}
+    .disk{fill:#2e2a0e;stroke:#facc15;stroke-width:2}
+    .gh{fill:#2a1426;stroke:#f472b6;stroke-width:2}
+    .ghd{fill:#2a1426;stroke:#f472b6;stroke-width:2;stroke-dasharray:8 6}
+    .sv{fill:#14301f;stroke:#22c55e;stroke-width:1.5}
+    .neu{fill:#1e293b;stroke:#334155;stroke-width:2}
+  </style>
+  <rect width="1600" height="1350" fill="#0f172a"/>
+
+  <text x="60" y="62" class="t">Escáner de vulnerabilidades</text>
+  <rect x="580" y="36" width="300" height="32" rx="16" fill="#3b1220" stroke="#f43f5e" stroke-width="2"/>
+  <text x="730" y="58" text-anchor="middle" style="font-size:15px;font-weight:700;fill:#f43f5e">DISEÑO v0.5.0 · NO CONSTRUIDO</text>
+  <text x="60" y="94" class="st">Qué hay instalado y qué avisos de seguridad le afectan, sacado de bases de datos reales. La IA es opcional y solo explica.</text>
+
+  <!-- ================= TU PC ================= -->
+  <rect x="40" y="120" width="940" height="600" rx="24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-dasharray="10 8"/>
+  <use href="#i-pc" x="62" y="129" width="26" height="26" style="color:#94a3b8"/>
+  <text x="98" y="149" class="z" style="fill:#94a3b8">TU PC</text>
+
+  <!-- Interfaz -->
+  <rect x="70" y="172" width="400" height="258" rx="16" class="ui"/>
+  <use href="#i-window" x="88" y="188" width="40" height="40" style="color:#38bdf8"/>
+  <text x="140" y="206" class="h" style="fill:#38bdf8">Interfaz</text>
+  <text x="140" y="226" class="xs">Administración → Vulnerabilidades</text>
+  <text x="90" y="262" class="s" style="fill:#e2e8f0">Analizar, con fases y Cancelar</text>
+  <text x="90" y="286" class="s" style="fill:#e2e8f0">Resumen: crítica · alta · media · baja</text>
+  <text x="90" y="310" class="s" style="fill:#e2e8f0">Tabla con filtros: gravedad, origen, con arreglo</text>
+  <text x="90" y="334" class="s" style="fill:#e2e8f0">Detalle: CVE, versiones, enlaces, comando</text>
+  <text x="90" y="358" class="s" style="fill:#e2e8f0">Historial y exportar (JSON, Markdown)</text>
+  <text x="90" y="382" class="s" style="fill:#e2e8f0">«Explicar con IA» (opcional)</text>
+  <text x="90" y="404" class="xs">los comandos sugeridos solo se copian o se</text>
+  <text x="90" y="420" class="xs">insertan en la terminal sin Enter</text>
+
+  <!-- IPC -->
+  <line x1="474" y1="290" x2="536" y2="290" stroke="#a78bfa" stroke-width="3" marker-start="url(#mp)" marker-end="url(#mp)"/>
+  <text x="505" y="266" text-anchor="middle" class="xs" style="fill:#c4b5fd;font-weight:700">IPC</text>
+  <text x="505" y="322" text-anchor="middle" class="xs" style="font-size:11px;fill:#c4b5fd">fases</text>
+
+  <!-- Motor -->
+  <rect x="540" y="172" width="410" height="258" rx="16" class="eng"/>
+  <use href="#i-gear" x="558" y="188" width="40" height="40" style="color:#f97316"/>
+  <text x="610" y="206" class="h" style="fill:#f97316">Motor</text>
+  <text x="610" y="226" class="xs mono">src-tauri/src/vulnscan/</text>
+  <text x="560" y="262" class="s" style="fill:#e2e8f0">Lee las salidas del servidor (parsers)</text>
+  <text x="560" y="286" class="s" style="fill:#e2e8f0">Arma lotes para OSV (hasta 1000)</text>
+  <text x="560" y="310" class="s" style="fill:#e2e8f0">Pide el detalle de cada aviso nuevo</text>
+  <text x="560" y="334" class="s" style="fill:#e2e8f0">Gravedad: CVSS 3/4 o la de la distro</text>
+  <text x="560" y="358" class="s" style="fill:#e2e8f0">Junta fuentes y quita duplicados por CVE</text>
+  <text x="560" y="382" class="s" style="fill:#e2e8f0">IA: Chat Completions, solo si confirmas</text>
+  <text x="560" y="412" class="xs">nunca decide qué es vulnerable con IA</text>
+
+  <!-- Almacenes -->
+  <rect x="70" y="490" width="200" height="200" rx="14" class="disk"/>
+  <use href="#i-history" x="86" y="504" width="36" height="36" style="color:#facc15"/>
+  <text x="86" y="566" class="b">Historial</text>
+  <text x="86" y="588" class="xs mono" style="font-size:12px">vulnscan/&lt;id&gt;.json</text>
+  <text x="86" y="612" class="xs">un archivo por servidor,</text>
+  <text x="86" y="630" class="xs">últimos 20 análisis</text>
+  <text x="86" y="662" class="xs mono" style="font-size:12px">&lt;config&gt;/terview/</text>
+
+  <rect x="290" y="490" width="200" height="200" rx="14" class="disk"/>
+  <use href="#i-db" x="306" y="504" width="36" height="36" style="color:#facc15"/>
+  <text x="306" y="566" class="b">Caché de OSV</text>
+  <text x="306" y="588" class="xs">detalle de cada aviso</text>
+  <text x="306" y="612" class="xs">por id y fecha; se puede</text>
+  <text x="306" y="630" class="xs">borrar sin perder nada</text>
+  <text x="306" y="662" class="xs mono" style="font-size:12px">&lt;caché&gt;/osv/</text>
+
+  <rect x="510" y="490" width="210" height="200" rx="14" class="disk"/>
+  <use href="#i-lock" x="526" y="504" width="36" height="36" style="color:#facc15"/>
+  <text x="526" y="566" class="b">Token de IA</text>
+  <text x="526" y="588" class="xs mono" style="font-size:12px">id ai-token</text>
+  <text x="526" y="612" class="xs">en la bóveda (o el llavero</text>
+  <text x="526" y="630" class="xs">si no hay PIN)</text>
+  <text x="526" y="662" class="xs" style="fill:#f43f5e">bloqueado = sin IA</text>
+
+  <rect x="740" y="490" width="210" height="200" rx="14" class="disk"/>
+  <use href="#i-file" x="756" y="504" width="36" height="36" style="color:#facc15"/>
+  <text x="756" y="566" class="b mono" style="font-size:15px">settings.json</text>
+  <text x="756" y="588" class="xs">URL base y modelo de IA,</text>
+  <text x="756" y="612" class="xs">fuentes activadas</text>
+  <text x="756" y="630" class="xs">(OSV, Trivy, distro)</text>
+  <text x="756" y="662" class="xs">nunca el token</text>
+
+  <!-- flechas motor → almacenes -->
+  <line x1="640" y1="432" x2="200" y2="486" stroke="#facc15" stroke-width="2" marker-end="url(#my)"/>
+  <line x1="680" y1="432" x2="400" y2="486" stroke="#facc15" stroke-width="2" marker-end="url(#my)"/>
+  <line x1="720" y1="432" x2="615" y2="486" stroke="#facc15" stroke-width="2" marker-end="url(#my)"/>
+  <line x1="800" y1="432" x2="845" y2="486" stroke="#facc15" stroke-width="2" marker-end="url(#my)"/>
+
+  <!-- ================= INTERNET ================= -->
+  <rect x="1010" y="120" width="550" height="600" rx="24" fill="none" stroke="#f472b6" stroke-width="2" stroke-dasharray="10 8"/>
+  <use href="#i-globe" x="1032" y="129" width="26" height="26" style="color:#f472b6"/>
+  <text x="1068" y="149" class="z" style="fill:#f472b6">INTERNET · HTTPS DESDE TU PC</text>
+
+  <!-- OSV -->
+  <rect x="1040" y="172" width="490" height="236" rx="16" class="gh"/>
+  <use href="#i-db" x="1058" y="188" width="40" height="40" style="color:#f472b6"/>
+  <text x="1110" y="206" class="h" style="fill:#f472b6">OSV.dev</text>
+  <text x="1110" y="226" class="xs mono">api.osv.dev · gratis, sin cuenta</text>
+  <text x="1060" y="262" class="s mono" style="fill:#e2e8f0;font-size:13px">POST /v1/querybatch → ids por paquete</text>
+  <text x="1060" y="284" class="s mono" style="fill:#e2e8f0;font-size:13px">GET  /v1/vulns/{id} → detalle</text>
+  <text x="1060" y="318" class="s" style="fill:#22c55e">Se envía: ecosistema, nombre y versión</text>
+  <text x="1060" y="340" class="s" style="fill:#e2e8f0">p. ej. Debian:12 · openssl · 3.0.11-1</text>
+  <text x="1060" y="372" class="s" style="fill:#f43f5e">Nunca: IP, nombre del servidor, usuarios</text>
+  <text x="1060" y="394" class="xs">ni rutas de archivos</text>
+
+  <!-- IA -->
+  <rect x="1040" y="440" width="490" height="250" rx="16" class="ghd"/>
+  <use href="#i-cloud" x="1058" y="454" width="40" height="40" style="color:#f472b6"/>
+  <text x="1110" y="474" class="h" style="fill:#f472b6">Endpoint de IA (opcional)</text>
+  <text x="1110" y="494" class="xs mono">compatible con OpenAI · /chat/completions</text>
+  <text x="1060" y="528" class="s" style="fill:#e2e8f0">URL base, modelo y token en Ajustes</text>
+  <text x="1060" y="552" class="s" style="fill:#e2e8f0">Antes: vista previa exacta + «Enviar»</text>
+  <text x="1060" y="576" class="s" style="fill:#e2e8f0">El servidor se llama «servidor-1»</text>
+  <text x="1060" y="600" class="s" style="fill:#e2e8f0">Sin contraseñas, IP, usuarios ni rutas</text>
+  <text x="1060" y="632" class="s" style="fill:#22c55e">Responde: resumen, prioridades y</text>
+  <text x="1060" y="652" class="s" style="fill:#22c55e">comandos para copiar (nunca se ejecutan)</text>
+  <text x="1060" y="676" class="xs">solo explica: la lista sale de OSV y de la distro</text>
+
+  <!-- flechas motor → internet -->
+  <line x1="952" y1="250" x2="1036" y2="250" stroke="#f472b6" stroke-width="3" marker-end="url(#mk)"/>
+  <text x="981" y="276" text-anchor="middle" class="xs" style="font-size:12px;fill:#f9a8d4">HTTPS</text>
+  <path d="M952 382 H990 V560 H1036" fill="none" stroke="#f472b6" stroke-width="2.5" stroke-dasharray="7 5" marker-end="url(#mk)"/>
+
+  <!-- ================= TUS SERVIDORES ================= -->
+  <rect x="40" y="760" width="1520" height="370" rx="24" fill="none" stroke="#22c55e" stroke-width="2" stroke-dasharray="10 8"/>
+  <use href="#i-server" x="62" y="769" width="26" height="26" style="color:#22c55e"/>
+  <text x="98" y="789" class="z" style="fill:#22c55e">TUS SERVIDORES · SSH, CANAL EXEC (SOLO LECTURA)</text>
+
+  <!-- flecha motor → servidor -->
+  <path d="M952 412 H975 V800" fill="none" stroke="#22c55e" stroke-width="3" marker-end="url(#mg)"/>
+  <text x="988" y="736" class="xs" style="fill:#86efac">SSH · sudo por stdin</text>
+  <text x="988" y="752" class="xs" style="fill:#86efac">solo si hace falta</text>
+
+  <!-- 1 Inventario -->
+  <rect x="70" y="812" width="350" height="300" rx="14" class="sv"/>
+  <use href="#i-term" x="86" y="826" width="34" height="34" style="color:#22c55e"/>
+  <text x="130" y="850" class="b">1 · Inventario</text>
+  <text x="86" y="884" class="xs" style="fill:#86efac">como tu usuario, sin sudo</text>
+  <text x="86" y="912" class="xs mono" style="fill:#e2e8f0">/etc/os-release · uname -r</text>
+  <text x="86" y="934" class="xs mono" style="fill:#e2e8f0">rpm -qa · dpkg-query -W</text>
+  <text x="86" y="956" class="xs mono" style="fill:#e2e8f0">apk list -I</text>
+  <text x="86" y="986" class="xs">Versión y paquete dueño de: sudo,</text>
+  <text x="86" y="1004" class="xs">OpenSSH, nginx, Caddy, Podman,</text>
+  <text x="86" y="1022" class="xs">Docker, Node, Python, PHP, Java</text>
+  <text x="86" y="1052" class="xs">Runtimes fuera de paquetes:</text>
+  <text x="86" y="1070" class="xs">nvm, pyenv, SDKMAN, /usr/local, /opt</text>
+  <text x="86" y="1096" class="xs" style="fill:#e2e8f0">→ todo esto va a OSV</text>
+
+  <!-- 2 Herramienta de la distro -->
+  <rect x="440" y="812" width="350" height="300" rx="14" class="sv"/>
+  <use href="#i-shield" x="456" y="826" width="34" height="34" style="color:#22c55e"/>
+  <text x="500" y="850" class="b">2 · Herramienta de la distro</text>
+  <text x="456" y="884" class="xs" style="fill:#86efac">probado: funcionan sin root</text>
+  <text x="456" y="912" class="xs mono" style="fill:#e2e8f0">dnf advisory list --security</text>
+  <text x="456" y="928" class="xs" style="font-size:12px">Fedora, RHEL, Rocky, Alma</text>
+  <text x="456" y="956" class="xs mono" style="fill:#e2e8f0">pro api u.pro.security.cves.v1</text>
+  <text x="456" y="972" class="xs" style="font-size:12px">Ubuntu</text>
+  <text x="456" y="1000" class="xs mono" style="fill:#e2e8f0">debsecan --suite &lt;nombre&gt;</text>
+  <text x="456" y="1016" class="xs" style="font-size:12px">Debian (si está instalado)</text>
+  <text x="456" y="1044" class="xs mono" style="fill:#e2e8f0">zypper lp -g security</text>
+  <text x="456" y="1060" class="xs" style="font-size:12px">openSUSE, SLES</text>
+  <text x="456" y="1094" class="xs">el servidor baja sus datos de la distro</text>
+
+  <!-- 3 Imágenes y contenedores -->
+  <rect x="810" y="812" width="350" height="300" rx="14" class="sv"/>
+  <use href="#i-box" x="826" y="826" width="34" height="34" style="color:#22c55e"/>
+  <text x="870" y="850" class="b">3 · Imágenes y contenedores</text>
+  <text x="826" y="884" class="xs" style="fill:#86efac">se lee la base de paquetes, no arranca nada</text>
+  <text x="826" y="912" class="xs mono" style="fill:#e2e8f0">podman unshare</text>
+  <text x="826" y="930" class="xs mono" style="fill:#e2e8f0">  podman image mount &lt;img&gt;</text>
+  <text x="826" y="958" class="xs mono" style="fill:#e2e8f0">runuser -u &lt;usuario&gt; -- …</text>
+  <text x="826" y="974" class="xs" style="font-size:12px">como root, las de cada usuario</text>
+  <text x="826" y="1002" class="xs mono" style="fill:#e2e8f0">docker create + docker cp</text>
+  <text x="826" y="1030" class="xs">cada aviso dice su imagen y qué</text>
+  <text x="826" y="1048" class="xs">contenedores la usan</text>
+  <rect x="826" y="1066" width="318" height="30" rx="15" fill="#3b1220" stroke="#f43f5e" stroke-width="1.5"/>
+  <text x="985" y="1086" text-anchor="middle" class="xs" style="fill:#fda4af;font-weight:700">con sudo: todos o solo los elegidos</text>
+
+  <!-- 4 Trivy -->
+  <rect x="1180" y="812" width="350" height="300" rx="14" class="sv"/>
+  <use href="#i-chart" x="1196" y="826" width="34" height="34" style="color:#22c55e"/>
+  <text x="1240" y="850" class="b">4 · Trivy (si está)</text>
+  <text x="1196" y="884" class="xs" style="fill:#86efac">se prefiere para las imágenes</text>
+  <text x="1196" y="912" class="xs mono" style="fill:#e2e8f0">trivy rootfs --format json</text>
+  <text x="1196" y="930" class="xs mono" style="fill:#e2e8f0">  &lt;imagen montada&gt;</text>
+  <text x="1196" y="958" class="xs mono" style="fill:#e2e8f0">trivy image --input x.tar</text>
+  <text x="1196" y="986" class="xs">ve también librerías dentro de la</text>
+  <text x="1196" y="1004" class="xs">imagen (npm, pip, jar, Go)</text>
+  <text x="1196" y="1032" class="xs">su base de datos la baja el servidor;</text>
+  <text x="1196" y="1050" class="xs">TerView no la instala ni la actualiza</text>
+  <text x="1196" y="1094" class="xs" style="fill:#e2e8f0">no ve el propio Node.js → OSV</text>
+
+  <!-- ================= FUENTES POR DISTRO ================= -->
+  <text x="60" y="1172" class="z" style="fill:#cbd5e1">FUENTES POR DISTRO (VERIFICADAS CONTRA OSV.DEV EL 12/11/2026)</text>
+
+  <rect x="60" y="1186" width="362" height="40" rx="10" class="neu"/>
+  <text x="76" y="1212" class="xs"><tspan style="fill:#e2e8f0;font-weight:700">Debian</tspan>  OSV <tspan class="mono">Debian:12</tspan> + debsecan</text>
+  <rect x="432" y="1186" width="362" height="40" rx="10" class="neu"/>
+  <text x="448" y="1212" class="xs"><tspan style="fill:#e2e8f0;font-weight:700">Ubuntu</tspan>  OSV <tspan class="mono">Ubuntu:22.04:LTS</tspan> + pro</text>
+  <rect x="804" y="1186" width="362" height="40" rx="10" class="neu"/>
+  <text x="820" y="1212" class="xs"><tspan style="fill:#e2e8f0;font-weight:700">Alpine</tspan>  OSV <tspan class="mono">Alpine:v3.18</tspan></text>
+  <rect x="1176" y="1186" width="364" height="40" rx="10" class="neu"/>
+  <text x="1192" y="1212" class="xs"><tspan style="fill:#e2e8f0;font-weight:700">Rocky / Alma</tspan>  OSV + dnf advisory</text>
+
+  <rect x="60" y="1236" width="362" height="40" rx="10" class="neu"/>
+  <text x="76" y="1262" class="xs"><tspan style="fill:#e2e8f0;font-weight:700">RHEL</tspan>  dnf advisory (+ OSV <tspan class="mono">Red Hat:&lt;CPE&gt;</tspan>)</text>
+  <rect x="432" y="1236" width="362" height="40" rx="10" fill="#3b1220" stroke="#f43f5e" stroke-width="1.5"/>
+  <text x="448" y="1262" class="xs"><tspan style="fill:#fda4af;font-weight:700">Fedora</tspan>  solo dnf advisory: OSV no la tiene</text>
+  <rect x="804" y="1236" width="362" height="40" rx="10" class="neu"/>
+  <text x="820" y="1262" class="xs"><tspan style="fill:#e2e8f0;font-weight:700">openSUSE</tspan>  OSV <tspan class="mono">openSUSE:Leap 15.6</tspan> + zypper</text>
+  <rect x="1176" y="1236" width="364" height="40" rx="10" class="neu"/>
+  <text x="1192" y="1262" class="xs"><tspan style="fill:#e2e8f0;font-weight:700">SLES</tspan>  zypper (OSV va por módulo)</text>
+
+  <text x="60" y="1312" style="font-size:15px;fill:#94a3b8">Programas sin paquete de la distro: OSV <tspan class="mono" style="fill:#e2e8f0">Bitnami</tspan> (node, python, php, java, nginx, tomcat) y <tspan class="mono" style="fill:#e2e8f0">Go</tspan> (Caddy, Podman, Docker).</text>
+  <text x="60" y="1334" style="font-size:15px;fill:#94a3b8">Si un paquete de la distro es dueño del binario, manda la distro: sus parches no cambian la versión de origen.</text>
+</svg>

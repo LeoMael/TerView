@@ -47,6 +47,7 @@ lenguaje visual: zonas con borde discontinuo (Tu PC, Internet, Tus servidores, G
 | 14 | [GitHub](arquitectura/14-github.png) | Token, llaves, despliegues, Actions y Gist cifrado |
 | 15 | [Bóveda y bloqueo](arquitectura/15-boveda-y-bloqueo.png) | PIN, cómo se saca la llave, estados y qué protege |
 | 16 | [Terminales con tmux](arquitectura/16-terminales-tmux.png) | Terminales que siguen vivas aunque se corte la red |
+| 17 | [Escáner de vulnerabilidades](arquitectura/17-vulnerabilidades.png) | **Diseño v0.5.0, no construido** (ver sección 16b): OSV.dev, herramientas de la distro, Trivy e IA opcional |
 
 Lo que falta y el plan detallado: **[PENDIENTES.md](PENDIENTES.md)**.
 Todos los comandos de la biblioteca: **[comandos/CATALOGO.md](comandos/CATALOGO.md)**.
@@ -92,6 +93,9 @@ La app tiene dos mitades dentro del mismo programa:
 | **Memoria de la interfaz** | Contraseña de sudo por conexión (`useSudo`), privilegios detectados, pestañas abiertas. La contraseña de sudo se olvida al cerrar la pestaña, al perder la conexión o al bloquear TerView. | Stores de zustand sin persistencia | RAM | — | Interfaz: `features/privileges/`, `features/lock/` y `stores/` |
 | **Sesiones tmux** (en el servidor) | Terminales persistentes `terview-<id>` con su historial (50.000 líneas). | Servidor tmux propio `-L terview` | Tu servidor | — | Motor: `terminal/tmux.rs` por SSH |
 | **Gist secreto** (GitHub) | `terview-sync.json`: copia de servidores, proyectos y comandos, sin contraseñas. | JSON cifrado | Tu cuenta de GitHub | Sí: AES-256-GCM con clave derivada por Argon2id de una frase que nunca se guarda | Motor: `github/crypto.rs`, `github/mod.rs` |
+| **`vulnscan/<idServidor>.json`** *(previsto v0.5.0, no construido)* | Historial del escáner de vulnerabilidades: los últimos 20 análisis del servidor (inventario resumido, hallazgos, fuentes y la explicación de IA si la hubo). | JSON | `<config>/terview/vulnscan/` | No (0600) | Motor: `vulnscan/store.rs` (previsto) |
+| **Caché de OSV** *(prevista v0.5.0)* | Detalle de cada aviso de OSV por id y fecha de modificación; se puede borrar sin perder nada. | Un JSON por aviso | Linux `~/.cache/com.terview.app/osv/` (caché del sistema en Windows y macOS) | No | Motor: `vulnscan/cache.rs` (previsto) |
+| **Token de IA** *(previsto v0.5.0)* | Token del endpoint de IA compatible con OpenAI, id `ai-token`. URL base y modelo van en `settings.json`, nunca el token. | Secreto | Bóveda (`vault.json`) si hay PIN; si no, llavero del sistema | Sí | Motor: `storage/secrets.rs` (`get_secret`/`set_secret`) |
 | **Releases** (GitHub) | Instaladores, sus firmas `.sig` y `latest.json`. | Archivos | `github.com/LeoMael/TerView/releases` | Firmados (minisign), no cifrados | GitHub Actions los sube; el actualizador de la app los lee |
 
 ### Qué significa cada flecha del mapa
@@ -103,6 +107,9 @@ La app tiene dos mitades dentro del mismo programa:
 | Motor → GitHub (**HTTPS, API**) | HTTPS con reqwest + rustls (sin OpenSSL) | API REST de GitHub; solo hosts de GitHub (`ALLOWED_HOSTS`); token en la cabecera `Authorization`, nunca en registros | `github/http.rs`, `github/api.rs` |
 | Motor → GitHub (**¿versión nueva?**) | HTTPS | `releases/latest/download/latest.json`, descarga del instalador y verificación de la firma | `tauri-plugin-updater` (lo usa `src/features/updater/`) |
 | Servidor → GitHub (**git clone**) | git por SSH | El servidor clona con su propia llave de despliegue de solo lectura (`GIT_SSH_COMMAND`); TerView solo le envía los comandos por `exec` | `src/features/github/shell.ts` |
+| Motor → **OSV.dev** *(previsto v0.5.0)* | HTTPS con reqwest + rustls | `POST api.osv.dev/v1/querybatch` (≤ 1000 paquetes por lote) y `GET /v1/vulns/{id}`. Solo ecosistema, nombre y versión de paquetes; nunca IP, nombre del servidor ni usuarios. Sin token | `vulnscan/osv.rs` (previsto) |
+| Motor → **endpoint de IA** *(previsto v0.5.0, opcional)* | HTTPS (HTTP solo a `localhost`) | `POST <URL base>/chat/completions`, compatible con OpenAI; token en `Authorization`. Solo tras mostrar el texto exacto y confirmar | `ai/` (previsto) |
+| Servidor → repos de su distro *(previsto v0.5.0)* | Lo que use cada herramienta | `dnf advisory`, `debsecan`, `pro`, `zypper` y Trivy bajan sus propios datos desde el servidor, como al actualizar | Scripts de `features/vulnscan/` (previsto) |
 | Motor ↔ disco | Archivos y llavero del sistema | Escritura atómica (temporal + renombrar); archivo dañado → se aparta como `.bak-<fecha>` | `storage/fsutil.rs`, `storage/secrets.rs` |
 | Interfaz ↔ `localStorage` | API Web Storage del motor web | Lectura y escritura síncronas, siempre con try/catch | `features/*`, `components/*` |
 
@@ -527,6 +534,45 @@ y ver resultado"), la detección de privilegios y GitHub (clonar y desplegar).
 
 ---
 
+## 16b. Escáner de vulnerabilidades (diseño v0.5.0, aún no construido · diagrama 17)
+
+![Escáner de vulnerabilidades](arquitectura/17-vulnerabilidades.png)
+
+> **Esto es un diseño, no algo construido.** El código actual no tiene escáner. Está planificado para la
+> v0.5.0; el diseño completo, lo que se comprobó de verdad y el plan por partes están en
+> [PENDIENTES.md, sección 10](PENDIENTES.md#10-escáner-de-vulnerabilidades--diseñado-v050).
+
+- **Qué hará:** sub-pestaña «Vulnerabilidades» en Administración. Dice qué hay instalado (paquetes,
+  kernel, sudo, OpenSSH, nginx, Caddy, Podman, Docker, Node, Python, PHP, Java e imágenes de
+  contenedores) y qué avisos de seguridad le afectan, con gravedad, si tiene arreglo y el comando para
+  actualizar (solo para copiar o insertar en la terminal sin Enter).
+- **La lista sale de bases de datos reales, nunca de una IA:**
+  - **OSV.dev**, consultado desde el motor en tu PC (`POST /v1/querybatch`, hasta 1000 paquetes por
+    lote, y `GET /v1/vulns/{id}`). Solo viaja ecosistema, nombre y versión de cada paquete.
+  - **La herramienta de seguridad de la distro**, en el servidor por exec y sin root: `dnf advisory` /
+    `dnf updateinfo`, `pro api u.pro.security.cves.v1` (Ubuntu), `debsecan` (Debian, si está) y
+    `zypper list-patches` (SUSE).
+  - **Trivy**, si el servidor ya lo tiene; se prefiere para las imágenes.
+- **Cobertura:** Debian, Ubuntu, Alpine, Rocky, AlmaLinux y openSUSE con OSV más su herramienta;
+  RHEL y SLES sobre todo con su herramienta; **Fedora no está en OSV**: solo se ven las actualizaciones de
+  seguridad pendientes (`dnf advisory`), no lo que aún no tiene arreglo. Programas sin paquete de la
+  distro (nvm, pyenv, tarballs): OSV `Bitnami` y `Go` por su versión de origen.
+- **Privilegios:** sin sudo, el sistema (los paquetes se listan igual) y lo del usuario conectado; con
+  sudo, además los contenedores e imágenes de root y de todos los usuarios (o solo los elegidos), entrando
+  como cada uno con `runuser -u` / `sudo -u -H`. Usa la elevación de la sección 8 (`runScript`,
+  `readElevated`) y cada fase lleva `execId` para poder cancelar de verdad.
+- **Imágenes:** se lee su base de paquetes sin arrancar sus servicios (`podman image mount` dentro de
+  `podman unshare`, `docker create` + `docker cp`, o solo el `rpm` de la imagen sin red). Cada hallazgo
+  dice su imagen y qué contenedores la usan.
+- **IA opcional, solo para explicar:** endpoint compatible con OpenAI (`/chat/completions`), URL y modelo
+  en `settings.json`, token `ai-token` en la bóveda o el llavero (bloqueado = sin IA). Antes de enviar se
+  muestra el texto exacto (el servidor se llama «servidor-1»; sin IP, usuarios, rutas ni secretos) y hay
+  que confirmar. Los comandos que proponga nunca se ejecutan solos.
+- **Se guardará:** historial por servidor en `<config>/terview/vulnscan/<idServidor>.json` (20 análisis) y
+  una caché de avisos de OSV en `<caché>/osv/`. Exportar a JSON y Markdown.
+
+---
+
 ## 17. Seguridad
 
 - **Contraseñas, frases, contraseñas de sudo guardadas y token de GitHub** en el llavero del sistema o, con PIN, en la bóveda
@@ -570,6 +616,7 @@ y ver resultado"), la detección de privilegios y GitHub (clonar y desplegar).
 | 19 | Arrastrar al escritorio | Hecho; falta probar en Windows real y compilar en macOS |
 | 20 | Terminales persistentes con tmux (ver sección 15) | Hecho |
 | 21 | PIN, bóveda de contraseñas y bloqueo (ver sección 14) | Hecho |
+| 22 | Escáner de vulnerabilidades (ver sección 16b, [detalle](PENDIENTES.md#10-escáner-de-vulnerabilidades--diseñado-v050)) | Diseñado (v0.5.0), no construido |
 
 ---
 
