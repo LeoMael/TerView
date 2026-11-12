@@ -6,34 +6,56 @@ siguen [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Sin publicar]
 
+## [0.4.0] - 2026-11-12
+
 ### Añadido
-- **PIN y bloqueo**: las contraseñas guardadas (de conexión y de sudo) y el token de GitHub pueden ir
-  en una bóveda cifrada (`vault.json`, AES-256-GCM + Argon2id) con un **PIN de 6 números** y una llave
-  de este equipo guardada en el llavero, así copiar solo el archivo no sirve. Al crearla, las contraseñas del llavero se mueven
-  a ella sin riesgo de perderlas; al quitarla, vuelven al llavero. TerView se bloquea al abrirlo, tras
-  5–60 min sin uso (15 por defecto) o con `Ctrl+Shift+L`, en todas las ventanas: se tapa la interfaz,
-  se borran de la memoria las contraseñas descifradas y las de sudo, y el motor deja de dar contraseñas
-  hasta que escribes el PIN. Las conexiones siguen vivas; una reconexión que necesita contraseña espera
-  al desbloqueo. Tras 5 fallos hay que esperar 30 s, el doble cada vez hasta 15 min (se recuerda aunque
-  cierres la app). El PIN se escribe en 6 casillas y se envía solo al completar; las bóvedas creadas
-  antes con una contraseña libre se siguen abriendo con un campo de texto hasta que cambias el PIN.
-  **«Olvidé mi PIN»** borra la bóveda (escribiendo BORRAR) y conserva servidores, llaves, comandos,
-  túneles y ajustes. Pantalla para crearlo la primera vez, con «Ahora no»; **candado en la barra de
-  pestañas** para bloquear, cambiar el PIN o ir a Ajustes → Seguridad. Textos cortos, con los detalles
-  en «¿Qué protege?».
+- **Contenedores (Podman / Docker)**: pestaña visual para iniciar, parar, reiniciar y eliminar
+  contenedores, ver logs, abrir una terminal dentro, crear contenedores con plantillas (Nginx,
+  PostgreSQL, MySQL, MariaDB, Redis, Adminer, Portainer), levantar y bajar proyectos **Compose**, y
+  limpiar imágenes, volúmenes y redes que no se usan mostrando antes cuánto espacio se libera.
+- **Administración del servidor**: una pestaña con varias secciones. Antes de cada cambio se muestra
+  el comando exacto, y la contraseña de sudo viaja siempre por la entrada estándar.
+  - **Usuarios y grupos**: crear, editar, bloquear y eliminar usuarios, sus llaves SSH, grupos,
+    sesiones conectadas e historial de cambios.
+  - **Puertos**: todos los puertos en escucha, TCP y UDP, con su proceso, usuario y servicio systemd
+    o contenedor. Filtros (públicos o solo locales, usuario, proceso), abrir un túnel a tu PC con un
+    clic y copiar la dirección.
+  - **Sitios web**: sitios de **nginx** y **Caddy** con sus dominios, HTTPS y fecha de caducidad del
+    certificado, a qué sirve cada ruta y si hay algo escuchando en el puerto de destino. Abre la
+    configuración en el editor, la comprueba y recarga el servicio con confirmación.
+- **Monitor**: gráficas en vivo de CPU, memoria, red y carga, discos, procesos (con botón Terminar),
+  consumo de contenedores, alertas configurables y resumen de todas las conexiones.
+- **Túneles (port forwarding)**: local, remoto y SOCKS, guardados por servidor, con arranque
+  automático al conectar y continuidad tras reconexiones.
+- **Ejecutar en varios servidores a la vez**: un comando (o uno de la biblioteca) en varios servidores
+  o en un proyecto entero, con resultados en tabla, lado a lado y «Comparar salidas».
+- **GitHub**: conectar la cuenta con un token (guardado de forma segura), pasar tus llaves SSH a un
+  servidor, clonar repositorios (con deploy key), desplegar con un botón, ver y lanzar GitHub Actions,
+  y sincronizar tu configuración en un Gist cifrado.
+- **Acerca de** con las novedades de cada versión y **actualizaciones automáticas** firmadas.
 - **Terminales persistentes (tmux)**: si el servidor tiene tmux, cada terminal vive en su propia sesión
   y sigue corriendo aunque se corte la red o cierres la app; al reconectar, TerView vuelve a ella.
   Ajuste Automático / Siempre / Nunca (general y por servidor), indicador ∞ en la pestaña, lista de
   sesiones que quedaron en el servidor para reabrirlas o cerrarlas, y «Desacoplar» para dejar una
   corriendo. El historial, la búsqueda y el copiar/pegar funcionan igual que sin tmux, y no se toca tu
   `~/.tmux.conf`.
-- **Contenedores (Podman / Docker)**: pestaña visual para iniciar, parar, reiniciar y eliminar
-  contenedores, ver logs, abrir una terminal dentro, crear contenedores con plantillas (Nginx,
-  PostgreSQL, MySQL, MariaDB, Redis, Adminer, Portainer), levantar y bajar proyectos **Compose**, y
-  limpiar imágenes, volúmenes y redes que no se usan mostrando antes cuánto espacio se libera.
-- **Administración**: pestaña para gestionar usuarios (crear, editar, bloquear, eliminar, llaves SSH),
-  grupos, sesiones conectadas e historial de cambios. La contraseña de sudo viaja siempre por la
-  entrada estándar. Antes de cada cambio se muestra el comando exacto.
+- **PIN y bloqueo**: las contraseñas guardadas (de conexión y de sudo) y el token de GitHub pueden ir
+  en una bóveda cifrada (`vault.json`, AES-256-GCM + Argon2id) protegida con un **PIN de 6 números** y
+  una llave de este equipo guardada en el llavero, así que copiar solo el archivo no sirve.
+  - Al crearla, las contraseñas del llavero se mueven a ella sin riesgo de perderlas; al quitarla,
+    vuelven al llavero.
+  - TerView se bloquea al abrirlo, tras 5–60 min sin uso (15 por defecto) o con `Ctrl+Shift+L`, en
+    todas las ventanas: se tapa la interfaz y se borran de la memoria las contraseñas descifradas y las
+    de sudo hasta que escribes el PIN. Las conexiones siguen vivas; una reconexión que necesita
+    contraseña espera al desbloqueo.
+  - Tras 5 fallos hay que esperar 30 s, el doble cada vez hasta 15 min (se recuerda aunque cierres la
+    app).
+  - El PIN se escribe en 6 casillas y se envía solo al completarlo. Las bóvedas creadas antes con una
+    contraseña libre se siguen abriendo con un campo de texto hasta que cambias el PIN.
+  - **«Olvidé mi PIN»** borra la bóveda (escribiendo BORRAR) y conserva servidores, llaves, comandos,
+    túneles y ajustes.
+  - Pantalla para crearlo la primera vez, con «Ahora no», y **candado en la barra de pestañas** para
+    bloquear, cambiar el PIN o ir a Ajustes → Seguridad. Los detalles están en «¿Qué protege?».
 - **Contraseña de sudo por servidor** (editor de servidor): «Pedir cada vez» (por defecto, solo en
   memoria), «La de la conexión» o «Guardar» (útil si entras con llave SSH), cifrada con el PIN o en el
   llavero. Botón de ojo para ver la contraseña guardada (con PIN, lo pide antes). En Administración,
@@ -41,45 +63,34 @@ siguen [Versionado Semántico](https://semver.org/lang/es/).
   duplicar y activar o quitar el PIN la tienen en cuenta; la copia en Gist solo lleva el modo.
 - **Detección de privilegios**: insignia **root** / **sudo** en la pestaña de la conexión, sin pedir
   contraseña ni dejar rastro en el servidor.
-- **Monitor**: gráficas en vivo de CPU, memoria, red y carga, discos, procesos (con botón Terminar),
-  consumo de contenedores, alertas configurables y resumen de todas las conexiones.
-- **Túneles (port forwarding)**: local, remoto y SOCKS, guardados por servidor, con arranque automático
-  al conectar y continuidad tras reconexiones.
-- **Ejecutar en varios servidores a la vez**: un comando (o uno de la biblioteca) en varios servidores o
-  un proyecto entero, con resultados en tabla, lado a lado y "Comparar salidas".
-- **GitHub**: conectar la cuenta con un token (guardado en el llavero), pasar tus llaves SSH a un
-  servidor, clonar repositorios (con deploy key), desplegar con un botón, ver y lanzar GitHub Actions,
-  y sincronizar tu configuración en un Gist cifrado.
-- **Editor en pestañas, como un navegador**: arrastra una pestaña fuera para abrirla en otra ventana;
-  reordénalas arrastrando; divide con el explorador solo si quieres (`Ctrl+Shift+M`).
-- **Acerca de** con novedades y **actualizaciones automáticas** firmadas.
-- **Diagnóstico** (Ajustes → Avanzado): tiempos de arranque y de cada operación, FPS, GPU y "Copiar informe".
-- Transferencias: opción **"Preguntar"** cuando el archivo ya existe (sobrescribir, omitir, mantener
-  ambos o solo si es más nuevo, con "aplicar a todos").
-- Explorador: **"Descargar en…"** y **"Descargar y abrir carpeta"**.
 - Explorador: **arrastrar archivos y carpetas al escritorio o a una carpeta** del gestor de archivos
   (Nautilus, Dolphin, Explorador de Windows, Finder). TerView primero los descarga a una carpeta
   temporal (se ve en Transferencias) y luego los suelta donde quieras; si ya estaban descargados, el
   arrastre es inmediato. Funciona con nombres con espacios y acentos, en X11 y en Wayland.
   ⚠️ Sin probar todavía con un arrastre real; en macOS, además, sin compilar.
-- "Mis comandos": **exportar e importar a archivo**, con vista previa.
-- `~/.ssh/config`: aviso cuando un servidor choca con un `Host` escrito a mano y alias alternativo.
-- **Puertos** (en Administración): todos los puertos en escucha, TCP y UDP, con su proceso, usuario y
-  servicio systemd o contenedor. Filtros (públicos o solo locales, usuario, proceso), abrir un túnel a
-  tu PC con un clic y copiar la dirección.
-- **Sitios web** (en Administración): sitios de **nginx** y **Caddy** con sus dominios, HTTPS y fecha
-  de caducidad del certificado, a qué sirve cada ruta y si hay algo escuchando en el puerto de destino.
-  Abre la configuración en el editor, comprueba la configuración y recarga el servicio con confirmación.
+- Explorador: **«Descargar en…»** y **«Descargar y abrir carpeta»**.
+- Transferencias: opción **«Preguntar»** cuando el archivo ya existe (sobrescribir, omitir, mantener
+  ambos o solo si es más nuevo, con «aplicar a todos»).
+- **Editor en pestañas, como un navegador**: arrastra una pestaña fuera para abrirla en otra ventana,
+  reordénalas arrastrando y divide con el explorador solo si quieres (`Ctrl+Shift+M`).
+- «Mis comandos»: **exportar e importar a archivo**, con vista previa.
+- `~/.ssh/config`: aviso cuando un servidor choca con un `Host` escrito a mano, con un alias
+  alternativo.
+- **Diagnóstico** (Ajustes → Avanzado): tiempos de arranque y de cada operación, FPS, GPU y «Copiar
+  informe».
 
 ### Mejorado
-- **Ajustes** en una ventana un poco más ancha (se adapta a pantallas pequeñas).
-- **Cancelar ahora detiene el comando en el servidor**: en el panel de Comandos y en "Ejecutar en
-  varios servidores" (también en las pestañas ya abiertas). Antes solo se dejaba de esperar y el
+- **Cancelar ahora detiene el comando en el servidor**: en el panel de Comandos y en «Ejecutar en
+  varios servidores» (también en las pestañas ya abiertas). Antes solo se dejaba de esperar y el
   comando seguía corriendo. Al vencer el tiempo límite también se detiene.
-- **Túneles a puertos bajos** (menores de 1024, como 80 o 443): "Abrir túnel" elige solo un puerto
-  libre en tu PC, porque esos puertos piden permisos de administrador. Sirve en Puertos y en Contenedores.
-- **Doble clic en un servidor** de la barra lateral: va a su pestaña abierta (y la reconecta si hace
-  falta) en lugar de abrir otra conexión. Para otra conexión: Ctrl+doble clic.
+- **Túneles a puertos bajos** (menores de 1024, como 80 o 443): «Abrir túnel» elige solo un puerto
+  libre en tu PC, porque esos puertos piden permisos de administrador. Sirve en Puertos y en
+  Contenedores.
+- **Ajustes** en una ventana un poco más ancha (se adapta a pantallas pequeñas).
+
+### Corregido
+- **Doble clic en un servidor** de la barra lateral: ahora va a su pestaña abierta (y la reconecta si
+  hace falta) en lugar de abrir otra conexión. Para abrir otra conexión: Ctrl+doble clic.
 
 ## [0.3.0] - 2026-11-11
 
@@ -141,7 +152,8 @@ Primera versión pública de TerView, cliente SSH/SFTP de escritorio.
 - Instalador `.rpm` para Linux.
 - Documentación con diagramas en `docs/`.
 
-[Sin publicar]: https://github.com/LeoMael/TerView/compare/v0.3.0...HEAD
+[Sin publicar]: https://github.com/LeoMael/TerView/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/LeoMael/TerView/releases/tag/v0.4.0
 [0.3.0]: https://github.com/LeoMael/TerView/releases/tag/v0.3.0
 [0.2.1]: https://github.com/LeoMael/TerView/releases/tag/v0.2.1
 [0.2.0]: https://github.com/LeoMael/TerView/commit/6dfd50a

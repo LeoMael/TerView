@@ -1,7 +1,7 @@
 # TerView — Pendientes y próximas funciones
 
-Estado al 12/11/2026: versión publicada **0.3.0**; lo hecho después y aún sin publicar se marca como
-**v0.4.0** (así lo llama el CHANGELOG, en «Sin publicar»). Todo el plan de la sección 8 está construido:
+Estado al 12/11/2026: versión publicada **0.3.0**; **0.4.0 lista para publicar** (lo hecho después de
+0.3.0 se marca como **v0.4.0**, igual que en el CHANGELOG). Todo el plan de la sección 8 está construido:
 administración (usuarios, grupos, **puertos y sitios web**), monitor, túneles, contenedores, ejecutar en
 varios servidores, GitHub, versiones y actualizaciones. Los comandos que se ejecutan aparte ya se pueden
 **cancelar de verdad** (se detienen también en el servidor).

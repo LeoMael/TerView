@@ -8,9 +8,8 @@ contraseñas guardadas y bloquea la app.
 
 **Tecnología:** Tauri 2 + Rust (motor, `src-tauri/`) · React 19 + TypeScript + zustand (interfaz, `src/`).
 
-**Estado que describe este documento:** el código del commit `bcd0267` (versión 0.3.0) más los cambios
-"Sin publicar" del CHANGELOG, que saldrán en la siguiente versión; entre ellos, la bóveda con PIN y
-las terminales persistentes con tmux.
+**Estado que describe este documento:** el código de la versión 0.4.0; entre sus novedades, la bóveda
+con PIN y las terminales persistentes con tmux.
 
 ---
 
