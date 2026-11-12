@@ -82,7 +82,7 @@ function ConnectForm() {
         </form>
         <ErrorBox error={error} />
         <p className="gh-hint">
-          El token se guarda solo en el llavero del sistema (nunca en archivos) y puedes borrarlo con «Desconectar».
+          El token se guarda cifrado en la bóveda si tienes PIN, o en el llavero del sistema si no. Se borra con «Desconectar».
         </p>
       </Card>
       {deviceFlow && <DeviceFlow />}
@@ -167,7 +167,7 @@ function AccountView() {
     const ok = await confirmDialog({
       title: "¿Desconectar GitHub?",
       message:
-        "Se borrará el token del llavero de este equipo. Para revocarlo del todo, bórralo también en GitHub → Settings → Tokens.",
+        "Se borrará el token guardado en este equipo. Para revocarlo del todo, bórralo también en GitHub → Settings → Tokens.",
       confirmText: "Desconectar",
       danger: true,
     });
@@ -176,7 +176,7 @@ function AccountView() {
       await disconnect();
       toast.success("Cuenta de GitHub desconectada");
     } catch (e) {
-      toast.error("No se pudo borrar el token del llavero", e);
+      toast.error("No se pudo borrar el token", e);
     }
   };
 
