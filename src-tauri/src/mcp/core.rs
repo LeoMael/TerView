@@ -583,7 +583,8 @@ impl<B: Backend> McpCore<B> {
         Ok(base)
     }
 
-    /// Para pruebas y para la interfaz: fija el catálogo base.
+    /// Para las pruebas: fija el catálogo base sin pedirlo a la interfaz.
+    #[cfg(test)]
     pub fn set_catalog(&self, list: Vec<CatalogEntry>) {
         *self.catalog.lock().unwrap_or_else(|p| p.into_inner()) = Some(list);
     }

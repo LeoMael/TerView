@@ -11,6 +11,7 @@ export type SectionId =
   | "editor"
   | "servers"
   | "security"
+  | "assistants"
   | "advanced"
   | "about";
 

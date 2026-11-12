@@ -256,14 +256,14 @@ fn watch_for_app(cfg: Arc<BridgeConfig>, shared: Arc<Mutex<Shared>>, tx: mpsc::U
         }
         s.watching = true;
     }
+    // Referencia débil: si el cliente cierra la entrada, el puente termina sin esperar a la app.
+    let tx = tx.downgrade();
     tokio::spawn(async move {
         loop {
             tokio::time::sleep(cfg.poll).await;
-            if tx.is_closed() {
-                break;
-            }
+            let Some(sender) = tx.upgrade() else { break };
             if app_is_open(cfg.port).await {
-                let _ = tx.send(json!({ "jsonrpc": "2.0", "method": "notifications/tools/list_changed" }).to_string());
+                let _ = sender.send(json!({ "jsonrpc": "2.0", "method": "notifications/tools/list_changed" }).to_string());
                 break;
             }
         }
@@ -368,12 +368,10 @@ impl SseParser {
     pub fn push(&mut self, data: &[u8]) -> Vec<String> {
         self.buf.extend_from_slice(data);
         let mut out = Vec::new();
-        loop {
-            let text = String::from_utf8_lossy(&self.buf).replace("\r\n", "\n");
-            let Some(end) = text.find("\n\n") else { break };
-            let event = text[..end].to_string();
-            let rest = text[end + 2..].as_bytes().to_vec();
-            self.buf = rest;
+        // Se trabaja con bytes: un carácter UTF-8 puede llegar partido entre dos trozos.
+        while let Some((end, next)) = Self::event_end(&self.buf) {
+            let event = String::from_utf8_lossy(&self.buf[..end]).into_owned();
+            self.buf.drain(..next);
             if let Some(m) = Self::event_data(&event) {
                 out.push(m);
             }
@@ -383,8 +381,22 @@ impl SseParser {
 
     /// Último evento sin línea en blanco al final.
     pub fn finish(&mut self) -> Vec<String> {
-        let text = String::from_utf8_lossy(&std::mem::take(&mut self.buf)).replace("\r\n", "\n");
-        Self::event_data(text.trim_end()).into_iter().collect()
+        let rest = std::mem::take(&mut self.buf);
+        Self::event_data(String::from_utf8_lossy(&rest).trim_end()).into_iter().collect()
+    }
+
+    /// Fin del primer evento (línea en blanco, `\n\n` o `\n\r\n`): (fin del evento, inicio del resto).
+    fn event_end(buf: &[u8]) -> Option<(usize, usize)> {
+        buf.iter().enumerate().find_map(|(i, &b)| {
+            if b != b'\n' {
+                return None;
+            }
+            match (buf.get(i + 1), buf.get(i + 2)) {
+                (Some(b'\n'), _) => Some((i, i + 2)),
+                (Some(b'\r'), Some(b'\n')) => Some((i, i + 3)),
+                _ => None,
+            }
+        })
     }
 
     fn event_data(event: &str) -> Option<String> {

@@ -865,4 +865,10 @@ fn sse_parser() {
     assert_eq!(out, vec![r#"{"a":1}"#.to_string(), r#"{"b":2}"#.to_string()]);
     assert_eq!(p.push(b":3}"), Vec::<String>::new());
     assert_eq!(p.finish(), vec![r#"{"c":3}"#.to_string()]);
+    // Un carácter UTF-8 partido entre dos trozos no se estropea.
+    let msg = "data: {\"t\":\"ñandú\"}\n\n".as_bytes();
+    let cut = msg.iter().position(|&b| b == 0xC3).unwrap() + 1;
+    let mut p = bridge::SseParser::default();
+    assert!(p.push(&msg[..cut]).is_empty());
+    assert_eq!(p.push(&msg[cut..]), vec![r#"{"t":"ñandú"}"#.to_string()]);
 }

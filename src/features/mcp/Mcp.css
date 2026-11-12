@@ -1,0 +1,294 @@
+/* Asistentes de IA (MCP): diálogo de permiso, actividad, botón y sección de Ajustes. */
+
+/* ───── Diálogo de permiso ───── */
+.mcp-ask {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.mcp-ask-lead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  flex-wrap: wrap;
+}
+.mcp-ask-lead > svg {
+  color: var(--purple);
+}
+.mcp-ask-hint {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+.mcp-command {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-terminal);
+  color: #e2e8f0;
+  font-family: var(--font-mono);
+  font-size: var(--fs);
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 200px;
+  overflow: auto;
+}
+.mcp-danger {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 8px 10px;
+  border: 1px solid var(--red);
+  border-radius: var(--radius-sm);
+  color: var(--red);
+  background: color-mix(in srgb, var(--red) 10%, transparent);
+}
+.mcp-danger > svg {
+  flex: none;
+  margin-top: 1px;
+}
+.mcp-diff {
+  margin: 0;
+  max-height: 300px;
+  overflow: auto;
+  padding: 6px 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-sunken);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  line-height: 1.45;
+}
+.mcp-diff > div {
+  padding: 0 10px;
+  white-space: pre;
+}
+.mcp-diff-add {
+  color: var(--green);
+  background: color-mix(in srgb, var(--green) 12%, transparent);
+}
+.mcp-diff-del {
+  color: var(--red);
+  background: color-mix(in srgb, var(--red) 12%, transparent);
+}
+.mcp-diff-hunk {
+  color: var(--purple);
+}
+.mcp-diff-note {
+  color: var(--text-muted);
+  font-style: italic;
+}
+.mcp-countdown {
+  margin-right: auto;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+
+/* ───── Botón de la barra de pestañas ───── */
+.mcp-btn {
+  position: relative;
+  color: var(--purple);
+}
+.mcp-btn-dot {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.mcp-btn-dot.waiting {
+  background: var(--yellow);
+  animation: mcp-pulse 1.2s ease-in-out infinite;
+}
+@keyframes mcp-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* ───── Actividad ───── */
+.mcp-act-list {
+  display: flex;
+  flex-direction: column;
+  max-height: min(60vh, 560px);
+  overflow: auto;
+}
+.mcp-act-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 4px;
+  border-bottom: 1px solid var(--border);
+}
+.mcp-act-status {
+  flex: none;
+  margin-top: 2px;
+}
+.mcp-st-ok .mcp-act-status {
+  color: var(--green);
+}
+.mcp-st-error .mcp-act-status {
+  color: var(--red);
+}
+.mcp-st-denied .mcp-act-status,
+.mcp-st-locked .mcp-act-status {
+  color: var(--yellow);
+}
+.mcp-st-running .mcp-act-status {
+  color: var(--accent);
+}
+.mcp-act-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mcp-act-top {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+.mcp-act-tool {
+  font-weight: 600;
+}
+.mcp-act-server {
+  color: var(--accent);
+}
+.mcp-act-time {
+  margin-left: auto;
+  color: var(--text-faint);
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+}
+.mcp-act-detail {
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mcp-act-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+.mcp-act-msg {
+  font-size: var(--fs-sm);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.mcp-act-path {
+  margin-right: auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-sm);
+}
+
+/* ───── Ajustes ───── */
+.mcp-intro,
+.mcp-note {
+  margin: 0 0 10px;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+}
+.mcp-warn {
+  margin: 0 0 10px;
+  padding: 6px 10px;
+  border-left: 3px solid var(--yellow);
+  font-size: var(--fs-sm);
+}
+.mcp-port {
+  width: 80px;
+  margin-right: 6px;
+}
+.mcp-token {
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-right: 4px;
+}
+.mcp-servers {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 12px;
+}
+.mcp-server {
+  border-bottom: 1px solid var(--border);
+}
+.mcp-server-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+}
+.mcp-server-name {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.mcp-server-name > * {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.st-segmented button.active.mcp-acc-read {
+  color: var(--accent);
+}
+.st-segmented button.active.mcp-acc-full {
+  color: var(--orange);
+}
+.mcp-rules {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 0 0 8px 12px;
+}
+.mcp-rule {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+}
+.mcp-rule code {
+  font-size: var(--fs-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mcp-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+.mcp-copy-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 500;
+}
+.mcp-copy-text {
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-sunken);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  white-space: pre-wrap;
+  word-break: break-all;
+  user-select: text;
+}
