@@ -158,7 +158,7 @@ clic central en una pestaña para cerrarla.
 
 Los archivos abiertos son pestañas, como en el navegador: arrastra una pestaña para cambiarla de orden, o
 **suéltala fuera de la ventana** (o bastante más abajo de la barra) para abrirla en una ventana aparte. Al cerrar esa
-ventana o pulsar «Volver», el archivo vuelve como pestaña. Con clic derecho en la pestaña: «Abrir en ventana aparte»,
+ventana o pulsar «Volver a la pestaña principal», el archivo vuelve como pestaña. Con clic derecho en la pestaña: «Abrir en ventana aparte»,
 «Dividir con Archivos» o «Dividir con Comandos». En Ajustes → Editor eliges cómo se abre un archivo: pestaña (por
 defecto), dividido o ventana aparte.
 
@@ -249,7 +249,7 @@ Ajustes. Con la AppImage, usa la opción por HTTP que también muestra Ajustes.
 |----------|-----------|
 | Lentitud, parpadeos o ventana en blanco en Linux | Con tarjetas NVIDIA, TerView ya aplica el arreglo solo. Si sigue pasando, ábrela con `WEBKIT_DISABLE_COMPOSITING_MODE=1 terview`. |
 | "Llavero del sistema no disponible" (Linux) | Instala o activa GNOME Keyring o KWallet. Sin llavero, TerView te pedirá la contraseña en cada conexión (el PIN también necesita el llavero para guardar la llave del equipo). |
-| Olvidé el PIN, o "falta la llave de este equipo" | En la pantalla de bloqueo pulsa «Olvidé mi PIN» (ver [PIN y bloqueo](#pin-y-bloqueo)). Pierdes solo las contraseñas guardadas y el token de GitHub. |
+| Olvidé el PIN, o "falta la llave de este equipo" | En la pantalla de bloqueo pulsa «Olvidé mi PIN» (ver [PIN y bloqueo](#pin-y-bloqueo)). Pierdes solo las contraseñas guardadas y los tokens de GitHub, de IA y del MCP (el del MCP se crea de nuevo). |
 | "¡La huella del servidor cambió!" | Si reinstalaste el servidor, es normal: confirma la nueva huella. Si no, **no te conectes**: podría ser un ataque. |
 | No conecta con llave | Elige la llave **privada** (el archivo sin `.pub`) y comprueba que la pública está en `~/.ssh/authorized_keys` del servidor. |
 | El agente SSH no funciona en Windows | Activa el servicio *Agente de autenticación OpenSSH* (`Get-Service ssh-agent \| Set-Service -StartupType Automatic -PassThru \| Start-Service` en PowerShell como administrador) o abre Pageant. |
@@ -367,8 +367,12 @@ docs/             Arquitectura, diagramas, pendientes y catálogo de comandos
 
 ## Hoja de ruta
 
-Lo siguiente (detalle en [`docs/PENDIENTES.md`](docs/PENDIENTES.md)): administración de usuarios y grupos,
-monitoreo en vivo, túneles (port forwarding), actualizaciones automáticas, instalador para macOS
-e integración con la cuenta de GitHub.
+Lo que queda (detalle en [`docs/PENDIENTES.md`](docs/PENDIENTES.md)):
+
+- Probar el MCP con Claude Code y Claude Desktop, y el escáner de vulnerabilidades en servidores reales.
+- Firmar el instalador de Windows (para que SmartScreen no avise).
+- Pruebas reales en Windows, con servidores con 2FA y con un agente SSH.
+- Medir el rendimiento y probar el arrastre de archivos al escritorio.
+- Pruebas automáticas de la interfaz.
 
 <p align="center"><sub>Hecho con Tauri, Rust y React · © LeoMael</sub></p>
