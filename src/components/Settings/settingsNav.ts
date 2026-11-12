@@ -14,6 +14,7 @@ export type SectionId =
   | "assistants"
   | "ai"
   | "advanced"
+  | "manual"
   | "about";
 
 export const useSettingsNav = create<{ section: SectionId; setSection: (s: SectionId) => void }>((set) => ({
@@ -25,4 +26,9 @@ export const useSettingsNav = create<{ section: SectionId; setSection: (s: Secti
 export function openSettingsAt(section: SectionId) {
   useSettingsNav.getState().setSection(section);
   useUi.getState().openSettings();
+}
+
+/** Abre el manual de uso (Ajustes → Manual de uso). */
+export function openManual() {
+  openSettingsAt("manual");
 }

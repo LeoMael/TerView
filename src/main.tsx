@@ -32,6 +32,9 @@ async function afterMainLoaded() {
   });
   requestAnimationFrame(() => markBoot(BOOT_MARKS.appReady));
   void import("./features/updater/autoCheck").then((m) => m.startUpdaterAutoCheck());
+  // Tras actualizar, una sola vez: lo nuevo de esta versión. Aquí la interfaz ya está montada, y eso
+  // solo pasa tras desbloquear (LockGate); el diálogo además se oculta si se vuelve a bloquear.
+  void import("./features/whatsNew/whatsNew").then((m) => m.checkWhatsNew());
 }
 
 // Sin React.StrictMode: su doble montaje abriría dos veces terminales/conexiones reales.

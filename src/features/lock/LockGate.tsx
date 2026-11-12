@@ -217,7 +217,7 @@ function ForgotPin({ onBack }: { onBack: () => void }) {
 
 /** Ofrecer crear el PIN: solo en la principal, sin bóveda, y si no se dijo «Ahora no» (o tras
  * «Olvidé mi PIN»). Los ajustes deben estar cargados para saberlo. */
-function useShowSetup(main: boolean, status: VaultStatus | null): boolean {
+export function useShowSetup(main: boolean, status: VaultStatus | null): boolean {
   const loaded = useSettings((s) => s.loaded);
   const dismissed = useSettings((s) => s.settings.vaultPromptDismissed);
   const offer = useLock((s) => s.offerSetup);

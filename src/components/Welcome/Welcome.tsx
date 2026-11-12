@@ -1,11 +1,12 @@
 // Pantalla de bienvenida cuando no hay conexiones abiertas.
 import { useMemo, useState } from "react";
-import { Command, FileCode2, Keyboard, MousePointerClick, Plus, Search, Server, Settings, TerminalSquare, Upload } from "lucide-react";
+import { BookOpen, Command, FileCode2, Keyboard, MousePointerClick, Plus, Search, Server, Settings, TerminalSquare, Upload } from "lucide-react";
 import { useProfiles } from "../../stores/profiles";
 import { useUi } from "../../stores/ui";
 import { openOrFocusServer } from "../../features/connect";
 import type { ServerProfile } from "../../api/types";
 import { Logo } from "../ui/Logo";
+import { openManual } from "../Settings/settingsNav";
 import "./Welcome.css";
 
 const RECENT_KEY = "terview.recentServers";
@@ -91,6 +92,9 @@ export function Welcome() {
           </button>
           <button className="btn" onClick={openSettings}>
             <Settings size={15} /> Ajustes
+          </button>
+          <button className="btn" onClick={openManual}>
+            <BookOpen size={15} /> Manual de uso
           </button>
         </div>
 

@@ -1,6 +1,6 @@
 // Barra de pestañas de conexión (una por sesión SSH).
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type PointerEvent as RPointerEvent } from "react";
-import { Copy, PanelLeftClose, PanelLeftOpen, Plus, RotateCw, Server, Settings, Unplug, X, XCircle } from "lucide-react";
+import { CircleHelp, Copy, PanelLeftClose, PanelLeftOpen, Plus, RotateCw, Server, Settings, Unplug, X, XCircle } from "lucide-react";
 import { useTabs, type SessionTab } from "../../stores/tabs";
 import { useUi } from "../../stores/ui";
 import { useProfiles } from "../../stores/profiles";
@@ -11,6 +11,7 @@ import { PopupMenu } from "./PopupMenu";
 import { PrivilegeBadge } from "./PrivilegeBadge";
 import { LockButton } from "./LockButton";
 import { McpButton } from "../../features/mcp/McpButton";
+import { openManual } from "../Settings/settingsNav";
 import "./TabBar.css";
 import { shortcutLabel } from "../../lib/platform";
 
@@ -180,6 +181,9 @@ export function TabBar() {
       </div>
       <McpButton />
       <LockButton />
+      <button className="icon-btn tabs-side-btn" onClick={openManual} title="Manual de uso" aria-label="Manual de uso">
+        <CircleHelp size={16} />
+      </button>
       <button className="icon-btn tabs-side-btn" onClick={openSettings} title={`Ajustes (${shortcutLabel(",")})`} aria-label="Ajustes">
         <Settings size={16} />
       </button>

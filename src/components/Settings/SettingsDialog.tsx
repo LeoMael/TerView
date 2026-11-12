@@ -1,7 +1,8 @@
 // Ajustes de la app. Los cambios se aplican al momento (useSettings().update guarda con retardo).
-import { useEffect, useState, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
 import {
   AppWindow,
+  BookOpen,
   Bot,
   MessageSquareText,
   ArrowLeftRight,
@@ -45,6 +46,9 @@ import { SecuritySection } from "./SecuritySection";
 import { McpSection } from "./McpSection";
 import { AiSection } from "./AiSection";
 
+// El manual (texto e imágenes) va en un trozo aparte: solo se carga al abrir su sección.
+const ManualView = lazy(() => import("../About/Manual"));
+
 const SECTIONS: { id: SectionId; label: string; icon: ReactNode }[] = [
   { id: "appearance", label: "Apariencia", icon: <Palette size={15} /> },
   { id: "terminal", label: "Terminal", icon: <TerminalSquare size={15} /> },
@@ -57,6 +61,7 @@ const SECTIONS: { id: SectionId; label: string; icon: ReactNode }[] = [
   { id: "assistants", label: "Asistentes de IA (MCP)", icon: <Bot size={15} /> },
   { id: "ai", label: "IA para explicar informes", icon: <MessageSquareText size={15} /> },
   { id: "advanced", label: "Avanzado", icon: <SlidersHorizontal size={15} /> },
+  { id: "manual", label: "Manual de uso", icon: <BookOpen size={15} /> },
   { id: "about", label: "Acerca de", icon: <Info size={15} /> },
 ];
 
@@ -125,6 +130,17 @@ export function SettingsDialog() {
           {section === "assistants" && <McpSection />}
           {section === "ai" && <AiSection />}
           {section === "advanced" && <AdvancedSection />}
+          {section === "manual" && (
+            <Suspense
+              fallback={
+                <div className="st-manual-loading">
+                  <span className="spinner" />
+                </div>
+              }
+            >
+              <ManualView />
+            </Suspense>
+          )}
           {section === "about" && <AboutSection />}
         </div>
       </div>
