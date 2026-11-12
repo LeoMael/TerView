@@ -26,6 +26,8 @@
 
 ![Ventana de TerView](docs/arquitectura/04-ventana.png)
 
+**[Manual de uso](docs/MANUAL.md)**: cómo usar cada función, paso a paso.
+
 ## Qué puedes hacer
 
 - **Conectarte por SSH** con contraseña, llave o agente SSH. Comprueba la huella del servidor
