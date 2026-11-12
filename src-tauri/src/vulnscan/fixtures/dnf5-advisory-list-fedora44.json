@@ -1,0 +1,30 @@
+[
+  {
+    "name":"FEDORA-2026-a06b828d65",
+    "type":"security",
+    "severity":"Moderate",
+    "nevra":"curl-8.18.0-14.fc44.x86_64",
+    "buildtime":1791940820
+  },
+  {
+    "name":"FEDORA-2026-a06b828d65",
+    "type":"security",
+    "severity":"Moderate",
+    "nevra":"libcurl-8.18.0-14.fc44.x86_64",
+    "buildtime":1791940820
+  },
+  {
+    "name":"FEDORA-2026-12f3f3d569",
+    "type":"security",
+    "severity":"Important",
+    "nevra":"openssl-libs-1:3.5.9-1.fc44.x86_64",
+    "buildtime":1790989781
+  },
+  {
+    "name":"FEDORA-2026-7d4732cbab",
+    "type":"security",
+    "severity":"Important",
+    "nevra":"sudo-1.9.17-10.p2.fc44.x86_64",
+    "buildtime":1791507998
+  }
+]

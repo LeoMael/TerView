@@ -177,7 +177,10 @@ function ForgotPin({ onBack }: { onBack: () => void }) {
   return (
     <div className="lock-form">
       <h2 className="lock-title">Olvidé mi PIN</h2>
-      <p className="lock-text">Se borran las contraseñas guardadas y el token de GitHub. Lo demás se conserva.</p>
+      <p className="lock-text">
+        Se borran las contraseñas guardadas y los tokens (GitHub, asistentes de IA e IA de informes). Lo demás se
+        conserva.
+      </p>
       <details className="lock-details">
         <summary>¿Qué se conserva?</summary>
         <ul>

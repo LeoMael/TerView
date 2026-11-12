@@ -62,6 +62,8 @@ http = "1"
 bytes = "1"
 tower-service = "0.3"
 regex = "1"
+# Escáner de vulnerabilidades (`vulnscan`): puntuación CVSS v2/v3/v4 (solo cálculo, sin red).
+cvss = "3"
 
 [dev-dependencies]
 # Pruebas de punta a punta del servidor MCP con el cliente oficial.

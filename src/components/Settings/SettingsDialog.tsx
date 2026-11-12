@@ -3,6 +3,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import {
   AppWindow,
   Bot,
+  MessageSquareText,
   ArrowLeftRight,
   Columns2,
   FileCode2,
@@ -42,6 +43,7 @@ import { getAutoCheck, setAutoCheck } from "../../features/updater/updater";
 import { checkSshAliasesBeforeExport } from "../../features/sshAliases";
 import { SecuritySection } from "./SecuritySection";
 import { McpSection } from "./McpSection";
+import { AiSection } from "./AiSection";
 
 const SECTIONS: { id: SectionId; label: string; icon: ReactNode }[] = [
   { id: "appearance", label: "Apariencia", icon: <Palette size={15} /> },
@@ -53,6 +55,7 @@ const SECTIONS: { id: SectionId; label: string; icon: ReactNode }[] = [
   { id: "servers", label: "Servidores", icon: <Server size={15} /> },
   { id: "security", label: "Seguridad", icon: <ShieldCheck size={15} /> },
   { id: "assistants", label: "Asistentes de IA (MCP)", icon: <Bot size={15} /> },
+  { id: "ai", label: "IA para explicar informes", icon: <MessageSquareText size={15} /> },
   { id: "advanced", label: "Avanzado", icon: <SlidersHorizontal size={15} /> },
   { id: "about", label: "Acerca de", icon: <Info size={15} /> },
 ];
@@ -120,6 +123,7 @@ export function SettingsDialog() {
           {section === "servers" && <ServersSection />}
           {section === "security" && <SecuritySection />}
           {section === "assistants" && <McpSection />}
+          {section === "ai" && <AiSection />}
           {section === "advanced" && <AdvancedSection />}
           {section === "about" && <AboutSection />}
         </div>

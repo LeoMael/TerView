@@ -180,7 +180,8 @@ pub async fn vault_change_pin(old_pin: String, new_pin: String) -> AppResult<()>
     blocking(move || vault().change_pin(&old_pin, &new_pin, vault::calibrate())).await
 }
 
-/// «Olvidé mi PIN»: borra la bóveda (se pierden las contraseñas guardadas y el token de GitHub)
+/// «Olvidé mi PIN»: borra la bóveda (se pierden las contraseñas guardadas y los tokens de GitHub,
+/// del servidor MCP —se crea uno nuevo— y de la IA que explica informes)
 /// y deja TerView sin bloqueo. Servidores, ajustes y llaves de ~/.ssh no se tocan.
 #[tauri::command]
 pub async fn vault_reset(app: AppHandle) -> AppResult<()> {

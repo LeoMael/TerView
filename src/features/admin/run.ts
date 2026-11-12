@@ -25,6 +25,8 @@ export class ElevationError extends Error {
 /**
  * Ejecuta `inner` con la elevación indicada. `secret` va al stdin del script interior.
  * Si la contraseña de sudo resulta incorrecta, se olvida y se lanza `ElevationError`.
+ * `execId` (opcional, `newExecId()`) permite cancelarlo con `snippets.cancelExec`: se detiene también
+ * en el servidor y la promesa falla con el error `Canceled`.
  */
 export async function runScript(
   sessionId: string,
@@ -32,9 +34,10 @@ export async function runScript(
   el: Elevation,
   secret = "",
   timeoutSecs = 60,
+  execId?: string,
 ): Promise<ExecResult> {
   const req = buildExec(inner, el, secret);
-  const r = await snippets.execStdin(sessionId, req.command, req.stdin, timeoutSecs);
+  const r = await snippets.execStdin(sessionId, req.command, req.stdin, timeoutSecs, execId);
   const f = elevationFailure(r.exitCode, r.stderr);
   if (f) {
     if (f === "bad-password" || f === "denied") forgetSudo(sessionId);

@@ -1,0 +1,23 @@
+/* Ajustes → IA para explicar informes */
+.st-hint {
+  margin: 4px 0 12px;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  line-height: 1.45;
+}
+.st-ai-token {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.st-ai-token .input {
+  width: 220px;
+}
+.st-ai-ok {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--green);
+  font-size: var(--fs-sm);
+}

@@ -576,10 +576,12 @@ fn enable_moves_secrets_from_keyring() {
         ("s3:sudo", "sudo3"),
         ("x:sudo", "de otro"),
         ("github-token", "ghp"),
+        ("mcp-token", "mcp"),
+        ("ai-token", "sk-ia"),
         ("otra-app", "x"),
     ]));
     let r = secrets::enable_vault(&v, &kr, &ids(&["s1", "s2", "s3"]), PIN, FAST).unwrap();
-    assert_eq!(r, MoveReport { moved: 5, left_in_keyring: 0 });
+    assert_eq!(r, MoveReport { moved: 7, left_in_keyring: 0 });
     // En el llavero solo queda lo que no es de un servidor conocido.
     assert_eq!(
         kr.data.borrow().keys().cloned().collect::<Vec<_>>(),
@@ -592,6 +594,8 @@ fn enable_moves_secrets_from_keyring() {
     assert_eq!(get(&v2, "s3:sudo").unwrap().as_deref(), Some("sudo3"));
     assert_eq!(get(&v2, "s1:sudo").unwrap(), None);
     assert_eq!(get(&v2, "github-token").unwrap().as_deref(), Some("ghp"));
+    assert_eq!(get(&v2, "mcp-token").unwrap().as_deref(), Some("mcp"));
+    assert_eq!(get(&v2, "ai-token").unwrap().as_deref(), Some("sk-ia"));
     assert_eq!(get(&v2, "s3").unwrap(), None);
 }
 
@@ -622,7 +626,14 @@ fn enable_keeps_copies_if_keyring_cannot_delete() {
 fn disable_returns_secrets_to_keyring() {
     let dir = TempDir::new();
     let v = dir.vault();
-    v.create(PIN, map(&[("s1", "p1"), ("s1:sudo", "ps1"), ("github-token", "ghp")]), FAST).unwrap();
+    let all = map(&[
+        ("s1", "p1"),
+        ("s1:sudo", "ps1"),
+        ("github-token", "ghp"),
+        ("mcp-token", "mcp"),
+        ("ai-token", "sk-ia"),
+    ]);
+    v.create(PIN, all.clone(), FAST).unwrap();
     v.lock();
     let kr = FakeKeyring::default();
 
@@ -632,10 +643,10 @@ fn disable_returns_secrets_to_keyring() {
     assert!(kr.data.borrow().is_empty());
 
     let r = secrets::disable_vault(&v, &kr, PIN).unwrap();
-    assert_eq!(r.moved, 3);
+    assert_eq!(r.moved, 5);
     assert!(!dir.vault_path().exists());
     assert!(!v.is_enabled());
-    assert_eq!(*kr.data.borrow(), map(&[("s1", "p1"), ("s1:sudo", "ps1"), ("github-token", "ghp")]));
+    assert_eq!(*kr.data.borrow(), all);
 }
 
 #[test]

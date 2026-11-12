@@ -18,11 +18,29 @@ siguen [Versionado Semántico](https://semver.org/lang/es/).
   bloqueado por PIN, el asistente no puede hacer nada. Herramientas: servidores, proyectos y
   conexiones, abrir una conexión (como pestaña), ejecutar comandos (cancelables, con tiempo y salida
   limitados), comandos de la Biblioteca, explorar, leer y escribir archivos, subir y descargar con la
-  cola de transferencias, y ver puertos, sitios web y contenedores. Escucha solo en `127.0.0.1` con un
-  token que se puede regenerar (guardado como tus contraseñas: en la bóveda si tienes PIN); para
+  cola de transferencias, ver puertos, sitios web y contenedores, y consultar vulnerabilidades (el
+  último informe, o un análisis nuevo sin sudo que se aprueba la primera vez). Escucha solo en
+  `127.0.0.1` con un token que se puede regenerar (guardado como tus contraseñas: en la bóveda si
+  tienes PIN); para
   clientes por stdio se instala el puente `terview-mcp`. Cada acción queda en el panel **Actividad del
   asistente** (con botón para detener un comando) y en `mcp-audit.jsonl`. Ajustes muestra la
   configuración lista para copiar en Claude Code y Claude Desktop.
+- **Escáner de vulnerabilidades** (Administración → **Vulnerabilidades**): un botón **Analizar** que dice
+  qué software tiene el servidor (paquetes, kernel, sudo, OpenSSH, nginx, Caddy, Podman, Docker, Node,
+  Python, PHP, Java e imágenes de contenedores) y qué vulnerabilidades conocidas le afectan.
+  - La lista sale de bases de datos reales: **OSV.dev** (consultado desde tu PC, solo con nombres y
+    versiones de paquetes), la herramienta de seguridad de la distro (`dnf`, `debsecan`, `pro`,
+    `zypper`) y **Trivy** si el servidor lo tiene. Nunca de una IA.
+  - Resumen por gravedad, cambios desde el análisis anterior, tabla con filtros, detalle con enlaces y el
+    **comando para actualizar** (se copia o se escribe en la terminal sin Enter; nunca se ejecuta solo).
+  - Con sudo, también los contenedores de root y de los usuarios que elijas. Las imágenes se leen sin
+    arrancarlas. **Cancelar** detiene el análisis también en el servidor.
+  - Historial de los últimos 20 análisis por servidor; exportar a JSON y Markdown.
+  - Atajo desde Contenedores → Imágenes: «Ver vulnerabilidades».
+- **IA opcional para explicar informes** (Ajustes → IA para explicar informes): cualquier servicio
+  compatible con OpenAI (también uno local como Ollama). Es otra cosa que el MCP: aquí TerView le
+  pregunta a la IA, y solo para que **explique** un informe. Antes de enviar ves el texto exacto, sin
+  nombre del servidor, IP, usuarios ni rutas. El token va en la bóveda o el llavero.
 
 ## [0.4.0] - 2026-11-12
 

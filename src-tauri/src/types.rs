@@ -144,6 +144,10 @@ pub struct Settings {
     pub lock_minutes: u32,
     /// El usuario dijo «Ahora no» a crear el PIN: no se vuelve a preguntar al iniciar.
     pub vault_prompt_dismissed: bool,
+    /// Escáner de vulnerabilidades (fuentes, límite de imágenes, usuarios elegidos por servidor).
+    pub vulnscan: crate::vulnscan::VulnScanSettings,
+    /// Asistente de IA opcional (URL base y modelo; el token va en la bóveda o el llavero).
+    pub ai: crate::ai::AiSettings,
 }
 
 impl Default for Settings {
@@ -167,6 +171,8 @@ impl Default for Settings {
             terminal_tmux: TmuxMode::Auto,
             lock_minutes: 15,
             vault_prompt_dismissed: false,
+            vulnscan: Default::default(),
+            ai: Default::default(),
         }
     }
 }
