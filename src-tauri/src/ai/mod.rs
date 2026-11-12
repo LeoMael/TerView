@@ -27,19 +27,13 @@ const MAX_BODY: usize = 4 * 1024 * 1024;
 /// Límite de lo que se envía (el diálogo ya lo recorta a 60 hallazgos).
 const MAX_PROMPT: usize = 200 * 1024;
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 pub struct AiSettings {
     pub enabled: bool,
     /// p. ej. `https://api.openai.com/v1` o `http://localhost:11434/v1`.
     pub base_url: String,
     pub model: String,
-}
-
-impl Default for AiSettings {
-    fn default() -> Self {
-        AiSettings { enabled: false, base_url: String::new(), model: String::new() }
-    }
 }
 
 impl AiSettings {

@@ -302,7 +302,7 @@ elif [ -s "$m/lib/apk/db/installed" ]; then
 elif [ -e "$m/var/lib/rpm" ] || [ -e "$m/usr/lib/sysimage/rpm" ]; then
   db="$m/usr/lib/sysimage/rpm"
   [ -e "$db/rpmdb.sqlite" ] || [ -e "$db/Packages" ] || [ -e "$db/Packages.db" ] || db="$m/var/lib/rpm"
-  if command -v rpm >/dev/null 2>&1; then echo @@rpm; echo "@@method rpm --dbpath"; rpm --dbpath "$db" -qa --qf '{RPM_QF}' 2>/dev/null
+  if command -v rpm >/dev/null 2>&1; then echo "@@method rpm --dbpath"; echo @@rpm; rpm --dbpath "$db" -qa --qf '{RPM_QF}' 2>/dev/null
   else echo @@needrpm; fi
 else echo @@nopkgdb; fi"#
     )
@@ -344,7 +344,7 @@ echo @@end"#,
                 user,
                 false,
                 &format!(
-                    "echo @@rpm; echo '@@method rpm de la imagen'; podman run --rm --network=none --entrypoint rpm {id} -qa --qf '{RPM_QF}' 2>/dev/null; echo @@end"
+                    "echo '@@method rpm de la imagen'; echo @@rpm; podman run --rm --network=none --entrypoint rpm {id} -qa --qf '{RPM_QF}' 2>/dev/null; echo @@end"
                 ),
             );
             let mount_cmd = if user.is_none() {
@@ -381,7 +381,7 @@ echo @@end
                 pkgdb = read_pkgdb().replace(
                     "else echo @@needrpm; fi",
                     &format!(
-                        "else echo @@rpm; echo '@@method rpm de la imagen'; docker run --rm --network=none --entrypoint rpm \"$img\" -qa --qf '{RPM_QF}' 2>/dev/null; fi"
+                        "else echo '@@method rpm de la imagen'; echo @@rpm; docker run --rm --network=none --entrypoint rpm \"$img\" -qa --qf '{RPM_QF}' 2>/dev/null; fi"
                     )
                 ),
             )

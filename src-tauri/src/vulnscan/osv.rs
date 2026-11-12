@@ -316,8 +316,20 @@ pub async fn fetch_details<A: OsvApi>(
     let cached = out.len();
     progress(cached, total);
     let mut done = cached;
+    let mut net_failed = 0usize;
     let mut s = stream::iter(todo.into_iter().map(|(id, modified)| async move {
-        let r = api.vuln(&id).await;
+        // Hasta 3 intentos si falla la red o OSV responde 5xx/429 (pasa a veces con 8 a la vez).
+        let mut r = api.vuln(&id).await;
+        for wait in [600u64, 1500] {
+            if !matches!(r, Err(OsvError::Other(_))) {
+                break;
+            }
+            tokio::time::sleep(Duration::from_millis(wait)).await;
+            r = api.vuln(&id).await;
+        }
+        if let Err(e) = &r {
+            log::warn!("OSV: no se pudo leer {id}: {e:?}");
+        }
         (id, modified, r)
     }))
     .buffer_unordered(DETAIL_PARALLEL);
@@ -338,9 +350,13 @@ pub async fn fetch_details<A: OsvApi>(
                     failed += 1;
                 }
             }
-            Err(OsvError::Other(e)) if matches!(e, AppError::Network(_)) && done == cached + 1 && failed == 0 => {
-                // La primera petición ya falla por red: OSV no está disponible.
-                return Err(e);
+            Err(OsvError::Other(e)) if matches!(e, AppError::Network(_)) => {
+                failed += 1;
+                net_failed += 1;
+                // Las primeras peticiones fallan todas por la red: OSV no está disponible.
+                if net_failed >= DETAIL_PARALLEL && out.len() == cached {
+                    return Err(e);
+                }
             }
             Err(_) => failed += 1,
         }

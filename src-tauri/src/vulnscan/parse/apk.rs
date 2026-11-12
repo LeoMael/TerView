@@ -5,7 +5,7 @@ use crate::vulnscan::model::Package;
 /// ¿Parece una versión de Alpine («3.1.0-r4», «20230506-r0», «1.36.0-r9»)?
 fn is_apk_version(v: &str) -> bool {
     let Some((ver, rel)) = v.rsplit_once("-r") else { return false };
-    !ver.is_empty() && ver.starts_with(|c: char| c.is_ascii_digit()) && !rel.is_empty() && rel.chars().all(|c| c.is_ascii_digit())
+    !ver.is_empty() && !ver.contains('-') && ver.starts_with(|c: char| c.is_ascii_digit()) && !rel.is_empty() && rel.chars().all(|c| c.is_ascii_digit())
 }
 
 /// Separa «libcrypto3-3.1.0-r4» en («libcrypto3», «3.1.0-r4»).
