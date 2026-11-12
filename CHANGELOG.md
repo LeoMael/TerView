@@ -7,6 +7,22 @@ siguen [Versionado Semántico](https://semver.org/lang/es/).
 ## [Sin publicar]
 
 ### Añadido
+- **Asistentes de IA (MCP)** (para la 0.5.0): servidor MCP propio para que Claude Code, Claude Desktop
+  u otro cliente MCP trabajen con tus servidores **usando las conexiones de TerView, sin ver nunca
+  contraseñas ni llaves**. Apagado por defecto; se activa en Ajustes → Asistentes de IA (MCP).
+  Permiso por servidor (**Sin acceso** por defecto, **Solo lectura** o **Completo**). Las lecturas
+  pasan solas; todo lo que cambia algo abre un diálogo en TerView con el comando exacto (o las
+  diferencias del archivo) y los botones Permitir una vez / Permitir siempre este comando en este
+  servidor / Denegar; si nadie responde en 2 minutos (ajustable), se deniega. Lo peligroso (`rm -rf`,
+  `prune`, `sudo`, `reboot`… o un comando ⚠️ de la Biblioteca) se pregunta siempre. Con TerView
+  bloqueado por PIN, el asistente no puede hacer nada. Herramientas: servidores, proyectos y
+  conexiones, abrir una conexión (como pestaña), ejecutar comandos (cancelables, con tiempo y salida
+  limitados), comandos de la Biblioteca, explorar, leer y escribir archivos, subir y descargar con la
+  cola de transferencias, y ver puertos, sitios web y contenedores. Escucha solo en `127.0.0.1` con un
+  token que se puede regenerar (guardado como tus contraseñas: en la bóveda si tienes PIN); para
+  clientes por stdio se instala el puente `terview-mcp`. Cada acción queda en el panel **Actividad del
+  asistente** (con botón para detener un comando) y en `mcp-audit.jsonl`. Ajustes muestra la
+  configuración lista para copiar en Claude Code y Claude Desktop.
 - **PIN y bloqueo**: las contraseñas guardadas (de conexión y de sudo) y el token de GitHub pueden ir
   en una bóveda cifrada (`vault.json`, AES-256-GCM + Argon2id) con un **PIN de 6 números** y una llave
   de este equipo guardada en el llavero, así copiar solo el archivo no sirve. Al crearla, las contraseñas del llavero se mueven

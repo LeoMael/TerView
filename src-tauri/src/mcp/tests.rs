@@ -566,6 +566,30 @@ async fn connect_opens_tab_with_permission() {
     assert!(out.is_error && out.text.contains("connect"), "{}", out.text);
 }
 
+#[tokio::test]
+async fn transfers_need_permission() {
+    let c = core();
+    let here = std::env::temp_dir().display().to_string();
+    // Subir a un servidor de solo lectura: no.
+    let out = call(&c, "upload", json!({ "server": "db-server", "local_paths": [here], "remote_dir": "/tmp" })).await;
+    assert!(out.is_error && out.text.contains("solo lectura"), "{}", out.text);
+    // Descargar desde solo lectura: sí, con permiso.
+    let out = call(&c, "download", json!({ "server": "db-server", "remote_paths": ["/etc/hosts"], "local_dir": here })).await;
+    assert!(!out.is_error && out.text.contains("lote-2"), "{}", out.text);
+    assert_eq!(asked(&c), 1);
+    // Rutas locales que no existen o relativas: error claro, sin preguntar.
+    let out = call(&c, "upload", json!({ "server": "web-prod", "local_paths": ["no/existe"], "remote_dir": "/tmp" })).await;
+    assert!(out.is_error && out.text.contains("No existe"), "{}", out.text);
+    let out = call(&c, "download", json!({ "server": "web-prod", "remote_paths": ["/x"], "local_dir": "relativa" })).await;
+    assert!(out.is_error);
+    assert_eq!(asked(&c), 1);
+    // Subir a completo: pregunta mostrando los archivos.
+    let out = call(&c, "upload", json!({ "server": "web-prod", "local_paths": [here], "remote_dir": "/srv" })).await;
+    assert!(!out.is_error && out.text.contains("lote-1"));
+    let req = c.backend.asked.lock().unwrap()[1].clone();
+    assert!(req.command.contains("/srv") && req.command.contains(&here), "{}", req.command);
+}
+
 // ───────────────────────── Límites ─────────────────────────
 
 #[tokio::test]

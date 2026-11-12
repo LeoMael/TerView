@@ -9,8 +9,8 @@ contraseñas guardadas y bloquea la app.
 **Tecnología:** Tauri 2 + Rust (motor, `src-tauri/`) · React 19 + TypeScript + zustand (interfaz, `src/`).
 
 **Estado que describe este documento:** el código del commit `bcd0267` (versión 0.3.0) más los cambios
-"Sin publicar" del CHANGELOG, que saldrán en la siguiente versión; entre ellos, la bóveda con PIN y
-las terminales persistentes con tmux.
+"Sin publicar" del CHANGELOG, que saldrán en la siguiente versión; entre ellos, la bóveda con PIN,
+las terminales persistentes con tmux y, para la 0.5.0, el servidor MCP para asistentes de IA.
 
 ---
 
@@ -39,7 +39,7 @@ lenguaje visual: zonas con borde discontinuo (Tu PC, Internet, Tus servidores, G
 | 5 | [Estructura del código](arquitectura/05-estructura-codigo.png) | Carpetas reales del código y cómo se conectan |
 | 6 | [Flujo de conexión](arquitectura/06-flujo-conexion.png) | Qué pasa, paso a paso, al conectarte |
 | 7 | [Biblioteca de comandos](arquitectura/07-biblioteca-comandos.png) | Panel de Comandos (Podman, análisis, mis comandos) |
-| 8 | [Servidor MCP](arquitectura/08-servidor-mcp.png) | **Diseño en pausa, no construido** (ver sección 16) |
+| 8 | [Servidor MCP](arquitectura/08-servidor-mcp.png) | Asistentes de IA con permisos, aprobación y registro (v0.5.0, sección 16) |
 | 9 | [Ejecutar y elevar](arquitectura/09-ejecutar-y-elevar.png) | Comandos aparte por canal exec, sudo y cancelación real |
 | 10 | [Administración](arquitectura/10-administracion.png) | Usuarios, grupos, puertos, sitios web, Plan e historial |
 | 11 | [Túneles](arquitectura/11-tuneles.png) | Local, remoto y SOCKS, y su relación con Puertos y Contenedores |
@@ -73,11 +73,13 @@ La app tiene dos mitades dentro del mismo programa:
 
 | Almacén | Qué guarda | Formato | Dónde | ¿Cifrado? | Quién lo lee y escribe |
 |---------|------------|---------|-------|-----------|------------------------|
-| **Llavero del sistema** | Servicio `terview`. **Con bóveda:** solo la llave del equipo (usuario `vault-device-key`, 32 bytes al azar). **Sin bóveda:** además la contraseña o frase de cada servidor (usuario = id del servidor), su contraseña de sudo guardada (usuario `<id>:sudo`) y el token de GitHub (usuario `github-token`). | Entradas del llavero | Linux: Secret Service (GNOME Keyring / KWallet) · Windows: Administrador de credenciales · macOS: Llavero | Sí, lo cifra el sistema | Motor: `storage/secrets.rs` (crate `keyring`), `storage/vault.rs` |
+| **Llavero del sistema** | Servicio `terview`. **Con bóveda:** solo la llave del equipo (usuario `vault-device-key`, 32 bytes al azar). **Sin bóveda:** además la contraseña o frase de cada servidor (usuario = id del servidor), su contraseña de sudo guardada (usuario `<id>:sudo`), el token de GitHub (usuario `github-token`) y el token de los asistentes de IA (usuario `mcp-token`). | Entradas del llavero | Linux: Secret Service (GNOME Keyring / KWallet) · Windows: Administrador de credenciales · macOS: Llavero | Sí, lo cifra el sistema | Motor: `storage/secrets.rs` (crate `keyring`), `storage/vault.rs` |
 | **Bóveda `vault.json`** (opcional) | Con PIN activo: contraseñas y frases de los servidores, sus contraseñas de sudo guardadas y el token de GitHub. | Sobre JSON `terview-vault`: parámetros de Argon2id, sal, tipo de PIN (`kind`), nonce y texto cifrado (base64) | `<config>/terview/vault.json` | Sí: AES-256-GCM; llave = Argon2id(PIN, llave del equipo) | Motor: `storage/vault.rs`, `storage/cipher.rs`, `storage/lock.rs` |
 | **`vault-attempts.json`** | Fallos de PIN y hora del próximo intento permitido (5 libres; luego 30 s, el doble cada vez, hasta 15 min). | JSON | `<config>/terview/vault-attempts.json` | No (no lleva secretos) | Motor: `storage/vault.rs` |
 | **`profiles.json`** | Servidores y proyectos (host, usuario, puerto, tipo de autenticación, ruta de la llave, marcadores). Nunca contraseñas. | JSON | `<config>/terview/profiles.json` | No (archivo 0600, carpeta 0700 en Unix) | Motor: `storage/` (`ProfileStore`) |
 | **`settings.json`** | Ajustes: tema, fuentes, transferencias simultáneas, política de conflictos, señal de vida, reconexión, tamaños de paneles (`layout`), sincronizar `~/.ssh/config`. | JSON | `<config>/terview/settings.json` | No | Motor: `storage/` (`SettingsStore`) |
+| **`mcp.json`** | Servidor MCP: encendido, puerto, tiempo para responder, acceso por servidor y reglas «Permitir siempre». Nunca el token. | JSON | `<config>/terview/mcp.json` | No | Motor: `mcp/config.rs` (el puente `terview-mcp` lee de aquí el puerto) |
+| **`mcp-audit.jsonl`** | Registro de lo que hace el asistente: herramienta, servidor, comando o ruta, resultado y quién lo aprobó. Rota a `mcp-audit.1.jsonl` al pasar de 1 MiB. | JSON por línea | `<config>/terview/mcp-audit.jsonl` | No (sin contraseñas ni contenidos) | Motor: `mcp/audit.rs` |
 | **`commands.json`** | "Mis comandos" (biblioteca propia). | JSON | `<config>/terview/commands.json` | No | Motor: `snippets/store.rs` |
 | **`tunnels.json`** | Túneles guardados por servidor (tipo, puertos, destino, `autoStart`). | JSON | `<config>/terview/tunnels.json` | No | Motor: `tunnels/store.rs` |
 | **`github.json`** | Recetas de despliegue y el id del Gist de sincronización. Nunca el token. | JSON | `<config>/terview/github.json` | No | Motor: `github/config.rs` |
@@ -518,15 +520,36 @@ y ver resultado"), la detección de privilegios y GitHub (clonar y desplegar).
 
 ---
 
-## 16. Servidor MCP (opcional, en pausa · diagrama 8)
+## 16. Servidor MCP para asistentes de IA (diagrama 8)
 
 ![Servidor MCP](arquitectura/08-servidor-mcp.png)
 
-> **Esto es un diseño, no algo construido.** El código actual no tiene servidor MCP. Se dejó en pausa
-> como idea opcional para que asistentes de IA usen las conexiones de TerView con permisos
-> controlados. Detalle en [PENDIENTES.md](PENDIENTES.md#3-servidor-mcp-conectar-asistentes-de-ia).
+Construido para la v0.5.0. Un asistente de IA (Claude Code, Claude Desktop u otro cliente MCP) trabaja con tus
+servidores a través de TerView: usa las conexiones abiertas en la app y **nunca ve contraseñas ni llaves**.
+Apagado por defecto (Ajustes → Asistentes de IA (MCP)). Detalle, herramientas y límites en
+[PENDIENTES.md](PENDIENTES.md#3-servidor-mcp-conectar-asistentes-de-ia).
 
----
+**Camino de una petición**
+
+1. **Transporte.** El cliente habla HTTP «streamable» con `http://127.0.0.1:<puerto>/mcp` (47821 por defecto),
+   o por stdio con el puente `terview-mcp`, que reenvía cada mensaje a esa dirección. El puente no tiene lógica:
+   lleva el token en la variable `TERVIEW_MCP_TOKEN` y lee el puerto de `mcp.json`; si la app está cerrada,
+   contesta él mismo «Abre TerView para usar tus servidores» y avisa (`tools/list_changed`) cuando se abre.
+2. **Puerta** (`mcp/http.rs`): cabecera `Origin` → 403; TerView bloqueado → error «TerView está bloqueado:
+   desbloquéalo para continuar»; token `Bearer` distinto → 401. El token se lee de la bóveda o el llavero
+   (`mcp-token`) y se olvida al bloquear.
+3. **SDK** (`mcp/server.rs`, crate `rmcp` 3.9): sin sesiones y con respuestas JSON; anuncia 17 herramientas
+   con su esquema y pasa cada llamada a `McpCore`.
+4. **Reglas** (`mcp/core.rs` + `mcp/policy.rs`): el servidor tiene que tener acceso (Sin acceso / Solo lectura /
+   Completo, en `mcp.json`); las lecturas pasan; los cambios abren el diálogo `mcp://approval` en la ventana
+   principal (que se trae al frente) y esperan la respuesta (`mcp_approval_reply`) hasta el tiempo límite; lo
+   peligroso pregunta siempre.
+5. **Motor** (`mcp/backend.rs`): exec cancelable con `ExecRegistry` (id `mcp-…`, se puede detener desde el panel),
+   `SftpStore` (lectura por trozos y guardado atómico) y la cola de transferencias. Lo que vive en TypeScript se
+   pide a la interfaz con `mcp://ui-request` → `mcp_ui_reply`: abrir la pestaña de conexión, el catálogo de la
+   Biblioteca y los escaneos de puertos, sitios y contenedores.
+6. **Registro** (`mcp/audit.rs`): cada acción, también las rechazadas, va a `mcp-audit.jsonl` y al panel
+   «Actividad del asistente» (evento `mcp://activity`).
 
 ## 17. Seguridad
 
@@ -539,6 +562,8 @@ y ver resultado"), la detección de privilegios y GitHub (clonar y desplegar).
 - **Contraseña de sudo** en memoria, por conexión (y, si lo eliges, guardada como un secreto más
   del servidor, `<id>:sudo`); viaja siempre por stdin, nunca en la línea
   de comandos ni en el historial. El motor borra el búfer al terminar.
+- **Asistentes de IA (MCP)** apagados por defecto; solo `127.0.0.1` con token; permiso por servidor; los cambios
+  piden tu aprobación y lo peligroso siempre; con TerView bloqueado no hacen nada; nunca reciben contraseñas.
 - **Verificación de huella** del servidor con `~/.ssh/known_hosts`, igual que `ssh`.
 - **Antes de cambiar algo como root** se muestra el comando exacto (Plan) y lo peligroso pide confirmación escrita.
 - **Permisos de Tauri (capabilities):** la interfaz solo puede llamar a los comandos definidos; las
@@ -559,7 +584,7 @@ y ver resultado"), la detección de privilegios y GitHub (clonar y desplegar).
 | 0–8 | Proyecto, SSH con huellas, terminal, explorador, transferencias masivas, servidores y proyectos, editor, temas y ajustes, reconexión | Hecho |
 | 9 | Biblioteca de comandos ([detalle](PENDIENTES.md#1-biblioteca-de-comandos)) | Hecho |
 | 9b | Exportar e importar con `~/.ssh/config` ([detalle](PENDIENTES.md#5-exportar-servidores-a-sshconfig)) | Hecho |
-| 10 | Servidor MCP para asistentes de IA ([detalle](PENDIENTES.md#3-servidor-mcp-conectar-asistentes-de-ia)) | En pausa (opcional) |
+| 10 | Servidor MCP para asistentes de IA ([detalle](PENDIENTES.md#3-servidor-mcp-conectar-asistentes-de-ia)) | Hecho (v0.5.0); falta probar con Claude Code y Claude Desktop reales |
 | 11 | Optimización y rendimiento, panel de diagnóstico ([detalle](PENDIENTES.md#81-optimización--rendimiento)) | Hecho; falta medir en la app real |
 | 12 | Administración: usuarios, grupos, sesiones, puertos y sitios web ([detalle](PENDIENTES.md#82-gestión-del-servidor-usuarios-y-grupos)) | Hecho; servicios, firewall y paquetes pendientes |
 | 13 | Monitor en vivo con alertas ([detalle](PENDIENTES.md#83-monitoreo-en-vivo)) | Hecho |

@@ -54,6 +54,8 @@
 - **Ejecutar un comando en varios servidores** a la vez y comparar los resultados.
 - **Conectar tu cuenta de GitHub**: llaves SSH, clonar, desplegar y sincronizar tu configuración.
 - **Proteger tus contraseñas con un PIN**: quedan cifradas y TerView se bloquea al abrirlo y tras un rato sin uso.
+- **Dejar que un asistente de IA te ayude** (Claude Code, Claude Desktop…) con tus servidores, sin darle
+  tus contraseñas y con tu permiso para cada cambio. Ver [más abajo](#usar-terview-con-un-asistente-de-ia-mcp).
 - **Actualizarse sola** cuando sale una versión nueva.
 - Tema oscuro o claro y paneles ajustables.
 
@@ -173,6 +175,7 @@ defecto), dividido o ventana aparte.
 | Contraseñas | Llavero del sistema | Administrador de credenciales |
 | Huellas de servidores | `~/.ssh/known_hosts` | `%USERPROFILE%\.ssh\known_hosts` |
 | Contraseñas con PIN (bóveda cifrada) | `~/.config/terview/vault.json` | `%APPDATA%\terview\vault.json` |
+| Asistentes de IA: ajustes y registro | `~/.config/terview/mcp.json`, `mcp-audit.jsonl` | `%APPDATA%\terview\` |
 
 ### PIN y bloqueo
 
@@ -192,6 +195,35 @@ después). Lo cambias o bloqueas desde el **candado** de la barra de pestañas o
 **Si olvidas el PIN:** en la pantalla de bloqueo pulsa **«Olvidé mi PIN»** y escribe `BORRAR`. Pierdes
 las contraseñas guardadas y el token de GitHub; conservas todo lo demás.
 
+## Usar TerView con un asistente de IA (MCP)
+
+Un asistente como **Claude Code** o **Claude Desktop** puede revisar y arreglar cosas en tus servidores
+a través de TerView. Usa las conexiones que ya tienes y **nunca ve tus contraseñas ni tus llaves**.
+
+1. En TerView: **Ajustes → Asistentes de IA (MCP)** y activa el servidor MCP (viene apagado).
+2. En la misma pantalla, elige qué puede tocar en cada servidor: **Sin acceso** (lo normal),
+   **Solo lectura** o **Completo**.
+3. Copia la configuración que te muestra TerView y pégala en tu asistente. Para Claude Code es un
+   comando así (TerView pone el token y la ruta por ti):
+   ```bash
+   claude mcp add --env TERVIEW_MCP_TOKEN=<token> --transport stdio terview -- /ruta/a/terview-mcp
+   ```
+   Para Claude Desktop, TerView te da el bloque JSON para `claude_desktop_config.json`.
+4. Deja TerView abierto y pide algo al asistente, por ejemplo: «revisa por qué se cayó el contenedor
+   web en web-prod».
+
+Qué esperar:
+- Lo que solo **lee** (listar, leer archivos, ver logs) pasa solo.
+- Lo que **cambia algo** abre un aviso en TerView con el comando exacto: **Permitir una vez**,
+  **Permitir siempre** o **Denegar**. Si no respondes en 2 minutos, se deniega.
+- Lo **peligroso** (`rm -rf`, `sudo`, `reboot`, `prune`…) se pregunta siempre.
+- Si TerView está **bloqueado** con el PIN, el asistente no puede hacer nada.
+- Todo queda en **Actividad del asistente** (botón del robot en la barra de pestañas) y en
+  `mcp-audit.jsonl`, en la carpeta de configuración.
+
+El servidor solo escucha en tu propio equipo (`127.0.0.1`) y pide un token, que puedes regenerar en
+Ajustes. Con la AppImage, usa la opción por HTTP que también muestra Ajustes.
+
 ## Solución de problemas
 
 | Problema | Qué hacer |
@@ -203,6 +235,9 @@ las contraseñas guardadas y el token de GitHub; conservas todo lo demás.
 | No conecta con llave | Elige la llave **privada** (el archivo sin `.pub`) y comprueba que la pública está en `~/.ssh/authorized_keys` del servidor. |
 | El agente SSH no funciona en Windows | Activa el servicio *Agente de autenticación OpenSSH* (`Get-Service ssh-agent \| Set-Service -StartupType Automatic -PassThru \| Start-Service` en PowerShell como administrador) o abre Pageant. |
 | La AppImage no abre | Falta FUSE (ver arriba) o el permiso de ejecución (`chmod +x`). |
+| El asistente dice «Abre TerView para usar tus servidores» | TerView tiene que estar abierto. Ábrelo: las herramientas aparecen solas. |
+| El asistente dice «TerView está bloqueado» | Escribe tu PIN en TerView y vuelve a pedírselo. |
+| El asistente dice «Token incorrecto» | Regeneraste el token: copia otra vez la configuración desde Ajustes → Asistentes de IA. |
 
 ## Desarrollo
 
@@ -304,6 +339,8 @@ src-tauri/src/    Motor (Rust)
   transfer/       Cola de transferencias en paralelo
   storage/        Servidores, ajustes, llavero, ~/.ssh/config
   snippets/       Mis comandos y ejecución con captura
+  mcp/            Servidor MCP para asistentes de IA (permisos, aprobación, registro)
+  bin/            terview-mcp: puente stdio hacia la app abierta
 docs/             Arquitectura, diagramas, pendientes y catálogo de comandos
 ```
 

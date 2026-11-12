@@ -6,8 +6,10 @@ administración (usuarios, grupos, **puertos y sitios web**), monitor, túneles,
 varios servidores, GitHub, versiones y actualizaciones. Los comandos que se ejecutan aparte ya se pueden
 **cancelar de verdad** (se detienen también en el servidor).
 
+El **servidor MCP** (sección 3) ya está construido para la **v0.5.0**.
+
 **Lo que sigue pendiente:**
-- **Servidor MCP** (sección 3): opcional, diseñado y en pausa.
+- **Probar el MCP con los clientes reales** (Claude Code y Claude Desktop) y ver la interfaz en la app (sección 3).
 - **Firmar el instalador** de Windows (SmartScreen avisa al instalar).
 - **Pruebas reales**: en un Windows real, contra un servidor con 2FA y con un agente SSH real.
 - **Medir el rendimiento** en la app real (el panel de diagnóstico ya existe).
@@ -20,7 +22,7 @@ Este documento guarda lo que falta, **con suficiente detalle para retomarlo más
 |---|---------|-----------|--------|
 | 1 | [Biblioteca de comandos](#1-biblioteca-de-comandos) (Podman, análisis del sistema, etc.) | Alta | ✅ Hecho (v0.2.0) |
 | 2 | [Reconexión rápida y automática](#2-reconexión-rápida-y-automática) | Alta | ✅ Hecho (v0.2.0) |
-| 3 | [Servidor MCP (conectar asistentes de IA)](#3-servidor-mcp-conectar-asistentes-de-ia) | **Opcional** (última fase) | Diseñado, en pausa |
+| 3 | [Servidor MCP (conectar asistentes de IA)](#3-servidor-mcp-conectar-asistentes-de-ia) | Opcional | ✅ Hecho (v0.5.0) |
 | 5 | [Exportar servidores a `~/.ssh/config`](#5-exportar-servidores-a-sshconfig) | Alta (corta) | ✅ Hecho (v0.2.0) |
 | 4 | [Otros pendientes detectados](#4-otros-pendientes-detectados) | Media/Baja | Mayoría hecha; ver tabla |
 
@@ -136,74 +138,106 @@ Archivos: `ssh/commands.rs` (vigilante + bucle de reintentos), `ssh/mod.rs` (`Se
 
 ## 3. Servidor MCP (conectar asistentes de IA)
 
-> **Decisión (11/11/2026): en pausa, opcional.** No es necesario para empezar a usar IA con los
-> servidores. Alternativas que ya funcionan hoy:
-> 1. **Claude Code + `ssh`**: con los servidores en `~/.ssh/config` (ver [punto 5](#5-exportar-servidores-a-sshconfig))
->    y autenticación por llave, Claude Code ejecuta `ssh web-prod '…'` / `scp` directamente y pide permiso
->    antes de cada comando. Cero código.
-> 2. **Servidores MCP de terceros** para SSH (p. ej. `tufantunc/ssh-mcp`, `thebusted/SSH-MCP`) o Podman
->    (`manusa/podman-mcp-server`, local). Revisar el código antes y usar usuarios con pocos permisos.
-> 3. **Terminales con IA integrada**: Wave Terminal (código abierto), Termius (pago), Warp.
->
-> Construir el MCP propio solo si se quiere que la IA use **las conexiones y contraseñas guardadas en
-> TerView**, con permisos por servidor, aprobación visual y registro dentro de la app.
+> **Hecho para la v0.5.0** (antes estaba en pausa como idea opcional). Un asistente de IA (Claude Code,
+> Claude Desktop u otro cliente MCP) trabaja con tus servidores **usando las conexiones de TerView, sin ver
+> nunca contraseñas ni llaves**, con permisos por servidor, aprobación en la app y registro.
+> Las alternativas sin TerView siguen valiendo: Claude Code + `ssh` con los servidores exportados a
+> `~/.ssh/config` ([punto 5](#5-exportar-servidores-a-sshconfig)).
 
 ![Servidor MCP](arquitectura/08-servidor-mcp.png)
 
-### Qué es
-**MCP** (Model Context Protocol) es el estándar para que asistentes de IA (Claude Code,
-Claude Desktop, otros clientes MCP) usen herramientas externas. TerView expondría un servidor
-MCP para que el asistente pueda **trabajar con tus servidores usando las conexiones que ya
-tienes guardadas**, por ejemplo:
+### Cómo se usa
+1. Ajustes → **Asistentes de IA (MCP)** → activar (viene apagado).
+2. Elegir el acceso de cada servidor: **Sin acceso** (por defecto), **Solo lectura** o **Completo**.
+3. Copiar la configuración que muestra Ajustes (lleva el token y la ruta del puente):
+   - Claude Code por stdio: `claude mcp add --env TERVIEW_MCP_TOKEN=<token> --transport stdio terview -- <ruta>/terview-mcp`
+   - Claude Code por HTTP: `claude mcp add --transport http terview http://127.0.0.1:47821/mcp --header "Authorization: Bearer <token>"`
+   - Claude Desktop: bloque `mcpServers` → `terview` con `command` (el puente) y `env.TERVIEW_MCP_TOKEN`.
+4. TerView tiene que estar abierto: el puente reenvía a la app. Si está cerrada, el asistente ve
+   «Abre TerView para usar tus servidores» y las herramientas aparecen solas al abrirla.
 
-> "Revisa por qué se cayó el contenedor web en web-prod y reinícialo"
-> → el asistente lista contenedores, lee los logs, te muestra el diagnóstico y pide permiso para `podman restart web`.
-
-### Herramientas que ofrecería (tools)
+### Herramientas
 | Herramienta | Qué hace | Permiso |
 |-------------|----------|---------|
-| `list_servers` / `list_projects` | Servidores y proyectos guardados (sin contraseñas) | Lectura |
-| `list_sessions` | Conexiones abiertas en la app | Lectura |
-| `connect` | Abre una conexión a un servidor guardado (aparece como pestaña) | Pide permiso |
-| `run_command` | Ejecuta un comando y devuelve salida, errores y código | Pide permiso |
-| `run_catalog_command` | Ejecuta un comando de la Biblioteca con sus variables | Pide permiso (salvo 📊 de solo lectura) |
-| `analyze_server` | Corre el "Analizar servidor" y devuelve el informe | Lectura |
-| `list_dir` / `stat` / `read_file` | Navegar y leer archivos remotos | Lectura |
-| `write_file` | Crear/editar archivos (guardado atómico) | Pide permiso, muestra diferencias |
-| `upload` / `download` | Transferencias con la cola de la app | Pide permiso |
-| `transfer_status` | Progreso de transferencias | Lectura |
+| `list_servers` / `list_projects` / `list_sessions` | Servidores (solo los que tienen acceso), proyectos y conexiones abiertas. Sin contraseñas. | Lectura |
+| `connect` | Abre una conexión a un servidor guardado (aparece como pestaña; si pide contraseña o huella, la pides tú en TerView) | Pide permiso (también en solo lectura) |
+| `run_command` | Comando no interactivo por el exec cancelable: código, stdout y stderr. 60 s por defecto (máx. 600) y 64 KB por flujo (máx. 512) | Pide permiso; en solo lectura, rechazado |
+| `list_catalog` | Comandos de la Biblioteca y de «Mis comandos», con sus variables | Lectura |
+| `run_catalog_command` | Un comando de la Biblioteca con sus variables (citadas como en la interfaz; no pueden empezar por «-») | 📊 de solo lectura: pasa; el resto pide permiso |
+| `list_dir` / `stat` / `read_file` | SFTP. `read_file` por trozos: 64 KB por defecto, 1 MB máx. por llamada; binarios no se muestran | Lectura |
+| `write_file` | Guardado atómico (hasta 1 MB). El diálogo muestra las diferencias | Pide permiso; en solo lectura, rechazado |
+| `upload` / `download` | Con la cola de transferencias de la app (rutas locales absolutas) | Pide permiso (descargar también en solo lectura) |
+| `transfer_status` | Progreso de un lote o de todas | Lectura |
+| `list_ports` / `list_sites` / `list_containers` | Los escaneos de Administración y Contenedores, como el usuario conectado (sin sudo) | Lectura |
 
-Recursos MCP (resources): lista de servidores, catálogo de comandos, informe del último análisis.
+### Seguridad
+- **Apagado por defecto**; al encenderlo se crea el token (`tv_` + 64 hex). Se guarda con la API de
+  secretos (id `mcp-token`): en la bóveda si tienes PIN, si no en el llavero. Se puede ver, copiar y regenerar.
+- **HTTP solo en `127.0.0.1`** (puerto 47821 por defecto, se cambia en Ajustes), ruta `/mcp`, token
+  `Authorization: Bearer` comparado en tiempo constante. Peticiones con cabecera `Origin` (páginas web) → 403.
+  El SDK además valida la cabecera `Host` (contra DNS rebinding).
+- **TerView bloqueado** (PIN): se rechaza todo con «TerView está bloqueado: desbloquéalo para continuar»;
+  al bloquear se olvida el token de la memoria y se deniegan las preguntas pendientes. Si se bloquea
+  mientras espera tu respuesta, no se ejecuta aunque lo hayas permitido.
+- **Permisos** (`mcp/policy.rs`): Sin acceso → rechazado (y el servidor no aparece en las listas);
+  lectura → pasa; cambio → diálogo; peligroso → diálogo siempre y sin «Permitir siempre».
+  Peligroso = ⚠️ de la Biblioteca o las reglas de `features/multirun/danger.ts` (rm -r, prune, reboot,
+  mkfs, dd, kill -9, DROP TABLE…) más `sudo`, `doas`, `pkexec` y `su`.
+- **Aprobación**: diálogo con el comando exacto y el servidor; Permitir una vez / Permitir siempre este
+  comando en este servidor (se guarda la acción exacta en `mcp.json` y se puede quitar en Ajustes) /
+  Denegar. Sin respuesta en 2 min (30 s–5 min en Ajustes) → denegado. La ventana se trae al frente.
+- **Las contraseñas y llaves nunca salen**: el asistente solo usa conexiones abiertas en la app.
+- **Registro**: `<config>/terview/mcp-audit.jsonl` (una línea por acción: herramienta, servidor, comando o
+  ruta, resultado, quién lo aprobó, duración, cliente). Al pasar de 1 MiB se renombra a
+  `mcp-audit.1.jsonl`. Panel **Actividad del asistente** (botón del robot en la barra de pestañas) con
+  las últimas 300 y botón para detener un comando en marcha.
 
-### Seguridad (lo más importante)
-- **Apagado por defecto.** Se activa en **Ajustes → Asistentes de IA (MCP)**.
-- **Permiso por servidor**: *Sin acceso* / *Solo lectura* / *Completo*. Por defecto, *Sin acceso*.
-- **Aprobación en TerView** para todo lo que cambie algo: diálogo con el comando exacto
-  ("El asistente quiere ejecutar `podman restart web` en web-prod") →
-  **Permitir una vez** / **Permitir siempre este comando en este servidor** / **Denegar**.
-- Comandos peligrosos (⚠️ del catálogo, `rm -rf`, `prune`, `sudo`…) **siempre** piden permiso.
-- **Las contraseñas y llaves nunca salen** por MCP: el asistente solo usa conexiones, no credenciales.
-- **Registro de auditoría**: todo lo que hace el asistente queda en
-  `~/.config/terview/mcp-audit.log` y visible en un panel de la app ("Actividad del asistente").
-- Solo escucha en la propia máquina (`127.0.0.1` / socket local) con **token** que se puede regenerar.
-
-### Cómo se construiría
+### Cómo está construido
 | Parte | Dónde | Qué hace |
 |-------|-------|----------|
-| Servidor MCP | `src-tauri/src/mcp/` | SDK oficial de MCP para Rust (crate `rmcp`); reutiliza `SessionStore`, `sftp`, `transfer`, `snippets::exec_capture` |
-| Transporte | HTTP local (`127.0.0.1:<puerto>` + token) | Para clientes que hablan HTTP |
-| Puente stdio | binario `terview-mcp` | Para clientes que lanzan el servidor por stdio; reenvía a la app abierta por socket local |
-| Aprobaciones | `src/features/mcp/ApprovalDialog.tsx` | Diálogo de permiso + recordar decisión |
-| Ajustes | `SettingsDialog` → sección "Asistentes de IA" | Activar, permisos por servidor, token, ver configuración |
-| Actividad | `src/components/McpActivity/` | Lista de acciones del asistente con resultado |
+| Lógica | `src-tauri/src/mcp/core.rs`, `policy.rs` | Permisos, aprobación, límites, registro. Sin Tauri (trait `Backend`): se prueba con un motor simulado |
+| Servidor MCP | `mcp/server.rs` | SDK oficial `rmcp` 3.9 (`ServerHandler`): lista de herramientas con esquema e indicaciones de solo lectura |
+| Transporte | `mcp/http.rs` | HTTP «streamable» del SDK, sin sesiones y con respuestas JSON, detrás de hyper con token y bloqueo |
+| Puente stdio | `src-tauri/src/bin/terview-mcp.rs` + `mcp/bridge.rs` | Reenvía cada mensaje JSON-RPC a la app; responde él mismo si está cerrada |
+| Motor real | `mcp/backend.rs` | Sesiones, exec cancelable (`ExecRegistry`), SFTP, transferencias |
+| Peticiones a la interfaz | `mcp/ui.rs` + `src/features/mcp/uiBridge.ts` | Abrir pestaña, catálogo, puertos, sitios y contenedores (reutiliza el TypeScript ya probado) |
+| Aprobaciones | `src/features/mcp/ApprovalDialog.tsx` | Diálogo con cuenta atrás, diferencias y peligro |
+| Ajustes | `src/components/Settings/McpSection.tsx` | Activar, puerto, tiempo, token, permisos, reglas, configuración para copiar |
+| Actividad | `src/components/McpActivity/` | Lista de acciones con resultado y quién aprobó |
 
-Configuración en el cliente (ejemplo con Claude Code), que la app mostraría para copiar:
-```bash
-claude mcp add terview -- terview-mcp
-```
+### Cambios respecto al diseño original
+- **Puente sin lógica**: reenvía mensajes en vez de ser un segundo servidor; así hay una sola puerta de permisos.
+  El token le llega por la variable `TERVIEW_MCP_TOKEN` (no se escribe en ningún archivo de TerView) y el puerto lo lee de `mcp.json`.
+- **Servidor sin sesiones** y con respuestas JSON: cada petición es independiente (más simple para el puente y
+  para reconectar).
+- **Lo que vive en TypeScript se pide a la interfaz** (catálogo, puertos, sitios, contenedores, abrir pestaña)
+  en lugar de copiarlo a Rust: no se duplican 1.500 líneas de analizadores ya probados. La decisión de
+  permisos y el texto final del comando siguen en Rust.
+- **Nuevas herramientas**: `list_catalog`, `list_ports`, `list_sites`, `list_containers`. `analyze_server` y los
+  recursos MCP quedan fuera (el análisis vive en la interfaz; se puede añadir igual que los escaneos).
+- **Comandos interactivos** (`top`, `tail -f`…) se rechazan con una pista; los valores de variables no pueden empezar por «-».
+- **Registro en JSONL** (`mcp-audit.jsonl`) en vez de `mcp-audit.log`, con rotación simple.
+- **Con TerView bloqueado se rechaza todo**, incluidas las listas.
 
-Requisito: la app debe estar abierta (las conexiones viven en ella). Si está cerrada, el puente
-responde "Abre TerView para usar tus servidores".
+### Pruebas
+- `cargo test --lib mcp`: permisos por nivel, aprobación (una vez, siempre, denegar) con un aprobador
+  simulado, tiempo límite, bloqueo (también mientras espera), MCP apagado, servidor sin acceso, solo
+  lectura, peligrosos que siempre preguntan, variables citadas, límites de salida y de lectura,
+  diferencias, registro con rotación, token incorrecto / `Origin` / bloqueo en HTTP y el puente stdio
+  (reenvío, token malo, app cerrada que luego se abre).
+- `cargo test --lib mcp::e2e -- --ignored --test-threads=1` contra `terview-sshd`: cliente oficial de
+  `rmcp` (initialize, tools/list, list_servers, run_command, tiempo límite, peligroso denegado,
+  write_file/read_file/list_dir), JSON-RPC a mano como `curl` y el puente stdio.
+
+### Sin verificar
+- Con **Claude Code y Claude Desktop reales** (solo se probó con el cliente de `rmcp`, JSON-RPC a mano y el puente).
+- La **interfaz en la app real**: diálogo, Ajustes, panel y botón (compila, pero no se abrió la ventana).
+- Las herramientas que pasan por la interfaz (`connect`, `list_catalog`, `list_ports`, `list_sites`,
+  `list_containers`) y `upload` / `download` con el motor de transferencias real: probadas solo con el motor simulado.
+- Que los **instaladores** incluyan `terview-mcp` junto a `terview` (el CLI de Tauri empaqueta los binarios de
+  `src/bin`; no se generó ningún instalador). Con la **AppImage** la ruta del puente cambia en cada arranque: usar HTTP.
+- Windows y macOS (la ruta del puente y el llavero para el token).
+- Detener un comando cuando el cliente cancela la petición (el SDK lo avisa; probado solo en código).
 
 ---
 

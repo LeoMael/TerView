@@ -32,7 +32,6 @@ export interface McpStatus {
   url: string;
   error: string | null;
   approvalTimeoutSecs: number;
-  hasToken: boolean;
   bridgePath: string;
   bridgeFound: boolean;
   appImage: boolean;

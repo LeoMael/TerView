@@ -145,7 +145,6 @@ pub struct McpStatus {
     /// Por qué no está en marcha (puerto ocupado…).
     pub error: Option<String>,
     pub approval_timeout_secs: u32,
-    pub has_token: bool,
     pub bridge_path: String,
     pub bridge_found: bool,
     /// La app corre como AppImage: la ruta del puente cambia en cada arranque.
@@ -201,7 +200,6 @@ impl McpState {
             url: format!("http://127.0.0.1:{port}{}", http::MCP_PATH),
             error: self.last_error.lock().unwrap_or_else(|p| p.into_inner()).clone(),
             approval_timeout_secs: cfg.approval_timeout_secs,
-            has_token: secrets::get_secret(TOKEN_ID).ok().flatten().is_some_and(|t| !t.is_empty()),
             bridge_found: bridge.as_ref().is_some_and(|p| p.is_file()),
             bridge_path: bridge.map(|p| p.display().to_string()).unwrap_or_else(bridge_file_name),
             app_image: std::env::var_os("APPIMAGE").is_some(),
