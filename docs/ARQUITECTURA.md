@@ -8,10 +8,10 @@ contraseñas guardadas y bloquea la app.
 
 **Tecnología:** Tauri 2 + Rust (motor, `src-tauri/`) · React 19 + TypeScript + zustand (interfaz, `src/`).
 
-**Estado que describe este documento:** el código de la versión 0.4.0 más los cambios "Sin publicar"
-del CHANGELOG, que saldrán en la 0.5.0: el servidor MCP para asistentes de IA y el escáner de
-vulnerabilidades (los dos construidos). Entre las novedades de la 0.4.0 están la bóveda con PIN
-y las terminales persistentes con tmux.
+**Estado que describe este documento:** el código de la versión **0.5.0**, la que se publica (la 0.4.0
+no llegó a publicarse: lo suyo sale en la 0.5.0). Sus novedades principales son el servidor MCP para
+asistentes de IA, el escáner de vulnerabilidades, la bóveda con PIN y las terminales persistentes con
+tmux.
 
 ---
 

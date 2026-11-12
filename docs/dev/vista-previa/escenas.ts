@@ -147,7 +147,7 @@ export const ESCENAS: Record<string, () => Promise<void>> = {
   },
   novedades: async () => {
     await app();
-    await showWhatsNew("Sin publicar");
+    await showWhatsNew("0.5.0");
     await sleep(800);
   },
   github: async () => {

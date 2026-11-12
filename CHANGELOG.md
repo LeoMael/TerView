@@ -6,25 +6,27 @@ siguen [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Sin publicar]
 
+## [0.5.0] - 2026-11-12
+
 ### Añadido
 - **Asistentes de IA (MCP)**: servidor MCP propio para que Claude Code, Claude Desktop
   u otro cliente MCP trabajen con tus servidores **usando las conexiones de TerView, sin ver nunca
   contraseñas ni llaves**. Apagado por defecto; se activa en Ajustes → Asistentes de IA (MCP).
-  Permiso por servidor (**Sin acceso** por defecto, **Solo lectura** o **Completo**). Las lecturas
-  pasan solas; todo lo que cambia algo abre un diálogo en TerView con el comando exacto (o las
-  diferencias del archivo) y los botones Permitir una vez / Permitir siempre este comando en este
-  servidor / Denegar; si nadie responde en 2 minutos (ajustable), se deniega. Lo peligroso (`rm -rf`,
-  `prune`, `sudo`, `reboot`… o un comando ⚠️ de la Biblioteca) se pregunta siempre. Con TerView
-  bloqueado por PIN, el asistente no puede hacer nada. Herramientas: servidores, proyectos y
-  conexiones, abrir una conexión (como pestaña), ejecutar comandos (cancelables, con tiempo y salida
-  limitados), comandos de la Biblioteca, explorar, leer y escribir archivos, subir y descargar con la
-  cola de transferencias, ver puertos, sitios web y contenedores, y consultar vulnerabilidades (el
-  último informe, o un análisis nuevo sin sudo que se aprueba la primera vez). Escucha solo en
-  `127.0.0.1` con un token que se puede regenerar (guardado como tus contraseñas: en la bóveda si
-  tienes PIN); para
-  clientes por stdio se instala el puente `terview-mcp`. Cada acción queda en el panel **Actividad del
-  asistente** (con botón para detener un comando) y en `mcp-audit.jsonl`. Ajustes muestra la
-  configuración lista para copiar en Claude Code y Claude Desktop.
+  - Permiso por servidor: **Sin acceso** (por defecto), **Solo lectura** o **Completo**. Las lecturas
+    pasan solas; todo lo que cambia algo abre un diálogo en TerView con el comando exacto (o las
+    diferencias del archivo): Permitir una vez / Permitir siempre este comando en este servidor /
+    Denegar. Si nadie responde en 2 minutos (ajustable), se deniega. Lo peligroso (`rm -rf`, `prune`,
+    `sudo`, `reboot`… o un comando ⚠️ de la Biblioteca) se pregunta siempre.
+  - Con TerView bloqueado por PIN, el asistente no puede hacer nada.
+  - Herramientas: servidores, proyectos y conexiones, abrir una conexión (como pestaña), ejecutar
+    comandos (cancelables, con tiempo y salida limitados), comandos de la Biblioteca, explorar, leer y
+    escribir archivos, subir y descargar con la cola de transferencias, ver puertos, sitios web y
+    contenedores, y consultar vulnerabilidades (el último informe, o un análisis nuevo sin sudo que se
+    aprueba la primera vez).
+  - Escucha solo en `127.0.0.1` con un token que se puede regenerar (guardado como tus contraseñas). Para
+    clientes por stdio se instala el puente `terview-mcp`. Cada acción queda en el panel **Actividad del
+    asistente** (con botón para detener un comando) y en `mcp-audit.jsonl`. Ajustes muestra la
+    configuración lista para copiar en Claude Code y Claude Desktop.
 - **Escáner de vulnerabilidades** (Administración → **Vulnerabilidades**): un botón **Analizar** que dice
   qué software tiene el servidor (paquetes, kernel, sudo, OpenSSH, nginx, Caddy, Podman, Docker, Node,
   Python, PHP, Java e imágenes de contenedores) y qué vulnerabilidades conocidas le afectan.
@@ -37,14 +39,6 @@ siguen [Versionado Semántico](https://semver.org/lang/es/).
     arrancarlas. **Cancelar** detiene el análisis también en el servidor.
   - Historial de los últimos 20 análisis por servidor; exportar a JSON y Markdown.
   - Atajo desde Contenedores → Imágenes: «Ver vulnerabilidades».
-- **IA opcional para explicar informes** (Ajustes → IA para explicar informes): cualquier servicio
-  compatible con OpenAI (también uno local como Ollama). Es otra cosa que el MCP: aquí TerView le
-  pregunta a la IA, y solo para que **explique** un informe. Antes de enviar ves el texto exacto, sin
-  nombre del servidor, IP, usuarios ni rutas. El token va en la bóveda o el llavero.
-
-## [0.4.0] - 2026-11-12
-
-### Añadido
 - **Contenedores (Podman / Docker)**: pestaña visual para iniciar, parar, reiniciar y eliminar
   contenedores, ver logs, abrir una terminal dentro, crear contenedores con plantillas (Nginx,
   PostgreSQL, MySQL, MariaDB, Redis, Adminer, Portainer), levantar y bajar proyectos **Compose**, y
@@ -68,18 +62,17 @@ siguen [Versionado Semántico](https://semver.org/lang/es/).
 - **GitHub**: conectar la cuenta con un token (guardado de forma segura), pasar tus llaves SSH a un
   servidor, clonar repositorios (con deploy key), desplegar con un botón, ver y lanzar GitHub Actions,
   y sincronizar tu configuración en un Gist cifrado.
-- **Acerca de** con las novedades de cada versión y **actualizaciones automáticas** firmadas.
 - **Terminales persistentes (tmux)**: si el servidor tiene tmux, cada terminal vive en su propia sesión
   y sigue corriendo aunque se corte la red o cierres la app; al reconectar, TerView vuelve a ella.
   Ajuste Automático / Siempre / Nunca (general y por servidor), indicador ∞ en la pestaña, lista de
   sesiones que quedaron en el servidor para reabrirlas o cerrarlas, y «Desacoplar» para dejar una
   corriendo. El historial, la búsqueda y el copiar/pegar funcionan igual que sin tmux, y no se toca tu
   `~/.tmux.conf`.
-- **PIN y bloqueo**: las contraseñas guardadas (de conexión y de sudo) y el token de GitHub pueden ir
-  en una bóveda cifrada (`vault.json`, AES-256-GCM + Argon2id) protegida con un **PIN de 6 números** y
-  una llave de este equipo guardada en el llavero, así que copiar solo el archivo no sirve.
-  - Al crearla, las contraseñas del llavero se mueven a ella sin riesgo de perderlas; al quitarla,
-    vuelven al llavero.
+- **PIN y bloqueo**: las contraseñas guardadas (de conexión y de sudo) y los tokens (GitHub, IA y MCP)
+  pueden ir en una bóveda cifrada (`vault.json`, AES-256-GCM + Argon2id) protegida con un **PIN de 6
+  números** y una llave de este equipo guardada en el llavero, así que copiar solo el archivo no sirve.
+  - Al crearla, lo que había en el llavero se mueve a ella sin riesgo de perderlo; al quitarla, vuelve
+    al llavero.
   - TerView se bloquea al abrirlo, tras 5–60 min sin uso (15 por defecto) o con `Ctrl+Shift+L`, en
     todas las ventanas: se tapa la interfaz y se borran de la memoria las contraseñas descifradas y las
     de sudo hasta que escribes el PIN. Las conexiones siguen vivas; una reconexión que necesita
@@ -88,8 +81,8 @@ siguen [Versionado Semántico](https://semver.org/lang/es/).
     app).
   - El PIN se escribe en 6 casillas y se envía solo al completarlo. Las bóvedas creadas antes con una
     contraseña libre se siguen abriendo con un campo de texto hasta que cambias el PIN.
-  - **«Olvidé mi PIN»** borra la bóveda (escribiendo BORRAR) y conserva servidores, llaves, comandos,
-    túneles y ajustes.
+  - **«Olvidé mi PIN»** borra la bóveda (escribiendo BORRAR): se pierden las contraseñas y los tokens, y
+    se conservan servidores, llaves, comandos, túneles y ajustes.
   - Pantalla para crearlo la primera vez, con «Ahora no», y **candado en la barra de pestañas** para
     bloquear, cambiar el PIN o ir a Ajustes → Seguridad. Los detalles están en «¿Qué protege?».
 - **Contraseña de sudo por servidor** (editor de servidor): «Pedir cada vez» (por defecto, solo en
@@ -99,6 +92,14 @@ siguen [Versionado Semántico](https://semver.org/lang/es/).
   duplicar y activar o quitar el PIN la tienen en cuenta; la copia en Gist solo lleva el modo.
 - **Detección de privilegios**: insignia **root** / **sudo** en la pestaña de la conexión, sin pedir
   contraseña ni dejar rastro en el servidor.
+- **IA opcional para explicar informes** (Ajustes → IA para explicar informes): cualquier servicio
+  compatible con OpenAI (también uno local como Ollama). Es otra cosa que el MCP: aquí TerView le
+  pregunta a la IA, y solo para que **explique** un informe. Antes de enviar ves el texto exacto, sin
+  nombre del servidor, IP, usuarios ni rutas. El token va en la bóveda o el llavero.
+- **Manual de uso dentro de la app** (Ajustes → Manual de uso, el botón ? de la barra o la bienvenida):
+  pasos cortos con capturas de cada función, atajos de teclado y solución de problemas.
+- **Novedades y actualizaciones automáticas**: tras actualizar, TerView muestra una vez lo nuevo de la
+  versión; el historial completo está en Acerca de. Las actualizaciones van firmadas.
 - Explorador: **arrastrar archivos y carpetas al escritorio o a una carpeta** del gestor de archivos
   (Nautilus, Dolphin, Explorador de Windows, Finder). TerView primero los descarga a una carpeta
   temporal (se ve en Transferencias) y luego los suelta donde quieras; si ya estaban descargados, el
@@ -188,8 +189,8 @@ Primera versión pública de TerView, cliente SSH/SFTP de escritorio.
 - Instalador `.rpm` para Linux.
 - Documentación con diagramas en `docs/`.
 
-[Sin publicar]: https://github.com/LeoMael/TerView/compare/v0.4.0...HEAD
-[0.4.0]: https://github.com/LeoMael/TerView/releases/tag/v0.4.0
+[Sin publicar]: https://github.com/LeoMael/TerView/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/LeoMael/TerView/releases/tag/v0.5.0
 [0.3.0]: https://github.com/LeoMael/TerView/releases/tag/v0.3.0
 [0.2.1]: https://github.com/LeoMael/TerView/releases/tag/v0.2.1
 [0.2.0]: https://github.com/LeoMael/TerView/commit/6dfd50a

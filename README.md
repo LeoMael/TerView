@@ -322,11 +322,11 @@ Los instaladores los genera GitHub Actions. Sube la versión en `package.json`,
 [`CHANGELOG.md`](CHANGELOG.md) y crea una etiqueta:
 
 ```bash
-git tag v0.4.0
-git push origin v0.4.0
+git tag v0.5.0
+git push origin v0.5.0
 ```
 
-GitHub compila para Linux y Windows y crea un *release* en borrador con los instaladores. Revísalo y publícalo.
+GitHub compila para Linux, Windows y macOS y crea un *release* en borrador con los instaladores. Revísalo y publícalo.
 
 ### Pruebas
 

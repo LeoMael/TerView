@@ -1,13 +1,14 @@
 # TerView — Pendientes y próximas funciones
 
-Estado al 12/11/2026: versión publicada **0.3.0**; **0.4.0 lista para publicar** (lo hecho después de
-0.3.0 se marca como **v0.4.0**, igual que en el CHANGELOG). Todo el plan de la sección 8 está construido:
+Estado al 12/11/2026: versión publicada **0.3.0**; la que se publica ahora es la **0.5.0**. La 0.4.0
+no llegó a publicarse: lo marcado **v0.4.0** en este documento salió publicado en la 0.5.0 (en el
+CHANGELOG todo va en la sección 0.5.0). Todo el plan de la sección 8 está construido:
 administración (usuarios, grupos, **puertos y sitios web**), monitor, túneles, contenedores, ejecutar en
 varios servidores, GitHub, versiones y actualizaciones. Los comandos que se ejecutan aparte ya se pueden
 **cancelar de verdad** (se detienen también en el servidor).
 
-El **servidor MCP** (sección 3) y el **escáner de vulnerabilidades** (sección 10) ya están construidos
-para la **v0.5.0**.
+El **servidor MCP** (sección 3) y el **escáner de vulnerabilidades** (sección 10) también están
+construidos y salen en la **0.5.0**.
 
 **Lo que sigue pendiente:**
 - **Probar el MCP con los clientes reales** (Claude Code y Claude Desktop) y ver la interfaz en la app (sección 3).
