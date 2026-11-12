@@ -52,6 +52,8 @@
 - **Ver puertos y sitios web** del servidor: qué programa usa cada puerto y los sitios de nginx o Caddy
   con sus dominios y certificados.
 - **Ejecutar un comando en varios servidores** a la vez y comparar los resultados.
+- **Buscar vulnerabilidades** en el servidor y en sus contenedores, con datos de OSV.dev y de tu distro, y
+  el comando para actualizar. Si quieres, una IA te lo explica.
 - **Conectar tu cuenta de GitHub**: llaves SSH, clonar, desplegar y sincronizar tu configuración.
 - **Proteger tus contraseñas con un PIN**: quedan cifradas y TerView se bloquea al abrirlo y tras un rato sin uso.
 - **Actualizarse sola** cuando sale una versión nueva.

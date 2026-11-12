@@ -6,6 +6,23 @@ siguen [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Sin publicar]
 
+### Añadido
+- **Escáner de vulnerabilidades** (Administración → **Vulnerabilidades**): un botón **Analizar** que dice
+  qué software tiene el servidor (paquetes, kernel, sudo, OpenSSH, nginx, Caddy, Podman, Docker, Node,
+  Python, PHP, Java e imágenes de contenedores) y qué vulnerabilidades conocidas le afectan.
+  - La lista sale de bases de datos reales: **OSV.dev** (consultado desde tu PC, solo con nombres y
+    versiones de paquetes), la herramienta de seguridad de la distro (`dnf`, `debsecan`, `pro`,
+    `zypper`) y **Trivy** si el servidor lo tiene. Nunca de una IA.
+  - Resumen por gravedad, cambios desde el análisis anterior, tabla con filtros, detalle con enlaces y el
+    **comando para actualizar** (se copia o se escribe en la terminal sin Enter; nunca se ejecuta solo).
+  - Con sudo, también los contenedores de root y de los usuarios que elijas. Las imágenes se leen sin
+    arrancarlas. **Cancelar** detiene el análisis también en el servidor.
+  - Historial de los últimos 20 análisis por servidor; exportar a JSON y Markdown.
+  - Atajo desde Contenedores → Imágenes: «Ver vulnerabilidades».
+- **Asistente de IA opcional** (Ajustes → Asistente de IA): cualquier servicio compatible con OpenAI
+  (también uno local como Ollama). Solo **explica** un informe: antes de enviar ves el texto exacto, sin
+  nombre del servidor, IP, usuarios ni rutas. El token va en la bóveda o el llavero.
+
 ## [0.4.0] - 2026-11-12
 
 ### Añadido

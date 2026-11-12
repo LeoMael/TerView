@@ -44,8 +44,8 @@
   <rect width="1600" height="1350" fill="#0f172a"/>
 
   <text x="60" y="62" class="t">Escáner de vulnerabilidades</text>
-  <rect x="580" y="36" width="300" height="32" rx="16" fill="#3b1220" stroke="#f43f5e" stroke-width="2"/>
-  <text x="730" y="58" text-anchor="middle" style="font-size:15px;font-weight:700;fill:#f43f5e">DISEÑO v0.5.0 · NO CONSTRUIDO</text>
+  <rect x="580" y="36" width="220" height="32" rx="16" fill="#14301f" stroke="#22c55e" stroke-width="2"/>
+  <text x="690" y="58" text-anchor="middle" style="font-size:15px;font-weight:700;fill:#22c55e">HECHO EN v0.5.0</text>
   <text x="60" y="94" class="st">Qué hay instalado y qué avisos de seguridad le afectan, sacado de bases de datos reales. La IA es opcional y solo explica.</text>
 
   <!-- ================= TU PC ================= -->
@@ -218,10 +218,10 @@
   <rect x="1180" y="812" width="350" height="300" rx="14" class="sv"/>
   <use href="#i-chart" x="1196" y="826" width="34" height="34" style="color:#22c55e"/>
   <text x="1240" y="850" class="b">4 · Trivy (si está)</text>
-  <text x="1196" y="884" class="xs" style="fill:#86efac">se prefiere para las imágenes</text>
-  <text x="1196" y="912" class="xs mono" style="fill:#e2e8f0">trivy rootfs --format json</text>
+  <text x="1196" y="884" class="xs" style="fill:#86efac">se prefiere para tus imágenes y las de root</text>
+  <text x="1196" y="912" class="xs mono" style="fill:#e2e8f0">trivy rootfs --format template</text>
   <text x="1196" y="930" class="xs mono" style="fill:#e2e8f0">  &lt;imagen montada&gt;</text>
-  <text x="1196" y="958" class="xs mono" style="fill:#e2e8f0">trivy image --input x.tar</text>
+  <text x="1196" y="958" class="xs mono" style="fill:#e2e8f0">trivy image &lt;img&gt;   (Docker)</text>
   <text x="1196" y="986" class="xs">ve también librerías dentro de la</text>
   <text x="1196" y="1004" class="xs">imagen (npm, pip, jar, Go)</text>
   <text x="1196" y="1032" class="xs">su base de datos la baja el servidor;</text>
@@ -241,7 +241,7 @@
   <text x="1192" y="1212" class="xs"><tspan style="fill:#e2e8f0;font-weight:700">Rocky / Alma</tspan>  OSV + dnf advisory</text>
 
   <rect x="60" y="1236" width="362" height="40" rx="10" class="neu"/>
-  <text x="76" y="1262" class="xs"><tspan style="fill:#e2e8f0;font-weight:700">RHEL</tspan>  dnf advisory (+ OSV <tspan class="mono">Red Hat:&lt;CPE&gt;</tspan>)</text>
+  <text x="76" y="1262" class="xs"><tspan style="fill:#e2e8f0;font-weight:700">RHEL</tspan>  solo dnf updateinfo (OSV va por repo)</text>
   <rect x="432" y="1236" width="362" height="40" rx="10" fill="#3b1220" stroke="#f43f5e" stroke-width="1.5"/>
   <text x="448" y="1262" class="xs"><tspan style="fill:#fda4af;font-weight:700">Fedora</tspan>  solo dnf advisory: OSV no la tiene</text>
   <rect x="804" y="1236" width="362" height="40" rx="10" class="neu"/>

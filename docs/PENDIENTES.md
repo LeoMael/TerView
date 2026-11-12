@@ -7,7 +7,8 @@ varios servidores, GitHub, versiones y actualizaciones. Los comandos que se ejec
 **cancelar de verdad** (se detienen también en el servidor).
 
 **Lo que sigue pendiente:**
-- **Escáner de vulnerabilidades** (sección 10): diseñado para la v0.5.0, sin construir.
+- **Escáner de vulnerabilidades** (sección 10): **hecho para la v0.5.0**; falta probarlo a mano en la app
+  y lo de [10.14](#1014-sin-verificar-y-riesgos) (Docker real, SLES/RHEL, otros usuarios con systemd…).
 - **Servidor MCP** (sección 3): opcional, diseñado y en pausa.
 - **Firmar el instalador** de Windows (SmartScreen avisa al instalar).
 - **Pruebas reales**: en un Windows real, contra un servidor con 2FA y con un agente SSH real.
@@ -24,7 +25,7 @@ Este documento guarda lo que falta, **con suficiente detalle para retomarlo más
 | 3 | [Servidor MCP (conectar asistentes de IA)](#3-servidor-mcp-conectar-asistentes-de-ia) | **Opcional** (última fase) | Diseñado, en pausa |
 | 5 | [Exportar servidores a `~/.ssh/config`](#5-exportar-servidores-a-sshconfig) | Alta (corta) | ✅ Hecho (v0.2.0) |
 | 4 | [Otros pendientes detectados](#4-otros-pendientes-detectados) | Media/Baja | Mayoría hecha; ver tabla |
-| 10 | [Escáner de vulnerabilidades](#10-escáner-de-vulnerabilidades--diseñado-v050) (OSV.dev, herramientas de la distro, Trivy; IA opcional solo para explicar) | Alta (v0.5.0) | Diseñado (v0.5.0) |
+| 10 | [Escáner de vulnerabilidades](#10-escáner-de-vulnerabilidades--hecho-v050) (OSV.dev, herramientas de la distro, Trivy; IA opcional solo para explicar) | Alta (v0.5.0) | ✅ Hecho (v0.5.0) |
 
 **Orden sugerido:** 2 (reconexión) → 5 (exportar a `~/.ssh/config`) → 1 (biblioteca de comandos)
 → 3 (MCP, solo si hace falta; reutiliza `exec_capture` y el catálogo de la biblioteca).
@@ -554,12 +555,14 @@ empezando por **llaves SSH** y **sincronizar configuración**.
 
 ---
 
-## 10. Escáner de vulnerabilidades — diseñado (v0.5.0)
+## 10. Escáner de vulnerabilidades — hecho (v0.5.0)
 
-> **Estado: diseño, aún no construido.** El código actual no tiene nada de esto. Los comandos, nombres
-> de ecosistemas y formatos de salida de esta sección se **probaron de verdad el 12/11/2026** contra
-> OSV.dev y contenedores reales (ver [10.13](#1013-qué-se-comprobó-de-verdad-12112026)); lo que no se
-> pudo probar está en [10.14](#1014-sin-verificar-y-riesgos).
+> **Estado: construido (v0.5.0).** Motor en `src-tauri/src/vulnscan/` y `src-tauri/src/ai/`; interfaz en
+> Administración → **Vulnerabilidades** (`src/components/Admin/Vulns*.tsx`, `src/features/vulnscan/`) y
+> Ajustes → **Asistente de IA**. Los comandos, ecosistemas y formatos se probaron de verdad el 12/11/2026
+> (diseño, [10.13](#1013-qué-se-comprobó-de-verdad-12112026)) y otra vez al construirlo, con pruebas
+> automáticas contra contenedores reales ([10.15](#1015-pruebas)). Lo que cambió respecto al diseño está en
+> [10.16](#1016-cambios-respecto-al-diseño); lo que falta probar, en [10.14](#1014-sin-verificar-y-riesgos).
 
 ![Escáner de vulnerabilidades](arquitectura/17-vulnerabilidades.png)
 
@@ -872,26 +875,28 @@ importan, mejor en la carpeta de configuración.
 - La **IA** solo recibe lo que el usuario ve y confirma en el diálogo (10.8).
 - Nada sale del PC si las fuentes están desactivadas en Ajustes (modo «solo herramientas del servidor»).
 
-### 10.12 Plan de construcción por partes
+### 10.12 Cómo está construido
 
-Cada parte se puede probar sola. Orden sugerido:
+| Parte | Archivos | Qué hace |
+|-------|----------|----------|
+| 1. Modelo y parsers | `src-tauri/src/vulnscan/model.rs`, `parse/{osrelease,rpm,dpkg,apk,dnf,debsecan,ubuntu_pro,zypper,trivy,inventory}.rs` | Cada salida → `Package` (binario, fuente, versión, versión fuente) y hallazgos de cada herramienta. Tolerantes: lo que no se entiende se salta |
+| 2. Scripts del servidor | `vulnscan/scripts.rs` | Fases 1–4 en POSIX `sh` con secciones `@@` (detectar, usuarios, inventario, herramienta de la distro, listado de imágenes, una imagen). Entrar como otro usuario con `runuser -u` → `sudo -u -H` → `su -s /bin/sh`. La interfaz los pide con `vulnscan_script` |
+| 3. Ecosistemas | `vulnscan/ecosystem.rs` | `os-release` → ecosistema OSV (lista fija), Ubuntu Pro, qué herramienta usar, kernel, programas sueltos (Bitnami/Go) y si el vendedor es la distro |
+| 4. Cliente OSV y caché | `vulnscan/osv.rs`, `vulnscan/cache.rs` | `querybatch` en lotes de 1000 con paginación y reparto por ecosistema si OSV rechaza uno; detalle 8 a la vez con 2 reintentos; caché por `id` + `modified` en `<caché>/com.terview.app/osv/` |
+| 5. Gravedad | `vulnscan/severity.rs` | Distro → CVSS v2/v3/v4 (crate `cvss` 3) → sin clasificar |
+| 6. Juntar | `vulnscan/analyze.rs` | Une OSV, la herramienta de la distro y Trivy en una fila por CVE, paquete fuente y objetivo |
+| 7. Historial y exportar | `vulnscan/store.rs`, `vulnscan/export.rs` | `<config>/terview/vulnscan/<idServidor>.json` (20 análisis, 0600, se borra con el servidor); JSON y Markdown |
+| 8. Comandos Tauri | `vulnscan/commands.rs`, `lib.rs` | `vulnscan_script`, `vulnscan_plan`, `vulnscan_parse_users`, `vulnscan_parse_images`, `vulnscan_analyze` (+ evento `vulnscan://progress`), `vulnscan_cancel`, `vulnscan_history_list/get/delete`, `vulnscan_latest`, `vulnscan_set_ai`, `vulnscan_export`, `vulnscan_vuln_detail` |
+| 9. Análisis sin sudo desde el motor | `vulnscan/scan.rs` | `scan_session(sesión, opciones)`: las mismas fases sin la interfaz. Lo usan las pruebas y lo podrá usar el servidor MCP (`scan_vulnerabilities`); `store::latest_report(id)` sirve para `get_vuln_report`. **Aún no conectado al MCP** |
+| 10. IA | `src-tauri/src/ai/mod.rs` | `ai_status`, `ai_set_token`, `ai_test` (`GET /models`), `ai_chat` (`POST /chat/completions`, cancelable con `ai_cancel`). Token `ai-token`, que `enable_vault` mueve a la bóveda |
+| 11. Fases en la interfaz | `src/features/vulnscan/run.ts` | Ejecuta cada fase con `runScript` + `execId` (con o sin sudo), Cancelar, y pasa las salidas a `vulnscan_analyze` |
+| 12. Interfaz | `src/components/Admin/VulnsTab.tsx`, `VulnSummary.tsx`, `VulnDetail.tsx`, `VulnsDialogs.tsx`, `AiExplainDialog.tsx`, `MiniMarkdown.tsx`, `vulnUi.tsx`, `Vulns.css`; `src/api/vulnscan.ts` | Lo de 10.9. Las opciones del escáner (fuentes, imágenes, límite) están en «Opciones» dentro de la pestaña |
+| 13. Comando sugerido y texto para la IA | `src/features/vulnscan/fixCommand.ts`, `aiPayload.ts` | Funciones puras; probadas con `vulnscan.test.ts` |
+| 14. Ajustes de IA | `src/components/Settings/AiSection.tsx` | URL base, modelo, token, «Probar» |
+| 15. Atajo desde Contenedores | `src/components/Containers/ImagesTab.tsx`, `src/features/vulnscan/nav.ts` | «Ver vulnerabilidades» de una imagen |
 
-| Parte | Archivos previstos | Qué hace |
-|-------|--------------------|----------|
-| 1. Parsers y modelo | `src-tauri/src/vulnscan/mod.rs`, `model.rs`, `parse/{rpm,dpkg,apk,osrelease,dnf,debsecan,ubuntu_pro,zypper,trivy}.rs`, `tests.rs` | Leer cada salida y convertirla en `Package { ecosistema, fuente, binario, versión, origen }` y `Finding`; mapa `os-release` → ecosistema OSV (lista fija) |
-| 2. Cliente OSV | `vulnscan/osv.rs`, `vulnscan/cache.rs` | `querybatch` en lotes de 1000 con paginación, detalle en paralelo con caché, rangos del ecosistema correcto, agrupado por CVE. Cliente reqwest propio con host fijo `api.osv.dev` (sin token) |
-| 3. Gravedad | `vulnscan/severity.rs` | Distro → CVSS (crate `cvss`) → sin clasificar |
-| 4. Historial | `vulnscan/store.rs` | `vulnscan/<id>.json` con `fsutil` |
-| 5. Comandos Tauri | `vulnscan/commands.rs`, registro en `lib.rs`, capability | `vulnscan_query_osv(packages)`, `vulnscan_history_list/get/save/delete(serverId)`, `vulnscan_export(path, formato)`; progreso por evento `vulnscan://progress` |
-| 6. Scripts del servidor | `src/features/vulnscan/scripts.ts`, `run.ts` | Scripts POSIX de las fases 1–4 con secciones `@@` (como `PORTS_SCRIPT`), elevación con `runScript` + `execId`, usuario por usuario con `runuser`/`sudo -u`/`su` |
-| 7. Interfaz | `src/components/Admin/VulnsTab.tsx`, `VulnDetail.tsx`, `VulnSummary.tsx`, entrada en `TABS` de `AdminPanel.tsx`, `src/api/vulnscan.ts`, tipos en `types.rs` + `api/types.ts` | Lo de 10.9 |
-| 8. Comando sugerido por distro | `src/features/vulnscan/fixCommand.ts` | Texto para copiar o insertar; nunca se ejecuta |
-| 9. IA | `src-tauri/src/ai/{mod,client}.rs`, `src/features/vulnscan/aiPayload.ts`, `src/components/Admin/AiExplainDialog.tsx`, sección en `SettingsDialog`; `ai-token` en `enable_vault`/`disable_vault` | 10.8 |
-| 10. Atajo desde Contenedores | `src/components/Containers/…` | «Ver vulnerabilidades» de una imagen |
-
-Dependencias nuevas previstas: el crate `cvss` (solo cálculo, sin red). `reqwest`, `serde_json`, `chrono`
-y `tokio` ya están. En la interfaz, ninguna (el Markdown de la IA se pinta con un renderizador mínimo
-propio o como texto con bloques de código; nada de HTML de la respuesta).
+Dependencia nueva: el crate `cvss` 3 (solo cálculo, sin red). En la interfaz, ninguna (la respuesta de
+la IA se pinta con un renderizador mínimo propio, sin HTML).
 
 ### 10.13 Qué se comprobó de verdad (12/11/2026)
 
@@ -923,38 +928,97 @@ TSV, `zypper --xmlout list-patches`.
 
 ### 10.14 Sin verificar y riesgos
 
-- **Docker** real: `docker create` + `docker cp` y `trivy image` con el socket (solo se probó el flujo
-  equivalente con Podman). Docker rootless de otro usuario.
-- `zypper list-patches` **con** parches pendientes (el contenedor Leap 15.6 estaba al día) y SLES.
-- RHEL de verdad (suscripción) y el mapeo de CPE por repositorio para `Red Hat:<CPE>`.
-- `machinectl shell` / `loginctl enable-linger`: no hicieron falta en las pruebas, pero no se probaron
-  con systemd real, ni contenedores rootless **corriendo** de otro usuario lanzados desde su sesión.
-- Imágenes «distroless» (`status.d`), imágenes sin gestor de paquetes (scratch, Go estático): solo Trivy
-  ve algo.
+- **La interfaz en la app real**: compila y sus funciones puras tienen pruebas, pero nadie la ha usado aún
+  con el ratón (ver los pasos de prueba manual en el CHANGELOG / informe de la v0.5.0).
+- **Docker** real: `docker create` + `docker cp`, el `rpm` de la imagen con `docker run` y `trivy image`
+  con el socket (en este PC Docker pide root y no hay contraseña). Docker rootless de otro usuario.
+- **Otros usuarios con sudo** (`runuser`/`sudo -u -H`/`su`): se probó en el diseño con Podman 6.1.3, pero
+  no con el script final. Ni `machinectl`/`loginctl enable-linger` con systemd real, ni contenedores
+  rootless **corriendo** de otro usuario.
+- `zypper list-patches` **con** parches pendientes (el parser se probó con un ejemplo hecho a mano) y SLES.
+- RHEL de verdad (suscripción); `yum` de CentOS 7 (se lee igual que dnf4, sin probar).
+- `debsecan` y `pro` de verdad por el script final (sus parsers se probaron con salidas reales capturadas).
+- Imágenes «distroless» (`status.d`) e imágenes sin gestor de paquetes (scratch, Go estático): solo Trivy
+  ve algo. Trivy en general (no hay `trivy` en este PC: se probó el parser con su salida real).
 - `pro api u.pro.security.cves.v1` en versiones viejas del cliente `pro` (probado con la 38).
-- Que el crate `cvss` puntúe bien CVSS v4.
-- Tiempos en servidores grandes (miles de paquetes, decenas de imágenes) y uso de disco de las cachés
-  de dnf/debsecan en `$HOME` al ir sin root.
+- Kernel de Debian/Ubuntu en un servidor real (`linux-signed-*` se consulta también como `linux`).
+- Tiempos en servidores grandes (miles de paquetes, decenas de imágenes) y disco de las cachés de
+  dnf/debsecan en `$HOME` al ir sin root.
 - La IA: que modelos distintos respeten «no inventes CVE». Por eso el panel lo marca como texto de IA y
   la tabla nunca se toca.
 
-### 10.15 Pruebas previstas
+### 10.15 Pruebas
 
-- **Unitarias en Rust** (`cargo test --lib vulnscan`) con las salidas reales de 10.13 como datos fijos:
-  cada parser; `os-release` → ecosistema (Debian 12, Ubuntu 22.04 LTS y no LTS, Alpine 3.18.0 → `v3.18`,
-  Rocky/Alma 9.0 → `9`, Leap 15.6 → `openSUSE:Leap 15.6`, Fedora → ninguno); RPM sin epoch y nombre
-  fuente desde `%{SOURCERPM}`; armado de lotes (1000) y reintento solo de las páginas pendientes;
-  agrupado por CVE (`DSA` + `DEBIAN-CVE`); gravedad (Red Hat, Ubuntu, Debian `unimportant`, CVSS v3 y
-  v4); «tiene arreglo»; dueño del binario → distro o upstream; plantilla de Trivy.
-- **Con el servidor de pruebas** (`#[ignore]`, `connect_test_server()` como en `snippets/tests.rs`):
-  inventario por exec como `test` (sin sudo) y que el análisis termine con 0 avisos o los que haya;
-  cancelar a mitad (con `execId`) y comprobar que el proceso muere en el servidor.
-- **Consulta real a OSV** (`#[ignore]`, necesita red): `alpine:3.18.0` debe devolver
-  `ALPINE-CVE-2023-2650` para openssl `3.1.0-r4`; `Fedora:41` debe dar «ecosistema no soportado» sin
-  tumbar el resto.
-- **Contenedores viejos** (`#[ignore]`, con podman): `debian:12.0`, `alpine:3.18.0`, `rockylinux:9.0`,
-  `almalinux:9.0`, `ubuntu:22.04` y un `fedora:44` con paquetes bajados, levantados con sshd o leídos
-  con `podman image mount`: deben salir los CVE de la tabla 10.13.
-- **TS puro** (`npx rolldown <archivo>.ts -p node -f esm -o out.mjs && node out.mjs`): `aiPayload.ts`
-  (que no salgan nombre del servidor, IP, usuarios ni rutas) y `fixCommand.ts` por distro.
-- Sin avisos nuevos: `npm run build`, `cargo test`, `cargo clippy --all-targets`.
+Todas pasan (12/11/2026). Datos fijos reales en `src-tauri/src/vulnscan/fixtures/` (salidas capturadas en
+el diseño y respuestas reales de OSV en `fixtures/osv/`).
+
+- **Unitarias en Rust** (`cd src-tauri && cargo test --lib vulnscan`, 33 pruebas): cada parser con su
+  salida real; `os-release` → ecosistema (Debian 12, Ubuntu 22.04 LTS y no LTS, Alpine 3.18.0 → `v3.18`,
+  Rocky/Alma 9.0 → `9`, Leap 15.6, Tumbleweed, Fedora → ninguno); RPM sin epoch y fuente desde
+  `%{SOURCERPM}`; lotes de 1000 y repetición solo de las consultas paginadas; ecosistema inválido sin
+  tumbar el resto; caché por `modified`; junta por CVE (`DSA` + `DEBIAN-CVE` + debsecan en una fila);
+  gravedad (Red Hat, Ubuntu, Debian `unimportant`, CVSS v3 y **v4**, comprobado contra la calculadora de
+  FIRST); «tiene arreglo»; programas sueltos y de terceros; plantilla de Trivy (592 hallazgos de Rocky);
+  historial (20, 0600, IA) y exportar; los scripts pasan `sh -n` y las fases 1–2 corren en este PC.
+- **OSV real** (`cargo test --lib vulnscan::live_tests::osv -- --ignored`): `Alpine:v3.18` da
+  `ALPINE-CVE-2023-2650` para openssl `3.1.0-r4` (22 avisos en total) y `Fedora:41` se rechaza sin tumbar
+  el lote.
+- **Contenedores viejos** (`cargo test --lib vulnscan::live_tests::distro -- --ignored`): los scripts de las
+  fases 1–2 se ejecutan dentro de cada imagen y el informe se arma con OSV real:
+
+  | Imagen | Resultado |
+  |--------|-----------|
+  | `debian:12.0` | 88 paquetes, 195 hallazgos (9 críticos; 36 «unimportant» ocultos). `CVE-2024-12133` en libtasn1-6 con `DSA-5863-1`, arreglado en `4.19.0-2+deb12u1`; `CVE-2023-45853` en zlib sin arreglo |
+  | `alpine:3.18.0` | 22 hallazgos (3 críticos): `CVE-2023-2650` en openssl con alias `ALPINE-CVE-2023-2650` |
+  | `rockylinux:9.0` | 195 avisos de OSV → 369 hallazgos por CVE. `CVE-2022-32206` en curl con `RLSA-2022:6157`, `Moderate`, arreglado en `7.76.1-14.el9_0.5` |
+  | `rockylinux:9.0` + `dnf updateinfo` (con red, 2 min) | dnf y OSV en las mismas filas (`ca-certificates` `CVE-2026-114406` crítica de dnf) |
+  | `almalinux:9.0` | 224 avisos → 414 hallazgos; `ALSA-2023:0333` (curl) |
+  | `ubuntu:22.04` | 60 hallazgos; ncurses (`UBUNTU-CVE-2023-50495`) |
+  | `fedora:44` + `dnf advisory` (dnf5, con red, 9 min) | 146 paquetes; dnf5 funciona sin root y da 0 avisos (la imagen ya está al día); nada va a OSV. Con avisos se probó el parser con la salida real capturada en el diseño |
+
+- **Imágenes de podman en este PC** (`…::live_tests::images -- --ignored`): `podman unshare` + `image mount`
+  leen `alpine:3.18.0` (apk), `debian:12.0` (dpkg) y `rockylinux:9.0` (`rpm --dbpath` con el rpm del
+  anfitrión); 586 hallazgos y no queda nada montado. El respaldo `podman run --network=none --entrypoint rpm`
+  se comprobó a mano con `almalinux:9.0`.
+- **Servidor de pruebas por SSH sin sudo** (`…::live_tests::sshd -- --ignored --test-threads=1`):
+  `terview-sshd` (Alpine 3.24): 65 paquetes, 46 consultas a OSV, 0 hallazgos (está al día), `sudo` con
+  su paquete dueño; y cancelar a mitad devuelve «Cancelado».
+- **TS puro** (`npx rolldown src/features/vulnscan/vulnscan.test.ts -p node -f esm -o out.mjs && node out.mjs`,
+  39 comprobaciones): el texto para la IA no lleva nombre/id del servidor, usuarios, rutas de `$HOME`,
+  nombres de contenedores ni el host del registro; máximo 60 hallazgos por gravedad; comando sugerido
+  por distro (apt, dnf/yum, apk, zypper, kernel, imágenes, nvm/pyenv).
+- `npm run build`, `cargo test` y `cargo clippy --all-targets`: sin errores ni avisos nuevos (el aviso de
+  Vite de «chunks» de más de 500 kB es de Monaco y xterm, de antes).
+
+### 10.16 Cambios respecto al diseño
+
+- **Los scripts del servidor están en el motor** (`vulnscan/scripts.rs`), no en `scripts.ts`: así la
+  interfaz, las pruebas de Rust y el futuro MCP usan exactamente los mismos. La interfaz los pide con
+  `vulnscan_script` y sigue ejecutándolos ella con `runScript` (su elevación y su `execId`).
+- **Comandos distintos a los previstos**: en vez de `vulnscan_query_osv(packages)` hay `vulnscan_analyze`
+  (recibe las salidas en bruto: el motor las lee, consulta OSV, junta y guarda). Hay además
+  `vulnscan_plan`, `vulnscan_parse_users`, `vulnscan_parse_images`, `vulnscan_latest` y `vulnscan_cancel`,
+  para que la interfaz no tenga que leer las salidas.
+- **RHEL no usa OSV** (`Red Hat:<CPE>` depende del repositorio de cada paquete y no se sabe sin más datos):
+  solo `dnf updateinfo`.
+- **Trivy solo para las imágenes del usuario conectado y las de root.** Para las de otros usuarios se lee
+  su base de paquetes: Trivy bajaría su base (1,7 GB) a la carpeta de cada usuario. Trivy no se usa para
+  el sistema (sería lento): el sistema va por OSV y la herramienta de la distro.
+- **Imágenes sin etiqueta y sin contenedores no se leen** (restos de compilaciones) y no cuentan para el
+  límite; primero van las que usan contenedores. El informe dice cuántas se saltaron.
+- **Debian «not yet assigned»** pasa a CVSS en vez de quedar «sin clasificar» (es más útil). Si dos
+  fuentes dan distinta gravedad de distro, se queda la más alta.
+- **Detalle de avisos con 2 reintentos**: sin ellos, 7 de 195 avisos de Rocky fallaban de vez en cuando con
+  8 peticiones a la vez. `querybatch` tiene 60 s de límite (el detalle, 25 s).
+- **El historial guarda solo el título** de cada hallazgo (200 caracteres); la descripción completa se pide
+  al abrir el detalle (`vulnscan_vuln_detail`, desde la caché de OSV). Cada informe guarda lo que se envió a
+  OSV (`osvSample`, hasta 1000 consultas) para «ver qué se envía».
+- **Ajustes**: `settings.json` tiene dos objetos nuevos, `vulnscan` (fuentes, imágenes, límite, usuarios por
+  servidor) y `ai` (activado, URL base, modelo). Las opciones del escáner se cambian en «Opciones» dentro
+  de la pestaña; la IA en Ajustes → **Asistente de IA**. `ai_test` y `ai_chat` usan siempre la URL
+  **guardada** (el token nunca va a una URL que no esté en Ajustes) y no siguen redirecciones.
+- **Programas sueltos**: también `httpd`/`apache2` (`Bitnami/apache`) y `postgres` (`Bitnami/postgresql`).
+  Los paquetes RPM con vendedor de terceros (`%{VENDOR}`) no se comparan con la distro.
+- **Kernel**: `linux-signed-*` se consulta también como `linux` (o `linux-hwe-…`).
+- **Runtimes de `$HOME`**: solo los del usuario conectado (con sudo no se miran los de otros usuarios).
+- **Docker**: `docker ps` no da el id de imagen; los contenedores se relacionan con `docker inspect`.
