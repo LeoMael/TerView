@@ -58,6 +58,8 @@ interface VulnState {
   /** Usuarios con almacén de contenedores (leídos con sudo), por sesión. */
   users: Record<string, UsersView | null>;
   setReport: (sessionId: string, r: Report | null) => void;
+  /** Olvida el informe en memoria: se vuelve a leer el último del historial. */
+  clearReport: (sessionId: string) => void;
 }
 
 export const useVulnScan = create<VulnState>((set) => ({
@@ -65,6 +67,12 @@ export const useVulnScan = create<VulnState>((set) => ({
   reports: {},
   users: {},
   setReport: (sessionId, r) => set((s) => ({ reports: { ...s.reports, [sessionId]: r } })),
+  clearReport: (sessionId) =>
+    set((s) => {
+      const reports = { ...s.reports };
+      delete reports[sessionId];
+      return { reports };
+    }),
 }));
 
 /** Lo necesario para cancelar el análisis en curso de cada sesión. */
