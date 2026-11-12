@@ -73,7 +73,7 @@ export function UsersTab() {
       {
         key: "last",
         label: "Último acceso",
-        width: "118px",
+        width: "136px",
         render: (u) => u.lastLogin ?? <span className="faint">—</span>,
       },
       {
@@ -87,7 +87,7 @@ export function UsersTab() {
       {
         key: "sudo",
         label: "Admin",
-        width: "54px",
+        width: "64px",
         render: (u) => (u.isAdmin ? <span className="adm-tag adm-tag-accent">Sí</span> : <span className="faint">No</span>),
         title: (u) => (u.isAdmin ? (u.uid === 0 ? "root" : "Está en wheel/sudo/admin") : ""),
       },
