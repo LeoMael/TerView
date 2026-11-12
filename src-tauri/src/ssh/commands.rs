@@ -10,6 +10,7 @@ use crate::ssh::connect::{self, Credentials, WRONG_PASSPHRASE_MSG, WRONG_PASSWOR
 use crate::ssh::handler::HostKeyPolicy;
 use crate::ssh::reconnect::{self, ReconnectEnv, ReconnectSettings, Supervised, Timing};
 use crate::ssh::{known_hosts, SessionStore, SshSession};
+use crate::storage::vault::Vault;
 use crate::storage::{secrets, ProfileStore, SettingsStore};
 use crate::types::{
     AuthMethod, SessionClosed, SessionInfo, SessionReconnecting, EV_SESSION_CLOSED,
@@ -20,27 +21,37 @@ fn non_empty(s: Option<String>) -> Option<String> {
     s.filter(|v| !v.is_empty())
 }
 
-async fn keyring_get(profile_id: &str) -> Option<String> {
+/// Secreto guardado (bóveda o llavero). Si TerView está bloqueado devuelve `Locked` (la interfaz
+/// pide el PIN); otros fallos del llavero solo se registran y se pide la contraseña.
+async fn keyring_get(profile_id: &str) -> AppResult<Option<String>> {
     let id = profile_id.to_string();
     match tokio::task::spawn_blocking(move || secrets::get_secret(&id)).await {
-        Ok(Ok(v)) => non_empty(v),
+        Ok(Ok(v)) => Ok(non_empty(v)),
+        Ok(Err(AppError::Locked)) => Err(AppError::Locked),
         Ok(Err(e)) => {
             log::warn!("llavero: no se pudo leer el secreto de {profile_id}: {e}");
-            None
+            Ok(None)
         }
         Err(e) => {
             log::warn!("llavero: tarea fallida: {e}");
-            None
+            Ok(None)
         }
     }
 }
 
-async fn keyring_set(profile_id: &str, secret: String) {
+/// Guarda el secreto. Devuelve si quedó guardado.
+async fn keyring_set(profile_id: &str, secret: String) -> bool {
     let id = profile_id.to_string();
     match tokio::task::spawn_blocking(move || secrets::set_secret(&id, &secret)).await {
-        Ok(Ok(())) => {}
-        Ok(Err(e)) => log::warn!("llavero: no se pudo guardar el secreto de {profile_id}: {e}"),
-        Err(e) => log::warn!("llavero: tarea fallida: {e}"),
+        Ok(Ok(())) => true,
+        Ok(Err(e)) => {
+            log::warn!("llavero: no se pudo guardar el secreto de {profile_id}: {e}");
+            false
+        }
+        Err(e) => {
+            log::warn!("llavero: tarea fallida: {e}");
+            false
+        }
     }
 }
 
@@ -84,7 +95,7 @@ pub async fn ssh_connect(
             if let Some(p) = password {
                 user_secret = Some(p.clone());
                 creds.password = Some(p);
-            } else if let Some(p) = keyring_get(&profile.id).await {
+            } else if let Some(p) = keyring_get(&profile.id).await? {
                 from_keyring = true;
                 creds.password = Some(p);
             }
@@ -93,7 +104,7 @@ pub async fn ssh_connect(
             if let Some(p) = passphrase {
                 user_secret = Some(p.clone());
                 creds.passphrase = Some(p);
-            } else if let Some(p) = keyring_get(&profile.id).await {
+            } else if let Some(p) = keyring_get(&profile.id).await? {
                 from_keyring = true;
                 creds.passphrase = Some(p);
             }
@@ -124,10 +135,21 @@ pub async fn ssh_connect(
         Err(e) => return Err(e),
     };
 
+    let mut saved = false;
     if save_secret == Some(true)
         && let Some(secret) = user_secret
     {
-        keyring_set(&profile.id, secret).await;
+        saved = keyring_set(&profile.id, secret).await;
+    }
+    // Con la bóveda activa, el secreto guardado no se queda en memoria con la sesión: al
+    // reconectar se vuelve a leer (y si TerView está bloqueado, se espera al desbloqueo).
+    let stored_secret = (from_keyring || saved) && Vault::global().is_enabled();
+    if stored_secret {
+        match profile.auth {
+            AuthMethod::Password => creds.password = None,
+            AuthMethod::Key => creds.passphrase = None,
+            AuthMethod::Agent => {}
+        }
     }
 
     let session = Arc::new(session);
@@ -138,6 +160,7 @@ pub async fn ssh_connect(
     let sup = Supervised {
         profile,
         creds,
+        stored_secret,
         policy,
         session,
         shared,
@@ -205,6 +228,16 @@ impl ReconnectEnv for TauriEnv {
         if let Some(x) = self.app.try_state::<crate::transfer::TransferManager>() {
             x.resume_session(session_id);
         }
+    }
+
+    fn stored_secret(&self, profile_id: &str) -> futures::future::BoxFuture<'static, AppResult<Option<String>>> {
+        let id = profile_id.to_string();
+        Box::pin(async move {
+            tokio::task::spawn_blocking(move || secrets::get_secret(&id))
+                .await
+                .map_err(|e| AppError::Io(format!("tarea interrumpida: {e}")))?
+                .map(non_empty)
+        })
     }
 }
 

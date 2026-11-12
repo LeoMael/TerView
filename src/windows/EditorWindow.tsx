@@ -37,6 +37,7 @@ import {
   type EdwSettings,
   type EdwStatus,
 } from "./editorWindowBus";
+import { LockGate } from "../features/lock/LockGate";
 import "./EditorWindow.css";
 
 const RemoteEditor = lazy(() => import("../components/Editor/RemoteEditor"));
@@ -284,5 +285,10 @@ export function mountEditorWindow(root: Root, params: EditorWindowParams): void 
     if (e.key === "F5" || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "r")) e.preventDefault();
   });
 
-  root.render(<EditorWindow params={params} />);
+  // Bloqueo con PIN: la ventana también se tapa (initLock ya se llamó en main.tsx).
+  root.render(
+    <LockGate main={false}>
+      <EditorWindow params={params} />
+    </LockGate>,
+  );
 }

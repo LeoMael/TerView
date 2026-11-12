@@ -1,5 +1,6 @@
 // Sincronizar configuración: qué se sube (sin contraseñas) y cómo se fusiona al importar.
 import type { Project, ServerProfile, Snippet } from "../../api/types";
+import { parseTmuxMode } from "../tmux/logic";
 
 export const SYNC_FORMAT = "terview-config";
 
@@ -45,6 +46,7 @@ export function parsePayload(v: unknown): SyncPayload {
       keyPath: str(s.keyPath),
       defaultPath: str(s.defaultPath),
       color: str(s.color),
+      tmux: parseTmuxMode(s.tmux),
     }));
   const projects: Project[] = arr("projects")
     .filter((p) => str(p.id) && str(p.name))
@@ -111,7 +113,8 @@ const sameServer = (a: ServerProfile, b: ServerProfile) =>
   a.auth === b.auth &&
   a.keyPath === b.keyPath &&
   a.defaultPath === b.defaultPath &&
-  a.color === b.color;
+  a.color === b.color &&
+  (a.tmux ?? null) === (b.tmux ?? null);
 
 export function planImport(
   remote: SyncPayload,

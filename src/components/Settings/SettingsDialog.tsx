@@ -18,6 +18,7 @@ import {
   Plus,
   RotateCcw,
   Server,
+  ShieldCheck,
   Sun,
   TerminalSquare,
 } from "lucide-react";
@@ -29,6 +30,7 @@ import { confirmDialog } from "../ui/dialogs";
 import { profiles } from "../../api/profiles";
 import { toast } from "../../stores/toasts";
 import { getTerminalGpu, setTerminalGpu } from "../Terminal/gpuPref";
+import { TMUX_MODE_HINTS, TMUX_MODE_LABELS } from "../../features/tmux/logic";
 import { getEditorOpenMode, setEditorOpenMode, type EditorOpenMode } from "../Editor/openPref";
 import "./SettingsDialog.css";
 import { SSH_CONFIG_LABEL } from "../../lib/platform";
@@ -37,6 +39,7 @@ import { DiagnosticsPanel } from "../Diagnostics/DiagnosticsPanel";
 import { AboutHeader, ChangelogView, UpdatesBox } from "../About/About";
 import { getAutoCheck, setAutoCheck } from "../../features/updater/updater";
 import { checkSshAliasesBeforeExport } from "../../features/sshAliases";
+import { SecuritySection } from "./SecuritySection";
 
 const SECTIONS: { id: SectionId; label: string; icon: ReactNode }[] = [
   { id: "appearance", label: "Apariencia", icon: <Palette size={15} /> },
@@ -46,6 +49,7 @@ const SECTIONS: { id: SectionId; label: string; icon: ReactNode }[] = [
   { id: "explorer", label: "Explorador", icon: <FolderTree size={15} /> },
   { id: "editor", label: "Editor", icon: <FileCode2 size={15} /> },
   { id: "servers", label: "Servidores", icon: <Server size={15} /> },
+  { id: "security", label: "Seguridad", icon: <ShieldCheck size={15} /> },
   { id: "advanced", label: "Avanzado", icon: <SlidersHorizontal size={15} /> },
   { id: "about", label: "Acerca de", icon: <Info size={15} /> },
 ];
@@ -110,6 +114,7 @@ export function SettingsDialog() {
           {section === "explorer" && <Explorer />}
           {section === "editor" && <EditorSection />}
           {section === "servers" && <ServersSection />}
+          {section === "security" && <SecuritySection />}
           {section === "advanced" && <AdvancedSection />}
           {section === "about" && <AboutSection />}
         </div>
@@ -125,8 +130,10 @@ async function resetAll() {
     confirmText: "Restablecer",
   });
   if (!ok) return;
-  const { layout: _layout, ...defaults } = DEFAULT_SETTINGS;
+  // «Ahora no» al PIN se respeta: restablecer no vuelve a mostrar la pantalla de crear PIN.
+  const { layout: _layout, vaultPromptDismissed: _dismissed, ...defaults } = DEFAULT_SETTINGS;
   void _layout;
+  void _dismissed;
   useSettings.getState().update(defaults);
 }
 
@@ -286,6 +293,7 @@ function Appearance() {
 function TerminalSection() {
   const [size, setSize] = useSetting("terminalFontSize");
   const [family, setFamily] = useSetting("terminalFontFamily");
+  const [tmux, setTmux] = useSetting("terminalTmux");
   // Se guarda en este equipo (localStorage), no en los ajustes del motor.
   const [gpu, setGpu] = useState(getTerminalGpu);
   return (
@@ -308,6 +316,17 @@ function TerminalSection() {
             setTerminalGpu(v);
           }}
           label="Aceleración por GPU en la terminal"
+        />
+      </Row>
+      <Row
+        label="Terminales persistentes (tmux)"
+        hint={`${TMUX_MODE_HINTS[tmux]} Con tmux, lo que corre en la terminal sigue vivo en el servidor si se corta la conexión o cierras la app, y TerView vuelve a engancharse al reconectar. Cada servidor puede cambiarlo en su ficha.`}
+      >
+        <Segmented
+          value={tmux}
+          label="Terminales persistentes (tmux)"
+          onChange={setTmux}
+          options={(["auto", "always", "never"] as const).map((v) => ({ v, label: TMUX_MODE_LABELS[v] }))}
         />
       </Row>
       <div className="st-preview" style={{ fontFamily: family, fontSize: size }}>

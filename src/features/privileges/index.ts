@@ -21,6 +21,7 @@ export {
 export {
   computeElevation,
   confirmSudo,
+  forgetAllSudo,
   forgetSudo,
   getSudoPassword,
   useElevation,

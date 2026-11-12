@@ -29,12 +29,17 @@ export interface SessionTab {
   reconnectCount: number;
   /** Carpeta inicial del explorador (null = home). */
   initialPath: string | null;
+  /** Sesiones tmux que las terminales deben reabrir al crear la pestaña (p. ej. al pulsar «Reconectar»). */
+  restoreTerminals: string[];
 }
 
 interface TabsState {
   tabs: SessionTab[];
   activeTabId: string | null;
-  openSession: (info: SessionInfo, opts?: { color?: string | null; initialPath?: string | null }) => string;
+  openSession: (
+    info: SessionInfo,
+    opts?: { color?: string | null; initialPath?: string | null; restoreTerminals?: string[] },
+  ) => string;
   /** Cierra la pestaña y desconecta. */
   closeTab: (id: string) => Promise<void>;
   setActive: (id: string) => void;
@@ -58,6 +63,7 @@ export const useTabs = create<TabsState>((set, get) => ({
       reconnect: null,
       reconnectCount: 0,
       initialPath: opts.initialPath ?? null,
+      restoreTerminals: opts.restoreTerminals ?? [],
     };
     set((s) => ({ tabs: [...s.tabs, tab], activeTabId: tab.id }));
     return tab.id;

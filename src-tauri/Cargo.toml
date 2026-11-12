@@ -47,6 +47,9 @@ argon2 = { version = "0.6", default-features = false, features = ["alloc"] }
 getrandom = "0.4"
 base64ct = { version = "1.8", features = ["alloc"] }
 chrono = "0.4"
+# Bóveda de contraseñas (`storage::vault`): pisa con ceros la llave y los secretos al bloquear.
+# Ya estaba en el árbol (aes-gcm, argon2, russh).
+zeroize = "1.8"
 
 # Windows: aws-lc-sys (cripto de russh) necesita NASM para x86_64; con `prebuilt-nasm` usa los
 # objetos ya ensamblados que trae el crate, así el build de CI no depende de tener NASM instalado.
@@ -63,6 +66,13 @@ gtk = "0.18"
 [target.'cfg(target_os = "macos")'.dependencies]
 drag = "2.1.1"
 
+
+# Argon2id (bóveda y copia sincronizada) es ~10 veces más lento sin optimizar: en desarrollo
+# desbloquear tardaría varios segundos. Solo estos crates se compilan optimizados.
+[profile.dev.package.argon2]
+opt-level = 3
+[profile.dev.package.blake2]
+opt-level = 3
 
 # Read the optimization guideline for more details: https://tauri.app/concept/size/#cargo-configuration
 [profile.release]

@@ -45,7 +45,17 @@ fn cache_get() -> Option<Option<String>> {
 }
 
 fn cache_set(v: Option<String>) {
+    // Si se bloqueó mientras se leía, no se guarda la copia.
+    if secrets::ensure_unlocked().is_err() {
+        return;
+    }
     *TOKEN.lock().unwrap_or_else(|e| e.into_inner()) = Some(v);
+}
+
+/// Olvida el token guardado en memoria (al bloquear TerView o cambiar la bóveda).
+/// La próxima vez se vuelve a leer de la bóveda o del llavero.
+pub fn forget_token_cache() {
+    *TOKEN.lock().unwrap_or_else(|e| e.into_inner()) = None;
 }
 
 async fn blocking<T: Send + 'static>(
@@ -57,6 +67,8 @@ async fn blocking<T: Send + 'static>(
 }
 
 async fn stored_token() -> AppResult<Option<String>> {
+    // Bloqueado: ni siquiera la copia en memoria (se borra al bloquear, pero por si acaso).
+    secrets::ensure_unlocked()?;
     if let Some(t) = cache_get() {
         return Ok(t);
     }

@@ -1,0 +1,199 @@
+/* Pantalla de bloqueo, pantalla de primera vez y formularios del PIN. */
+
+/* Envoltorio de la interfaz: no crea caja (no cambia el diseño), solo permite volverla inerte. */
+.lock-content {
+  display: contents;
+}
+
+/* Tapa TODA la ventana: opaca (no se ve la terminal) y por encima de diálogos y avisos. */
+.lock-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  overflow: auto;
+  background: var(--bg);
+}
+.lock-setup {
+  background: rgba(2, 6, 23, 0.72);
+}
+
+.lock-card {
+  width: 380px;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
+  padding: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+}
+.lock-card > .tv-logo {
+  align-self: center;
+}
+.lock-card-wide {
+  width: 500px;
+}
+
+.lock-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.lock-form .field {
+  margin-bottom: 0;
+}
+.lock-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: var(--fs-lg);
+}
+.lock-text {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+.lock-hint {
+  color: var(--text-faint);
+  font-size: var(--fs-sm);
+  line-height: 1.4;
+}
+.lock-pin {
+  height: 38px;
+  font-size: 16px;
+  text-align: center;
+  letter-spacing: 0.15em;
+}
+.lock-submit {
+  justify-content: center;
+}
+.lock-error {
+  color: var(--red);
+  font-size: var(--fs-sm);
+  line-height: 1.4;
+}
+.lock-warn {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--yellow);
+  background: var(--mix-yellow-12-surface);
+  font-size: var(--fs-sm);
+  line-height: 1.45;
+}
+.lock-warn > svg {
+  flex: none;
+  margin-top: 1px;
+  color: var(--yellow);
+}
+.lock-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+.lock-link {
+  align-self: center;
+  border: none;
+  background: none;
+  padding: 2px 4px;
+  color: var(--accent);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* «Olvidé mi PIN»: qué se pierde y qué se conserva */
+.lock-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  font-size: var(--fs-sm);
+}
+.lock-cols ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+.lock-lose {
+  color: var(--red);
+}
+.lock-keep {
+  color: var(--green);
+}
+@media (max-width: 480px) {
+  .lock-cols {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Medidor de fortaleza */
+.lock-strength {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: var(--fs-sm);
+  line-height: 1.4;
+}
+.lock-strength-bar {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+.lock-strength-bar > span {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--surface-3);
+}
+.lock-strength-bar.level-1 > span:nth-child(-n + 1) {
+  background: var(--red);
+}
+.lock-strength-bar.level-2 > span:nth-child(-n + 2) {
+  background: var(--yellow);
+}
+.lock-strength-bar.level-3 > span {
+  background: var(--green);
+}
+
+/* Ajustes → Seguridad */
+.sec-reminder {
+  margin-bottom: 6px;
+}
+.sec-reminder > svg {
+  color: var(--accent);
+}
+.sec-form {
+  padding: 12px 14px;
+  margin: 4px 0 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--bg);
+}
+.sec-explain {
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+  user-select: text;
+}
+.sec-explain p {
+  margin: 8px 0 2px;
+  color: var(--text);
+}
+.sec-explain ul {
+  margin: 0;
+  padding-left: 18px;
+}
+.sec-explain li {
+  margin: 3px 0;
+}

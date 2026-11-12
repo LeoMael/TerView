@@ -6,8 +6,11 @@
 //!   SettingsStore::load(), SettingsStore::get()
 //!   secrets::get_secret / set_secret / delete_secret
 
+pub(crate) mod cipher;
 pub(crate) mod fsutil;
+pub mod lock;
 pub mod secrets;
+pub mod vault;
 pub mod ssh_config;
 #[cfg(test)]
 mod tests;
@@ -325,6 +328,9 @@ fn sanitize_settings(mut s: Settings) -> Settings {
     s.transfer_concurrency = s.transfer_concurrency.clamp(1, 8);
     s.editor_max_bytes = s.editor_max_bytes.clamp(64 * 1024, 200 * 1024 * 1024);
     s.layout.retain(|_, v| v.iter().all(|x| x.is_finite()));
+    if !lock::LOCK_MINUTES.contains(&s.lock_minutes) {
+        s.lock_minutes = def.lock_minutes;
+    }
     s
 }
 

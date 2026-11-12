@@ -1,0 +1,210 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1090" viewBox="0 0 1600 1090">
+  <defs>
+    <marker id="mp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#a78bfa"/></marker>
+    <marker id="mg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#22c55e"/></marker>
+    <marker id="mn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#64748b"/></marker>
+    <!-- ICONOS (48x48, trazo; el color se da con style="color:#..." en <use>) -->
+    <symbol id="i-pc" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="7" width="38" height="26" rx="3"/><path d="M18 41h12M24 33v8"/></g></symbol>
+    <symbol id="i-window" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><rect x="4" y="7" width="40" height="34" rx="4"/><path d="M4 16h40"/></g><g fill="currentColor"><circle cx="10" cy="11.5" r="1.8"/><circle cx="16" cy="11.5" r="1.8"/><circle cx="22" cy="11.5" r="1.8"/></g></symbol>
+    <symbol id="i-gear" viewBox="0 0 48 48"><g fill="currentColor"><rect x="20" y="3" width="8" height="10" rx="2"/><rect x="20" y="35" width="8" height="10" rx="2"/><rect x="3" y="20" width="10" height="8" rx="2"/><rect x="35" y="20" width="10" height="8" rx="2"/><rect x="20" y="3" width="8" height="10" rx="2" transform="rotate(45 24 24)"/><rect x="20" y="35" width="8" height="10" rx="2" transform="rotate(45 24 24)"/><rect x="3" y="20" width="10" height="8" rx="2" transform="rotate(45 24 24)"/><rect x="35" y="20" width="10" height="8" rx="2" transform="rotate(45 24 24)"/></g><circle cx="24" cy="24" r="13" fill="currentColor"/><circle cx="24" cy="24" r="5.5" fill="#0f172a"/></symbol>
+    <symbol id="i-server" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><rect x="6" y="5" width="36" height="11" rx="2.5"/><rect x="6" y="19" width="36" height="11" rx="2.5"/><rect x="6" y="33" width="36" height="11" rx="2.5"/></g><g fill="currentColor"><circle cx="35" cy="10.5" r="2"/><circle cx="35" cy="24.5" r="2"/><circle cx="35" cy="38.5" r="2"/><rect x="11" y="9" width="14" height="3" rx="1.5"/><rect x="11" y="23" width="14" height="3" rx="1.5"/><rect x="11" y="37" width="14" height="3" rx="1.5"/></g></symbol>
+    <symbol id="i-cloud" viewBox="0 0 48 48"><path d="M14 38h22a9 9 0 0 0 1-17.9A12 12 0 0 0 14.3 17 10.5 10.5 0 0 0 14 38z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/></symbol>
+    <symbol id="i-git" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><circle cx="14" cy="10" r="5"/><circle cx="14" cy="38" r="5"/><circle cx="34" cy="16" r="5"/><path d="M14 15v18M34 21c0 9-20 6-20 12"/></g></symbol>
+    <symbol id="i-db" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3"><ellipse cx="24" cy="10" rx="16" ry="6"/><path d="M8 10v28c0 3.3 7.2 6 16 6s16-2.7 16-6V10"/><path d="M8 19c0 3.3 7.2 6 16 6s16-2.7 16-6M8 28.5c0 3.3 7.2 6 16 6s16-2.7 16-6"/></g></symbol>
+    <symbol id="i-key" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="15" cy="30" r="9"/><path d="M21.5 23.5 40 5M33 12l5 5M28 17l4 4"/></g></symbol>
+    <symbol id="i-folder" viewBox="0 0 48 48"><path d="M5 13a3 3 0 0 1 3-3h10l4 5h18a3 3 0 0 1 3 3v19a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/></symbol>
+    <symbol id="i-file" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><path d="M12 4h17l9 9v31H12z"/><path d="M29 4v9h9M18 24h14M18 31h14"/></g></symbol>
+    <symbol id="i-lock" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><rect x="9" y="21" width="30" height="22" rx="3"/><path d="M15 21v-6a9 9 0 0 1 18 0v6"/></g><circle cx="24" cy="32" r="3" fill="currentColor"/></symbol>
+    <symbol id="i-chip" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><rect x="12" y="12" width="24" height="24" rx="3"/><path d="M18 5v6M24 5v6M30 5v6M18 37v6M24 37v6M30 37v6M5 18h6M5 24h6M5 30h6M37 18h6M37 24h6M37 30h6"/></g><rect x="19" y="19" width="10" height="10" rx="1.5" fill="currentColor"/></symbol>
+    <symbol id="i-box" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><path d="M24 4 42 13v22L24 44 6 35V13z"/><path d="M6 13l18 9 18-9M24 22v22"/></g></symbol>
+    <symbol id="i-term" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="40" height="34" rx="4"/><path d="M12 18l7 6-7 6M23 31h12"/></g></symbol>
+    <symbol id="i-shield" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"><path d="M24 4 40 10v12c0 10-7 18-16 22C15 40 8 32 8 22V10z"/><path d="M17 24l5 5 9-10"/></g></symbol>
+    <symbol id="i-chart" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6v36h36"/><path d="M12 32l9-10 7 6 12-15"/></g></symbol>
+    <symbol id="i-user" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><circle cx="24" cy="15" r="8"/><path d="M8 43c0-9 7-15 16-15s16 6 16 15"/></g></symbol>
+    <symbol id="i-tunnel" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 40V24a20 20 0 0 1 40 0v16"/><path d="M14 40V25a10 10 0 0 1 20 0v15"/><path d="M4 40h10M34 40h10"/></g></symbol>
+    <symbol id="i-globe" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3"><circle cx="24" cy="24" r="19"/><ellipse cx="24" cy="24" rx="8" ry="19"/><path d="M5 24h38M8 14h32M8 34h32"/></g></symbol>
+    <symbol id="i-play" viewBox="0 0 48 48"><path d="M14 8l26 16-26 16z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 48 48"><rect x="9" y="9" width="30" height="30" rx="4" fill="none" stroke="currentColor" stroke-width="3"/></symbol>
+    <symbol id="i-tag" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><path d="M5 6h18l20 20-17 17L5 23z"/></g><circle cx="14" cy="15" r="3" fill="currentColor"/></symbol>
+    <symbol id="i-download" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M24 6v24M14 21l10 10 10-10M6 36v6h36v-6"/></g></symbol>
+    <symbol id="i-hand" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M16 26V9a3 3 0 0 1 6 0v14M22 21V6a3 3 0 0 1 6 0v15M28 21V9a3 3 0 0 1 6 0v14M34 23v-7a3 3 0 0 1 6 0v12c0 9-6 16-15 16-6 0-9-3-12-7l-6-9a3 3 0 0 1 5-3l3 3"/></g></symbol>
+    <symbol id="i-history" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 24a17 17 0 1 0 5-12"/><path d="M6 6v8h8M24 14v11l7 4"/></g></symbol>
+    <symbol id="i-eye" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><path d="M3 24s8-14 21-14 21 14 21 14-8 14-21 14S3 24 3 24z"/><circle cx="24" cy="24" r="6"/></g></symbol>
+  </defs>
+  <style>
+    text{font-family:'Noto Sans','DejaVu Sans',sans-serif;fill:#e2e8f0}
+    .t{font-size:34px;font-weight:700}
+    .st{font-size:18px;fill:#94a3b8}
+    .h{font-size:24px;font-weight:700}
+    .b{font-size:18px;font-weight:600}
+    .b16{font-size:16px;font-weight:600}
+    .s{font-size:15px;fill:#94a3b8}
+    .xs{font-size:13px;fill:#94a3b8}
+    .mono{font-family:'Noto Sans Mono','DejaVu Sans Mono',monospace}
+    .z{font-size:15px;font-weight:700;letter-spacing:2px}
+    .chip{fill:#1e293b;stroke:#334155;stroke-width:1.5}
+    .pi{fill:#1e293b;stroke:#2c4a66;stroke-width:1.5}
+    .po{fill:#1e293b;stroke:#5a3a20;stroke-width:1.5}
+    .ps{fill:#14301f;stroke:#1f5a36;stroke-width:1.5}
+    .row{fill:#1e293b;stroke:#334155;stroke-width:1.5}
+  </style>
+  <rect width="1600" height="1090" fill="#0f172a"/>
+
+  <text x="60" y="62" class="t">Ejecutar un comando aparte (y como root)</text>
+  <text x="60" y="94" class="st">Canal exec sin terminal: la salida vuelve completa, la contraseña nunca va en el comando y el proceso se puede detener de verdad.</text>
+
+  <!-- Lo usan -->
+  <text x="60" y="152" class="z" style="fill:#94a3b8">LO USAN</text>
+  <g>
+    <rect x="170" y="124" width="188" height="44" rx="10" class="chip"/>
+    <use href="#i-shield" x="182" y="134" width="24" height="24" style="color:#38bdf8"/>
+    <text x="214" y="152" style="font-size:15px">Administración</text>
+    <rect x="366" y="124" width="188" height="44" rx="10" class="chip"/>
+    <use href="#i-box" x="378" y="134" width="24" height="24" style="color:#38bdf8"/>
+    <text x="410" y="152" style="font-size:15px">Contenedores</text>
+    <rect x="562" y="124" width="188" height="44" rx="10" class="chip"/>
+    <use href="#i-chart" x="574" y="134" width="24" height="24" style="color:#38bdf8"/>
+    <text x="606" y="152" style="font-size:15px">Monitor</text>
+    <rect x="758" y="124" width="188" height="44" rx="10" class="chip"/>
+    <use href="#i-server" x="770" y="134" width="24" height="24" style="color:#38bdf8"/>
+    <text x="802" y="152" style="font-size:15px">Varios servidores</text>
+    <rect x="954" y="124" width="188" height="44" rx="10" class="chip"/>
+    <use href="#i-term" x="966" y="134" width="24" height="24" style="color:#38bdf8"/>
+    <text x="998" y="152" style="font-size:15px">Comandos</text>
+    <rect x="1150" y="124" width="188" height="44" rx="10" class="chip"/>
+    <use href="#i-user" x="1162" y="134" width="24" height="24" style="color:#38bdf8"/>
+    <text x="1194" y="152" style="font-size:15px">Privilegios</text>
+    <rect x="1346" y="124" width="188" height="44" rx="10" class="chip"/>
+    <use href="#i-git" x="1358" y="134" width="24" height="24" style="color:#38bdf8"/>
+    <text x="1390" y="152" style="font-size:15px">GitHub</text>
+  </g>
+  <line x1="285" y1="170" x2="285" y2="241" stroke="#64748b" stroke-width="3" marker-end="url(#mn)"/>
+
+  <!-- Zona Tu PC -->
+  <rect x="40" y="200" width="1050" height="325" rx="24" fill="none" stroke="#475569" stroke-width="2" stroke-dasharray="10 8"/>
+  <use href="#i-pc" x="64" y="211" width="24" height="24" style="color:#94a3b8"/>
+  <text x="96" y="230" class="z" style="fill:#94a3b8">TU PC</text>
+
+  <!-- Interfaz -->
+  <rect x="70" y="245" width="420" height="260" rx="18" fill="#10243a" stroke="#38bdf8" stroke-width="2.5"/>
+  <use href="#i-window" x="92" y="256" width="32" height="32" style="color:#38bdf8"/>
+  <text x="134" y="281" class="h" style="fill:#38bdf8">INTERFAZ</text>
+  <text x="95" y="308" class="s mono" style="font-size:14px">features/privileges · buildExec()</text>
+  <rect x="95" y="325" width="370" height="70" rx="12" class="pi"/>
+  <use href="#i-file" x="110" y="343" width="32" height="32" style="color:#38bdf8"/>
+  <text x="155" y="355" class="b">Script envuelto</text>
+  <text x="155" y="380" class="s">según cómo se eleva</text>
+  <rect x="95" y="415" width="370" height="70" rx="12" fill="#1e1838" stroke="#a78bfa" stroke-width="1.8" stroke-dasharray="6 5"/>
+  <use href="#i-chip" x="110" y="434" width="32" height="32" style="color:#a78bfa"/>
+  <text x="155" y="445" class="b">Contraseña de sudo</text>
+  <text x="155" y="470" class="s">solo en memoria, por pestaña</text>
+
+  <!-- IPC -->
+  <text x="550" y="348" text-anchor="middle" style="fill:#a78bfa;font-weight:700;font-size:14px">invoke</text>
+  <line x1="493" y1="362" x2="606" y2="362" stroke="#a78bfa" stroke-width="3" marker-end="url(#mp)"/>
+  <text x="550" y="438" text-anchor="middle" style="fill:#a78bfa;font-weight:700;font-size:14px">resultado</text>
+  <line x1="607" y1="452" x2="494" y2="452" stroke="#a78bfa" stroke-width="3" stroke-dasharray="8 6" marker-end="url(#mp)"/>
+
+  <!-- Motor -->
+  <rect x="610" y="245" width="450" height="260" rx="18" fill="#2a1a10" stroke="#f97316" stroke-width="2.5"/>
+  <use href="#i-gear" x="632" y="256" width="32" height="32" style="color:#f97316"/>
+  <text x="674" y="281" class="h" style="fill:#f97316">MOTOR</text>
+  <text x="635" y="308" class="s mono" style="font-size:14px">snippets/exec.rs · exec_capture_stdin</text>
+  <rect x="635" y="322" width="400" height="52" rx="10" class="po"/>
+  <text x="655" y="344" class="b16">Canal exec sin terminal</text>
+  <text x="655" y="365" class="xs" style="font-size:14px">uno nuevo para cada comando</text>
+  <rect x="635" y="384" width="400" height="52" rx="10" class="po"/>
+  <text x="655" y="406" class="b16">Límites</text>
+  <text x="655" y="427" class="xs" style="font-size:14px">2 MB por flujo · de 1 a 600 segundos</text>
+  <rect x="635" y="446" width="400" height="52" rx="10" class="po"/>
+  <text x="655" y="468" class="b16">Borra el stdin al terminar</text>
+  <text x="655" y="489" class="xs" style="font-size:14px">la contraseña no queda en la memoria del motor</text>
+
+  <!-- Zona servidores -->
+  <rect x="1120" y="200" width="440" height="325" rx="24" fill="none" stroke="#22c55e" stroke-width="2" stroke-dasharray="10 8"/>
+  <text x="1182" y="230" class="z" style="fill:#22c55e">TUS SERVIDORES</text>
+  <use href="#i-server" x="1150" y="211" width="24" height="24" style="color:#22c55e"/>
+  <rect x="1150" y="245" width="390" height="260" rx="18" fill="#0f2a1c" stroke="#22c55e" stroke-width="2.5"/>
+  <text x="1172" y="281" class="h" style="fill:#22c55e">SERVIDOR</text>
+  <text x="1172" y="308" class="s">al recibir el comando:</text>
+  <rect x="1168" y="322" width="354" height="40" rx="9" class="ps"/>
+  <circle cx="1190" cy="342" r="11" fill="#22c55e"/><text x="1190" y="347" text-anchor="middle" style="font-size:13px;font-weight:700;fill:#0f172a">1</text>
+  <text x="1212" y="348" style="font-size:15px">sh escribe su PID en stderr</text>
+  <rect x="1168" y="367" width="354" height="40" rx="9" class="ps"/>
+  <circle cx="1190" cy="387" r="11" fill="#22c55e"/><text x="1190" y="392" text-anchor="middle" style="font-size:13px;font-weight:700;fill:#0f172a">2</text>
+  <text x="1212" y="393" style="font-size:15px">dd lee el comando por stdin</text>
+  <rect x="1168" y="412" width="354" height="40" rx="9" class="ps"/>
+  <circle cx="1190" cy="432" r="11" fill="#22c55e"/><text x="1190" y="437" text-anchor="middle" style="font-size:13px;font-weight:700;fill:#0f172a">3</text>
+  <text x="1212" y="438" style="font-size:15px">tu shell de login lo ejecuta</text>
+  <rect x="1168" y="457" width="354" height="40" rx="9" class="ps"/>
+  <circle cx="1190" cy="477" r="11" fill="#22c55e"/><text x="1190" y="482" text-anchor="middle" style="font-size:13px;font-weight:700;fill:#0f172a">4</text>
+  <text x="1212" y="483" style="font-size:15px">sudo -S lee la contraseña</text>
+
+  <!-- SSH -->
+  <line x1="1062" y1="362" x2="1146" y2="362" stroke="#22c55e" stroke-width="3.5" marker-end="url(#mg)"/>
+  <rect x="1080" y="328" width="52" height="22" rx="4" fill="#0f172a"/>
+  <text x="1106" y="345" text-anchor="middle" style="fill:#22c55e;font-weight:700;font-size:15px">SSH</text>
+  <line x1="1148" y1="452" x2="1064" y2="452" stroke="#22c55e" stroke-width="3" stroke-dasharray="8 6" marker-end="url(#mg)"/>
+  <rect x="1076" y="418" width="60" height="22" rx="4" fill="#0f172a"/>
+  <text x="1106" y="435" text-anchor="middle" style="fill:#22c55e;font-weight:700;font-size:15px">salida</text>
+
+  <!-- stdin -->
+  <text x="60" y="580" class="z" style="fill:#94a3b8">QUÉ VIAJA POR STDIN · NUNCA EN LA LÍNEA DE COMANDOS</text>
+  <text x="60" y="614" class="s">Comando que ve el servidor:</text>
+  <text x="270" y="614" class="mono" style="font-size:15px;fill:#e2e8f0">sh -c 'echo __TERVIEW_PID__=$$ &gt;&amp;2; c=$(dd bs=1 count=N); exec "$SHELL" -c "$c"'</text>
+  <rect x="60" y="630" width="340" height="56" rx="10" fill="#2a1a10" stroke="#f97316" stroke-width="2"/>
+  <text x="230" y="665" text-anchor="middle" class="b16">1 · Comando real</text>
+  <rect x="404" y="630" width="512" height="56" rx="10" fill="#10243a" stroke="#38bdf8" stroke-width="2"/>
+  <text x="660" y="665" text-anchor="middle" class="b16">2 · Script envuelto (con sudo si hace falta)</text>
+  <rect x="920" y="630" width="276" height="56" rx="10" fill="#3b1220" stroke="#f43f5e" stroke-width="2"/>
+  <text x="1058" y="665" text-anchor="middle" class="b16">3 · Contraseña de sudo</text>
+  <rect x="1200" y="630" width="340" height="56" rx="10" fill="#1e1838" stroke="#a78bfa" stroke-width="2"/>
+  <text x="1370" y="665" text-anchor="middle" class="b16">4 · Secreto</text>
+  <text x="230" y="712" text-anchor="middle" class="s">lo lee dd del arranque</text>
+  <text x="660" y="712" text-anchor="middle" class="s">lo lee y lo evalúa sh -c 'eval …'</text>
+  <text x="1058" y="712" text-anchor="middle" class="s">solo si sudo la pide</text>
+  <text x="1370" y="712" text-anchor="middle" class="s">p. ej. usuario:clave para chpasswd</text>
+
+  <!-- Cómo se eleva -->
+  <rect x="40" y="748" width="740" height="292" rx="18" fill="#131c2e" stroke="#334155" stroke-width="1.5"/>
+  <use href="#i-shield" x="62" y="760" width="26" height="26" style="color:#38bdf8"/>
+  <text x="98" y="780" class="z" style="fill:#38bdf8">CÓMO SE ELEVA</text>
+  <rect x="60" y="800" width="700" height="40" rx="9" class="row"/>
+  <text x="80" y="826" class="b16">Sin elevar</text>
+  <text x="270" y="826" class="mono" style="font-size:14px">script</text>
+  <text x="340" y="826" class="s">(lecturas como tu usuario)</text>
+  <rect x="60" y="848" width="700" height="40" rx="9" class="row"/>
+  <text x="80" y="874" class="b16">Ya eres root</text>
+  <text x="270" y="874" class="mono" style="font-size:14px">sh -c 'script'</text>
+  <rect x="60" y="896" width="700" height="40" rx="9" class="row"/>
+  <text x="80" y="922" class="b16">Sin contraseña</text>
+  <text x="270" y="922" class="mono" style="font-size:14px">sudo -n sh -c …   o   doas -n …</text>
+  <rect x="60" y="944" width="700" height="40" rx="9" fill="#3b1220" stroke="#f43f5e" stroke-width="1.5"/>
+  <text x="80" y="970" class="b16">Con contraseña</text>
+  <text x="270" y="970" class="mono" style="font-size:14px">sudo -k -S -v  →  sudo -k -S sh -c …</text>
+  <text x="62" y="1016" class="s">Si falla (códigos 95 a 98): «contraseña incorrecta», «sin permiso de sudo», «exige terminal»…</text>
+
+  <!-- Cancelar -->
+  <rect x="820" y="748" width="740" height="292" rx="18" fill="#131c2e" stroke="#334155" stroke-width="1.5"/>
+  <use href="#i-stop" x="842" y="760" width="26" height="26" style="color:#f43f5e"/>
+  <text x="878" y="780" class="z" style="fill:#f43f5e">CANCELAR DE VERDAD</text>
+  <rect x="840" y="800" width="700" height="40" rx="9" class="row"/>
+  <circle cx="862" cy="820" r="12" fill="#f43f5e"/><text x="862" y="825" text-anchor="middle" style="font-size:14px;font-weight:700;fill:#ffffff">1</text>
+  <text x="886" y="826" class="mono" style="font-size:15px">exec_cancel(id)</text>
+  <text x="1200" y="826" class="s">la interfaz pide parar</text>
+  <rect x="840" y="848" width="700" height="40" rx="9" class="row"/>
+  <circle cx="862" cy="868" r="12" fill="#f43f5e"/><text x="862" y="873" text-anchor="middle" style="font-size:14px;font-weight:700;fill:#ffffff">2</text>
+  <text x="886" y="874" class="b16">TERM por el mismo canal</text>
+  <text x="1200" y="874" class="s">espera 1,5 s</text>
+  <rect x="840" y="896" width="700" height="40" rx="9" class="row"/>
+  <circle cx="862" cy="916" r="12" fill="#f43f5e"/><text x="862" y="921" text-anchor="middle" style="font-size:14px;font-weight:700;fill:#ffffff">3</text>
+  <text x="886" y="922" class="b16">Otro canal: <tspan class="mono" style="font-weight:400;font-size:15px">kill -TERM -PID</tspan></text>
+  <text x="1200" y="922" class="s">a todo el grupo de procesos</text>
+  <rect x="840" y="944" width="700" height="40" rx="9" class="row"/>
+  <circle cx="862" cy="964" r="12" fill="#f43f5e"/><text x="862" y="969" text-anchor="middle" style="font-size:14px;font-weight:700;fill:#ffffff">4</text>
+  <text x="886" y="970" class="b16">KILL</text>
+  <text x="1200" y="970" class="s">si aún sigue vivo</text>
+  <text x="842" y="1016" class="s">El PID llega por stderr (<tspan class="mono" style="font-size:14px">__TERVIEW_PID__</tspan>) y se quita de la salida.</text>
+
+  <text x="60" y="1072" style="font-size:17px;fill:#94a3b8">Cerrar el canal no basta: sin terminal, el proceso seguiría vivo en el servidor. Por eso se marca el PID y se detiene el grupo.</text>
+</svg>

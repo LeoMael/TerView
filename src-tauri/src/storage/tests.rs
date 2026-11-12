@@ -34,6 +34,7 @@ fn server(name: &str) -> ServerProfile {
         key_path: None,
         default_path: None,
         color: None,
+        tmux: None,
     }
 }
 

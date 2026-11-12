@@ -1,0 +1,200 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="970" viewBox="0 0 1600 970">
+  <defs>
+    <marker id="mn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker>
+    <marker id="mk" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#f472b6"/></marker>
+    <marker id="my" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#facc15"/></marker>
+    <marker id="mg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#22c55e"/></marker>
+    <!-- ICONOS (48x48, trazo; el color se da con style="color:#..." en <use>) -->
+    <symbol id="i-pc" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="7" width="38" height="26" rx="3"/><path d="M18 41h12M24 33v8"/></g></symbol>
+    <symbol id="i-window" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><rect x="4" y="7" width="40" height="34" rx="4"/><path d="M4 16h40"/></g><g fill="currentColor"><circle cx="10" cy="11.5" r="1.8"/><circle cx="16" cy="11.5" r="1.8"/><circle cx="22" cy="11.5" r="1.8"/></g></symbol>
+    <symbol id="i-gear" viewBox="0 0 48 48"><g fill="currentColor"><rect x="20" y="3" width="8" height="10" rx="2"/><rect x="20" y="35" width="8" height="10" rx="2"/><rect x="3" y="20" width="10" height="8" rx="2"/><rect x="35" y="20" width="10" height="8" rx="2"/><rect x="20" y="3" width="8" height="10" rx="2" transform="rotate(45 24 24)"/><rect x="20" y="35" width="8" height="10" rx="2" transform="rotate(45 24 24)"/><rect x="3" y="20" width="10" height="8" rx="2" transform="rotate(45 24 24)"/><rect x="35" y="20" width="10" height="8" rx="2" transform="rotate(45 24 24)"/></g><circle cx="24" cy="24" r="13" fill="currentColor"/><circle cx="24" cy="24" r="5.5" fill="#0f172a"/></symbol>
+    <symbol id="i-server" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><rect x="6" y="5" width="36" height="11" rx="2.5"/><rect x="6" y="19" width="36" height="11" rx="2.5"/><rect x="6" y="33" width="36" height="11" rx="2.5"/></g><g fill="currentColor"><circle cx="35" cy="10.5" r="2"/><circle cx="35" cy="24.5" r="2"/><circle cx="35" cy="38.5" r="2"/><rect x="11" y="9" width="14" height="3" rx="1.5"/><rect x="11" y="23" width="14" height="3" rx="1.5"/><rect x="11" y="37" width="14" height="3" rx="1.5"/></g></symbol>
+    <symbol id="i-cloud" viewBox="0 0 48 48"><path d="M14 38h22a9 9 0 0 0 1-17.9A12 12 0 0 0 14.3 17 10.5 10.5 0 0 0 14 38z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/></symbol>
+    <symbol id="i-git" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><circle cx="14" cy="10" r="5"/><circle cx="14" cy="38" r="5"/><circle cx="34" cy="16" r="5"/><path d="M14 15v18M34 21c0 9-20 6-20 12"/></g></symbol>
+    <symbol id="i-db" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3"><ellipse cx="24" cy="10" rx="16" ry="6"/><path d="M8 10v28c0 3.3 7.2 6 16 6s16-2.7 16-6V10"/><path d="M8 19c0 3.3 7.2 6 16 6s16-2.7 16-6M8 28.5c0 3.3 7.2 6 16 6s16-2.7 16-6"/></g></symbol>
+    <symbol id="i-key" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="15" cy="30" r="9"/><path d="M21.5 23.5 40 5M33 12l5 5M28 17l4 4"/></g></symbol>
+    <symbol id="i-folder" viewBox="0 0 48 48"><path d="M5 13a3 3 0 0 1 3-3h10l4 5h18a3 3 0 0 1 3 3v19a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/></symbol>
+    <symbol id="i-file" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><path d="M12 4h17l9 9v31H12z"/><path d="M29 4v9h9M18 24h14M18 31h14"/></g></symbol>
+    <symbol id="i-lock" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><rect x="9" y="21" width="30" height="22" rx="3"/><path d="M15 21v-6a9 9 0 0 1 18 0v6"/></g><circle cx="24" cy="32" r="3" fill="currentColor"/></symbol>
+    <symbol id="i-chip" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><rect x="12" y="12" width="24" height="24" rx="3"/><path d="M18 5v6M24 5v6M30 5v6M18 37v6M24 37v6M30 37v6M5 18h6M5 24h6M5 30h6M37 18h6M37 24h6M37 30h6"/></g><rect x="19" y="19" width="10" height="10" rx="1.5" fill="currentColor"/></symbol>
+    <symbol id="i-box" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><path d="M24 4 42 13v22L24 44 6 35V13z"/><path d="M6 13l18 9 18-9M24 22v22"/></g></symbol>
+    <symbol id="i-term" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="40" height="34" rx="4"/><path d="M12 18l7 6-7 6M23 31h12"/></g></symbol>
+    <symbol id="i-shield" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"><path d="M24 4 40 10v12c0 10-7 18-16 22C15 40 8 32 8 22V10z"/><path d="M17 24l5 5 9-10"/></g></symbol>
+    <symbol id="i-chart" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6v36h36"/><path d="M12 32l9-10 7 6 12-15"/></g></symbol>
+    <symbol id="i-user" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><circle cx="24" cy="15" r="8"/><path d="M8 43c0-9 7-15 16-15s16 6 16 15"/></g></symbol>
+    <symbol id="i-tunnel" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 40V24a20 20 0 0 1 40 0v16"/><path d="M14 40V25a10 10 0 0 1 20 0v15"/><path d="M4 40h10M34 40h10"/></g></symbol>
+    <symbol id="i-globe" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3"><circle cx="24" cy="24" r="19"/><ellipse cx="24" cy="24" rx="8" ry="19"/><path d="M5 24h38M8 14h32M8 34h32"/></g></symbol>
+    <symbol id="i-play" viewBox="0 0 48 48"><path d="M14 8l26 16-26 16z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 48 48"><rect x="9" y="9" width="30" height="30" rx="4" fill="none" stroke="currentColor" stroke-width="3"/></symbol>
+    <symbol id="i-tag" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><path d="M5 6h18l20 20-17 17L5 23z"/></g><circle cx="14" cy="15" r="3" fill="currentColor"/></symbol>
+    <symbol id="i-download" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M24 6v24M14 21l10 10 10-10M6 36v6h36v-6"/></g></symbol>
+    <symbol id="i-hand" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M16 26V9a3 3 0 0 1 6 0v14M22 21V6a3 3 0 0 1 6 0v15M28 21V9a3 3 0 0 1 6 0v14M34 23v-7a3 3 0 0 1 6 0v12c0 9-6 16-15 16-6 0-9-3-12-7l-6-9a3 3 0 0 1 5-3l3 3"/></g></symbol>
+    <symbol id="i-history" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 24a17 17 0 1 0 5-12"/><path d="M6 6v8h8M24 14v11l7 4"/></g></symbol>
+    <symbol id="i-eye" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><path d="M3 24s8-14 21-14 21 14 21 14-8 14-21 14S3 24 3 24z"/><circle cx="24" cy="24" r="6"/></g></symbol>
+  </defs>
+  <style>
+    text{font-family:'Noto Sans','DejaVu Sans',sans-serif;fill:#e2e8f0}
+    .t{font-size:34px;font-weight:700}
+    .st{font-size:18px;fill:#94a3b8}
+    .b{font-size:17px;font-weight:600}
+    .s{font-size:14px;fill:#94a3b8}
+    .xs{font-size:13px;fill:#94a3b8}
+    .mono{font-family:'Noto Sans Mono','DejaVu Sans Mono',monospace}
+    .z{font-size:15px;font-weight:700;letter-spacing:2px}
+    .nb{fill:#1e293b;stroke:#334155;stroke-width:1.5}
+    .gh{fill:#2a1426;stroke:#f472b6;stroke-width:2}
+    .ghi{fill:#1e293b;stroke:#6b2f57;stroke-width:1.5}
+    .db{fill:#2e2a0e;stroke:#facc15;stroke-width:2}
+    .ap{fill:#10243a;stroke:#38bdf8;stroke-width:2}
+    .num{font-size:15px;font-weight:700;fill:#fff}
+  </style>
+  <rect width="1600" height="970" fill="#0f172a"/>
+
+  <text x="60" y="62" class="t">Publicación y actualizaciones</text>
+  <text x="60" y="94" class="st">GitHub Actions compila y firma los instaladores; la app instalada busca la versión nueva y se actualiza sola.</text>
+
+  <!-- Zonas -->
+  <rect x="40" y="120" width="310" height="760" rx="24" fill="none" stroke="#475569" stroke-width="2" stroke-dasharray="10 8"/>
+  <text x="62" y="152" class="z" style="fill:#94a3b8">TU PC (DESARROLLO)</text>
+  <rect x="370" y="120" width="810" height="760" rx="24" fill="none" stroke="#f472b6" stroke-width="2" stroke-dasharray="10 8"/>
+  <text x="394" y="152" class="z" style="fill:#f472b6">GITHUB</text>
+  <rect x="1220" y="120" width="340" height="760" rx="24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-dasharray="10 8"/>
+  <text x="1242" y="152" class="z" style="fill:#38bdf8">PC DEL USUARIO</text>
+
+  <!-- ===== Tu PC ===== -->
+  <rect x="60" y="175" width="270" height="120" rx="14" class="nb"/>
+  <use href="#i-git" x="76" y="190" width="36" height="36" style="color:#e2e8f0"/>
+  <text x="124" y="215" class="b">Cambios</text>
+  <text x="76" y="254" class="mono" style="font-size:14px;fill:#cbd5e1">git push</text>
+  <text x="76" y="276" class="s">a main o pull request</text>
+
+  <rect x="60" y="355" width="270" height="200" rx="14" class="nb"/>
+  <use href="#i-tag" x="76" y="370" width="36" height="36" style="color:#e2e8f0"/>
+  <text x="124" y="395" class="b">Nueva versión</text>
+  <text x="76" y="432" class="s">1. Sube la versión en</text>
+  <text x="76" y="452" class="xs mono">tauri.conf.json, Cargo.toml</text>
+  <text x="76" y="470" class="xs mono">y package.json</text>
+  <text x="76" y="498" class="s">2. Crea y sube la etiqueta</text>
+  <text x="76" y="522" class="mono" style="font-size:13px;fill:#cbd5e1">git tag v0.3.0</text>
+  <text x="76" y="542" class="mono" style="font-size:13px;fill:#cbd5e1">git push origin v0.3.0</text>
+
+  <rect x="60" y="680" width="270" height="120" rx="14" class="nb"/>
+  <use href="#i-eye" x="76" y="695" width="36" height="36" style="color:#e2e8f0"/>
+  <text x="124" y="720" class="b">Revisas</text>
+  <text x="76" y="758" class="s">y publicas el borrador</text>
+  <text x="76" y="780" class="s">en la web de GitHub</text>
+
+  <!-- ===== GitHub: CI ===== -->
+  <rect x="400" y="175" width="750" height="120" rx="14" class="gh"/>
+  <use href="#i-shield" x="416" y="190" width="36" height="36" style="color:#f472b6"/>
+  <text x="464" y="215" class="b">CI · <tspan class="mono" style="font-weight:400">ci.yml</tspan></text>
+  <text x="416" y="252" class="s">Comprueba que todo compila y pasa las pruebas. No publica nada.</text>
+  <text x="416" y="278" class="mono" style="font-size:14px;fill:#f9a8d4">tsc → vite build → cargo clippy → cargo test --lib</text>
+  <rect x="890" y="195" width="110" height="32" rx="16" class="ghi"/>
+  <text x="945" y="216" text-anchor="middle" class="s" style="fill:#e2e8f0">Linux</text>
+  <rect x="1015" y="195" width="115" height="32" rx="16" class="ghi"/>
+  <text x="1072" y="216" text-anchor="middle" class="s" style="fill:#e2e8f0">Windows</text>
+
+  <line x1="330" y1="235" x2="396" y2="235" stroke="#94a3b8" stroke-width="3" marker-end="url(#mn)"/>
+
+  <!-- ===== GitHub: Release ===== -->
+  <rect x="400" y="355" width="750" height="260" rx="14" class="gh"/>
+  <use href="#i-play" x="416" y="370" width="36" height="36" style="color:#f472b6"/>
+  <text x="464" y="395" class="b">Publicar versión · <tspan class="mono" style="font-weight:400">release.yml</tspan></text>
+  <text x="416" y="430" class="s">Con la etiqueta v* o a mano. Un sistema que falla no cancela los demás.</text>
+
+  <rect x="416" y="448" width="230" height="86" rx="12" class="ghi"/>
+  <use href="#i-pc" x="428" y="458" width="26" height="26" style="color:#e2e8f0"/>
+  <text x="464" y="478" class="b" style="font-size:16px">Linux</text>
+  <text x="428" y="516" class="mono" style="font-size:14px;fill:#f9a8d4">.deb  .rpm  .AppImage</text>
+
+  <rect x="660" y="448" width="230" height="86" rx="12" class="ghi"/>
+  <use href="#i-pc" x="672" y="458" width="26" height="26" style="color:#e2e8f0"/>
+  <text x="708" y="478" class="b" style="font-size:16px">Windows</text>
+  <text x="672" y="516" class="mono" style="font-size:14px;fill:#f9a8d4">.msi  -setup.exe</text>
+
+  <rect x="904" y="448" width="230" height="86" rx="12" class="ghi"/>
+  <use href="#i-pc" x="916" y="458" width="26" height="26" style="color:#e2e8f0"/>
+  <text x="952" y="478" class="b" style="font-size:16px">macOS</text>
+  <text x="916" y="516" class="mono" style="font-size:14px;fill:#f9a8d4">.dmg universal</text>
+
+  <use href="#i-key" x="416" y="552" width="26" height="26" style="color:#facc15"/>
+  <text x="452" y="571" class="s"><tspan style="fill:#e2e8f0">Firma:</tspan> secreto <tspan class="mono" style="fill:#fde68a">TAURI_SIGNING_PRIVATE_KEY</tspan> → <tspan class="mono" style="fill:#fde68a">.sig</tspan> + <tspan class="mono" style="fill:#fde68a">latest.json</tspan></text>
+  <use href="#i-file" x="416" y="580" width="26" height="26" style="color:#e2e8f0"/>
+  <text x="452" y="599" class="s"><tspan style="fill:#e2e8f0">Notas:</tspan> la sección de esta versión en <tspan class="mono" style="fill:#cbd5e1">CHANGELOG.md</tspan></text>
+
+  <line x1="330" y1="455" x2="396" y2="455" stroke="#94a3b8" stroke-width="3" marker-end="url(#mn)"/>
+
+  <!-- ===== GitHub: Releases ===== -->
+  <line x1="580" y1="615" x2="580" y2="676" stroke="#f472b6" stroke-width="3" marker-end="url(#mk)"/>
+  <text x="596" y="640" class="s" style="fill:#f472b6;font-weight:700">sube</text>
+
+  <rect x="400" y="680" width="330" height="150" rx="14" class="db"/>
+  <use href="#i-db" x="416" y="696" width="36" height="36" style="color:#facc15"/>
+  <text x="464" y="720" class="b">Release en BORRADOR</text>
+  <text x="416" y="760" class="s">instaladores + .sig + latest.json</text>
+  <text x="416" y="784" class="s">La app todavía no lo ve.</text>
+  <text x="416" y="808" class="xs">Sin el secreto: sin .sig ni latest.json</text>
+
+  <line x1="330" y1="740" x2="396" y2="740" stroke="#94a3b8" stroke-width="3" marker-end="url(#mn)"/>
+
+  <line x1="730" y1="770" x2="816" y2="770" stroke="#facc15" stroke-width="3" marker-end="url(#my)"/>
+  <text x="774" y="750" text-anchor="middle" class="xs" style="fill:#facc15;font-weight:700">publicar</text>
+
+  <rect x="820" y="680" width="330" height="150" rx="14" class="db"/>
+  <use href="#i-db" x="836" y="696" width="36" height="36" style="color:#facc15"/>
+  <text x="884" y="720" class="b">Release publicado</text>
+  <text x="836" y="760" class="s">el más reciente («latest»):</text>
+  <text x="836" y="786" class="mono" style="font-size:13px;fill:#fde68a">…/releases/latest/</text>
+  <text x="836" y="806" class="mono" style="font-size:13px;fill:#fde68a">download/latest.json</text>
+
+  <!-- ===== PC del usuario ===== -->
+  <rect x="1240" y="175" width="300" height="80" rx="14" class="ap"/>
+  <use href="#i-window" x="1256" y="190" width="36" height="36" style="color:#38bdf8"/>
+  <text x="1304" y="208" class="b">TerView instalado</text>
+  <text x="1304" y="232" class="xs mono">tauri-plugin-updater</text>
+
+  <!-- paso 1 -->
+  <rect x="1240" y="275" width="300" height="90" rx="12" class="nb"/>
+  <circle cx="1266" cy="301" r="14" fill="#38bdf8"/><text x="1266" y="306" text-anchor="middle" class="num">1</text>
+  <text x="1292" y="307" class="b" style="font-size:16px">Busca al abrir</text>
+  <text x="1256" y="336" class="s">a los 6 s, sin molestar.</text>
+  <text x="1256" y="355" class="xs">Se puede apagar en Ajustes.</text>
+
+  <!-- paso 2 -->
+  <rect x="1240" y="380" width="300" height="90" rx="12" class="nb"/>
+  <circle cx="1266" cy="406" r="14" fill="#38bdf8"/><text x="1266" y="411" text-anchor="middle" class="num">2</text>
+  <text x="1292" y="412" class="b" style="font-size:16px">Lee latest.json</text>
+  <text x="1256" y="441" class="s">versión, notas, enlaces</text>
+  <text x="1256" y="460" class="xs">y firma de cada instalador</text>
+
+  <!-- paso 3 -->
+  <rect x="1240" y="485" width="300" height="90" rx="12" class="nb"/>
+  <circle cx="1266" cy="511" r="14" fill="#38bdf8"/><text x="1266" y="516" text-anchor="middle" class="num">3</text>
+  <text x="1292" y="517" class="b" style="font-size:16px">Verifica la firma</text>
+  <text x="1256" y="546" class="s">con la llave pública de</text>
+  <text x="1256" y="565" class="xs mono">tauri.conf.json</text>
+
+  <!-- paso 4 -->
+  <rect x="1240" y="590" width="300" height="160" rx="12" class="nb"/>
+  <circle cx="1266" cy="616" r="14" fill="#38bdf8"/><text x="1266" y="621" text-anchor="middle" class="num">4</text>
+  <text x="1292" y="622" class="b" style="font-size:16px">Descarga e instala</text>
+  <text x="1256" y="652" class="s">AppImage: cambia el archivo</text>
+  <text x="1256" y="676" class="s">.deb / .rpm: con pkexec</text>
+  <text x="1256" y="700" class="s">Windows: instalador pasivo</text>
+  <text x="1256" y="724" class="s">macOS: cambia la app</text>
+
+  <!-- paso 5 -->
+  <rect x="1240" y="765" width="300" height="90" rx="12" class="nb"/>
+  <circle cx="1266" cy="791" r="14" fill="#38bdf8"/><text x="1266" y="796" text-anchor="middle" class="num">5</text>
+  <text x="1292" y="797" class="b" style="font-size:16px">Reinicia</text>
+  <text x="1256" y="826" class="s">con tauri-plugin-process</text>
+
+  <!-- flecha HTTPS -->
+  <polyline points="1150,755 1200,755 1200,425 1236,425" fill="none" stroke="#22c55e" stroke-width="3" marker-end="url(#mg)"/>
+  <rect x="1188" y="560" width="24" height="60" fill="#0f172a"/>
+  <text transform="translate(1206 590) rotate(-90)" text-anchor="middle" style="font-size:14px;font-weight:700;fill:#22c55e">HTTPS</text>
+
+  <text x="60" y="918" style="font-size:17px;fill:#94a3b8">Solo cuenta el Release publicado más reciente. En Windows latest.json apunta al -setup.exe (NSIS, sin permisos de administrador).</text>
+  <text x="60" y="946" style="font-size:17px;fill:#94a3b8">Los instaladores de Windows y macOS aún no llevan firma del sistema: SmartScreen o Gatekeeper pueden avisar la primera vez.</text>
+</svg>

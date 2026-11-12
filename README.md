@@ -33,6 +33,8 @@
 - **Seguir trabajando si se corta la red**: TerView reconecta solo y retoma terminales,
   explorador y transferencias.
 - **Usar la terminal**: varias por conexión, con búsqueda, copiar/pegar y enlaces clicables.
+- **No perder lo que corre en la terminal**: si el servidor tiene tmux, la terminal sigue viva aunque se
+  corte la red o cierres la app, y TerView vuelve a ella.
 - **Manejar archivos como en un explorador**: crear, renombrar, cambiar permisos, borrar y
   arrastrar archivos desde tu PC.
 - **Transferir miles de archivos**: carpetas completas, varias a la vez, con pausa y reanudación.
@@ -51,6 +53,7 @@
   con sus dominios y certificados.
 - **Ejecutar un comando en varios servidores** a la vez y comparar los resultados.
 - **Conectar tu cuenta de GitHub**: llaves SSH, clonar, desplegar y sincronizar tu configuración.
+- **Proteger tus contraseñas con un PIN**: quedan cifradas y TerView se bloquea al abrirlo y tras un rato sin uso.
 - **Actualizarse sola** cuando sale una versión nueva.
 - Tema oscuro o claro y paneles ajustables.
 
@@ -136,6 +139,7 @@ En Windows ese archivo está en `C:\Users\<tu usuario>\.ssh\config`.
 | `Ctrl+B` | Mostrar u ocultar la barra lateral |
 | ``Ctrl+` `` | Mostrar u ocultar la terminal |
 | `Ctrl+,` | Ajustes |
+| `Ctrl+Shift+L` | Bloquear TerView ahora (si usas PIN) |
 
 **En la terminal:** `Ctrl+Shift+C` / `Ctrl+Shift+V` copiar y pegar · `Ctrl+Shift+F` buscar.
 Con el foco en la terminal, `Ctrl+W` y `Ctrl+B` van a la shell (borrar palabra, prefijo de tmux).
@@ -154,8 +158,9 @@ defecto), dividido o ventana aparte.
 
 ## Seguridad
 
-- Las **contraseñas** y frases de llaves se guardan solo en el llavero del sistema
-  (GNOME Keyring o KWallet en Linux, Administrador de credenciales en Windows). Nunca en archivos.
+- Las **contraseñas** y frases de llaves se guardan cifradas con tu **PIN** (si lo activas) o en el
+  llavero del sistema (GNOME Keyring o KWallet en Linux, Administrador de credenciales en Windows).
+  Nunca en archivos sin cifrar.
 - Si la **huella** de un servidor cambia, TerView bloquea la conexión y te avisa, igual que `ssh`.
 - El editor guarda de forma segura: primero en un archivo temporal y luego lo reemplaza,
   así un corte nunca deja el archivo a medias.
@@ -167,13 +172,42 @@ defecto), dividido o ventana aparte.
 | Servidores, proyectos, ajustes y comandos | `~/.config/terview/` | `%APPDATA%\terview\` |
 | Contraseñas | Llavero del sistema | Administrador de credenciales |
 | Huellas de servidores | `~/.ssh/known_hosts` | `%USERPROFILE%\.ssh\known_hosts` |
+| Contraseñas con PIN (bóveda cifrada) | `~/.config/terview/vault.json` | `%APPDATA%\terview\vault.json` |
+
+### PIN y bloqueo
+
+Al abrir TerView por primera vez te ofrece crear un **PIN** (puedes decir «Ahora no» y activarlo
+después en Ajustes → Seguridad). Con el PIN:
+
+- Las contraseñas y frases guardadas y el token de GitHub van **cifrados** en `vault.json`. Otros
+  programas ya no pueden leerlos del llavero del sistema.
+- La llave de la bóveda sale de tu PIN **y** de una llave de este equipo que se guarda en el llavero.
+  Si alguien copia solo `vault.json` a otro PC, no puede abrirlo aunque adivine el PIN.
+- TerView se **bloquea** al abrirlo y tras un rato sin uso (15 min por defecto; 5, 10, 30, 60 o nunca),
+  o cuando pulsas `Ctrl+Shift+L`. Se tapan todas las ventanas, también las de editor aparte, y se borran
+  de la memoria las contraseñas descifradas y las de sudo. Las conexiones abiertas siguen vivas; si una
+  se cae, espera a que desbloquees para reconectar con su contraseña guardada.
+- Tras **5 PIN incorrectos** hay que esperar 30 s, luego el doble cada vez, hasta 15 min. La espera se
+  mantiene aunque cierres TerView. Nunca se borra nada por fallar.
+- Un PIN corto de números te protege de alguien sentado en tu PC. Una **frase de 4 o 5 palabras** te
+  protege también si un programa malicioso logra copiar la bóveda y la llave del equipo.
+
+Lo que **no** protege: las conexiones abiertas siguen funcionando mientras está bloqueado (solo se tapa
+la pantalla); servidores, ajustes y tus llaves de `~/.ssh` no se cifran aquí; y un programa malicioso
+que ya controla tu usuario podría ver el PIN al escribirlo.
+
+**Si olvidas el PIN:** en la pantalla de bloqueo pulsa **«Olvidé mi PIN»** y escribe `BORRAR`. Se
+borran la bóveda y la llave del equipo: pierdes las contraseñas guardadas y el token de GitHub, pero
+conservas servidores, proyectos, llaves de `~/.ssh`, comandos, túneles, ajustes y tu copia en Gist.
+Después puedes crear un PIN nuevo y volver a escribir las contraseñas cuando TerView te las pida.
 
 ## Solución de problemas
 
 | Problema | Qué hacer |
 |----------|-----------|
 | Lentitud, parpadeos o ventana en blanco en Linux | Con tarjetas NVIDIA, TerView ya aplica el arreglo solo. Si sigue pasando, ábrela con `WEBKIT_DISABLE_COMPOSITING_MODE=1 terview`. |
-| "Llavero del sistema no disponible" (Linux) | Instala o activa GNOME Keyring o KWallet. Sin llavero, TerView te pedirá la contraseña en cada conexión. |
+| "Llavero del sistema no disponible" (Linux) | Instala o activa GNOME Keyring o KWallet. Sin llavero, TerView te pedirá la contraseña en cada conexión (el PIN también necesita el llavero para guardar la llave del equipo). |
+| Olvidé el PIN, o "falta la llave de este equipo" | En la pantalla de bloqueo pulsa «Olvidé mi PIN» (ver [PIN y bloqueo](#pin-y-bloqueo)). Pierdes solo las contraseñas guardadas y el token de GitHub. |
 | "¡La huella del servidor cambió!" | Si reinstalaste el servidor, es normal: confirma la nueva huella. Si no, **no te conectes**: podría ser un ataque. |
 | No conecta con llave | Elige la llave **privada** (el archivo sin `.pub`) y comprueba que la pública está en `~/.ssh/authorized_keys` del servidor. |
 | El agente SSH no funciona en Windows | Activa el servicio *Agente de autenticación OpenSSH* (`Get-Service ssh-agent \| Set-Service -StartupType Automatic -PassThru \| Start-Service` en PowerShell como administrador) o abre Pageant. |
@@ -258,6 +292,7 @@ podman run -d --name terview-sshd -p 127.0.0.1:2222:2222 \
   -e PUID=1000 -e PGID=1000 -e PASSWORD_ACCESS=true \
   -e USER_NAME=test -e USER_PASSWORD=test123 \
   lscr.io/linuxserver/openssh-server:latest
+podman exec terview-sshd apk add tmux   # para las pruebas de terminales persistentes
 
 cd src-tauri
 cargo test --lib -- --include-ignored --test-threads=1

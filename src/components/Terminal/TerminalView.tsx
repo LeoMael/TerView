@@ -3,10 +3,21 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { createPortal } from "react-dom";
 import { ChevronDown, ChevronUp, ClipboardPaste, Copy, Eraser, Search, TextSelect, X } from "lucide-react";
 import { useSettings } from "../../stores/settings";
-import { TermController, type ConnState, type SearchResults, type TermStatus } from "./termController";
+import {
+  TermController,
+  type ConnState,
+  type SearchResults,
+  type TermStatus,
+  type TmuxState,
+} from "./termController";
 
 interface TerminalViewProps {
   sessionId: string;
+  /** Sesión tmux de esta terminal (null = shell normal). Fija durante la vida de la vista. */
+  tmuxName: string | null;
+  /** Volcar el historial de la sesión tmux al abrirla (se reabre una que ya existía). */
+  tmuxReplay: boolean;
+  onTmux?: (s: TmuxState) => void;
   /** Es la terminal visible (pestaña de conexión activa y sub-pestaña elegida). */
   visible: boolean;
   disabled: boolean;
@@ -27,6 +38,9 @@ interface MenuState {
 
 export function TerminalView({
   sessionId,
+  tmuxName,
+  tmuxReplay,
+  onTmux,
   visible,
   disabled,
   connState,
@@ -38,6 +52,7 @@ export function TerminalView({
   const ctrlRef = useRef<TermController | null>(null);
   const onStatusRef = useRef(onStatus);
   const onControllerRef = useRef(onController);
+  const onTmuxRef = useRef(onTmux);
   const [menu, setMenu] = useState<MenuState | null>(null);
   /** Contador que abre (o vuelve a enfocar) la barra de búsqueda. */
   const [searchSeq, setSearchSeq] = useState(0);
@@ -51,6 +66,7 @@ export function TerminalView({
   useLayoutEffect(() => {
     onStatusRef.current = onStatus;
     onControllerRef.current = onController;
+    onTmuxRef.current = onTmux;
   });
 
   const openSearch = useCallback(() => {
@@ -65,6 +81,9 @@ export function TerminalView({
     const s = useSettings.getState().settings;
     const ctrl = new TermController(host, {
       sessionId,
+      tmuxName,
+      tmuxReplay,
+      onTmux: (st) => onTmuxRef.current?.(st),
       fontSize: s.terminalFontSize,
       fontFamily: s.terminalFontFamily,
       disabled,

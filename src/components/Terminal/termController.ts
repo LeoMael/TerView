@@ -19,8 +19,23 @@ export type TermStatus = "opening" | "running" | "exited";
 /** Estado de la conexión SSH de la pestaña (de `useTabs`). */
 export type ConnState = "connected" | "reconnecting" | "closed";
 
+/** Resultado de abrir la shell respecto a tmux. */
+export interface TmuxState {
+  /** La shell corre dentro de tmux (sobrevive a cortes de red). */
+  persistent: boolean;
+  /** Se pidió tmux pero el servidor no lo tiene. */
+  missing: boolean;
+  problem: string | null;
+}
+
 export interface TermControllerOptions {
   sessionId: string;
+  /** Sesión tmux de esta terminal (null = shell normal). */
+  tmuxName: string | null;
+  /** Volcar el historial de la sesión tmux al abrirla por primera vez (se reabre una que ya existía). */
+  tmuxReplay: boolean;
+  /** Tras cada apertura: si quedó dentro de tmux o no. */
+  onTmux?: (s: TmuxState) => void;
   fontSize: number;
   fontFamily: string;
   disabled: boolean;
@@ -53,6 +68,11 @@ export class TermController {
   private readonly sessionId: string;
   private readonly onStatus: (s: TermStatus) => void;
   private readonly onSearchRequest: () => void;
+  private readonly tmuxName: string | null;
+  private tmuxReplay: boolean;
+  private readonly onTmux: ((s: TmuxState) => void) | undefined;
+  /** La shell actual corre dentro de tmux. */
+  private persistent = false;
   private disabled: boolean;
   private connState: ConnState;
   /** La shell murió con la conexión (o no pudo abrirse): se reabre al reconectar. */
@@ -85,6 +105,9 @@ export class TermController {
     this.sessionId = opts.sessionId;
     this.onStatus = opts.onStatus;
     this.onSearchRequest = opts.onSearchRequest;
+    this.tmuxName = opts.tmuxName;
+    this.tmuxReplay = opts.tmuxReplay;
+    this.onTmux = opts.onTmux;
     this.disabled = opts.disabled;
     this.connState = opts.connState;
 
@@ -191,16 +214,28 @@ export class TermController {
     if (this.disposed || gen !== this.gen) return;
     this.fitNow();
     const { cols, rows } = this.term;
+    const tmux = this.tmuxName ? { name: this.tmuxName, replay: this.tmuxReplay } : null;
     try {
-      const id = await terminal.open(this.sessionId, cols, rows, (bytes) => {
-        if (!this.disposed && gen === this.gen) this.term.write(bytes);
-      });
+      const opened = await terminal.open(
+        this.sessionId,
+        cols,
+        rows,
+        (bytes) => {
+          if (!this.disposed && gen === this.gen) this.term.write(bytes);
+        },
+        tmux,
+      );
+      const id = opened.termId;
       if (this.disposed || gen !== this.gen) {
         terminal.close(id).catch(() => {});
         return;
       }
       this.termId = id;
       this.lost = false;
+      // El historial ya está en xterm.js: al reabrir (reconexión) no se vuelve a volcar.
+      this.tmuxReplay = false;
+      this.persistent = opened.tmux !== null;
+      this.onTmux?.({ persistent: this.persistent, missing: opened.tmuxMissing, problem: opened.tmuxProblem });
       this.setStatus("running");
       this.unExit = onTerminalExit(id, (code) => this.handleExit(id, code));
       if (this.term.cols !== cols || this.term.rows !== rows) this.sendResize();
@@ -267,7 +302,8 @@ export class TermController {
     if (this.termId) terminal.close(this.termId).catch(() => {});
     this.termId = null;
     this.pending = "";
-    this.term.write(`\r\n${DIM("— reconectado —")}\r\n`);
+    // Con tmux se vuelve a la misma sesión: lo que corría sigue ahí.
+    this.term.write(`\r\n${DIM(this.persistent ? "— reconectado: volviendo a la sesión tmux —" : "— reconectado —")}\r\n`);
     void this.start();
   }
 
@@ -375,6 +411,11 @@ export class TermController {
   clear() {
     this.term.clear();
     this.term.focus();
+  }
+
+  /** La shell actual corre dentro de tmux. */
+  isPersistent(): boolean {
+    return this.persistent;
   }
 
   hasSelection(): boolean {

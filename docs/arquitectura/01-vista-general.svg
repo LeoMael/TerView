@@ -1,102 +1,190 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1040" viewBox="0 0 1600 1040">
   <defs>
     <marker id="mp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#a78bfa"/></marker>
     <marker id="mg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#22c55e"/></marker>
+    <marker id="mk" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#f472b6"/></marker>
+    <!-- ICONOS (48x48, trazo; el color se da con style="color:#..." en <use>) -->
+    <symbol id="i-pc" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="7" width="38" height="26" rx="3"/><path d="M18 41h12M24 33v8"/></g></symbol>
+    <symbol id="i-window" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><rect x="4" y="7" width="40" height="34" rx="4"/><path d="M4 16h40"/></g><g fill="currentColor"><circle cx="10" cy="11.5" r="1.8"/><circle cx="16" cy="11.5" r="1.8"/><circle cx="22" cy="11.5" r="1.8"/></g></symbol>
+    <symbol id="i-gear" viewBox="0 0 48 48"><g fill="currentColor"><rect x="20" y="3" width="8" height="10" rx="2"/><rect x="20" y="35" width="8" height="10" rx="2"/><rect x="3" y="20" width="10" height="8" rx="2"/><rect x="35" y="20" width="10" height="8" rx="2"/><rect x="20" y="3" width="8" height="10" rx="2" transform="rotate(45 24 24)"/><rect x="20" y="35" width="8" height="10" rx="2" transform="rotate(45 24 24)"/><rect x="3" y="20" width="10" height="8" rx="2" transform="rotate(45 24 24)"/><rect x="35" y="20" width="10" height="8" rx="2" transform="rotate(45 24 24)"/></g><circle cx="24" cy="24" r="13" fill="currentColor"/><circle cx="24" cy="24" r="5.5" fill="#0f172a"/></symbol>
+    <symbol id="i-server" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><rect x="6" y="5" width="36" height="11" rx="2.5"/><rect x="6" y="19" width="36" height="11" rx="2.5"/><rect x="6" y="33" width="36" height="11" rx="2.5"/></g><g fill="currentColor"><circle cx="35" cy="10.5" r="2"/><circle cx="35" cy="24.5" r="2"/><circle cx="35" cy="38.5" r="2"/><rect x="11" y="9" width="14" height="3" rx="1.5"/><rect x="11" y="23" width="14" height="3" rx="1.5"/><rect x="11" y="37" width="14" height="3" rx="1.5"/></g></symbol>
+    <symbol id="i-git" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><circle cx="14" cy="10" r="5"/><circle cx="14" cy="38" r="5"/><circle cx="34" cy="16" r="5"/><path d="M14 15v18M34 21c0 9-20 6-20 12"/></g></symbol>
+    <symbol id="i-db" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3"><ellipse cx="24" cy="10" rx="16" ry="6"/><path d="M8 10v28c0 3.3 7.2 6 16 6s16-2.7 16-6V10"/><path d="M8 19c0 3.3 7.2 6 16 6s16-2.7 16-6M8 28.5c0 3.3 7.2 6 16 6s16-2.7 16-6"/></g></symbol>
+    <symbol id="i-folder" viewBox="0 0 48 48"><path d="M5 13a3 3 0 0 1 3-3h10l4 5h18a3 3 0 0 1 3 3v19a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><rect x="9" y="21" width="30" height="22" rx="3"/><path d="M15 21v-6a9 9 0 0 1 18 0v6"/></g><circle cx="24" cy="32" r="3" fill="currentColor"/></symbol>
+    <symbol id="i-box" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><path d="M24 4 42 13v22L24 44 6 35V13z"/><path d="M6 13l18 9 18-9M24 22v22"/></g></symbol>
+    <symbol id="i-term" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="40" height="34" rx="4"/><path d="M12 18l7 6-7 6M23 31h12"/></g></symbol>
+    <symbol id="i-shield" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"><path d="M24 4 40 10v12c0 10-7 18-16 22C15 40 8 32 8 22V10z"/><path d="M17 24l5 5 9-10"/></g></symbol>
+    <symbol id="i-chart" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6v36h36"/><path d="M12 32l9-10 7 6 12-15"/></g></symbol>
+    <symbol id="i-tunnel" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 40V24a20 20 0 0 1 40 0v16"/><path d="M14 40V25a10 10 0 0 1 20 0v15"/><path d="M4 40h10M34 40h10"/></g></symbol>
+    <symbol id="i-play" viewBox="0 0 48 48"><path d="M14 8l26 16-26 16z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/></symbol>
+    <symbol id="i-download" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M24 6v24M14 21l10 10 10-10M6 36v6h36v-6"/></g></symbol>
+    <symbol id="i-hand" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M16 26V9a3 3 0 0 1 6 0v14M22 21V6a3 3 0 0 1 6 0v15M28 21V9a3 3 0 0 1 6 0v14M34 23v-7a3 3 0 0 1 6 0v12c0 9-6 16-15 16-6 0-9-3-12-7l-6-9a3 3 0 0 1 5-3l3 3"/></g></symbol>
   </defs>
   <style>
     text{font-family:'Noto Sans','DejaVu Sans',sans-serif;fill:#e2e8f0}
     .t{font-size:34px;font-weight:700}
     .st{font-size:18px;fill:#94a3b8}
     .h{font-size:24px;font-weight:700}
-    .b{font-size:18px;font-weight:600}
+    .b{font-size:17px;font-weight:600}
     .s{font-size:15px;fill:#94a3b8}
+    .xs{font-size:14px;fill:#94a3b8}
     .mono{font-family:'Noto Sans Mono','DejaVu Sans Mono',monospace}
+    .z{font-size:15px;font-weight:700;letter-spacing:2px}
     .pi{fill:#1e293b;stroke:#2c4a66;stroke-width:1.5}
     .po{fill:#1e293b;stroke:#5a3a20;stroke-width:1.5}
   </style>
-  <rect width="1600" height="900" fill="#0f172a"/>
+  <rect width="1600" height="1040" fill="#0f172a"/>
 
   <text x="60" y="62" class="t">TerView — Vista general</text>
-  <text x="60" y="94" class="st">Dos mitades dentro de la misma app. Solo el motor habla con el servidor.</text>
+  <text x="60" y="94" class="st">Dos mitades dentro de la misma app. Cada función de la interfaz tiene su pieza en el motor.</text>
 
   <!-- Tu computadora -->
-  <rect x="40" y="120" width="1120" height="720" rx="24" fill="none" stroke="#475569" stroke-width="2" stroke-dasharray="10 8"/>
-  <text x="64" y="152" class="s" style="font-weight:700;letter-spacing:2px">TU COMPUTADORA · APP TERVIEW</text>
+  <rect x="40" y="120" width="1145" height="850" rx="24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-dasharray="10 8"/>
+  <use href="#i-pc" x="62" y="130" width="28" height="28" style="color:#94a3b8"/>
+  <text x="100" y="151" class="z" style="fill:#94a3b8">TU PC · APP TERVIEW</text>
 
   <!-- Interfaz -->
-  <rect x="80" y="180" width="440" height="630" rx="18" fill="#10243a" stroke="#38bdf8" stroke-width="2.5"/>
-  <text x="110" y="225" class="h" style="fill:#38bdf8">INTERFAZ</text>
-  <text x="110" y="252" class="s">Lo que ves · React + TypeScript</text>
-
-  <rect x="110" y="280" width="380" height="72" rx="12" class="pi"/>
-  <text x="130" y="312" class="b">Servidores y proyectos</text>
-  <text x="130" y="336" class="s">Lista guardada, conectar con 1 clic</text>
-  <rect x="110" y="366" width="380" height="72" rx="12" class="pi"/>
-  <text x="130" y="398" class="b">Pestañas</text>
-  <text x="130" y="422" class="s">Una conexión por pestaña</text>
-  <rect x="110" y="452" width="380" height="72" rx="12" class="pi"/>
-  <text x="130" y="484" class="b">Explorador de archivos</text>
-  <text x="130" y="508" class="s">Navegar carpetas, arrastrar y soltar</text>
-  <rect x="110" y="538" width="380" height="72" rx="12" class="pi"/>
-  <text x="130" y="570" class="b">Terminal</text>
-  <text x="130" y="594" class="s">xterm.js (la misma de VS Code)</text>
-  <rect x="110" y="624" width="380" height="72" rx="12" class="pi"/>
-  <text x="130" y="656" class="b">Editor</text>
-  <text x="130" y="680" class="s">Monaco (el mismo de VS Code)</text>
-  <rect x="110" y="710" width="380" height="72" rx="12" class="pi"/>
-  <text x="130" y="742" class="b">Cola de transferencias</text>
-  <text x="130" y="766" class="s">Progreso, pausar, cancelar</text>
-
-  <!-- IPC -->
-  <rect x="545" y="300" width="110" height="40" rx="20" fill="#2e2550" stroke="#a78bfa" stroke-width="2"/>
-  <text x="600" y="327" text-anchor="middle" style="fill:#a78bfa;font-weight:700;font-size:18px">IPC</text>
-  <text x="600" y="388" text-anchor="middle" class="s">Comandos</text>
-  <line x1="525" y1="400" x2="672" y2="400" stroke="#a78bfa" stroke-width="3" marker-end="url(#mp)"/>
-  <text x="600" y="458" text-anchor="middle" class="s">Respuestas</text>
-  <line x1="675" y1="470" x2="528" y2="470" stroke="#a78bfa" stroke-width="3" marker-end="url(#mp)"/>
-  <text x="600" y="548" text-anchor="middle" class="s">En vivo</text>
-  <line x1="675" y1="560" x2="528" y2="560" stroke="#a78bfa" stroke-width="3" stroke-dasharray="8 6" marker-end="url(#mp)"/>
-  <text x="600" y="586" text-anchor="middle" style="font-size:13px;fill:#94a3b8">terminal y progreso</text>
-  <text x="600" y="680" text-anchor="middle" class="mono" style="font-size:14px;fill:#a78bfa">invoke()</text>
-  <text x="600" y="702" text-anchor="middle" class="mono" style="font-size:14px;fill:#a78bfa">Channel</text>
+  <rect x="80" y="170" width="480" height="775" rx="18" fill="#10243a" stroke="#38bdf8" stroke-width="2.5"/>
+  <use href="#i-window" x="104" y="184" width="44" height="44" style="color:#38bdf8"/>
+  <text x="162" y="210" class="h" style="fill:#38bdf8">INTERFAZ</text>
+  <text x="162" y="234" class="s">Lo que ves · React + TypeScript · src/</text>
 
   <!-- Motor -->
-  <rect x="680" y="180" width="440" height="630" rx="18" fill="#2a1a10" stroke="#f97316" stroke-width="2.5"/>
-  <text x="710" y="225" class="h" style="fill:#f97316">MOTOR</text>
-  <text x="710" y="252" class="s">Lo que trabaja · Rust</text>
+  <rect x="690" y="170" width="480" height="775" rx="18" fill="#2a1a10" stroke="#f97316" stroke-width="2.5"/>
+  <use href="#i-gear" x="714" y="184" width="44" height="44" style="color:#f97316"/>
+  <text x="772" y="210" class="h" style="fill:#f97316">MOTOR</text>
+  <text x="772" y="234" class="s">Lo que trabaja · Rust · src-tauri/src/</text>
 
-  <rect x="710" y="280" width="380" height="72" rx="12" class="po"/>
-  <text x="730" y="312" class="b">Conexiones SSH</text>
-  <text x="730" y="336" class="s">russh · autenticación y huellas</text>
-  <rect x="710" y="366" width="380" height="72" rx="12" class="po"/>
-  <text x="730" y="398" class="b">SFTP</text>
-  <text x="730" y="422" class="s">Listar, crear, renombrar, borrar</text>
-  <rect x="710" y="452" width="380" height="72" rx="12" class="po"/>
-  <text x="730" y="484" class="b">Terminal (PTY)</text>
-  <text x="730" y="508" class="s">Shell real del servidor</text>
-  <rect x="710" y="538" width="380" height="72" rx="12" class="po"/>
-  <text x="730" y="570" class="b">Transferencias</text>
-  <text x="730" y="594" class="s">4 en paralelo, reanudables</text>
-  <rect x="710" y="624" width="380" height="72" rx="12" class="po"/>
-  <text x="730" y="656" class="b">Llavero seguro</text>
-  <text x="730" y="680" class="s">Contraseñas cifradas por el sistema</text>
-  <rect x="710" y="710" width="380" height="72" rx="12" class="po"/>
-  <text x="730" y="742" class="b">Configuración</text>
-  <text x="730" y="766" class="s mono">~/.config/terview/*.json</text>
+  <rect x="105" y="250" width="430" height="58" rx="10" class="pi"/>
+  <use href="#i-server" x="121" y="265" width="28" height="28" style="color:#38bdf8"/>
+  <text x="164" y="276" class="b">Servidores y proyectos</text>
+  <text x="164" y="297" class="xs">barra lateral, conexión rápida</text>
+  <rect x="105" y="318" width="430" height="58" rx="10" class="pi"/>
+  <use href="#i-window" x="121" y="333" width="28" height="28" style="color:#38bdf8"/>
+  <text x="164" y="344" class="b">Pestañas y vistas fijas</text>
+  <text x="164" y="365" class="xs">una conexión por pestaña</text>
+  <rect x="105" y="386" width="430" height="58" rx="10" class="pi"/>
+  <use href="#i-folder" x="121" y="401" width="28" height="28" style="color:#38bdf8"/>
+  <text x="164" y="412" class="b">Explorador y editor</text>
+  <text x="164" y="433" class="xs">Monaco, en ventana aparte</text>
+  <rect x="105" y="454" width="430" height="58" rx="10" class="pi"/>
+  <use href="#i-term" x="121" y="469" width="28" height="28" style="color:#38bdf8"/>
+  <text x="164" y="480" class="b">Terminal</text>
+  <text x="164" y="501" class="xs">xterm.js, persistentes con tmux</text>
+  <rect x="105" y="522" width="430" height="58" rx="10" class="pi"/>
+  <use href="#i-play" x="121" y="537" width="28" height="28" style="color:#38bdf8"/>
+  <text x="164" y="548" class="b">Comandos</text>
+  <text x="164" y="569" class="xs">biblioteca y varios servidores</text>
+  <rect x="105" y="590" width="430" height="58" rx="10" class="pi"/>
+  <use href="#i-box" x="121" y="605" width="28" height="28" style="color:#38bdf8"/>
+  <text x="164" y="616" class="b">Contenedores y Monitor</text>
+  <text x="164" y="637" class="xs">Podman/Docker, gráficas, alertas</text>
+  <rect x="105" y="658" width="430" height="58" rx="10" class="pi"/>
+  <use href="#i-shield" x="121" y="673" width="28" height="28" style="color:#38bdf8"/>
+  <text x="164" y="684" class="b">Administración</text>
+  <text x="164" y="705" class="xs">usuarios, puertos, sitios web</text>
+  <rect x="105" y="726" width="430" height="58" rx="10" class="pi"/>
+  <use href="#i-tunnel" x="121" y="741" width="28" height="28" style="color:#38bdf8"/>
+  <text x="164" y="752" class="b">Túneles</text>
+  <text x="164" y="773" class="xs">local, remoto y SOCKS</text>
+  <rect x="105" y="794" width="430" height="58" rx="10" class="pi"/>
+  <use href="#i-download" x="121" y="809" width="28" height="28" style="color:#38bdf8"/>
+  <text x="164" y="820" class="b">Transferencias</text>
+  <text x="164" y="841" class="xs">cola, progreso, conflictos</text>
+  <rect x="105" y="862" width="430" height="58" rx="10" class="pi"/>
+  <use href="#i-git" x="121" y="877" width="28" height="28" style="color:#38bdf8"/>
+  <text x="164" y="888" class="b">GitHub y actualizaciones</text>
+  <text x="164" y="909" class="xs">cuenta, Gist, versión nueva</text>
+  <rect x="715" y="250" width="430" height="58" rx="10" class="po"/>
+  <use href="#i-lock" x="731" y="265" width="28" height="28" style="color:#f97316"/>
+  <text x="774" y="276" class="b">Conexiones SSH</text>
+  <text x="774" y="297" class="xs">russh · huellas · reconexión</text>
+  <text x="1131" y="297" text-anchor="end" class="mono" style="font-size:13px;fill:#f97316;opacity:.85">ssh/</text>
+  <rect x="715" y="318" width="430" height="58" rx="10" class="po"/>
+  <use href="#i-term" x="731" y="333" width="28" height="28" style="color:#f97316"/>
+  <text x="774" y="344" class="b">Terminal (PTY)</text>
+  <text x="774" y="365" class="xs">shell real, o dentro de tmux</text>
+  <text x="1131" y="365" text-anchor="end" class="mono" style="font-size:13px;fill:#f97316;opacity:.85">terminal/</text>
+  <rect x="715" y="386" width="430" height="58" rx="10" class="po"/>
+  <use href="#i-folder" x="731" y="401" width="28" height="28" style="color:#f97316"/>
+  <text x="774" y="412" class="b">SFTP</text>
+  <text x="774" y="433" class="xs">listar, leer, guardar</text>
+  <text x="1131" y="433" text-anchor="end" class="mono" style="font-size:13px;fill:#f97316;opacity:.85">sftp/</text>
+  <rect x="715" y="454" width="430" height="58" rx="10" class="po"/>
+  <use href="#i-download" x="731" y="469" width="28" height="28" style="color:#f97316"/>
+  <text x="774" y="480" class="b">Transferencias</text>
+  <text x="774" y="501" class="xs">1 a 8 en paralelo, reanudables</text>
+  <text x="1131" y="501" text-anchor="end" class="mono" style="font-size:13px;fill:#f97316;opacity:.85">transfer/</text>
+  <rect x="715" y="522" width="430" height="58" rx="10" class="po"/>
+  <use href="#i-play" x="731" y="537" width="28" height="28" style="color:#f97316"/>
+  <text x="774" y="548" class="b">Ejecución aparte</text>
+  <text x="774" y="569" class="xs">canal exec, cancelar de verdad</text>
+  <text x="1131" y="569" text-anchor="end" class="mono" style="font-size:13px;fill:#f97316;opacity:.85">snippets/</text>
+  <rect x="715" y="590" width="430" height="58" rx="10" class="po"/>
+  <use href="#i-tunnel" x="731" y="605" width="28" height="28" style="color:#f97316"/>
+  <text x="774" y="616" class="b">Túneles</text>
+  <text x="774" y="637" class="xs">-L  -R  -D</text>
+  <text x="1131" y="637" text-anchor="end" class="mono" style="font-size:13px;fill:#f97316;opacity:.85">tunnels/</text>
+  <rect x="715" y="658" width="430" height="58" rx="10" class="po"/>
+  <use href="#i-hand" x="731" y="673" width="28" height="28" style="color:#f97316"/>
+  <text x="774" y="684" class="b">Arrastre al sistema</text>
+  <text x="774" y="705" class="xs">GTK · Shell · Finder</text>
+  <text x="1131" y="705" text-anchor="end" class="mono" style="font-size:13px;fill:#f97316;opacity:.85">dragout/</text>
+  <rect x="715" y="726" width="430" height="58" rx="10" class="po"/>
+  <use href="#i-git" x="731" y="741" width="28" height="28" style="color:#f97316"/>
+  <text x="774" y="752" class="b">GitHub</text>
+  <text x="774" y="773" class="xs">HTTPS, cifrado del Gist</text>
+  <text x="1131" y="773" text-anchor="end" class="mono" style="font-size:13px;fill:#f97316;opacity:.85">github/</text>
+  <rect x="715" y="794" width="430" height="58" rx="10" class="po"/>
+  <use href="#i-db" x="731" y="809" width="28" height="28" style="color:#f97316"/>
+  <text x="774" y="820" class="b">Almacenamiento</text>
+  <text x="774" y="841" class="xs">JSON, llavero, bóveda con PIN</text>
+  <text x="1131" y="841" text-anchor="end" class="mono" style="font-size:13px;fill:#f97316;opacity:.85">storage/</text>
+  <rect x="715" y="862" width="430" height="58" rx="10" class="po"/>
+  <use href="#i-chart" x="731" y="877" width="28" height="28" style="color:#f97316"/>
+  <text x="774" y="888" class="b">Archivos locales y diagnóstico</text>
+  <text x="774" y="909" class="xs">exportar, datos del sistema</text>
+  <text x="1131" y="909" text-anchor="end" class="mono" style="font-size:13px;fill:#f97316;opacity:.85">localfs · diag</text>
+
+  <!-- IPC -->
+  <rect x="570" y="300" width="110" height="40" rx="20" fill="#2e2550" stroke="#a78bfa" stroke-width="2"/>
+  <text x="625" y="327" text-anchor="middle" style="fill:#a78bfa;font-weight:700;font-size:18px">IPC</text>
+  <text x="625" y="398" text-anchor="middle" class="xs">Comandos</text>
+  <line x1="562" y1="410" x2="686" y2="410" stroke="#a78bfa" stroke-width="3" marker-end="url(#mp)"/>
+  <text x="625" y="478" text-anchor="middle" class="xs">Respuestas</text>
+  <line x1="688" y1="490" x2="564" y2="490" stroke="#a78bfa" stroke-width="3" marker-end="url(#mp)"/>
+  <text x="625" y="568" text-anchor="middle" class="xs">En vivo</text>
+  <line x1="688" y1="580" x2="564" y2="580" stroke="#a78bfa" stroke-width="3" stroke-dasharray="8 6" marker-end="url(#mp)"/>
+  <text x="625" y="604" text-anchor="middle" style="font-size:12px;fill:#94a3b8">terminal, progreso,</text>
+  <text x="625" y="620" text-anchor="middle" style="font-size:12px;fill:#94a3b8">túneles, reconexión</text>
+  <text x="625" y="700" text-anchor="middle" class="mono" style="font-size:13px;fill:#a78bfa">invoke()</text>
+  <text x="625" y="720" text-anchor="middle" class="mono" style="font-size:13px;fill:#a78bfa">Channel</text>
+  <text x="625" y="740" text-anchor="middle" class="mono" style="font-size:13px;fill:#a78bfa">emit()</text>
 
   <!-- SSH -->
-  <line x1="1126" y1="480" x2="1234" y2="480" stroke="#22c55e" stroke-width="3.5" marker-start="url(#mg)" marker-end="url(#mg)"/>
-  <text x="1198" y="464" text-anchor="middle" style="fill:#22c55e;font-weight:700;font-size:18px">SSH</text>
-  <text x="1198" y="506" text-anchor="middle" class="s">cifrado</text>
+  <line x1="1176" y1="420" x2="1254" y2="420" stroke="#22c55e" stroke-width="3.5" marker-start="url(#mg)" marker-end="url(#mg)"/>
+  <text x="1222" y="394" text-anchor="middle" style="fill:#22c55e;font-weight:700;font-size:17px">SSH</text>
+  <text x="1222" y="456" text-anchor="middle" class="xs">cifrado</text>
 
   <!-- Servidor -->
-  <rect x="1240" y="360" width="310" height="240" rx="18" fill="#0f2a1c" stroke="#22c55e" stroke-width="2.5"/>
-  <text x="1270" y="405" class="h" style="fill:#22c55e">SERVIDOR</text>
-  <text x="1270" y="442" class="b mono" style="font-weight:400">user@x.x.x.x</text>
-  <text x="1270" y="470" class="s">Linux · puerto 22</text>
-  <rect x="1270" y="500" width="250" height="20" rx="4" fill="#14532d"/><circle cx="1505" cy="510" r="4" fill="#22c55e"/>
-  <rect x="1270" y="528" width="250" height="20" rx="4" fill="#14532d"/><circle cx="1505" cy="538" r="4" fill="#22c55e"/>
-  <rect x="1270" y="556" width="250" height="20" rx="4" fill="#14532d"/><circle cx="1505" cy="566" r="4" fill="#22c55e"/>
+  <rect x="1260" y="300" width="300" height="250" rx="18" fill="#0f2a1c" stroke="#22c55e" stroke-width="2.5"/>
+  <use href="#i-server" x="1284" y="320" width="44" height="44" style="color:#22c55e"/>
+  <text x="1342" y="350" class="h" style="fill:#22c55e">SERVIDOR</text>
+  <text x="1284" y="398" class="mono" style="font-size:16px">user@x.x.x.x</text>
+  <text x="1284" y="424" class="xs">Linux · puerto 22</text>
+  <rect x="1284" y="446" width="252" height="26" rx="5" fill="#14532d"/><text x="1296" y="464" class="mono" style="font-size:13px">shell o tmux (PTY)</text>
+  <rect x="1284" y="478" width="252" height="26" rx="5" fill="#14532d"/><text x="1296" y="496" class="mono" style="font-size:13px">sftp-server</text>
+  <rect x="1284" y="510" width="252" height="26" rx="5" fill="#14532d"/><text x="1296" y="528" class="mono" style="font-size:13px">sh -c (exec)</text>
 
-  <text x="60" y="878" style="font-size:17px;fill:#94a3b8">La interfaz nunca toca la red: le pide todo al motor. Por eso la app es segura y pesa ~10 MB.</text>
+  <!-- GitHub -->
+  <line x1="1176" y1="740" x2="1254" y2="740" stroke="#f472b6" stroke-width="3" marker-end="url(#mk)"/>
+  <text x="1222" y="722" text-anchor="middle" style="fill:#f472b6;font-weight:700;font-size:15px">HTTPS</text>
+  <rect x="1260" y="660" width="300" height="160" rx="18" fill="#2a1426" stroke="#f472b6" stroke-width="2.5"/>
+  <use href="#i-git" x="1284" y="680" width="44" height="44" style="color:#f472b6"/>
+  <text x="1342" y="710" class="h" style="fill:#f472b6">GITHUB</text>
+  <text x="1284" y="760" class="xs">API: cuenta, llaves, Gist</text>
+  <text x="1284" y="784" class="xs">Releases: actualizaciones</text>
+
+  <text x="60" y="1008" style="font-size:17px;fill:#94a3b8">La interfaz nunca toca la red ni el disco: se lo pide todo al motor. Detalle de carpetas en el diagrama 5.</text>
 </svg>

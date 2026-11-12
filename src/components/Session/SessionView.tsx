@@ -138,8 +138,8 @@ function ReconnectingBanner({ tab, visible }: { tab: SessionTab; visible: boolea
     <div className="sv-banner sv-banner-warn" role="status" aria-live="polite">
       <span className="spinner sv-banner-spinner" />
       <span className="sv-banner-text">
-        <strong>Reconectando…</strong>
-        {r && (
+        <strong>{r?.waitingUnlock ? "Esperando el desbloqueo…" : "Reconectando…"}</strong>
+        {r && !r.waitingUnlock && (
           <>
             {" "}
             intento {r.attempt} de {r.maxAttempts}

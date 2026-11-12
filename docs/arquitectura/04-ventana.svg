@@ -1,142 +1,221 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="960" viewBox="0 0 1600 960">
+  <defs>
+    <marker id="mr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#f43f5e"/></marker>
+    <filter id="sombra" x="-10%" y="-10%" width="130%" height="140%"><feGaussianBlur in="SourceAlpha" stdDeviation="9"/><feOffset dy="8" result="o"/><feFlood flood-color="#000" flood-opacity="0.65"/><feComposite in2="o" operator="in"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
   <style>
     text{font-family:'Noto Sans','DejaVu Sans',sans-serif;fill:#e2e8f0}
     .t{font-size:34px;font-weight:700}
     .st{font-size:18px;fill:#94a3b8}
     .b{font-size:17px;font-weight:600}
     .r{font-size:15px}
+    .tb{font-size:13px;fill:#94a3b8}
     .s{font-size:14px;fill:#94a3b8}
     .mono{font-family:'Noto Sans Mono','DejaVu Sans Mono',monospace}
     .badge{fill:#f43f5e}
     .bn{font-size:16px;font-weight:700;fill:#fff}
     .lt{font-size:18px;font-weight:700}
     .ld{font-size:15px;fill:#94a3b8}
+    .code{font-family:'Noto Sans Mono','DejaVu Sans Mono',monospace;font-size:13px;fill:#cbd5e1}
+    .ln{font-family:'Noto Sans Mono','DejaVu Sans Mono',monospace;font-size:13px;fill:#475569}
   </style>
   <rect width="1600" height="960" fill="#0f172a"/>
 
   <text x="60" y="62" class="t">Cómo se ve la ventana</text>
-  <text x="60" y="94" class="st">Todo es ajustable: el tamaño de la ventana y el de cada panel.</text>
+  <text x="60" y="94" class="st">Una pestaña por servidor; dentro, vistas fijas, editores y terminales. Todo se puede ajustar.</text>
 
-  <!-- Ventana -->
+  <!-- ===== Ventana principal ===== -->
   <rect x="60" y="130" width="1180" height="760" rx="12" fill="#111827" stroke="#475569" stroke-width="2"/>
-  <!-- barra de título -->
   <path d="M60,142 a12,12 0 0 1 12,-12 h1156 a12,12 0 0 1 12,12 v28 h-1180 z" fill="#1e293b"/>
   <text x="80" y="157" class="b" style="font-size:15px">TerView</text>
   <text x="1140" y="158" class="s">—</text><rect x="1170" y="146" width="12" height="12" fill="none" stroke="#94a3b8" stroke-width="1.5"/><text x="1205" y="158" class="s">✕</text>
 
   <!-- barra lateral -->
   <rect x="60" y="170" width="240" height="720" fill="#0b1220"/>
-  <text x="80" y="202" class="s" style="font-weight:700;letter-spacing:1.5px">PROYECTOS</text>
-  <text x="80" y="234" class="r" style="font-weight:600">▾  Cliente X</text>
-  <rect x="70" y="246" width="220" height="30" rx="6" fill="#1e3a5f"/>
-  <circle cx="102" cy="261" r="5" fill="#22c55e"/><text x="116" y="266" class="r">web-prod</text>
-  <circle cx="102" cy="291" r="5" fill="#64748b"/><text x="116" y="296" class="r">db-server</text>
-  <text x="80" y="332" class="r" style="font-weight:600">▸  Personal</text>
-  <text x="80" y="384" class="s" style="font-weight:700;letter-spacing:1.5px">SERVIDORES</text>
-  <circle cx="86" cy="411" r="5" fill="#64748b"/><text x="100" y="416" class="r">vps-1</text>
-  <circle cx="86" cy="441" r="5" fill="#22c55e"/><text x="100" y="446" class="r">raspberry</text>
+  <rect x="190" y="182" width="22" height="22" rx="5" fill="#1e293b" stroke="#334155"/><text x="201" y="198" text-anchor="middle" class="s" style="fill:#e2e8f0">+</text>
+  <rect x="218" y="182" width="22" height="22" rx="5" fill="#1e293b" stroke="#334155"/><text x="229" y="197" text-anchor="middle" class="tb" style="fill:#e2e8f0">≡</text>
+  <rect x="246" y="182" width="22" height="22" rx="5" fill="#1e293b" stroke="#334155"/><circle cx="257" cy="193" r="5" fill="none" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="80" y="198" class="s" style="font-weight:700;fill:#e2e8f0">TerView</text>
+  <rect x="74" y="216" width="212" height="28" rx="6" fill="#111827" stroke="#334155"/>
+  <text x="86" y="235" class="tb mono">usuario@host:puerto</text>
+  <rect x="74" y="252" width="212" height="28" rx="6" fill="#111827" stroke="#334155"/>
+  <text x="86" y="271" class="tb">Buscar</text>
+
+  <text x="80" y="312" class="s" style="font-weight:700;letter-spacing:1.5px">PROYECTOS</text>
+  <text x="80" y="342" class="r" style="font-weight:600">▾  Cliente X</text>
+  <rect x="70" y="354" width="220" height="30" rx="6" fill="#1e3a5f"/>
+  <circle cx="102" cy="369" r="5" fill="#22c55e"/><text x="116" y="374" class="r">web-prod</text>
+  <circle cx="102" cy="399" r="5" fill="#64748b"/><text x="116" y="404" class="r">db-server</text>
+  <text x="80" y="438" class="r" style="font-weight:600">▸  Personal</text>
+  <text x="80" y="486" class="s" style="font-weight:700;letter-spacing:1.5px">SERVIDORES</text>
+  <circle cx="86" cy="513" r="5" fill="#64748b"/><text x="100" y="518" class="r">vps-1</text>
+  <circle cx="86" cy="543" r="5" fill="#22c55e"/><text x="100" y="548" class="r">raspberry</text>
   <rect x="76" y="836" width="208" height="38" rx="8" fill="#1e293b" stroke="#38bdf8"/>
   <text x="180" y="861" text-anchor="middle" class="r" style="fill:#38bdf8">+ Nuevo servidor</text>
   <!-- divisor lateral -->
-  <rect x="300" y="170" width="5" height="660" fill="#334155"/>
-  <circle cx="302.5" cy="490" r="2" fill="#94a3b8"/><circle cx="302.5" cy="500" r="2" fill="#94a3b8"/><circle cx="302.5" cy="510" r="2" fill="#94a3b8"/>
+  <rect x="300" y="170" width="5" height="720" fill="#334155"/>
+  <circle cx="302.5" cy="640" r="2" fill="#94a3b8"/><circle cx="302.5" cy="650" r="2" fill="#94a3b8"/><circle cx="302.5" cy="660" r="2" fill="#94a3b8"/>
 
-  <!-- pestañas -->
+  <!-- pestañas de conexión -->
   <rect x="305" y="170" width="935" height="40" fill="#0b1220"/>
-  <path d="M315,210 v-28 a6,6 0 0 1 6,-6 h148 a6,6 0 0 1 6,6 v28 z" fill="#111827"/>
-  <circle cx="332" cy="194" r="4" fill="#22c55e"/><text x="344" y="199" class="r">web-prod</text><text x="452" y="199" class="s">✕</text>
-  <path d="M481,210 v-28 a6,6 0 0 1 6,-6 h148 a6,6 0 0 1 6,6 v28 z" fill="#1a2234"/>
-  <circle cx="498" cy="194" r="4" fill="#22c55e"/><text x="510" y="199" class="r" style="fill:#94a3b8">raspberry</text><text x="618" y="199" class="s">✕</text>
-  <text x="658" y="200" style="font-size:20px;fill:#94a3b8">+</text>
+  <rect x="314" y="180" width="22" height="22" rx="5" fill="none" stroke="#334155"/><rect x="318" y="185" width="5" height="12" fill="#64748b"/>
+  <path d="M346,210 v-28 a6,6 0 0 1 6,-6 h172 a6,6 0 0 1 6,6 v28 z" fill="#111827"/>
+  <circle cx="363" cy="194" r="4" fill="#22c55e"/><text x="375" y="199" class="r">web-prod</text>
+  <rect x="452" y="186" width="40" height="17" rx="4" fill="#0e2a3d" stroke="#38bdf8"/><text x="472" y="199" text-anchor="middle" style="font-size:12px;font-weight:700;fill:#38bdf8">sudo</text>
+  <text x="506" y="199" class="s">✕</text>
+  <path d="M536,210 v-28 a6,6 0 0 1 6,-6 h172 a6,6 0 0 1 6,6 v28 z" fill="#1a2234"/>
+  <circle cx="553" cy="194" r="4" fill="#22c55e"/><text x="565" y="199" class="r" style="fill:#94a3b8">raspberry</text>
+  <rect x="648" y="186" width="38" height="17" rx="4" fill="#2e1a0e" stroke="#f97316"/><text x="667" y="199" text-anchor="middle" style="font-size:12px;font-weight:700;fill:#f97316">root</text>
+  <text x="696" y="199" class="s">✕</text>
+  <text x="736" y="200" style="font-size:20px;fill:#94a3b8">+</text>
+  <circle cx="1214" cy="191" r="7" fill="none" stroke="#94a3b8" stroke-width="1.6"/><circle cx="1214" cy="191" r="2.5" fill="#94a3b8"/>
 
-  <!-- barra de ruta -->
-  <text x="325" y="240" class="mono r" style="fill:#cbd5e1">/  var  /  www  /  app</text>
-  <rect x="890" y="220" width="100" height="30" rx="7" fill="#f97316"/><text x="940" y="240" text-anchor="middle" class="r" style="font-weight:600;fill:#0f172a">↑ Subir</text>
-  <rect x="1000" y="220" width="100" height="30" rx="7" fill="#1e293b" stroke="#475569"/><text x="1050" y="240" text-anchor="middle" class="r">↓ Bajar</text>
-  <rect x="1110" y="220" width="115" height="30" rx="7" fill="#1e293b" stroke="#475569"/><text x="1167" y="240" text-anchor="middle" class="r">+ Carpeta</text>
+  <!-- ===== columna izquierda: vistas fijas ===== -->
+  <rect x="305" y="210" width="535" height="32" fill="#0b1220"/>
+  <rect x="309" y="212" width="77" height="30" rx="5" fill="#111827"/>
+  <rect x="309" y="239" width="77" height="3" fill="#38bdf8"/>
+  <text x="347" y="231" text-anchor="middle" class="tb" style="fill:#e2e8f0;font-weight:600">Archivos</text>
+  <text x="425" y="231" text-anchor="middle" class="tb">Comandos</text>
+  <text x="515" y="231" text-anchor="middle" class="tb">Contenedores</text>
+  <text x="602" y="231" text-anchor="middle" class="tb">Monitor</text>
+  <text x="672" y="231" text-anchor="middle" class="tb">Túneles</text>
+  <text x="773" y="231" text-anchor="middle" class="tb">Administración</text>
+
+  <!-- ruta y botones -->
+  <text x="320" y="270" class="mono" style="font-size:14px;fill:#cbd5e1">/ var / www / app</text>
+  <rect x="616" y="252" width="80" height="28" rx="7" fill="#f97316"/><text x="656" y="271" text-anchor="middle" class="s" style="font-weight:600;fill:#0f172a">↑ Subir</text>
+  <rect x="704" y="252" width="80" height="28" rx="7" fill="#1e293b" stroke="#475569"/><text x="744" y="271" text-anchor="middle" class="s" style="fill:#e2e8f0">↓ Bajar</text>
+  <rect x="792" y="252" width="38" height="28" rx="7" fill="#1e293b" stroke="#475569"/><text x="811" y="271" text-anchor="middle" class="s" style="fill:#e2e8f0">+</text>
 
   <!-- lista de archivos -->
-  <line x1="315" y1="262" x2="1230" y2="262" stroke="#1f2937"/>
-  <text x="350" y="284" class="s">Nombre</text><text x="720" y="284" class="s">Tamaño</text><text x="840" y="284" class="s">Modificado</text><text x="1020" y="284" class="s">Permisos</text>
-  <line x1="315" y1="294" x2="1230" y2="294" stroke="#1f2937"/>
+  <line x1="313" y1="290" x2="832" y2="290" stroke="#1f2937"/>
+  <text x="346" y="309" class="tb">Nombre</text><text x="560" y="309" class="tb">Tamaño</text><text x="660" y="309" class="tb">Modificado</text>
+  <line x1="313" y1="318" x2="832" y2="318" stroke="#1f2937"/>
+  <rect x="325" y="331" width="17" height="12" rx="2" fill="#facc15"/><text x="352" y="342" class="s" style="fill:#e2e8f0">public</text><text x="560" y="342" class="tb">—</text><text x="660" y="342" class="tb">10/11/2026</text>
+  <rect x="325" y="365" width="17" height="12" rx="2" fill="#facc15"/><text x="352" y="376" class="s" style="fill:#e2e8f0">src</text><text x="560" y="376" class="tb">—</text><text x="660" y="376" class="tb">09/11/2026</text>
+  <rect x="313" y="394" width="519" height="30" rx="4" fill="#1e3a5f"/>
+  <rect x="327" y="400" width="13" height="16" rx="2" fill="#94a3b8"/><text x="352" y="414" class="s" style="fill:#e2e8f0">nginx.conf</text><text x="560" y="414" class="tb">1.4 KB</text><text x="660" y="414" class="tb">10/11/2026</text>
+  <rect x="327" y="434" width="13" height="16" rx="2" fill="#94a3b8"/><text x="352" y="448" class="s" style="fill:#e2e8f0">deploy.sh</text><text x="560" y="448" class="tb">860 B</text><text x="660" y="448" class="tb">05/11/2026</text>
+  <rect x="327" y="468" width="13" height="16" rx="2" fill="#94a3b8"/><text x="352" y="482" class="s" style="fill:#e2e8f0">app.js</text><text x="560" y="482" class="tb">12 KB</text><text x="660" y="482" class="tb">07/11/2026</text>
+  <rect x="327" y="502" width="13" height="16" rx="2" fill="#94a3b8"/><text x="352" y="516" class="s" style="fill:#e2e8f0">.env</text><text x="560" y="516" class="tb">300 B</text><text x="660" y="516" class="tb">08/11/2026</text>
 
-  <rect x="327" y="309" width="18" height="13" rx="2" fill="#facc15"/><text x="355" y="321" class="r">public</text><text x="720" y="321" class="s">—</text><text x="840" y="321" class="s">10/11/2026</text><text x="1020" y="321" class="s mono">drwxr-xr-x</text>
-  <rect x="327" y="345" width="18" height="13" rx="2" fill="#facc15"/><text x="355" y="357" class="r">src</text><text x="720" y="357" class="s">—</text><text x="840" y="357" class="s">09/11/2026</text><text x="1020" y="357" class="s mono">drwxr-xr-x</text>
-  <rect x="315" y="372" width="915" height="32" rx="4" fill="#1e3a5f"/>
-  <rect x="329" y="379" width="14" height="17" rx="2" fill="#94a3b8"/><text x="355" y="393" class="r">index.html</text><text x="720" y="393" class="s">1.2 KB</text><text x="840" y="393" class="s">10/11/2026</text><text x="1020" y="393" class="s mono">-rw-r--r--</text>
-  <rect x="329" y="415" width="14" height="17" rx="2" fill="#94a3b8"/><text x="355" y="429" class="r">.env</text><text x="720" y="429" class="s">300 B</text><text x="840" y="429" class="s">08/11/2026</text><text x="1020" y="429" class="s mono">-rw-------</text>
-  <rect x="329" y="451" width="14" height="17" rx="2" fill="#94a3b8"/><text x="355" y="465" class="r">package.json</text><text x="720" y="465" class="s">2.4 KB</text><text x="840" y="465" class="s">07/11/2026</text><text x="1020" y="465" class="s mono">-rw-r--r--</text>
-  <rect x="329" y="487" width="14" height="17" rx="2" fill="#94a3b8"/><text x="355" y="501" class="r">deploy.sh</text><text x="720" y="501" class="s">860 B</text><text x="840" y="501" class="s">05/11/2026</text><text x="1020" y="501" class="s mono">-rwxr-xr-x</text>
-  <rect x="329" y="523" width="14" height="17" rx="2" fill="#94a3b8"/><text x="355" y="537" class="r">README.md</text><text x="720" y="537" class="s">3.1 KB</text><text x="840" y="537" class="s">01/11/2026</text><text x="1020" y="537" class="s mono">-rw-r--r--</text>
+  <!-- divisor vertical de la división -->
+  <rect x="840" y="210" width="5" height="350" fill="#334155"/>
+  <circle cx="842.5" cy="375" r="2" fill="#94a3b8"/><circle cx="842.5" cy="385" r="2" fill="#94a3b8"/><circle cx="842.5" cy="395" r="2" fill="#94a3b8"/>
+
+  <!-- ===== columna derecha: editores ===== -->
+  <rect x="845" y="210" width="395" height="32" fill="#0b1220"/>
+  <rect x="849" y="212" width="112" height="30" rx="5" fill="#111827"/>
+  <rect x="849" y="239" width="112" height="3" fill="#38bdf8"/>
+  <text x="862" y="231" class="tb" style="fill:#e2e8f0;font-weight:600">nginx.conf</text><circle cx="946" cy="227" r="4" fill="#facc15"/>
+  <text x="975" y="231" class="tb">app.js</text>
+  <!-- botón de editores en otra ventana -->
+  <rect x="1132" y="215" width="42" height="24" rx="5" fill="#1e293b" stroke="#475569"/>
+  <path d="M1142,222 h7 M1142,222 v10 h10 v-4 M1150,220 h5 v5 M1155,220 l-7,7" fill="none" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="1164" y="232" class="tb" style="fill:#e2e8f0">1</text>
+  <!-- botón quitar división -->
+  <rect x="1184" y="215" width="26" height="24" rx="5" fill="#1e293b" stroke="#38bdf8"/>
+  <rect x="1190" y="221" width="14" height="12" rx="1.5" fill="none" stroke="#38bdf8" stroke-width="1.5"/><line x1="1197" y1="221" x2="1197" y2="233" stroke="#38bdf8" stroke-width="1.5"/>
+
+  <!-- código -->
+  <text x="860" y="270" class="ln">1</text><text x="888" y="270" class="code" xml:space="preserve"><tspan fill="#f472b6">server</tspan> {</text>
+  <text x="860" y="294" class="ln">2</text><text x="888" y="294" class="code" xml:space="preserve">  <tspan fill="#38bdf8">listen</tspan> 443 ssl;</text>
+  <text x="860" y="318" class="ln">3</text><text x="888" y="318" class="code" xml:space="preserve">  <tspan fill="#38bdf8">server_name</tspan> app.ejemplo.com;</text>
+  <text x="860" y="342" class="ln">4</text><text x="888" y="342" class="code" xml:space="preserve">  <tspan fill="#38bdf8">root</tspan> /var/www/app/public;</text>
+  <text x="860" y="366" class="ln">5</text><text x="888" y="366" class="code" xml:space="preserve">  <tspan fill="#f472b6">location</tspan> /api/ {</text>
+  <text x="860" y="390" class="ln">6</text><text x="888" y="390" class="code" xml:space="preserve">    <tspan fill="#38bdf8">proxy_pass</tspan> <tspan fill="#22c55e">http://127.0.0.1:3000</tspan>;</text>
+  <text x="860" y="414" class="ln">7</text><text x="888" y="414" class="code" xml:space="preserve">  }</text>
+  <text x="860" y="438" class="ln">8</text><text x="888" y="438" class="code" xml:space="preserve">}</text>
 
   <!-- divisor horizontal -->
-  <rect x="305" y="558" width="935" height="6" fill="#334155"/>
-  <circle cx="762" cy="561" r="2" fill="#94a3b8"/><circle cx="772" cy="561" r="2" fill="#94a3b8"/><circle cx="782" cy="561" r="2" fill="#94a3b8"/>
+  <rect x="305" y="560" width="935" height="6" fill="#334155"/>
+  <circle cx="742" cy="563" r="2" fill="#94a3b8"/><circle cx="752" cy="563" r="2" fill="#94a3b8"/><circle cx="762" cy="563" r="2" fill="#94a3b8"/>
 
   <!-- terminal -->
-  <rect x="305" y="564" width="935" height="266" fill="#020617"/>
-  <rect x="305" y="564" width="935" height="30" fill="#0b1220"/>
-  <text x="325" y="584" class="s" style="fill:#e2e8f0">Terminal 1</text><text x="425" y="584" class="s">Terminal 2</text><text x="520" y="585" class="s">+</text>
-  <text x="325" y="622" class="mono" style="font-size:14px"><tspan fill="#22c55e">deploy@web-prod</tspan><tspan fill="#94a3b8">:</tspan><tspan fill="#38bdf8">/var/www/app</tspan><tspan fill="#e2e8f0">$ ls -la</tspan></text>
-  <text x="325" y="646" class="mono" style="font-size:14px;fill:#cbd5e1">total 24</text>
-  <text x="325" y="670" class="mono" style="font-size:14px;fill:#cbd5e1">drwxr-xr-x 4 deploy deploy 4096 nov 10 public</text>
-  <text x="325" y="694" class="mono" style="font-size:14px;fill:#cbd5e1">drwxr-xr-x 6 deploy deploy 4096 nov  9 src</text>
-  <text x="325" y="718" class="mono" style="font-size:14px;fill:#cbd5e1">-rw-r--r-- 1 deploy deploy 1200 nov 10 index.html</text>
-  <text x="325" y="742" class="mono" style="font-size:14px"><tspan fill="#22c55e">deploy@web-prod</tspan><tspan fill="#94a3b8">:</tspan><tspan fill="#38bdf8">/var/www/app</tspan><tspan fill="#e2e8f0">$ </tspan></text>
-  <rect x="578" y="730" width="9" height="16" fill="#e2e8f0"/>
+  <rect x="305" y="566" width="935" height="264" fill="#020617"/>
+  <rect x="305" y="566" width="935" height="30" fill="#0b1220"/>
+  <text x="325" y="586" class="s" style="fill:#e2e8f0">Terminal 1</text><text x="425" y="586" class="s">Terminal 2</text><text x="520" y="587" class="s">+</text>
+  <text x="325" y="624" class="mono" style="font-size:14px"><tspan fill="#22c55e">deploy@web-prod</tspan><tspan fill="#94a3b8">:</tspan><tspan fill="#38bdf8">/var/www/app</tspan><tspan fill="#e2e8f0">$ sudo nginx -t</tspan></text>
+  <text x="325" y="648" class="mono" style="font-size:14px;fill:#cbd5e1">nginx: configuration file test is successful</text>
+  <text x="325" y="672" class="mono" style="font-size:14px"><tspan fill="#22c55e">deploy@web-prod</tspan><tspan fill="#94a3b8">:</tspan><tspan fill="#38bdf8">/var/www/app</tspan><tspan fill="#e2e8f0">$ </tspan></text>
+  <rect x="578" y="660" width="9" height="16" fill="#e2e8f0"/>
 
   <!-- barra de transferencias -->
   <path d="M305,830 h935 v48 a12,12 0 0 1 -12,12 h-923 z" fill="#1e293b"/>
   <text x="325" y="866" class="r">↑ Subiendo  fotos/</text><text x="490" y="866" class="s">640 / 2.000</text>
   <rect x="600" y="855" width="300" height="10" rx="5" fill="#334155"/><rect x="600" y="855" width="96" height="10" rx="5" fill="#f97316"/>
   <text x="920" y="866" class="s">12 MB/s</text>
-  <rect x="1140" y="846" width="32" height="28" rx="6" fill="#111827" stroke="#475569"/><text x="1156" y="866" text-anchor="middle" class="s">II</text>
-  <rect x="1180" y="846" width="32" height="28" rx="6" fill="#111827" stroke="#475569"/><text x="1196" y="866" text-anchor="middle" class="s">✕</text>
+  <rect x="1100" y="846" width="32" height="28" rx="6" fill="#111827" stroke="#475569"/><text x="1116" y="866" text-anchor="middle" class="s">II</text>
+  <rect x="1140" y="846" width="32" height="28" rx="6" fill="#111827" stroke="#475569"/><text x="1156" y="866" text-anchor="middle" class="s">✕</text>
 
   <!-- agarre de redimensión -->
   <path d="M1222,884 L1234,872 M1214,884 L1234,864 M1206,884 L1234,856" stroke="#f43f5e" stroke-width="2"/>
 
-  <!-- marcadores -->
+  <!-- ===== ventana aparte (editor) ===== -->
+  <path d="M1153,241 V252 H1226 V588 Q1226,602 1206,610" fill="none" stroke="#f43f5e" stroke-width="2.5" stroke-dasharray="7 6" marker-end="url(#mr)"/>
+  <g filter="url(#sombra)">
+    <rect x="800" y="618" width="410" height="196" rx="10" fill="#111827" stroke="#64748b" stroke-width="2"/>
+  </g>
+  <path d="M800,628 a10,10 0 0 1 10,-10 h390 a10,10 0 0 1 10,10 v22 h-410 z" fill="#1e293b"/>
+  <text x="816" y="640" class="tb" style="fill:#e2e8f0;font-weight:600">deploy.sh — web-prod</text>
+  <rect x="1110" y="625" width="62" height="20" rx="5" fill="#111827" stroke="#475569"/><text x="1141" y="640" text-anchor="middle" style="font-size:12px;fill:#e2e8f0">↩ Volver</text>
+  <text x="1184" y="640" class="tb">✕</text>
+  <text x="814" y="676" class="ln">1</text><text x="840" y="676" class="code" xml:space="preserve"><tspan fill="#64748b">#!/bin/sh</tspan></text>
+  <text x="814" y="700" class="ln">2</text><text x="840" y="700" class="code" xml:space="preserve">set -e</text>
+  <text x="814" y="724" class="ln">3</text><text x="840" y="724" class="code" xml:space="preserve">git pull --ff-only</text>
+  <text x="814" y="748" class="ln">4</text><text x="840" y="748" class="code" xml:space="preserve">npm ci &amp;&amp; npm run build</text>
+  <text x="814" y="772" class="ln">5</text><text x="840" y="772" class="code" xml:space="preserve">sudo systemctl reload nginx</text>
+
+  <!-- ===== marcadores ===== -->
   <circle cx="1240" cy="890" r="16" class="badge"/><text x="1240" y="896" text-anchor="middle" class="bn">1</text>
-  <circle cx="302" cy="460" r="16" class="badge"/><text x="302" y="466" text-anchor="middle" class="bn">2</text>
-  <circle cx="830" cy="561" r="16" class="badge"/><text x="830" y="567" text-anchor="middle" class="bn">2</text>
-  <circle cx="700" cy="193" r="16" class="badge"/><text x="700" y="199" text-anchor="middle" class="bn">3</text>
-  <circle cx="1180" cy="440" r="16" class="badge"/><text x="1180" y="446" text-anchor="middle" class="bn">4</text>
-  <circle cx="1080" cy="860" r="16" class="badge"/><text x="1080" y="866" text-anchor="middle" class="bn">5</text>
-  <circle cx="260" cy="197" r="16" class="badge"/><text x="260" y="203" text-anchor="middle" class="bn">6</text>
+  <circle cx="262" cy="305" r="16" class="badge"/><text x="262" y="311" text-anchor="middle" class="bn">2</text>
+  <circle cx="780" cy="190" r="16" class="badge"/><text x="780" y="196" text-anchor="middle" class="bn">3</text>
+  <circle cx="560" cy="266" r="16" class="badge"/><text x="560" y="272" text-anchor="middle" class="bn">4</text>
+  <circle cx="1095" cy="227" r="16" class="badge"/><text x="1095" y="233" text-anchor="middle" class="bn">5</text>
+  <circle cx="800" cy="618" r="16" class="badge"/><text x="800" y="624" text-anchor="middle" class="bn">6</text>
+  <circle cx="620" cy="586" r="16" class="badge"/><text x="620" y="592" text-anchor="middle" class="bn">7</text>
+  <circle cx="1060" cy="860" r="16" class="badge"/><text x="1060" y="866" text-anchor="middle" class="bn">8</text>
 
-  <!-- leyenda -->
-  <circle cx="1290" cy="155" r="16" class="badge"/><text x="1290" y="161" text-anchor="middle" class="bn">1</text>
-  <text x="1318" y="161" class="lt">Ventana redimensionable</text>
-  <text x="1318" y="188" class="ld">Arrastra los bordes o maximiza.</text>
-  <text x="1318" y="210" class="ld">Recuerda tamaño y posición</text>
-  <text x="1318" y="232" class="ld">al volver a abrir.</text>
+  <!-- ===== leyenda ===== -->
+  <circle cx="1290" cy="150" r="16" class="badge"/><text x="1290" y="156" text-anchor="middle" class="bn">1</text>
+  <text x="1318" y="156" class="lt">Ventana y paneles</text>
+  <text x="1318" y="181" class="ld">Recuerda tamaño y posición.</text>
+  <text x="1318" y="203" class="ld">Los divisores se arrastran.</text>
 
-  <circle cx="1290" cy="290" r="16" class="badge"/><text x="1290" y="296" text-anchor="middle" class="bn">2</text>
-  <text x="1318" y="296" class="lt">Paneles ajustables</text>
-  <text x="1318" y="323" class="ld">Mueve los divisores entre la</text>
-  <text x="1318" y="345" class="ld">barra lateral, el explorador</text>
-  <text x="1318" y="367" class="ld">y la terminal.</text>
+  <circle cx="1290" cy="242" r="16" class="badge"/><text x="1290" y="248" text-anchor="middle" class="bn">2</text>
+  <text x="1318" y="248" class="lt">Servidores y proyectos</text>
+  <text x="1318" y="273" class="ld">Conexión rápida, buscar,</text>
+  <text x="1318" y="295" class="ld">varios servidores y GitHub.</text>
 
-  <circle cx="1290" cy="425" r="16" class="badge"/><text x="1290" y="431" text-anchor="middle" class="bn">3</text>
-  <text x="1318" y="431" class="lt">Pestañas</text>
-  <text x="1318" y="458" class="ld">Una conexión por pestaña,</text>
-  <text x="1318" y="480" class="ld">con varias terminales dentro.</text>
+  <circle cx="1290" cy="334" r="16" class="badge"/><text x="1290" y="340" text-anchor="middle" class="bn">3</text>
+  <text x="1318" y="340" class="lt">Una pestaña por conexión</text>
+  <text x="1318" y="365" class="ld">Insignia root o sudo si tienes</text>
+  <text x="1318" y="387" class="ld">permisos de administrador.</text>
 
-  <circle cx="1290" cy="538" r="16" class="badge"/><text x="1290" y="544" text-anchor="middle" class="bn">4</text>
-  <text x="1318" y="544" class="lt">Arrastrar y soltar</text>
-  <text x="1318" y="571" class="ld">Suelta archivos o carpetas</text>
-  <text x="1318" y="593" class="ld">de tu PC para subirlos.</text>
+  <circle cx="1290" cy="426" r="16" class="badge"/><text x="1290" y="432" text-anchor="middle" class="bn">4</text>
+  <text x="1318" y="432" class="lt">Vistas fijas</text>
+  <text x="1318" y="457" class="ld">Archivos, Comandos, Contenedores,</text>
+  <text x="1318" y="479" class="ld">Monitor, Túneles, Administración.</text>
 
-  <circle cx="1290" cy="651" r="16" class="badge"/><text x="1290" y="657" text-anchor="middle" class="bn">5</text>
-  <text x="1318" y="657" class="lt">Transferencias</text>
-  <text x="1318" y="684" class="ld">Progreso, velocidad,</text>
-  <text x="1318" y="706" class="ld">pausar y cancelar.</text>
+  <circle cx="1290" cy="518" r="16" class="badge"/><text x="1290" y="524" text-anchor="middle" class="bn">5</text>
+  <text x="1318" y="524" class="lt">Editores y división</text>
+  <text x="1318" y="549" class="ld">Cada archivo, una pestaña.</text>
+  <text x="1318" y="571" class="ld">Ctrl+Shift+M: vista | editores.</text>
 
-  <circle cx="1290" cy="764" r="16" class="badge"/><text x="1290" y="770" text-anchor="middle" class="bn">6</text>
-  <text x="1318" y="770" class="lt">Servidores y proyectos</text>
-  <text x="1318" y="797" class="ld">Doble clic para conectar.</text>
-  <text x="1318" y="819" class="ld">Punto verde = conectado.</text>
+  <circle cx="1290" cy="610" r="16" class="badge"/><text x="1290" y="616" text-anchor="middle" class="bn">6</text>
+  <text x="1318" y="616" class="lt">Editor en otra ventana</text>
+  <text x="1318" y="641" class="ld">Suelta la pestaña fuera de la</text>
+  <text x="1318" y="663" class="ld">ventana; «Volver» la trae.</text>
 
-  <text x="60" y="935" style="font-size:17px;fill:#94a3b8">Doble clic en un archivo de texto: se abre en el editor dentro de la app; Ctrl+S lo guarda directo en el servidor.</text>
+  <circle cx="1290" cy="702" r="16" class="badge"/><text x="1290" y="708" text-anchor="middle" class="bn">7</text>
+  <text x="1318" y="708" class="lt">Terminales</text>
+  <text x="1318" y="733" class="ld">Varias por conexión.</text>
+  <text x="1318" y="755" class="ld">Ctrl+` las oculta o muestra.</text>
+
+  <circle cx="1290" cy="794" r="16" class="badge"/><text x="1290" y="800" text-anchor="middle" class="bn">8</text>
+  <text x="1318" y="800" class="lt">Transferencias</text>
+  <text x="1318" y="825" class="ld">Progreso, velocidad, pausar,</text>
+  <text x="1318" y="847" class="ld">reanudar y cancelar.</text>
+
+  <text x="60" y="935" style="font-size:17px;fill:#94a3b8">Arrastra archivos desde tu PC para subirlos, o del explorador a tu escritorio para bajarlos. Ctrl+S guarda en el servidor.</text>
 </svg>

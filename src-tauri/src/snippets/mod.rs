@@ -1,7 +1,7 @@
 //! Biblioteca de comandos: "Mis comandos" guardados (~/.config/terview/commands.json)
 //! y ejecución aparte con captura de salida (canal exec). DUEÑO: agente Comandos.
 
-mod exec;
+pub(crate) mod exec;
 mod store;
 #[cfg(test)]
 mod tests;

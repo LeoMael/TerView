@@ -78,10 +78,33 @@ impl TerminalHandle {
     }
 }
 
+/// Qué se arranca en la terminal.
+#[derive(Debug, Clone)]
+pub enum ShellStart {
+    /// La shell de login del usuario.
+    Shell,
+    /// Un comando con PTY (p. ej. engancharse a una sesión tmux).
+    Exec(String),
+}
+
 /// Abre una shell interactiva. `on_data` recibe la salida (agrupada); `on_exit` se llama
 /// una vez al terminar, con el código de salida si el servidor lo envió.
+#[cfg(test)]
 pub async fn spawn_shell(
     session: Arc<SshSession>,
+    cols: u32,
+    rows: u32,
+    on_data: impl Fn(Vec<u8>) + Send + 'static,
+    on_exit: impl FnOnce(Option<u32>) + Send + 'static,
+) -> AppResult<TerminalHandle> {
+    spawn_terminal(session, ShellStart::Shell, cols, rows, on_data, on_exit).await
+}
+
+/// Abre una terminal con PTY: la shell de login o un comando (tmux). `on_data` recibe la salida
+/// (agrupada); `on_exit` se llama una vez al terminar, con el código de salida si el servidor lo envió.
+pub async fn spawn_terminal(
+    session: Arc<SshSession>,
+    start: ShellStart,
     cols: u32,
     rows: u32,
     on_data: impl Fn(Vec<u8>) + Send + 'static,
@@ -93,7 +116,10 @@ pub async fn spawn_shell(
             .request_pty(false, "xterm-256color", cols.max(1), rows.max(1), 0, 0, TERMINAL_MODES)
             .await?;
         // Pedimos respuesta para detectar un rechazo del servidor.
-        channel.request_shell(true).await?;
+        match &start {
+            ShellStart::Shell => channel.request_shell(true).await?,
+            ShellStart::Exec(cmd) => channel.exec(true, cmd.as_bytes()).await?,
+        }
         loop {
             match channel.wait().await {
                 Some(ChannelMsg::Success) => return Ok(Vec::new()),

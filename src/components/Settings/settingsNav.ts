@@ -10,6 +10,7 @@ export type SectionId =
   | "explorer"
   | "editor"
   | "servers"
+  | "security"
   | "advanced"
   | "about";
 

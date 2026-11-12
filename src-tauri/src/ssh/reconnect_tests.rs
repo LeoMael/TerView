@@ -7,6 +7,7 @@
 //! (corta a cualquier otro que esté usando el servidor) y siempre lo vuelve a arrancar.
 
 use std::process::Command;
+use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
@@ -27,6 +28,9 @@ struct TestEnv {
     store: SessionStore,
     settings: Mutex<ReconnectSettings>,
     events: Mutex<Vec<Ev>>,
+    /// Cuántas lecturas del secreto guardado responden «bloqueado» antes de dar `secret`.
+    locked_reads: AtomicU32,
+    secret: Mutex<Option<String>>,
 }
 
 impl TestEnv {
@@ -39,6 +43,8 @@ impl TestEnv {
                 keepalive_secs: 5,
             }),
             events: Mutex::new(Vec::new()),
+            locked_reads: AtomicU32::new(0),
+            secret: Mutex::new(None),
         })
     }
     fn push(&self, e: Ev) {
@@ -101,6 +107,18 @@ impl ReconnectEnv for TestEnv {
     fn resume(&self, _: &str) {
         self.push(Ev::Resumed);
     }
+    fn stored_secret(&self, _: &str) -> BoxFuture<'static, Result<Option<String>, AppError>> {
+        let locked = self
+            .locked_reads
+            .try_update(Ordering::SeqCst, Ordering::SeqCst, |n| n.checked_sub(1))
+            .is_ok();
+        let r = if locked {
+            Err(AppError::Locked)
+        } else {
+            Ok(self.secret.lock().unwrap().clone())
+        };
+        Box::pin(async move { r })
+    }
 }
 
 async fn exec(session: &SshSession, cmd: &str) -> (String, Option<u32>) {
@@ -150,6 +168,7 @@ async fn start(
     let sup = Supervised {
         profile,
         creds: test_creds(),
+        stored_secret: false,
         policy,
         session: session.clone(),
         shared,
@@ -410,4 +429,57 @@ async fn container_restart_and_stop() {
     assert!(c.reason.starts_with("No se pudo reconectar tras 3 intentos:"), "{}", c.reason);
     assert_eq!(env.reconnecting().len(), 3);
     wait_server_up().await;
+}
+
+// ───────── Contraseña guardada en la bóveda (sin servidor) ─────────
+
+/// Sin secreto en la bóveda: se usan las credenciales tal cual, sin preguntar nada.
+#[tokio::test]
+async fn creds_without_stored_secret_are_used_as_is() {
+    let env = TestEnv::new(true, 3);
+    let base = test_creds();
+    let cancel = CancellationToken::new();
+    let c = creds_for_attempt(&*env, &test_profile(), &base, false, "s1", 1, 3, &cancel)
+        .await
+        .ok()
+        .expect("credenciales");
+    assert_eq!(c.password, base.password);
+    assert!(env.reconnecting().is_empty());
+}
+
+/// Bloqueado: espera (avisando una vez con `waiting_unlock`) y al desbloquear usa el secreto.
+#[tokio::test]
+async fn creds_wait_for_unlock_then_use_stored_secret() {
+    let env = TestEnv::new(true, 3);
+    env.locked_reads.store(2, Ordering::SeqCst);
+    *env.secret.lock().unwrap() = Some("guardada".into());
+    let mut profile = test_profile();
+    profile.auth = AuthMethod::Password;
+    let base = Credentials::default();
+    let cancel = CancellationToken::new();
+    let c = creds_for_attempt(&*env, &profile, &base, true, "s1", 2, 3, &cancel)
+        .await
+        .ok()
+        .expect("credenciales");
+    assert_eq!(c.password.as_deref(), Some("guardada"));
+    let evs = env.reconnecting();
+    assert_eq!(evs.len(), 2, "un aviso al esperar y otro al desbloquear");
+    assert!(evs[0].waiting_unlock);
+    assert_eq!(evs[0].attempt, 2);
+    assert!(!evs[1].waiting_unlock);
+}
+
+/// Si cancelan mientras espera el desbloqueo, se deja de esperar.
+#[tokio::test]
+async fn creds_wait_for_unlock_can_be_cancelled() {
+    let env = TestEnv::new(true, 3);
+    env.locked_reads.store(u32::MAX, Ordering::SeqCst);
+    let cancel = CancellationToken::new();
+    let c2 = cancel.clone();
+    tokio::spawn(async move {
+        tokio::time::sleep(Duration::from_millis(100)).await;
+        c2.cancel();
+    });
+    let r = creds_for_attempt(&*env, &test_profile(), &Credentials::default(), true, "s1", 1, 3, &cancel).await;
+    assert!(matches!(r, Err(Outcome::Cancelled)));
 }

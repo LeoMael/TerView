@@ -1,57 +1,239 @@
-//! Secretos en el llavero del sistema (servicio "terview", usuario = id del servidor).
+//! Secretos guardados: contraseña o frase de cada servidor (usuario = id del servidor) y el
+//! token de GitHub (usuario "github-token").
 //!
-//! Usa `keyring` 4 (modo `v1`): el almacén por defecto de la plataforma (Secret Service en
-//! Linux, Keychain en macOS, Credential Manager en Windows) se inicializa una sola vez,
-//! de forma perezosa, en la primera llamada.
+//! Dónde se guardan:
+//! - Con la bóveda activa (`storage::vault`): en `vault.json`, cifrados con el PIN. Si está
+//!   bloqueada, todas las funciones devuelven `AppError::Locked`.
+//! - Sin bóveda: en el llavero del sistema (servicio "terview"), como siempre.
+//!
+//! El llavero usa `keyring` 4 (modo `v1`): el almacén por defecto de la plataforma (Secret
+//! Service en Linux, Keychain en macOS, Credential Manager en Windows) se inicializa una sola
+//! vez, de forma perezosa, en la primera llamada.
 //!
 //! Las llamadas pueden bloquear (D-Bus): desde código async conviene usar `spawn_blocking`.
 
-use keyring::{Entry, Error as KrError};
+use std::collections::{BTreeMap, BTreeSet};
 
+use keyring::{Entry, Error as KrError};
+use serde::Serialize;
+
+use base64ct::{Base64, Encoding};
+use zeroize::Zeroizing;
+
+use super::cipher::KdfParams;
+use super::vault::{DeviceKeyStore, Vault, DEVICE_KEY_USER};
 use crate::error::{AppError, AppResult};
 
 /// Servicio usado en el llavero real.
 pub const SERVICE: &str = "terview";
 
+fn check_user(user: &str) -> AppResult<()> {
+    if user.trim().is_empty() {
+        return Err(AppError::Invalid("Falta el id del servidor para el llavero".into()));
+    }
+    Ok(())
+}
+
 pub fn get_secret(profile_id: &str) -> AppResult<Option<String>> {
-    get_secret_in(SERVICE, profile_id)
+    check_user(profile_id)?;
+    match Vault::global().get(profile_id) {
+        Some(r) => r,
+        None => get_secret_in(SERVICE, profile_id),
+    }
 }
 
 pub fn set_secret(profile_id: &str, secret: &str) -> AppResult<()> {
-    set_secret_in(SERVICE, profile_id, secret)
+    check_user(profile_id)?;
+    match Vault::global().set(profile_id, secret) {
+        Some(r) => r,
+        None => set_secret_in(SERVICE, profile_id, secret),
+    }
 }
 
 /// Borra el secreto. Si no existía, no es error.
 pub fn delete_secret(profile_id: &str) -> AppResult<()> {
-    delete_secret_in(SERVICE, profile_id)
+    check_user(profile_id)?;
+    match Vault::global().delete(profile_id) {
+        Some(r) => r,
+        None => delete_secret_in(SERVICE, profile_id),
+    }
 }
 
-// ───────── Token de GitHub (servicio "terview", usuario "github-token") ─────────
+/// Error si la bóveda está bloqueada (para cachés que no pasan por `get_secret`).
+pub fn ensure_unlocked() -> AppResult<()> {
+    let st = Vault::global().status();
+    if st.locked {
+        return Err(AppError::Locked);
+    }
+    Ok(())
+}
 
-/// Usuario del llavero donde se guarda el token personal de GitHub.
+// ───────── Token de GitHub (usuario "github-token") ─────────
+
+/// Usuario del llavero (o id en la bóveda) donde se guarda el token personal de GitHub.
 pub const GITHUB_TOKEN_USER: &str = "github-token";
 
 /// Token de GitHub guardado (None si no hay cuenta conectada).
 pub fn get_github_token() -> AppResult<Option<String>> {
-    get_secret_in(SERVICE, GITHUB_TOKEN_USER)
+    get_secret(GITHUB_TOKEN_USER)
 }
 
-/// Guarda (o reemplaza) el token de GitHub. Solo en el llavero: nunca en archivos ni en logs.
+/// Guarda (o reemplaza) el token de GitHub. Solo en la bóveda o el llavero: nunca en archivos
+/// sin cifrar ni en logs.
 pub fn set_github_token(token: &str) -> AppResult<()> {
-    set_secret_in(SERVICE, GITHUB_TOKEN_USER, token)
+    set_secret(GITHUB_TOKEN_USER, token)
 }
 
 /// Borra el token de GitHub ("Desconectar"). Si no existía, no es error.
 pub fn delete_github_token() -> AppResult<()> {
-    delete_secret_in(SERVICE, GITHUB_TOKEN_USER)
+    delete_secret(GITHUB_TOKEN_USER)
+}
+
+// ───────── Mover secretos entre el llavero y la bóveda ─────────
+
+/// Dónde se leen y escriben los secretos fuera de la bóveda (el llavero; en tests, memoria).
+pub(crate) trait Keyring {
+    fn get(&self, user: &str) -> AppResult<Option<String>>;
+    fn set(&self, user: &str, secret: &str) -> AppResult<()>;
+    fn delete(&self, user: &str) -> AppResult<()>;
+}
+
+/// El llavero del sistema con un servicio concreto ("terview"; "terview-test" en pruebas).
+pub(crate) struct SystemKeyring(pub &'static str);
+
+impl Keyring for SystemKeyring {
+    fn get(&self, user: &str) -> AppResult<Option<String>> {
+        get_secret_in(self.0, user)
+    }
+    fn set(&self, user: &str, secret: &str) -> AppResult<()> {
+        set_secret_in(self.0, user, secret)
+    }
+    fn delete(&self, user: &str) -> AppResult<()> {
+        delete_secret_in(self.0, user)
+    }
+}
+
+/// La llave de este equipo de la bóveda, en el llavero del sistema (usuario `vault-device-key`,
+/// en base64). Va siempre al llavero, nunca a la bóveda.
+pub(crate) struct KeyringDeviceKey(pub &'static str);
+
+impl DeviceKeyStore for KeyringDeviceKey {
+    fn load(&self) -> AppResult<Option<Zeroizing<Vec<u8>>>> {
+        let Some(text) = get_secret_in(self.0, DEVICE_KEY_USER)?.map(Zeroizing::new) else {
+            return Ok(None);
+        };
+        Base64::decode_vec(text.trim())
+            .map(|k| Some(Zeroizing::new(k)))
+            .map_err(|_| AppError::Invalid("la llave de este equipo en el llavero está dañada".into()))
+    }
+    fn save(&self, key: &[u8]) -> AppResult<()> {
+        let text = Zeroizing::new(Base64::encode_string(key));
+        set_secret_in(self.0, DEVICE_KEY_USER, &text)
+    }
+    fn delete(&self) -> AppResult<()> {
+        delete_secret_in(self.0, DEVICE_KEY_USER)
+    }
+}
+
+/// Resultado de mover secretos.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MoveReport {
+    /// Secretos movidos.
+    pub moved: u32,
+    /// Al activar: copias que no se pudieron borrar del llavero (siguen allí, no se perdió nada).
+    pub left_in_keyring: u32,
+}
+
+/// El llavero no existe en este sistema (no hay nada que leer).
+fn keyring_unavailable(e: &AppError) -> bool {
+    matches!(e, AppError::Keyring(m) if m == UNAVAILABLE)
+}
+
+/// Crea la bóveda y mueve a ella los secretos del llavero de esos ids (+ token de GitHub).
+///
+/// Orden seguro: 1) leer todo del llavero (si algo falla, no se crea nada); 2) escribir la
+/// bóveda y comprobar que se descifra; 3) solo entonces borrar las copias del llavero. Si se corta
+/// a mitad, los secretos siguen en el llavero, en la bóveda o en ambos: nunca se pierden.
+pub(crate) fn enable_vault(
+    vault: &Vault,
+    kr: &dyn Keyring,
+    ids: &[String],
+    pin: &str,
+    params: KdfParams,
+) -> AppResult<MoveReport> {
+    super::vault::check_new_pin(pin)?;
+    let users: BTreeSet<&str> = ids
+        .iter()
+        .map(String::as_str)
+        .chain([GITHUB_TOKEN_USER])
+        .filter(|u| !u.trim().is_empty())
+        .collect();
+    let mut found = BTreeMap::new();
+    for u in users {
+        match kr.get(u) {
+            Ok(Some(s)) if !s.is_empty() => {
+                found.insert(u.to_string(), s);
+            }
+            Ok(_) => {}
+            // Sin llavero en el sistema no puede haber nada guardado en él.
+            Err(e) if keyring_unavailable(&e) => break,
+            Err(e) => return Err(e),
+        }
+    }
+    let ids: Vec<String> = found.keys().cloned().collect();
+    vault.create(pin, found, params)?;
+    let mut report = MoveReport {
+        moved: ids.len() as u32,
+        left_in_keyring: 0,
+    };
+    for id in &ids {
+        if let Err(e) = kr.delete(id) {
+            log::warn!("bóveda: no se pudo borrar del llavero la copia de {id}: {e}");
+            report.left_in_keyring += 1;
+        }
+    }
+    Ok(report)
+}
+
+/// Desactiva la bóveda: comprueba el PIN, devuelve los secretos al llavero, comprueba que están y
+/// solo entonces borra `vault.json`. Si algo falla, la bóveda sigue igual.
+pub(crate) fn disable_vault(vault: &Vault, kr: &dyn Keyring, pin: &str) -> AppResult<MoveReport> {
+    let secrets = vault.export_with_pin(pin)?;
+    let mut written: Vec<&str> = Vec::new();
+    let undo = |written: &[&str]| {
+        for id in written {
+            let _ = kr.delete(id);
+        }
+    };
+    for (id, s) in &secrets {
+        if let Err(e) = kr.set(id, s) {
+            undo(&written);
+            return Err(e);
+        }
+        written.push(id);
+    }
+    for (id, s) in &secrets {
+        let ok = matches!(kr.get(id), Ok(Some(v)) if v == **s);
+        if !ok {
+            undo(&written);
+            return Err(AppError::Keyring(
+                "no se pudo comprobar que las contraseñas quedaron en el llavero; la bóveda sigue activa"
+                    .into(),
+            ));
+        }
+    }
+    vault.remove()?;
+    Ok(MoveReport {
+        moved: secrets.len() as u32,
+        left_in_keyring: 0,
+    })
 }
 
 // ───────── Implementación parametrizada por servicio (los tests usan "terview-test") ─────────
 
 fn entry(service: &str, user: &str) -> AppResult<Entry> {
-    if user.trim().is_empty() {
-        return Err(AppError::Invalid("Falta el id del servidor para el llavero".into()));
-    }
+    check_user(user)?;
     Entry::new(service, user).map_err(map_err)
 }
 

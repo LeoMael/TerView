@@ -122,8 +122,9 @@ Comandos Tauri nuevos: `snippets_load`, `snippets_save`, `snippets_delete`, `exe
      no tiene que rehacer pestañas.
    - Explorador recarga **la misma carpeta** (requiere que `FileExplorer` informe su ruta actual:
      prop `onPathChange`).
-   - Terminales abren una shell nueva (la anterior se pierde). Opción futura: **usar `tmux`/`screen`**
-     para que la sesión de la terminal sobreviva a cortes.
+   - Terminales: sin tmux abren una shell nueva (la anterior se pierde). ✅ Con **terminales
+     persistentes (tmux)** vuelven a engancharse a la misma sesión y lo que corría sigue vivo (v0.4.0,
+     ver sección 7, idea 6).
    - Transferencias con error se **reanudan solas** (el motor ya sabe continuar desde el último byte).
 5. Nuevo evento `session://reconnected` y estado `"reconnecting"` en `SessionTab`.
 
@@ -285,11 +286,97 @@ Ordenadas por utilidad para el día a día:
 | 3 | **Ejecutar en varios servidores a la vez** | Un comando de la biblioteca en todo un proyecto (p. ej. `podman ps` en 5 servidores) con resultados lado a lado. |
 | 4 | **Monitoreo en vivo** | Gráficas de CPU, memoria, disco y red en tiempo real (amplía "Analizar servidor"), con alertas. |
 | 5 | **Sincronizar carpeta** | Carpeta local ↔ remota: al guardar en tu PC se sube sola (desarrollo web). |
-| 6 | **Sesiones persistentes con tmux** | La terminal sobrevive a cortes de red y a cerrar la app. |
+| 6 | **Sesiones persistentes con tmux** | La terminal sobrevive a cortes de red y a cerrar la app. ✅ Hecho (v0.4.0), detalle abajo. |
 | 7 | **Comparar archivos** | Diferencias entre un archivo local y uno remoto, o entre dos servidores. |
 | 8 | **Actualizaciones automáticas** | La app se actualiza sola (`tauri-plugin-updater`) + instaladores para Windows/macOS con GitHub Actions. |
 | 9 | **Respaldo/sincronización de servidores** | Exportar todo cifrado con contraseña o sincronizar entre tus equipos. |
 | 10 | **Historial por servidor** | Comandos usados y grabación opcional de sesiones (auditoría). |
+
+### 7.6 Terminales persistentes con tmux — ✅ Hecho (v0.4.0)
+
+- **Ajuste**: Ajustes → Terminal → «Terminales persistentes (tmux)»: Automático (por defecto), Siempre o
+  Nunca. Cada servidor puede cambiarlo en su ficha («Como en Ajustes» hereda el general).
+  - Por qué Automático: es lo que hace útil la reconexión automática, y en servidores sin tmux no cambia
+    nada ni avisa. Cambia el comportamiento para quien ya usaba TerView: si el servidor tiene tmux, lo
+    que corre en la terminal **sigue vivo al cerrar la app** (antes moría). Por eso las sesiones sueltas
+    se ven con un contador en la barra de terminales y se pueden cerrar desde la lista.
+- **Cómo funciona**: cada terminal tiene una sesión tmux con nombre propio (`terview-<8 hex>`), guardada en
+  el estado de la sub-pestaña. El motor (`src-tauri/src/terminal/tmux.rs`) busca tmux una vez por
+  conexión y abre la terminal con `exec` + PTY: `tmux -L terview new-session -A -s <nombre>`. Al
+  reconectar (automático o botón «Reconectar», que abre pestaña nueva) se engancha a la misma sesión.
+  - Servidor tmux propio (`-L terview`, `-f /dev/null`): no lee ni toca `~/.tmux.conf` ni las sesiones
+    tmux del usuario. A mano: `tmux -L terview attach -t terview-…` (lo copia el menú de la pestaña).
+  - Configuración por línea de comandos al arrancar ese servidor: sin barra de estado, **sin tecla
+    prefijo** (Ctrl+B llega a los programas), `escape-time 10`, historial de 50 000 líneas,
+    `default-terminal` tmux-256color (o screen-256color si el servidor no lo conoce), `-u -2`, color real,
+    `aggressive-resize` y `window-size latest` (3.1+), hipervínculos (3.4+). Opciones según la versión.
+  - **Historial y búsqueda**: tmux no usa la pantalla alternativa hacia xterm.js
+    (`terminal-overrides …smcup@:rmcup@`). Así la rueda, el historial, Ctrl+Shift+F, la selección,
+    copiar/pegar y los enlaces siguen funcionando con xterm.js, como sin tmux. Contras: en `less`/`man`
+    la rueda mueve el historial de xterm.js en vez de la página (usa las flechas o RePág), y lo que salió
+    mientras no había conexión y ya no cabe en pantalla queda solo en el historial de tmux. Al reabrir una
+    sesión en una terminal nueva (lista o «Reconectar») se vuelcan antes sus últimas 10 000 líneas.
+- **Cerrar**: la ✕ de la sub-pestaña o cerrar la pestaña de la conexión **terminan** la sesión tmux (como
+  una shell normal). Menú de la sub-pestaña → «Desacoplar» la deja corriendo. Si la conexión se corta,
+  se cierra la app o se cierra sin conexión, la sesión **se conserva**.
+- **Sesiones sueltas**: botón de capas junto al «+» de las terminales (con contador si hay sueltas que
+  nadie mira): lista con programa, carpeta y actividad, para **Abrir** en una terminal nueva o
+  **Cerrar** (una o todas las sueltas).
+- **Sin tmux**: en Automático, terminal normal sin avisos (se recuerda 20 s por conexión para no
+  comprobarlo en cada terminal). En Siempre, avisa una vez por servidor con el comando de instalación
+  según la distro (detección de privilegios) y ofrece escribirlo en la terminal.
+- Indicador ∞ en la sub-pestaña cuando la terminal es persistente.
+- Pruebas: `cargo test --lib terminal::tmux` (scripts, versiones, `tmux ls`) y, con el contenedor
+  (`podman exec terview-sshd apk add tmux`), `cargo test --lib terminal::tmux -- --ignored`: crea la
+  sesión, corta la conexión con un `sleep` en marcha, se engancha desde otra conexión y comprueba que el
+  proceso y la shell siguen, el historial volcado y la configuración propia; y dos terminales por conexión.
+- ⚠️ **Sin probar**: en la app real con un corte de red de verdad (wifi/VPN), servidores con tmux viejo
+  (1.8–2.x), macOS (tmux de Homebrew) y FreeBSD, otros shells de login (fish, tcsh), programas con ratón
+  (vim/htop) dentro de tmux, y el dibujado al cambiar el tamaño con mucho historial.
+
+### 7.7 PIN, bóveda cifrada y bloqueo — ✅ Hecho (v0.4.0)
+
+- **Bóveda** (`src-tauri/src/storage/vault.rs`): `vault.json` en la carpeta de configuración (atómico,
+  0600) con un mapa id → secreto (servidores + `github-token`) cifrado con AES-256-GCM. Sobre JSON con
+  cabecera autenticada (AAD) compartido con la copia en Gist: la parte común salió de `github/crypto.rs`
+  a `storage/cipher.rs` (mismo formato de antes, los Gist viejos se siguen abriendo).
+  - Llave = Argon2id(PIN, sal) con la **llave del equipo** como «secreto» K de Argon2 (32 bytes al azar
+    en el llavero, usuario `vault-device-key`). Sin ella no se abre ni con el PIN correcto.
+  - Argon2id calibrado al crear o cambiar el PIN para unos 0,75 s: 64 MiB (128 MiB si el equipo es
+    rápido) y 3–20 pasadas; los parámetros van en el archivo. En este PC: 128 MiB × 9 pasadas ≈ 0,63 s.
+    `argon2` y `blake2` se compilan optimizados también en desarrollo (`Cargo.toml`).
+  - Llave y secretos descifrados solo en memoria mientras está desbloqueada (`Zeroizing`).
+  - Fallos: 5 libres; luego 30 s, el doble cada vez, máx. 15 min, en `vault-attempts.json`. Nunca se
+    borra nada por fallar. Borrar ese archivo a mano quita la espera (quien puede hacerlo ya tiene acceso
+    a tu usuario).
+- **API sin cambios** (`storage/secrets.rs`): `get/set/delete_secret` y las del token van a la bóveda si
+  existe (error `Locked` si está bloqueada) o al llavero si no.
+- **Mover**: activar lee todo del llavero → escribe y comprueba la bóveda → borra del llavero. Desactivar
+  (pide PIN) escribe en el llavero, comprueba, y solo entonces borra `vault.json` y la llave del equipo.
+  Cambiar el PIN vuelve a cifrar con sal nueva (misma llave del equipo). «Olvidé mi PIN» (escribir
+  BORRAR) borra bóveda y llave del equipo.
+- **Bloqueo** (`storage/lock.rs`): estado en Rust, evento `vault://state` a todas las ventanas. Las
+  ventanas avisan de la actividad (como mucho cada 15 s) y un vigilante bloquea tras `lockMinutes` (hora
+  del sistema: cuenta el tiempo suspendido). Al bloquear: se olvidan el token de GitHub en caché y las
+  contraseñas de sudo; la interfaz queda montada pero inerte y tapada. Atajo `Ctrl+Shift+L` (⌘⇧L).
+- **Reconexión**: con la bóveda activa, la sesión no guarda en memoria la contraseña o frase guardada;
+  se lee en cada intento. Si está bloqueado, el intento espera (aviso `waitingUnlock`, la pestaña dice
+  «Esperando el desbloqueo…») sin gastar intentos. Las de llave sin frase reconectan normal.
+- Interfaz: `src/features/lock/` (pantalla de bloqueo, «Olvidé mi PIN», primera vez con «Ahora no»,
+  medidor de fortaleza) y Ajustes → Seguridad (`components/Settings/SecuritySection.tsx`).
+- Pruebas: `cargo test --lib storage::vault` (ida y vuelta, PIN incorrecto, cambiar PIN, archivo dañado o
+  cabecera alterada, bloqueada → `Locked`, 0600, esperas guardadas en disco, llave del equipo ausente u
+  otra, «Olvidé mi PIN», mover con un llavero simulado) y `cargo test --lib ssh::reconnect` (espera al
+  desbloqueo). Con el llavero real (servicio `terview-test`):
+  `cargo test --lib storage -- --ignored --test-threads=1`.
+- ⚠️ **Sin probar en la app real**: la pantalla de bloqueo y la de primera vez a mano; ventanas de editor
+  aparte bloqueadas; el bloqueo por inactividad y tras suspender el equipo; una reconexión real esperando
+  al desbloqueo; Windows (Credential Manager) y macOS (Keychain, puede pedir permiso para la llave del
+  equipo); Linux sin llavero (el PIN no se puede activar: necesita el llavero para la llave del equipo);
+  el atajo `Ctrl+Shift+L` dentro del editor (tapa «seleccionar todas las coincidencias» de Monaco).
+- Límites conocidos: los secretos que se devuelven a otros módulos son `String` normales (no se pisan
+  al soltarlos); serde puede dejar copias temporales al descifrar. Mientras está desbloqueado, un
+  programa malicioso con tu usuario puede leer la memoria o ver el PIN al escribirlo.
 
 ---
 

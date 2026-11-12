@@ -21,6 +21,9 @@ pub const EV_SESSION_RECONNECTING: &str = "session://reconnecting";
 /// Payload: `SessionInfo`. La reconexión funcionó: mismo sessionId, conexión nueva.
 /// Terminales y canales SFTP anteriores murieron: hay que reabrirlos.
 pub const EV_SESSION_RECONNECTED: &str = "session://reconnected";
+/// Payload: `VaultStatus` (storage::vault). La bóveda se bloqueó, desbloqueó, creó o quitó.
+/// Llega a todas las ventanas (también a las de editor aparte).
+pub const EV_VAULT_STATE: &str = "vault://state";
 
 // ───────────────────────── Servidores y proyectos ─────────────────────────
 
@@ -48,6 +51,22 @@ pub struct ServerProfile {
     pub default_path: Option<String>,
     /// Color de acento (hex) para reconocerlo en pestañas.
     pub color: Option<String>,
+    /// Terminales persistentes (tmux) de este servidor. None = usar el ajuste general.
+    #[serde(default)]
+    pub tmux: Option<TmuxMode>,
+}
+
+/// Cuándo abrir las terminales dentro de tmux (sobreviven a cortes de red y al cierre de la app).
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum TmuxMode {
+    /// Usar tmux si el servidor lo tiene; si no, terminal normal sin avisos.
+    #[default]
+    Auto,
+    /// Usar tmux siempre; si no está instalado se abre una terminal normal y se avisa.
+    Always,
+    /// Nunca usar tmux.
+    Never,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -103,6 +122,12 @@ pub struct Settings {
     pub ssh_config_sync: bool,
     /// Si el destino ya existe al transferir: "overwrite" | "skip" | "newer" (solo si el origen es más nuevo) | "ask" (preguntar).
     pub transfer_conflict: String,
+    /// Terminales persistentes (tmux) por defecto. Cada servidor puede cambiarlo.
+    pub terminal_tmux: TmuxMode,
+    /// Bloquear TerView tras estos minutos sin uso (0 = nunca). Solo con bóveda: 5/10/15/30/60.
+    pub lock_minutes: u32,
+    /// El usuario dijo «Ahora no» a crear el PIN: no se vuelve a preguntar al iniciar.
+    pub vault_prompt_dismissed: bool,
 }
 
 impl Default for Settings {
@@ -123,6 +148,9 @@ impl Default for Settings {
             editor_font_family: "'JetBrains Mono', 'Fira Code', 'Noto Sans Mono', monospace".into(),
             ssh_config_sync: false,
             transfer_conflict: "overwrite".into(),
+            terminal_tmux: TmuxMode::Auto,
+            lock_minutes: 15,
+            vault_prompt_dismissed: false,
         }
     }
 }
@@ -165,6 +193,9 @@ pub struct SessionReconnecting {
     /// Segundos hasta el próximo intento.
     pub next_retry_secs: u32,
     pub reason: String,
+    /// Espera a que se desbloquee TerView para usar la contraseña guardada (no gasta intentos).
+    #[serde(default)]
+    pub waiting_unlock: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -175,6 +206,57 @@ pub struct SessionClosed {
 }
 
 // ───────────────────────── Terminal ─────────────────────────
+
+/// Petición de abrir la terminal dentro de una sesión tmux (parámetro de `term_open`).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TmuxOpen {
+    /// Nombre estable de la sesión tmux (`terview-…`). Si ya existe, se engancha a ella.
+    pub name: String,
+    /// Antes de engancharse, volcar el historial de la sesión (terminal recién creada en la interfaz).
+    #[serde(default)]
+    pub replay: bool,
+}
+
+/// Resultado de `term_open`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TermOpened {
+    pub term_id: String,
+    /// Nombre de la sesión tmux si la terminal es persistente; None = shell normal.
+    pub tmux: Option<String>,
+    /// Se pidió tmux pero no está instalado en el servidor.
+    pub tmux_missing: bool,
+    /// Se pidió tmux y no se pudo usar: motivo en español (no instalado, versión antigua, error).
+    pub tmux_problem: Option<String>,
+}
+
+/// Una sesión tmux de TerView que sigue viva en el servidor.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct TmuxSession {
+    pub name: String,
+    /// Creación y última actividad (segundos desde epoch).
+    pub created: Option<u64>,
+    pub activity: Option<u64>,
+    /// Clientes enganchados ahora (0 = nadie la está mirando).
+    pub attached: u32,
+    pub windows: u32,
+    /// Programa en primer plano (p. ej. "bash", "vim").
+    pub command: String,
+    /// Carpeta actual del programa.
+    pub path: String,
+}
+
+/// Resultado de `term_tmux_list`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TmuxList {
+    pub installed: bool,
+    /// Salida de `tmux -V` (p. ej. "tmux 3.4").
+    pub version: Option<String>,
+    pub sessions: Vec<TmuxSession>,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

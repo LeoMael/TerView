@@ -7,6 +7,23 @@ siguen [Versionado Semántico](https://semver.org/lang/es/).
 ## [Sin publicar]
 
 ### Añadido
+- **PIN y bloqueo**: las contraseñas y frases guardadas y el token de GitHub pueden ir en una bóveda
+  cifrada (`vault.json`, AES-256-GCM + Argon2id) con tu PIN o frase y una llave de este equipo guardada
+  en el llavero, así copiar solo el archivo no sirve. Al crearla, las contraseñas del llavero se mueven
+  a ella sin riesgo de perderlas; al quitarla, vuelven al llavero. TerView se bloquea al abrirlo, tras
+  5–60 min sin uso (15 por defecto) o con `Ctrl+Shift+L`, en todas las ventanas: se tapa la interfaz,
+  se borran de la memoria las contraseñas descifradas y las de sudo, y el motor deja de dar contraseñas
+  hasta que escribes el PIN. Las conexiones siguen vivas; una reconexión que necesita contraseña espera
+  al desbloqueo. Tras 5 fallos hay que esperar 30 s, el doble cada vez hasta 15 min (se recuerda aunque
+  cierres la app). Medidor de fortaleza que recomienda una frase de 4 o 5 palabras. **«Olvidé mi PIN»**
+  borra la bóveda (escribiendo BORRAR) y conserva servidores, llaves, comandos, túneles y ajustes.
+  Pantalla para crearlo la primera vez, con «Ahora no»; todo en Ajustes → Seguridad.
+- **Terminales persistentes (tmux)**: si el servidor tiene tmux, cada terminal vive en su propia sesión
+  y sigue corriendo aunque se corte la red o cierres la app; al reconectar, TerView vuelve a ella.
+  Ajuste Automático / Siempre / Nunca (general y por servidor), indicador ∞ en la pestaña, lista de
+  sesiones que quedaron en el servidor para reabrirlas o cerrarlas, y «Desacoplar» para dejar una
+  corriendo. El historial, la búsqueda y el copiar/pegar funcionan igual que sin tmux, y no se toca tu
+  `~/.tmux.conf`.
 - **Contenedores (Podman / Docker)**: pestaña visual para iniciar, parar, reiniciar y eliminar
   contenedores, ver logs, abrir una terminal dentro, crear contenedores con plantillas (Nginx,
   PostgreSQL, MySQL, MariaDB, Redis, Adminer, Portainer), levantar y bajar proyectos **Compose**, y

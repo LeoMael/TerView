@@ -1,0 +1,200 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1080" viewBox="0 0 1600 1080">
+  <defs>
+    <marker id="mp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#a78bfa"/></marker>
+    <marker id="mg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#22c55e"/></marker>
+    <marker id="my" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#facc15"/></marker>
+    <marker id="mo" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#f97316"/></marker>
+    <marker id="mr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#f43f5e"/></marker>
+    <!-- ICONOS (48x48, trazo; el color se da con style="color:#..." en <use>) -->
+    <symbol id="i-pc" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="7" width="38" height="26" rx="3"/><path d="M18 41h12M24 33v8"/></g></symbol>
+    <symbol id="i-window" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><rect x="4" y="7" width="40" height="34" rx="4"/><path d="M4 16h40"/></g><g fill="currentColor"><circle cx="10" cy="11.5" r="1.8"/><circle cx="16" cy="11.5" r="1.8"/><circle cx="22" cy="11.5" r="1.8"/></g></symbol>
+    <symbol id="i-gear" viewBox="0 0 48 48"><g fill="currentColor"><rect x="20" y="3" width="8" height="10" rx="2"/><rect x="20" y="35" width="8" height="10" rx="2"/><rect x="3" y="20" width="10" height="8" rx="2"/><rect x="35" y="20" width="10" height="8" rx="2"/><rect x="20" y="3" width="8" height="10" rx="2" transform="rotate(45 24 24)"/><rect x="20" y="35" width="8" height="10" rx="2" transform="rotate(45 24 24)"/><rect x="3" y="20" width="10" height="8" rx="2" transform="rotate(45 24 24)"/><rect x="35" y="20" width="10" height="8" rx="2" transform="rotate(45 24 24)"/></g><circle cx="24" cy="24" r="13" fill="currentColor"/><circle cx="24" cy="24" r="5.5" fill="#0f172a"/></symbol>
+    <symbol id="i-server" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><rect x="6" y="5" width="36" height="11" rx="2.5"/><rect x="6" y="19" width="36" height="11" rx="2.5"/><rect x="6" y="33" width="36" height="11" rx="2.5"/></g><g fill="currentColor"><circle cx="35" cy="10.5" r="2"/><circle cx="35" cy="24.5" r="2"/><circle cx="35" cy="38.5" r="2"/><rect x="11" y="9" width="14" height="3" rx="1.5"/><rect x="11" y="23" width="14" height="3" rx="1.5"/><rect x="11" y="37" width="14" height="3" rx="1.5"/></g></symbol>
+    <symbol id="i-cloud" viewBox="0 0 48 48"><path d="M14 38h22a9 9 0 0 0 1-17.9A12 12 0 0 0 14.3 17 10.5 10.5 0 0 0 14 38z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/></symbol>
+    <symbol id="i-git" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><circle cx="14" cy="10" r="5"/><circle cx="14" cy="38" r="5"/><circle cx="34" cy="16" r="5"/><path d="M14 15v18M34 21c0 9-20 6-20 12"/></g></symbol>
+    <symbol id="i-db" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3"><ellipse cx="24" cy="10" rx="16" ry="6"/><path d="M8 10v28c0 3.3 7.2 6 16 6s16-2.7 16-6V10"/><path d="M8 19c0 3.3 7.2 6 16 6s16-2.7 16-6M8 28.5c0 3.3 7.2 6 16 6s16-2.7 16-6"/></g></symbol>
+    <symbol id="i-key" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="15" cy="30" r="9"/><path d="M21.5 23.5 40 5M33 12l5 5M28 17l4 4"/></g></symbol>
+    <symbol id="i-folder" viewBox="0 0 48 48"><path d="M5 13a3 3 0 0 1 3-3h10l4 5h18a3 3 0 0 1 3 3v19a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/></symbol>
+    <symbol id="i-file" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><path d="M12 4h17l9 9v31H12z"/><path d="M29 4v9h9M18 24h14M18 31h14"/></g></symbol>
+    <symbol id="i-lock" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><rect x="9" y="21" width="30" height="22" rx="3"/><path d="M15 21v-6a9 9 0 0 1 18 0v6"/></g><circle cx="24" cy="32" r="3" fill="currentColor"/></symbol>
+    <symbol id="i-chip" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><rect x="12" y="12" width="24" height="24" rx="3"/><path d="M18 5v6M24 5v6M30 5v6M18 37v6M24 37v6M30 37v6M5 18h6M5 24h6M5 30h6M37 18h6M37 24h6M37 30h6"/></g><rect x="19" y="19" width="10" height="10" rx="1.5" fill="currentColor"/></symbol>
+    <symbol id="i-box" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><path d="M24 4 42 13v22L24 44 6 35V13z"/><path d="M6 13l18 9 18-9M24 22v22"/></g></symbol>
+    <symbol id="i-term" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="40" height="34" rx="4"/><path d="M12 18l7 6-7 6M23 31h12"/></g></symbol>
+    <symbol id="i-shield" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"><path d="M24 4 40 10v12c0 10-7 18-16 22C15 40 8 32 8 22V10z"/><path d="M17 24l5 5 9-10"/></g></symbol>
+    <symbol id="i-chart" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6v36h36"/><path d="M12 32l9-10 7 6 12-15"/></g></symbol>
+    <symbol id="i-user" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><circle cx="24" cy="15" r="8"/><path d="M8 43c0-9 7-15 16-15s16 6 16 15"/></g></symbol>
+    <symbol id="i-tunnel" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 40V24a20 20 0 0 1 40 0v16"/><path d="M14 40V25a10 10 0 0 1 20 0v15"/><path d="M4 40h10M34 40h10"/></g></symbol>
+    <symbol id="i-globe" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3"><circle cx="24" cy="24" r="19"/><ellipse cx="24" cy="24" rx="8" ry="19"/><path d="M5 24h38M8 14h32M8 34h32"/></g></symbol>
+    <symbol id="i-play" viewBox="0 0 48 48"><path d="M14 8l26 16-26 16z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 48 48"><rect x="9" y="9" width="30" height="30" rx="4" fill="none" stroke="currentColor" stroke-width="3"/></symbol>
+    <symbol id="i-tag" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><path d="M5 6h18l20 20-17 17L5 23z"/></g><circle cx="14" cy="15" r="3" fill="currentColor"/></symbol>
+    <symbol id="i-download" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M24 6v24M14 21l10 10 10-10M6 36v6h36v-6"/></g></symbol>
+    <symbol id="i-hand" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M16 26V9a3 3 0 0 1 6 0v14M22 21V6a3 3 0 0 1 6 0v15M28 21V9a3 3 0 0 1 6 0v14M34 23v-7a3 3 0 0 1 6 0v12c0 9-6 16-15 16-6 0-9-3-12-7l-6-9a3 3 0 0 1 5-3l3 3"/></g></symbol>
+    <symbol id="i-history" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 24a17 17 0 1 0 5-12"/><path d="M6 6v8h8M24 14v11l7 4"/></g></symbol>
+    <symbol id="i-eye" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><path d="M3 24s8-14 21-14 21 14 21 14-8 14-21 14S3 24 3 24z"/><circle cx="24" cy="24" r="6"/></g></symbol>
+  </defs>
+  <style>
+    text{font-family:'Noto Sans','DejaVu Sans',sans-serif;fill:#e2e8f0}
+    .t{font-size:34px;font-weight:700}
+    .st{font-size:18px;fill:#94a3b8}
+    .h{font-size:24px;font-weight:700}
+    .b{font-size:18px;font-weight:600}
+    .s{font-size:15px;fill:#94a3b8}
+    .xs{font-size:13px;fill:#94a3b8}
+    .n{font-size:13px;font-weight:700;fill:#fff}
+    .mono{font-family:'Noto Sans Mono','DejaVu Sans Mono',monospace}
+    .z{font-size:15px;font-weight:700;letter-spacing:2px}
+    .pi{fill:#1e293b;stroke:#2c4a66;stroke-width:1.5}
+    .po{fill:#1e293b;stroke:#5a3a20;stroke-width:1.5}
+  </style>
+  <rect width="1600" height="1080" fill="#0f172a"/>
+
+  <text x="60" y="62" class="t">Arrastrar del servidor a tu escritorio</text>
+  <text x="60" y="94" class="st">Primero se descarga a una carpeta de la caché y después el sistema hace un arrastre de archivos de verdad.</text>
+
+  <!-- ZONAS -->
+  <rect x="40" y="120" width="1110" height="625" rx="24" fill="none" stroke="#475569" stroke-width="2" stroke-dasharray="10 8"/>
+  <use href="#i-pc" x="62" y="134" width="24" height="24" style="color:#94a3b8"/>
+  <text x="94" y="152" class="z" style="fill:#94a3b8">TU PC</text>
+  <rect x="1180" y="120" width="380" height="625" rx="24" fill="none" stroke="#22c55e" stroke-width="2" stroke-dasharray="10 8"/>
+  <use href="#i-server" x="1202" y="134" width="24" height="24" style="color:#22c55e"/>
+  <text x="1234" y="152" class="z" style="fill:#22c55e">TUS SERVIDORES</text>
+
+  <!-- INTERFAZ -->
+  <rect x="80" y="170" width="340" height="330" rx="18" fill="#10243a" stroke="#38bdf8" stroke-width="2.5"/>
+  <use href="#i-window" x="100" y="184" width="40" height="40" style="color:#38bdf8"/>
+  <text x="152" y="204" class="h" style="fill:#38bdf8;font-size:22px">INTERFAZ</text>
+  <text x="152" y="226" class="xs">Explorador · dragOut.ts</text>
+  <rect x="100" y="240" width="300" height="64" rx="12" class="pi"/>
+  <text x="118" y="266" class="b" style="font-size:16px">Pulsas y arrastras</text>
+  <text x="118" y="290" class="xs">archivos o carpetas del servidor</text>
+  <rect x="100" y="318" width="300" height="64" rx="12" class="pi"/>
+  <text x="118" y="344" class="b" style="font-size:16px">Espera la descarga</text>
+  <text x="118" y="368" class="xs">el lote se ve en Transferencias</text>
+  <rect x="100" y="396" width="300" height="86" rx="12" class="pi"/>
+  <text x="118" y="422" class="b" style="font-size:16px">Lanza el arrastre</text>
+  <text x="118" y="446" class="xs">solo si el botón sigue apretado;</text>
+  <text x="118" y="466" class="xs">si no, queda «listo» para después</text>
+
+  <!-- MOTOR -->
+  <rect x="580" y="170" width="380" height="330" rx="18" fill="#2a1a10" stroke="#f97316" stroke-width="2.5"/>
+  <use href="#i-gear" x="600" y="184" width="40" height="40" style="color:#f97316"/>
+  <text x="652" y="204" class="h" style="fill:#f97316;font-size:22px">MOTOR</text>
+  <text x="652" y="226" class="xs">Rust · dragout/ + transfer/</text>
+  <rect x="600" y="240" width="340" height="64" rx="12" class="po"/>
+  <text x="618" y="266" class="b mono" style="font-size:15px">drag_out_dir</text>
+  <text x="618" y="290" class="xs">crea una carpeta nueva y vacía</text>
+  <rect x="600" y="318" width="340" height="64" rx="12" class="po"/>
+  <text x="618" y="344" class="b" style="font-size:16px">Motor de transferencias</text>
+  <text x="618" y="368" class="xs">cola, progreso, pausar, reanudar</text>
+  <rect x="600" y="396" width="340" height="86" rx="12" class="po"/>
+  <text x="618" y="422" class="b mono" style="font-size:15px">drag_out_start</text>
+  <text x="618" y="446" class="xs">check_paths: solo rutas de la caché</text>
+  <text x="618" y="466" class="xs">y empieza el arrastre nativo</text>
+
+  <!-- CACHÉ (cilindro) -->
+  <path d="M640,580 v120 a160,18 0 0 0 320,0 v-120" fill="#2e2a0e" stroke="#facc15" stroke-width="2.5"/>
+  <ellipse cx="800" cy="580" rx="160" ry="18" fill="#3a340f" stroke="#facc15" stroke-width="2.5"/>
+  <text x="800" y="626" text-anchor="middle" class="b" style="fill:#facc15">Caché de arrastre</text>
+  <text x="800" y="652" text-anchor="middle" class="mono xs" style="fill:#e2e8f0">&lt;caché&gt;/com.terview.app/</text>
+  <text x="800" y="672" text-anchor="middle" class="mono xs" style="fill:#e2e8f0">arrastre/&lt;uuid&gt;/</text>
+  <text x="800" y="696" text-anchor="middle" class="xs">se limpia al abrir la app</text>
+
+  <!-- SISTEMA -->
+  <rect x="80" y="540" width="340" height="170" rx="18" fill="#1e293b" stroke="#64748b" stroke-width="2.5"/>
+  <use href="#i-folder" x="100" y="556" width="40" height="40" style="color:#cbd5e1"/>
+  <text x="152" y="576" class="b">Escritorio o</text>
+  <text x="152" y="598" class="b">gestor de archivos</text>
+  <text x="100" y="640" class="xs">Nautilus, Dolphin, Thunar,</text>
+  <text x="100" y="660" class="xs">Explorador de Windows, Finder</text>
+  <text x="100" y="690" class="xs" style="fill:#e2e8f0">copia desde la caché</text>
+
+  <!-- SERVIDOR -->
+  <rect x="1210" y="250" width="320" height="200" rx="18" fill="#0f2a1c" stroke="#22c55e" stroke-width="2.5"/>
+  <use href="#i-server" x="1230" y="266" width="40" height="40" style="color:#22c55e"/>
+  <text x="1282" y="294" class="h" style="fill:#22c55e;font-size:22px">SERVIDOR</text>
+  <rect x="1230" y="322" width="280" height="34" rx="8" fill="#14301f"/>
+  <text x="1246" y="344" class="mono xs" style="fill:#e2e8f0">/srv/informes/enero.pdf</text>
+  <rect x="1230" y="364" width="280" height="34" rx="8" fill="#14301f"/>
+  <text x="1246" y="386" class="mono xs" style="fill:#e2e8f0">/var/www/fotos/</text>
+  <text x="1230" y="428" class="xs">lo que arrastras</text>
+  <text x="1210" y="500" class="xs">La descarga usa la misma conexión SSH</text>
+  <text x="1210" y="520" class="xs">y los canales SFTP de las transferencias.</text>
+
+  <!-- FLECHAS -->
+  <!-- 1: drag_out_dir -->
+  <line x1="422" y1="272" x2="596" y2="272" stroke="#a78bfa" stroke-width="3" marker-end="url(#mp)"/>
+  <circle cx="440" cy="256" r="11" fill="#a78bfa"/><text x="440" y="261" text-anchor="middle" class="n">1</text>
+  <text x="457" y="261" class="mono" style="font-size:12px;fill:#a78bfa">drag_out_dir</text>
+  <!-- 2: descarga SFTP -->
+  <line x1="1208" y1="350" x2="944" y2="350" stroke="#22c55e" stroke-width="3" marker-end="url(#mg)"/>
+  <circle cx="1000" cy="334" r="11" fill="#22c55e"/><text x="1000" y="339" text-anchor="middle" class="n">2</text>
+  <text x="1018" y="340" style="font-size:15px;font-weight:700;fill:#22c55e">SFTP</text>
+  <text x="980" y="374" class="xs">descarga a la caché</text>
+  <!-- progreso al panel -->
+  <line x1="598" y1="350" x2="404" y2="350" stroke="#a78bfa" stroke-width="2.5" stroke-dasharray="7 5" marker-end="url(#mp)"/>
+  <text x="501" y="342" text-anchor="middle" class="xs" style="fill:#a78bfa">progreso</text>
+  <!-- 3: escribe en la caché -->
+  <line x1="800" y1="502" x2="800" y2="556" stroke="#facc15" stroke-width="3" marker-end="url(#my)"/>
+  <circle cx="824" cy="522" r="11" fill="#facc15"/><text x="824" y="527" text-anchor="middle" class="n" style="fill:#0f172a">3</text>
+  <text x="842" y="527" class="xs" style="fill:#facc15">escribe los archivos</text>
+  <!-- 4: drag_out_start -->
+  <line x1="422" y1="439" x2="596" y2="439" stroke="#a78bfa" stroke-width="3" marker-end="url(#mp)"/>
+  <circle cx="440" cy="423" r="11" fill="#a78bfa"/><text x="440" y="428" text-anchor="middle" class="n">4</text>
+  <text x="457" y="428" class="mono" style="font-size:12px;fill:#a78bfa">drag_out_start</text>
+  <text x="440" y="460" class="xs">rutas locales</text>
+  <!-- 5: arrastre nativo -->
+  <path d="M610,502 V600 H424" fill="none" stroke="#f97316" stroke-width="3" marker-end="url(#mo)"/>
+  <circle cx="446" cy="584" r="11" fill="#f97316"/><text x="446" y="589" text-anchor="middle" class="n">5</text>
+  <text x="464" y="589" style="font-size:14px;font-weight:700;fill:#f97316">arrastre nativo</text>
+  <!-- 6: copia al soltar -->
+  <line x1="638" y1="664" x2="424" y2="664" stroke="#facc15" stroke-width="3" stroke-dasharray="8 6" marker-end="url(#my)"/>
+  <circle cx="446" cy="648" r="11" fill="#facc15"/><text x="446" y="653" text-anchor="middle" class="n" style="fill:#0f172a">6</text>
+  <text x="464" y="653" style="font-size:14px;font-weight:700;fill:#facc15">al soltar, copia</text>
+  <!-- 7: el soltar también llega a TerView -->
+  <line x1="250" y1="538" x2="250" y2="506" stroke="#f43f5e" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#mr)"/>
+  <circle cx="276" cy="521" r="11" fill="#f43f5e"/><text x="276" y="526" text-anchor="middle" class="n">7</text>
+  <text x="294" y="526" class="xs" style="fill:#f43f5e;font-weight:700">«soltar» propio: se ignora</text>
+
+  <!-- POR SISTEMA -->
+  <text x="60" y="790" class="z" style="fill:#f97316">ARRASTRE NATIVO POR SISTEMA</text>
+  <rect x="60" y="808" width="300" height="190" rx="16" fill="#1e293b" stroke="#5a3a20" stroke-width="2"/>
+  <use href="#i-pc" x="78" y="822" width="34" height="34" style="color:#f97316"/>
+  <text x="122" y="846" class="b">Linux</text>
+  <text x="78" y="884" class="s" style="fill:#e2e8f0">GTK3 propio (linux.rs)</text>
+  <text x="78" y="908" class="xs">X11 y Wayland</text>
+  <text x="78" y="930" class="xs">lista text/uri-list con URIs</text>
+  <text x="78" y="950" class="xs">bien codificadas (espacios, acentos)</text>
+  <text x="78" y="972" class="xs">datos disponibles hasta drag-end</text>
+
+  <rect x="378" y="808" width="300" height="190" rx="16" fill="#1e293b" stroke="#5a3a20" stroke-width="2"/>
+  <use href="#i-window" x="396" y="822" width="34" height="34" style="color:#f97316"/>
+  <text x="440" y="846" class="b">Windows</text>
+  <text x="396" y="884" class="s" style="fill:#e2e8f0">Shell: SHDoDragDrop (win.rs)</text>
+  <text x="396" y="908" class="xs">CF_HDROP y formatos del</text>
+  <text x="396" y="930" class="xs">Explorador, como desde una carpeta</text>
+  <text x="396" y="972" class="xs" style="fill:#facc15">aún sin probar en un Windows real</text>
+
+  <rect x="696" y="808" width="300" height="190" rx="16" fill="#1e293b" stroke="#5a3a20" stroke-width="2"/>
+  <use href="#i-pc" x="714" y="822" width="34" height="34" style="color:#f97316"/>
+  <text x="758" y="846" class="b">macOS</text>
+  <text x="714" y="884" class="s" style="fill:#e2e8f0">crate drag (macos.rs)</text>
+  <text x="714" y="908" class="xs">arrastra NSURL de archivo</text>
+  <text x="714" y="930" class="xs">hacia Finder</text>
+
+  <!-- REGLAS -->
+  <text x="1030" y="790" class="z" style="fill:#94a3b8">REGLAS</text>
+  <rect x="1030" y="808" width="530" height="190" rx="16" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+  <use href="#i-shield" x="1048" y="824" width="26" height="26" style="color:#22c55e"/>
+  <text x="1086" y="843" class="s" style="fill:#e2e8f0">Solo se arrastra lo que está en la caché</text>
+  <use href="#i-eye" x="1048" y="860" width="26" height="26" style="color:#f43f5e"/>
+  <text x="1086" y="879" class="s" style="fill:#e2e8f0">Lo que suelta TerView no se vuelve a subir</text>
+  <use href="#i-play" x="1048" y="896" width="26" height="26" style="color:#38bdf8"/>
+  <text x="1086" y="915" class="s" style="fill:#e2e8f0">Ya preparado y sin cambios: arrastre inmediato</text>
+  <use href="#i-history" x="1048" y="932" width="26" height="26" style="color:#facc15"/>
+  <text x="1086" y="951" class="s" style="fill:#e2e8f0">Al abrir la app se borra lo de más de 1 día</text>
+  <use href="#i-download" x="1048" y="964" width="26" height="26" style="color:#94a3b8"/>
+  <text x="1086" y="983" class="s" style="fill:#e2e8f0">Más de 1 GB: pregunta antes de descargar</text>
+
+  <text x="60" y="1058" style="font-size:17px;fill:#94a3b8">Por qué descargar primero: Wayland no admite «archivos prometidos» y así todo pasa por la cola, con progreso y reanudación.</text>
+</svg>

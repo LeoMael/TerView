@@ -13,17 +13,25 @@
 //! 3. Éxito → misma `sessionId` con la conexión nueva, se reanudan transferencias y se emite
 //!    `SessionInfo`. Fracaso definitivo → se quita la sesión y se emite `SessionClosed`.
 //! 4. `SessionStore::remove` (p. ej. `ssh_disconnect`) cancela todo sin emitir nada más.
+//!
+//! Contraseña guardada en la bóveda (`Supervised::stored_secret`): no se guarda en memoria con
+//! la sesión; se lee en cada intento. Si TerView está bloqueado, el intento espera al desbloqueo
+//! (avisando con `waiting_unlock`) sin gastar intentos.
 
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
+use futures::future::BoxFuture;
 use tokio_util::sync::CancellationToken;
 
 use crate::error::AppError;
 use crate::ssh::connect::{self, Credentials};
 use crate::ssh::handler::{HostKeyPolicy, SharedState};
 use crate::ssh::{disconnect_session, SessionStore, SshSession};
-use crate::types::{ServerProfile, SessionClosed, SessionInfo, SessionReconnecting, Settings};
+use crate::types::{AuthMethod, ServerProfile, SessionClosed, SessionInfo, SessionReconnecting, Settings};
+
+/// Cada cuánto se vuelve a mirar si TerView ya se desbloqueó.
+const UNLOCK_POLL: Duration = Duration::from_millis(500);
 
 /// Lo que el vigilante necesita de la aplicación.
 pub trait ReconnectEnv: Send + Sync + 'static {
@@ -39,6 +47,9 @@ pub trait ReconnectEnv: Send + Sync + 'static {
     fn release_all(&self, session_id: &str);
     /// Reconectada: reanudar las transferencias que fallaron por la caída.
     fn resume(&self, session_id: &str);
+    /// Contraseña o frase guardada del servidor (bóveda o llavero). `AppError::Locked` si TerView
+    /// está bloqueado.
+    fn stored_secret(&self, profile_id: &str) -> BoxFuture<'static, Result<Option<String>, AppError>>;
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -93,7 +104,11 @@ impl Timing {
 pub struct Supervised {
     pub profile: ServerProfile,
     /// Credenciales que funcionaron (solo en memoria, mientras viva la sesión). Sin OTP.
+    /// Si `stored_secret`, sin la contraseña/frase guardada (se lee en cada intento).
     pub creds: Credentials,
+    /// La contraseña (método contraseña) o la frase (método llave) está en la bóveda: no se
+    /// guarda aquí, se pide a `ReconnectEnv::stored_secret` al reintentar.
+    pub stored_secret: bool,
     pub policy: HostKeyPolicy,
     pub session: Arc<SshSession>,
     pub shared: Arc<Mutex<SharedState>>,
@@ -232,12 +247,17 @@ async fn reconnect_loop<E: ReconnectEnv>(
             max_attempts: max,
             next_retry_secs: wait.as_secs_f64().ceil() as u32,
             reason: reason.clone(),
+            waiting_unlock: false,
         });
         tokio::select! {
             _ = cancel.cancelled() => return Outcome::Cancelled,
             _ = tokio::time::sleep(wait) => {}
         }
-        let fut = connect::connect_full(&sup.profile, sup.creds.clone(), sup.policy.clone(), keepalive);
+        let creds = match creds_for_attempt(env, &sup.profile, &sup.creds, sup.stored_secret, id, attempt, max, cancel).await {
+            Ok(c) => c,
+            Err(out) => return out,
+        };
+        let fut = connect::connect_full(&sup.profile, creds, sup.policy.clone(), keepalive);
         let res = tokio::select! {
             _ = cancel.cancelled() => return Outcome::Cancelled,
             r = fut => r,
@@ -260,6 +280,75 @@ async fn reconnect_loop<E: ReconnectEnv>(
     Outcome::GaveUp(format!(
         "No se pudo reconectar tras {max} intentos: {last_error}"
     ))
+}
+
+/// Credenciales para un intento. Con secreto en la bóveda lo lee ahora; si TerView está bloqueado
+/// avisa una vez y espera al desbloqueo (o a que cancelen).
+#[allow(clippy::too_many_arguments)]
+async fn creds_for_attempt<E: ReconnectEnv>(
+    env: &E,
+    profile: &ServerProfile,
+    base: &Credentials,
+    stored_secret: bool,
+    session_id: &str,
+    attempt: u8,
+    max: u8,
+    cancel: &CancellationToken,
+) -> Result<Credentials, Outcome> {
+    let mut creds = base.clone();
+    if !stored_secret {
+        return Ok(creds);
+    }
+    let mut waited = false;
+    loop {
+        if cancel.is_cancelled() {
+            return Err(Outcome::Cancelled);
+        }
+        match env.stored_secret(&profile.id).await {
+            Ok(secret) => {
+                match profile.auth {
+                    AuthMethod::Password => creds.password = secret,
+                    AuthMethod::Key => creds.passphrase = secret,
+                    AuthMethod::Agent => {}
+                }
+                if waited {
+                    env.emit_reconnecting(SessionReconnecting {
+                        session_id: session_id.to_string(),
+                        attempt,
+                        max_attempts: max,
+                        next_retry_secs: 0,
+                        reason: "TerView se desbloqueó: reconectando".to_string(),
+                        waiting_unlock: false,
+                    });
+                }
+                return Ok(creds);
+            }
+            Err(AppError::Locked) => {
+                if !waited {
+                    waited = true;
+                    log::info!("sesión {session_id}: esperando el desbloqueo para reconectar");
+                    env.emit_reconnecting(SessionReconnecting {
+                        session_id: session_id.to_string(),
+                        attempt,
+                        max_attempts: max,
+                        next_retry_secs: 0,
+                        reason: "esperando a que desbloquees TerView para usar la contraseña guardada"
+                            .to_string(),
+                        waiting_unlock: true,
+                    });
+                }
+                tokio::select! {
+                    _ = cancel.cancelled() => return Err(Outcome::Cancelled),
+                    _ = tokio::time::sleep(UNLOCK_POLL) => {}
+                }
+            }
+            Err(e) => {
+                return Err(Outcome::GaveUp(format!(
+                    "No se pudo reconectar: no se pudo leer la contraseña guardada ({e})"
+                )));
+            }
+        }
+    }
 }
 
 #[cfg(test)]

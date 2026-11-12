@@ -38,6 +38,7 @@ pub fn run() {
         .manage(sftp::SftpStore::default())
         .manage(transfer::TransferManager::default())
         .manage(snippets::ExecRegistry::default())
+        .manage(storage::lock::LockState::default())
         // Al cerrar la principal se cierra la app entera (si no, seguirían vivas las ventanas de editor aparte).
         .on_window_event(|window, event| {
             if window.label() == "main" && matches!(event, tauri::WindowEvent::Destroyed) {
@@ -47,6 +48,8 @@ pub fn run() {
         .setup(|app| {
             app.manage(storage::ProfileStore::load());
             app.manage(storage::SettingsStore::load());
+            // Bloqueo por inactividad (solo actúa si hay bóveda y está desbloqueada).
+            storage::lock::start_idle_watcher(app.handle().clone());
             app.manage(snippets::SnippetStore::load());
             // Túneles: definiciones guardadas + vigilante (arranque automático, reconexión, cierre).
             app.manage(tunnels::TunnelManager::load());
@@ -66,6 +69,8 @@ pub fn run() {
             terminal::term_write,
             terminal::term_resize,
             terminal::term_close,
+            terminal::term_tmux_list,
+            terminal::term_tmux_kill,
             // sftp
             sftp::sftp_home,
             sftp::sftp_list_dir,
@@ -110,6 +115,15 @@ pub fn run() {
             storage::ssh_config::ssh_config_aliases,
             storage::ssh_config::ssh_config_set_aliases,
             storage::ssh_config::ssh_config_import_preview,
+            // bóveda de contraseñas y bloqueo con PIN
+            storage::lock::vault_status,
+            storage::lock::vault_activity,
+            storage::lock::vault_unlock,
+            storage::lock::vault_lock,
+            storage::lock::vault_enable,
+            storage::lock::vault_disable,
+            storage::lock::vault_change_pin,
+            storage::lock::vault_reset,
             // archivos locales (exportar/importar)
             localfs::local_write_text,
             localfs::local_read_text,

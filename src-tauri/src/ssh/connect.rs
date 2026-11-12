@@ -815,6 +815,7 @@ pub mod testutil {
             key_path: None,
             default_path: None,
             color: None,
+            tmux: None,
         }
     }
 

@@ -1,0 +1,216 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+  <defs>
+    <marker id="mg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#22c55e"/></marker>
+    <marker id="mn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#64748b"/></marker>
+    <!-- ICONOS (48x48, trazo; el color se da con style="color:#..." en <use>) -->
+    <symbol id="i-pc" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="7" width="38" height="26" rx="3"/><path d="M18 41h12M24 33v8"/></g></symbol>
+    <symbol id="i-window" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><rect x="4" y="7" width="40" height="34" rx="4"/><path d="M4 16h40"/></g><g fill="currentColor"><circle cx="10" cy="11.5" r="1.8"/><circle cx="16" cy="11.5" r="1.8"/><circle cx="22" cy="11.5" r="1.8"/></g></symbol>
+    <symbol id="i-gear" viewBox="0 0 48 48"><g fill="currentColor"><rect x="20" y="3" width="8" height="10" rx="2"/><rect x="20" y="35" width="8" height="10" rx="2"/><rect x="3" y="20" width="10" height="8" rx="2"/><rect x="35" y="20" width="10" height="8" rx="2"/><rect x="20" y="3" width="8" height="10" rx="2" transform="rotate(45 24 24)"/><rect x="20" y="35" width="8" height="10" rx="2" transform="rotate(45 24 24)"/><rect x="3" y="20" width="10" height="8" rx="2" transform="rotate(45 24 24)"/><rect x="35" y="20" width="10" height="8" rx="2" transform="rotate(45 24 24)"/></g><circle cx="24" cy="24" r="13" fill="currentColor"/><circle cx="24" cy="24" r="5.5" fill="#0f172a"/></symbol>
+    <symbol id="i-server" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><rect x="6" y="5" width="36" height="11" rx="2.5"/><rect x="6" y="19" width="36" height="11" rx="2.5"/><rect x="6" y="33" width="36" height="11" rx="2.5"/></g><g fill="currentColor"><circle cx="35" cy="10.5" r="2"/><circle cx="35" cy="24.5" r="2"/><circle cx="35" cy="38.5" r="2"/><rect x="11" y="9" width="14" height="3" rx="1.5"/><rect x="11" y="23" width="14" height="3" rx="1.5"/><rect x="11" y="37" width="14" height="3" rx="1.5"/></g></symbol>
+    <symbol id="i-cloud" viewBox="0 0 48 48"><path d="M14 38h22a9 9 0 0 0 1-17.9A12 12 0 0 0 14.3 17 10.5 10.5 0 0 0 14 38z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/></symbol>
+    <symbol id="i-git" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><circle cx="14" cy="10" r="5"/><circle cx="14" cy="38" r="5"/><circle cx="34" cy="16" r="5"/><path d="M14 15v18M34 21c0 9-20 6-20 12"/></g></symbol>
+    <symbol id="i-db" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3"><ellipse cx="24" cy="10" rx="16" ry="6"/><path d="M8 10v28c0 3.3 7.2 6 16 6s16-2.7 16-6V10"/><path d="M8 19c0 3.3 7.2 6 16 6s16-2.7 16-6M8 28.5c0 3.3 7.2 6 16 6s16-2.7 16-6"/></g></symbol>
+    <symbol id="i-key" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="15" cy="30" r="9"/><path d="M21.5 23.5 40 5M33 12l5 5M28 17l4 4"/></g></symbol>
+    <symbol id="i-folder" viewBox="0 0 48 48"><path d="M5 13a3 3 0 0 1 3-3h10l4 5h18a3 3 0 0 1 3 3v19a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/></symbol>
+    <symbol id="i-file" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><path d="M12 4h17l9 9v31H12z"/><path d="M29 4v9h9M18 24h14M18 31h14"/></g></symbol>
+    <symbol id="i-lock" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><rect x="9" y="21" width="30" height="22" rx="3"/><path d="M15 21v-6a9 9 0 0 1 18 0v6"/></g><circle cx="24" cy="32" r="3" fill="currentColor"/></symbol>
+    <symbol id="i-chip" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><rect x="12" y="12" width="24" height="24" rx="3"/><path d="M18 5v6M24 5v6M30 5v6M18 37v6M24 37v6M30 37v6M5 18h6M5 24h6M5 30h6M37 18h6M37 24h6M37 30h6"/></g><rect x="19" y="19" width="10" height="10" rx="1.5" fill="currentColor"/></symbol>
+    <symbol id="i-box" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><path d="M24 4 42 13v22L24 44 6 35V13z"/><path d="M6 13l18 9 18-9M24 22v22"/></g></symbol>
+    <symbol id="i-term" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="40" height="34" rx="4"/><path d="M12 18l7 6-7 6M23 31h12"/></g></symbol>
+    <symbol id="i-shield" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"><path d="M24 4 40 10v12c0 10-7 18-16 22C15 40 8 32 8 22V10z"/><path d="M17 24l5 5 9-10"/></g></symbol>
+    <symbol id="i-chart" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6v36h36"/><path d="M12 32l9-10 7 6 12-15"/></g></symbol>
+    <symbol id="i-user" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><circle cx="24" cy="15" r="8"/><path d="M8 43c0-9 7-15 16-15s16 6 16 15"/></g></symbol>
+    <symbol id="i-tunnel" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 40V24a20 20 0 0 1 40 0v16"/><path d="M14 40V25a10 10 0 0 1 20 0v15"/><path d="M4 40h10M34 40h10"/></g></symbol>
+    <symbol id="i-globe" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3"><circle cx="24" cy="24" r="19"/><ellipse cx="24" cy="24" rx="8" ry="19"/><path d="M5 24h38M8 14h32M8 34h32"/></g></symbol>
+    <symbol id="i-play" viewBox="0 0 48 48"><path d="M14 8l26 16-26 16z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 48 48"><rect x="9" y="9" width="30" height="30" rx="4" fill="none" stroke="currentColor" stroke-width="3"/></symbol>
+    <symbol id="i-tag" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><path d="M5 6h18l20 20-17 17L5 23z"/></g><circle cx="14" cy="15" r="3" fill="currentColor"/></symbol>
+    <symbol id="i-download" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M24 6v24M14 21l10 10 10-10M6 36v6h36v-6"/></g></symbol>
+    <symbol id="i-hand" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M16 26V9a3 3 0 0 1 6 0v14M22 21V6a3 3 0 0 1 6 0v15M28 21V9a3 3 0 0 1 6 0v14M34 23v-7a3 3 0 0 1 6 0v12c0 9-6 16-15 16-6 0-9-3-12-7l-6-9a3 3 0 0 1 5-3l3 3"/></g></symbol>
+    <symbol id="i-history" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 24a17 17 0 1 0 5-12"/><path d="M6 6v8h8M24 14v11l7 4"/></g></symbol>
+    <symbol id="i-eye" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><path d="M3 24s8-14 21-14 21 14 21 14-8 14-21 14S3 24 3 24z"/><circle cx="24" cy="24" r="6"/></g></symbol>
+  </defs>
+  <style>
+    text{font-family:'Noto Sans','DejaVu Sans',sans-serif;fill:#e2e8f0}
+    .t{font-size:34px;font-weight:700}
+    .st{font-size:18px;fill:#94a3b8}
+    .h{font-size:24px;font-weight:700}
+    .b{font-size:18px;font-weight:600}
+    .s{font-size:15px;fill:#94a3b8}
+    .s14{font-size:14px;fill:#94a3b8}
+    .mono{font-family:'Noto Sans Mono','DejaVu Sans Mono',monospace}
+    .z{font-size:15px;font-weight:700;letter-spacing:2px}
+    .chip{fill:#1e293b;stroke:#334155;stroke-width:1.5}
+    .lane{fill:#10243a;stroke:#38bdf8;stroke-width:2}
+    .ch{fill:#1e293b;stroke:#2c4a66;stroke-width:1.2}
+    .cht{font-size:13px;fill:#cbd5e1}
+    .srv{fill:#0f2a1c;stroke:#22c55e;stroke-width:2}
+    .step{fill:#1e293b;stroke:#334155;stroke-width:1.5}
+  </style>
+  <rect width="1600" height="1000" fill="#0f172a"/>
+
+  <text x="60" y="62" class="t">Administración del servidor</text>
+  <text x="60" y="94" class="st">Primero lee y te muestra el estado. Cada cambio es un Plan que ves completo antes de ejecutarlo.</text>
+
+  <!-- Sub-pestañas -->
+  <rect x="60" y="118" width="182" height="40" rx="10" fill="#10243a" stroke="#38bdf8" stroke-width="1.8"/>
+  <use href="#i-user" x="72" y="127" width="22" height="22" style="color:#38bdf8"/><text x="102" y="144" style="font-size:15px">Usuarios</text>
+  <rect x="248" y="118" width="182" height="40" rx="10" class="chip"/>
+  <use href="#i-user" x="260" y="127" width="22" height="22" style="color:#94a3b8"/><text x="290" y="144" style="font-size:15px">Grupos</text>
+  <rect x="436" y="118" width="182" height="40" rx="10" class="chip"/>
+  <use href="#i-pc" x="448" y="127" width="22" height="22" style="color:#94a3b8"/><text x="478" y="144" style="font-size:15px">Conectados ahora</text>
+  <rect x="624" y="118" width="182" height="40" rx="10" class="chip"/>
+  <use href="#i-tag" x="636" y="127" width="22" height="22" style="color:#94a3b8"/><text x="666" y="144" style="font-size:15px">Puertos</text>
+  <rect x="812" y="118" width="182" height="40" rx="10" class="chip"/>
+  <use href="#i-globe" x="824" y="127" width="22" height="22" style="color:#94a3b8"/><text x="854" y="144" style="font-size:15px">Sitios web</text>
+  <rect x="1000" y="118" width="182" height="40" rx="10" class="chip"/>
+  <use href="#i-history" x="1012" y="127" width="22" height="22" style="color:#94a3b8"/><text x="1042" y="144" style="font-size:15px">Historial</text>
+
+  <!-- Zona servidores -->
+  <rect x="1190" y="178" width="370" height="784" rx="24" fill="none" stroke="#22c55e" stroke-width="2" stroke-dasharray="10 8"/>
+  <use href="#i-server" x="1212" y="186" width="22" height="22" style="color:#22c55e"/>
+  <text x="1242" y="203" class="z" style="fill:#22c55e">TUS SERVIDORES</text>
+
+  <!-- LEER -->
+  <text x="60" y="198" class="z" style="fill:#38bdf8">LEER</text>
+  <text x="122" y="198" class="s">solo lectura: no cambia nada en el servidor</text>
+
+  <!-- Lane 1 -->
+  <rect x="60" y="212" width="500" height="100" rx="14" class="lane"/>
+  <use href="#i-user" x="76" y="226" width="34" height="34" style="color:#38bdf8"/>
+  <text x="124" y="248" class="b">Usuarios · Grupos · Conectados</text>
+  <text x="124" y="270" class="s">cuentas, grupos y sesiones abiertas</text>
+  <rect x="124" y="281" width="62" height="22" rx="6" class="ch"/><text x="155" y="297" text-anchor="middle" class="cht">Crear</text>
+  <rect x="192" y="281" width="62" height="22" rx="6" class="ch"/><text x="223" y="297" text-anchor="middle" class="cht">Editar</text>
+  <rect x="260" y="281" width="78" height="22" rx="6" class="ch"/><text x="299" y="297" text-anchor="middle" class="cht">Bloquear</text>
+  <rect x="344" y="281" width="88" height="22" rx="6" class="ch"/><text x="388" y="297" text-anchor="middle" class="cht">Llaves SSH</text>
+  <rect x="438" y="281" width="108" height="22" rx="6" class="ch"/><text x="492" y="297" text-anchor="middle" class="cht">Cerrar sesión</text>
+
+  <line x1="562" y1="262" x2="1206" y2="262" stroke="#22c55e" stroke-width="3" marker-end="url(#mg)"/>
+  <text x="884" y="252" text-anchor="middle" class="mono" style="font-size:14px;fill:#e2e8f0">getent passwd · getent group · who · lastlog</text>
+  <text x="884" y="284" text-anchor="middle" class="s">+ /etc/shadow (solo el estado, como root)</text>
+
+  <!-- Lane 2 -->
+  <rect x="60" y="326" width="500" height="100" rx="14" class="lane"/>
+  <use href="#i-tag" x="76" y="340" width="34" height="34" style="color:#38bdf8"/>
+  <text x="124" y="362" class="b">Puertos</text>
+  <text x="124" y="384" class="s">qué escucha, qué proceso y desde dónde</text>
+  <rect x="124" y="395" width="100" height="22" rx="6" fill="#0f2a1c" stroke="#22c55e" stroke-width="1.2"/><text x="174" y="411" text-anchor="middle" class="cht">Abrir túnel</text>
+  <rect x="230" y="395" width="98" height="22" rx="6" class="ch"/><text x="279" y="411" text-anchor="middle" class="cht">Ver proceso</text>
+
+  <line x1="562" y1="376" x2="1206" y2="376" stroke="#22c55e" stroke-width="3" marker-end="url(#mg)"/>
+  <text x="884" y="366" text-anchor="middle" class="mono" style="font-size:14px;fill:#e2e8f0">ss -tulpn   o   netstat -tulpn</text>
+  <text x="884" y="398" text-anchor="middle" class="s">+ /proc/PID (usuario y servicio) · podman / docker ps</text>
+
+  <!-- Lane 3 -->
+  <rect x="60" y="440" width="500" height="100" rx="14" class="lane"/>
+  <use href="#i-globe" x="76" y="454" width="34" height="34" style="color:#38bdf8"/>
+  <text x="124" y="476" class="b">Sitios web</text>
+  <text x="124" y="498" class="s">dominios, HTTPS y a qué sirve cada ruta</text>
+  <rect x="124" y="509" width="98" height="22" rx="6" class="ch"/><text x="173" y="525" text-anchor="middle" class="cht">Ir al puerto</text>
+  <rect x="228" y="509" width="138" height="22" rx="6" class="ch"/><text x="297" y="525" text-anchor="middle" class="cht">Abrir en el editor</text>
+  <rect x="372" y="509" width="88" height="22" rx="6" class="ch"/><text x="416" y="525" text-anchor="middle" class="cht">Comprobar</text>
+  <rect x="466" y="509" width="80" height="22" rx="6" fill="#3b1220" stroke="#f43f5e" stroke-width="1.2"/><text x="506" y="525" text-anchor="middle" class="cht">Recargar</text>
+
+  <line x1="562" y1="490" x2="1206" y2="490" stroke="#22c55e" stroke-width="3" marker-end="url(#mg)"/>
+  <text x="884" y="480" text-anchor="middle" class="mono" style="font-size:14px;fill:#e2e8f0">nginx -T   o   archivos de configuración</text>
+  <text x="884" y="512" text-anchor="middle" class="s">Caddy: API :2019 o caddy adapt · openssl (certificados)</text>
+
+  <text x="60" y="568" class="s">Si tienes sudo se lee como root y se ve todo; si sudo falla, se repite como tu usuario y se muestra lo que se pueda.</text>
+
+  <!-- Servidor: fuentes -->
+  <rect x="1208" y="212" width="334" height="100" rx="14" class="srv"/>
+  <use href="#i-user" x="1224" y="226" width="30" height="30" style="color:#22c55e"/>
+  <text x="1266" y="248" class="b">Cuentas</text>
+  <text x="1226" y="280" class="mono" style="font-size:14px">/etc/passwd · /etc/group</text>
+  <text x="1226" y="300" class="mono" style="font-size:14px">/etc/shadow · who</text>
+
+  <rect x="1208" y="326" width="334" height="100" rx="14" class="srv"/>
+  <use href="#i-tag" x="1224" y="340" width="30" height="30" style="color:#22c55e"/>
+  <text x="1266" y="362" class="b">Red y procesos</text>
+  <text x="1226" y="394" class="mono" style="font-size:14px">ss · netstat · /proc</text>
+  <text x="1226" y="414" class="mono" style="font-size:14px">podman · docker</text>
+
+  <rect x="1208" y="440" width="334" height="100" rx="14" class="srv"/>
+  <use href="#i-globe" x="1224" y="454" width="30" height="30" style="color:#22c55e"/>
+  <text x="1266" y="476" class="b">nginx · Caddy</text>
+  <text x="1226" y="508" class="mono" style="font-size:14px">configuración · API :2019</text>
+  <text x="1226" y="528" class="mono" style="font-size:14px">certificados (openssl)</text>
+
+  <rect x="1208" y="640" width="334" height="160" rx="14" class="srv"/>
+  <use href="#i-gear" x="1224" y="654" width="30" height="30" style="color:#22c55e"/>
+  <text x="1266" y="676" class="b">Herramientas de admin</text>
+  <text x="1226" y="710" class="mono" style="font-size:14px">useradd · usermod · userdel</text>
+  <text x="1226" y="732" class="mono" style="font-size:14px">gpasswd · chpasswd · chage</text>
+  <text x="1226" y="754" class="mono" style="font-size:14px">busybox: adduser · deluser</text>
+  <text x="1226" y="782" class="s14">nginx -t · systemctl reload</text>
+
+  <!-- CAMBIAR -->
+  <text x="60" y="618" class="z" style="fill:#f43f5e">CAMBIAR</text>
+  <text x="160" y="618" class="s">siempre como root y con revisión antes de ejecutar</text>
+
+  <rect x="60" y="640" width="240" height="160" rx="14" class="step"/>
+  <circle cx="88" cy="670" r="14" fill="#f43f5e"/><text x="88" y="675" text-anchor="middle" style="font-size:15px;font-weight:700;fill:#ffffff">1</text>
+  <use href="#i-hand" x="256" y="654" width="30" height="30" style="color:#94a3b8"/>
+  <text x="80" y="716" class="b">Eliges un cambio</text>
+  <text x="80" y="742" class="s14">crear, editar, bloquear,</text>
+  <text x="80" y="764" class="s14">borrar, grupos, llaves…</text>
+
+  <line x1="302" y1="720" x2="336" y2="720" stroke="#64748b" stroke-width="3" marker-end="url(#mn)"/>
+
+  <rect x="340" y="640" width="240" height="160" rx="14" fill="#10243a" stroke="#38bdf8" stroke-width="1.8"/>
+  <circle cx="368" cy="670" r="14" fill="#f43f5e"/><text x="368" y="675" text-anchor="middle" style="font-size:15px;font-weight:700;fill:#ffffff">2</text>
+  <use href="#i-file" x="536" y="654" width="30" height="30" style="color:#38bdf8"/>
+  <text x="360" y="716" class="b">Se arma un Plan</text>
+  <text x="360" y="742" class="s14">pasos ya citados para sh</text>
+  <text x="360" y="764" class="s14">secreto aparte:</text>
+  <text x="360" y="786" class="mono" style="font-size:14px;fill:#a78bfa">ana:●●●●</text>
+
+  <line x1="582" y1="720" x2="616" y2="720" stroke="#64748b" stroke-width="3" marker-end="url(#mn)"/>
+
+  <rect x="620" y="640" width="240" height="160" rx="14" fill="#2e2a0e" stroke="#facc15" stroke-width="1.8"/>
+  <circle cx="648" cy="670" r="14" fill="#f43f5e"/><text x="648" y="675" text-anchor="middle" style="font-size:15px;font-weight:700;fill:#ffffff">3</text>
+  <use href="#i-eye" x="816" y="654" width="30" height="30" style="color:#facc15"/>
+  <text x="640" y="716" class="b">Lo revisas</text>
+  <text x="640" y="742" class="s14">comando exacto y cómo</text>
+  <text x="640" y="764" class="s14">se eleva; lo peligroso pide</text>
+  <text x="640" y="786" class="s14">escribir el nombre</text>
+
+  <line x1="862" y1="720" x2="896" y2="720" stroke="#64748b" stroke-width="3" marker-end="url(#mn)"/>
+
+  <rect x="900" y="640" width="240" height="160" rx="14" fill="#3b1220" stroke="#f43f5e" stroke-width="1.8"/>
+  <circle cx="928" cy="670" r="14" fill="#f43f5e"/><text x="928" y="675" text-anchor="middle" style="font-size:15px;font-weight:700;fill:#ffffff">4</text>
+  <use href="#i-play" x="1096" y="654" width="30" height="30" style="color:#f43f5e"/>
+  <text x="920" y="716" class="b">Se ejecuta</text>
+  <text x="920" y="742" class="mono" style="font-size:14px">sh -e</text><text x="972" y="742" class="s14">como root</text>
+  <text x="920" y="764" class="s14">sudo y secreto por stdin</text>
+  <text x="920" y="786" class="s14">(ver diagrama 09)</text>
+
+  <line x1="1142" y1="720" x2="1204" y2="720" stroke="#22c55e" stroke-width="3" marker-end="url(#mg)"/>
+  <rect x="1150" y="694" width="44" height="20" rx="4" fill="#0f172a"/>
+  <text x="1172" y="709" text-anchor="middle" style="fill:#22c55e;font-weight:700;font-size:14px">exec</text>
+
+  <line x1="1020" y1="802" x2="1020" y2="844" stroke="#64748b" stroke-width="3" marker-end="url(#mn)"/>
+
+  <!-- Historial -->
+  <rect x="900" y="848" width="240" height="100" rx="14" class="step"/>
+  <use href="#i-history" x="916" y="862" width="30" height="30" style="color:#94a3b8"/>
+  <text x="958" y="884" class="b">Historial</text>
+  <text x="918" y="912" class="s14">últimos 300 por servidor</text>
+  <text x="918" y="934" class="s14">sin contraseñas</text>
+
+  <!-- Info -->
+  <rect x="60" y="848" width="400" height="100" rx="14" class="step"/>
+  <use href="#i-server" x="76" y="862" width="28" height="28" style="color:#94a3b8"/>
+  <text x="116" y="883" class="b">Se adapta al servidor</text>
+  <text x="80" y="912" class="s14">shadow-utils (useradd…) o busybox (adduser…)</text>
+  <text x="80" y="934" class="s14">grupo de admin: sudo (Debian/Ubuntu) o wheel</text>
+
+  <rect x="480" y="848" width="400" height="100" rx="14" class="step"/>
+  <use href="#i-tunnel" x="496" y="862" width="28" height="28" style="color:#22c55e"/>
+  <text x="536" y="883" class="b">Atajos entre pestañas</text>
+  <text x="500" y="912" class="s14">Puertos → Abrir túnel (pestaña Túneles)</text>
+  <text x="500" y="934" class="s14">Sitios web → su puerto · su archivo en el editor</text>
+
+  <text x="60" y="984" style="font-size:17px;fill:#94a3b8">Las contraseñas nunca van en el comando ni en el historial: viajan por stdin y en pantalla se ven como ●●●●.</text>
+</svg>

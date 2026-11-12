@@ -30,6 +30,11 @@ export function forgetSudo(sessionId: string): void {
   useSudo.getState().clear(sessionId);
 }
 
+/** Olvida todas las contraseñas de sudo en memoria (al bloquear TerView). */
+export function forgetAllSudo(): void {
+  useSudo.setState({ bySession: {} });
+}
+
 export function useHasSudoPassword(sessionId: string): boolean {
   return useSudo((s) => sessionId in s.bySession);
 }

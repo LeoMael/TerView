@@ -7,6 +7,7 @@ import { toast } from "../../stores/toasts";
 import { connectToServer } from "../../features/connect";
 import { confirmDialog } from "../ui/dialogs";
 import { basename } from "../../lib/paths";
+import { killTmuxSessions, openTmuxNames } from "../../features/tmux";
 
 interface DirtyState {
   /** sessionId → rutas con cambios sin guardar */
@@ -69,6 +70,10 @@ export async function requestCloseTab(tabId: string): Promise<boolean> {
   }
   useEditorDirty.getState().clearSession(tab.sessionId);
   currentPaths.delete(tab.sessionId);
+  // Cerrar la pestaña a propósito termina también sus terminales persistentes (tmux), igual que una
+  // shell normal. Si la conexión ya se había perdido, quedan en el servidor y se pueden reabrir o
+  // cerrar después desde «Sesiones en el servidor».
+  if (tab.status === "connected") await killTmuxSessions(tab.sessionId, openTmuxNames(tab.sessionId));
   await useTabs.getState().closeTab(tabId);
   return true;
 }
@@ -124,7 +129,8 @@ export async function reconnectTab(tabId: string): Promise<void> {
   try {
     const oldIndex = useTabs.getState().tabs.findIndex((t) => t.id === tabId);
     const before = new Set(useTabs.getState().tabs.map((t) => t.id));
-    const ok = await connectToServer(profile, { initialPath });
+    // Las terminales persistentes (tmux) de la pestaña vieja se reabren en la nueva.
+    const ok = await connectToServer(profile, { initialPath, restoreTerminals: openTmuxNames(tab.sessionId) });
     if (!ok) return;
     const fresh = useTabs.getState().tabs.find((t) => !before.has(t.id));
     useEditorDirty.getState().clearSession(tab.sessionId);

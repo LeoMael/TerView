@@ -18,7 +18,7 @@ const MAX_STEPS = 12;
  */
 export async function connectToServer(
   profile: ServerProfile,
-  opts: { initialPath?: string | null } = {},
+  opts: { initialPath?: string | null; restoreTerminals?: string[] } = {},
 ): Promise<boolean> {
   const store = useProfiles.getState();
   if (store.connecting[profile.id]) return false; // ya hay un intento en curso
@@ -41,6 +41,7 @@ export async function connectToServer(
         useTabs.getState().openSession(info, {
           color: profile.color,
           initialPath: opts.initialPath ?? profile.defaultPath,
+          restoreTerminals: opts.restoreTerminals,
         });
         return true;
       } catch (e) {

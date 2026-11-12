@@ -736,6 +736,7 @@ pub fn import_preview(env: &SshEnv, existing: &[ServerProfile]) -> AppResult<Vec
             key_path,
             default_path: None,
             color: None,
+            tmux: None,
         };
         let Ok(candidate) = super::validate_server(candidate) else { continue };
         let key = same_key(&candidate.host, candidate.port, &candidate.username);
@@ -1147,6 +1148,7 @@ pub async fn ssh_config_alias_info(
         key_path: None,
         default_path: None,
         color: None,
+        tmux: None,
     };
     blocking(move || alias_info(&SshEnv::user()?, &servers, draft, alias.as_deref())).await
 }
@@ -1223,6 +1225,7 @@ mod tests {
             key_path: key.map(Into::into),
             default_path: None,
             color: None,
+            tmux: None,
         }
     }
 

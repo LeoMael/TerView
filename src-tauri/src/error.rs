@@ -45,6 +45,9 @@ pub enum AppError {
     Invalid(String),
     #[error("Cancelado")]
     Canceled,
+    /// La bóveda de contraseñas está bloqueada: hay que escribir el PIN.
+    #[error("TerView está bloqueado: escribe tu PIN para usar las contraseñas guardadas")]
+    Locked,
 }
 
 impl AppError {
@@ -66,6 +69,7 @@ impl AppError {
             AppError::Keyring(_) => "Keyring",
             AppError::Invalid(_) => "Invalid",
             AppError::Canceled => "Canceled",
+            AppError::Locked => "Locked",
         }
     }
 }

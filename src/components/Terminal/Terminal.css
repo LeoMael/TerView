@@ -270,3 +270,117 @@
   background: var(--mix-accent-16);
   border-color: var(--mix-accent-45);
 }
+
+/* ───────── Terminales persistentes (tmux) ───────── */
+.term-tab-persist {
+  display: inline-flex;
+  align-items: center;
+  margin-left: -2px;
+  color: var(--accent);
+}
+.term-tab.exited .term-tab-persist {
+  color: var(--text-faint);
+}
+.term-sessions-btn {
+  position: relative;
+  margin-left: 0;
+}
+.term-sessions-badge {
+  position: absolute;
+  top: 0;
+  right: -2px;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
+  border-radius: 7px;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 14px;
+  text-align: center;
+  pointer-events: none;
+}
+.term-tmux-intro {
+  margin: 0 0 10px;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+.term-tmux-empty {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 4px;
+  color: var(--text-muted);
+}
+.term-tmux-error {
+  color: var(--red);
+}
+.term-tmux-cmd {
+  margin: 0;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  white-space: pre-wrap;
+  user-select: text;
+}
+.term-tmux-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 340px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.term-tmux-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+}
+.term-tmux-row:last-child {
+  border-bottom: none;
+}
+.term-tmux-main {
+  flex: 1;
+  min-width: 0;
+}
+.term-tmux-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.term-tmux-chip {
+  padding: 0 6px;
+  border-radius: 8px;
+  font-size: 11px;
+  line-height: 16px;
+  background: var(--surface-2);
+  color: var(--text-muted);
+}
+.term-tmux-chip.here {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+.term-tmux-chip.loose {
+  color: var(--yellow);
+}
+.term-tmux-meta {
+  display: flex;
+  gap: 10px;
+  margin-top: 2px;
+  font-size: var(--fs-sm);
+  color: var(--text-faint);
+  min-width: 0;
+}
+.term-tmux-path {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

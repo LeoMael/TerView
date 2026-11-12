@@ -30,7 +30,12 @@
   <path d="M164,208 v-30 a6,6 0 0 1 6,-6 h112 a6,6 0 0 1 6,6 v30 z" fill="#111827"/>
   <text x="182" y="195" class="r" style="font-weight:600">Comandos</text>
   <rect x="164" y="205" width="124" height="3" fill="#38bdf8"/>
-  <text x="312" y="194" class="r" style="fill:#94a3b8">deploy.sh</text>
+  <text x="312" y="194" class="r" style="fill:#94a3b8">Contenedores</text>
+  <text x="432" y="194" class="r" style="fill:#94a3b8">Monitor</text>
+  <text x="514" y="194" class="r" style="fill:#94a3b8">Túneles</text>
+  <text x="596" y="194" class="r" style="fill:#94a3b8">Administración</text>
+  <line x1="726" y1="180" x2="726" y2="200" stroke="#334155" stroke-width="1.5"/>
+  <text x="744" y="194" class="r" style="fill:#94a3b8">deploy.sh</text>
 
   <!-- barra de búsqueda -->
   <rect x="80" y="222" width="460" height="34" rx="8" fill="#0f172a" stroke="#334155"/>

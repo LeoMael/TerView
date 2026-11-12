@@ -23,7 +23,12 @@ export interface ServerProfile {
   keyPath: string | null;
   defaultPath: string | null;
   color: string | null;
+  /** Terminales persistentes (tmux) de este servidor. null/ausente = usar el ajuste general. */
+  tmux?: TmuxMode | null;
 }
+
+/** Cuándo abrir las terminales dentro de tmux: «auto» si está instalado, «always» (avisa si falta) o «never». */
+export type TmuxMode = "auto" | "always" | "never";
 
 export interface Bookmark {
   serverId: string;
@@ -66,6 +71,12 @@ export interface Settings {
   sshConfigSync: boolean;
   /** Si el destino existe al transferir. */
   transferConflict: "overwrite" | "skip" | "newer" | "ask";
+  /** Terminales persistentes (tmux) por defecto. */
+  terminalTmux: TmuxMode;
+  /** Bloquear tras estos minutos sin uso (0 = nunca). Solo con PIN: 5/10/15/30/60. */
+  lockMinutes: number;
+  /** Se dijo «Ahora no» a crear el PIN: no volver a preguntar al iniciar. */
+  vaultPromptDismissed: boolean;
 }
 
 // ───────── SSH ─────────
@@ -93,6 +104,8 @@ export interface SessionReconnecting {
   maxAttempts: number;
   nextRetrySecs: number;
   reason: string;
+  /** Espera a que se desbloquee TerView para usar la contraseña guardada. */
+  waitingUnlock: boolean;
 }
 
 export interface SessionClosed {
@@ -104,6 +117,44 @@ export interface SessionClosed {
 export interface TerminalExit {
   termId: string;
   code: number | null;
+}
+
+/** Abrir la terminal dentro de una sesión tmux (parámetro de `term_open`). */
+export interface TmuxOpen {
+  /** Nombre estable (`terview-…`). Si ya existe, se engancha a ella. */
+  name: string;
+  /** Volcar el historial de la sesión antes de engancharse (terminal recién creada). */
+  replay: boolean;
+}
+
+export interface TermOpened {
+  termId: string;
+  /** Nombre de la sesión tmux si la terminal es persistente; null = shell normal. */
+  tmux: string | null;
+  /** Se pidió tmux pero no está instalado. */
+  tmuxMissing: boolean;
+  /** Se pidió tmux y no se pudo usar: motivo. */
+  tmuxProblem: string | null;
+}
+
+/** Sesión tmux de TerView viva en el servidor. */
+export interface TmuxSession {
+  name: string;
+  /** Segundos desde epoch. */
+  created: number | null;
+  activity: number | null;
+  /** Clientes enganchados ahora (0 = nadie la mira). */
+  attached: number;
+  windows: number;
+  /** Programa en primer plano. */
+  command: string;
+  path: string;
+}
+
+export interface TmuxList {
+  installed: boolean;
+  version: string | null;
+  sessions: TmuxSession[];
 }
 
 // ───────── SFTP ─────────
@@ -203,6 +254,7 @@ export type ApiErrorKind =
   | "Keyring"
   | "Invalid"
   | "Canceled"
+  | "Locked"
   | "NotImplemented"
   | "Unknown";
 

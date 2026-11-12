@@ -6,13 +6,15 @@ import { AlertTriangle, FolderOpen } from "lucide-react";
 import { Modal } from "../components/ui/Modal";
 import { profiles as profilesApi, sshAliases, type SshAliasInfo } from "../api/profiles";
 import { errorMessage } from "../api/core";
-import type { AuthMethod, ServerProfile } from "../api/types";
+import type { AuthMethod, ServerProfile, TmuxMode } from "../api/types";
 import { useProfiles } from "../stores/profiles";
 import { useUi } from "../stores/ui";
 import { toast } from "../stores/toasts";
 import { ColorPicker } from "./ColorPicker";
 import { SSH_CONFIG_LABEL, SSH_KEY_EXAMPLE } from "../lib/platform";
 import { SshAliasMatches, describeMatch } from "./sshAliases";
+import { TMUX_MODE_HINTS, TMUX_MODE_LABELS } from "./tmux/logic";
+import { useSettings } from "../stores/settings";
 
 export function ServerEditorHost() {
   const editor = useUi((s) => s.serverEditor);
@@ -47,6 +49,9 @@ function ServerEditor({ initial, onClose }: { initial: ServerProfile | null; onC
   const [keyPath, setKeyPath] = useState(initial?.keyPath ?? "");
   const [defaultPath, setDefaultPath] = useState(initial?.defaultPath ?? "");
   const [color, setColor] = useState<string | null>(initial?.color ?? null);
+  /** null = usar el ajuste general. */
+  const [tmux, setTmux] = useState<TmuxMode | null>(initial?.tmux ?? null);
+  const globalTmux = useSettings((s) => s.settings.terminalTmux);
   const [projectId, setProjectId] = useState(initialProjectId);
   const [errors, setErrors] = useState<Errors>({});
   const [saving, setSaving] = useState(false);
@@ -118,6 +123,7 @@ function ServerEditor({ initial, onClose }: { initial: ServerProfile | null; onC
       keyPath: auth === "key" ? keyPath.trim() : null,
       defaultPath: defaultPath.trim() || null,
       color,
+      tmux,
     };
 
     // Qué hacer con el llavero: undefined = no tocar, "" = borrar, texto = guardar.
@@ -358,6 +364,21 @@ function ServerEditor({ initial, onClose }: { initial: ServerProfile | null; onC
             placeholder="Carpeta personal del usuario"
             onChange={(e) => setDefaultPath(e.target.value)}
           />
+        </label>
+
+        <label className="field">
+          <span>Terminales persistentes (tmux)</span>
+          <select
+            className="select"
+            value={tmux ?? ""}
+            onChange={(e) => setTmux(e.target.value === "" ? null : (e.target.value as TmuxMode))}
+          >
+            <option value="">Como en Ajustes ({TMUX_MODE_LABELS[globalTmux]})</option>
+            <option value="auto">{TMUX_MODE_LABELS.auto}: si el servidor tiene tmux</option>
+            <option value="always">{TMUX_MODE_LABELS.always}: avisar si falta tmux</option>
+            <option value="never">{TMUX_MODE_LABELS.never}</option>
+          </select>
+          <small className="cd-field-hint">{TMUX_MODE_HINTS[tmux ?? globalTmux]}</small>
         </label>
 
         <div className="field-row">

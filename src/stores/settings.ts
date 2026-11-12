@@ -24,6 +24,9 @@ export const DEFAULT_SETTINGS: Settings = {
   editorFontFamily: DEFAULT_MONO_FONT,
   sshConfigSync: false,
   transferConflict: "overwrite",
+  terminalTmux: "auto",
+  lockMinutes: 15,
+  vaultPromptDismissed: false,
 };
 
 interface SettingsState {
