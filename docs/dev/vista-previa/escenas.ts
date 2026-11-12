@@ -156,6 +156,16 @@ export const ESCENAS: Record<string, () => Promise<void>> = {
     await el(".modal, [role=dialog]");
     await sleep(800);
   },
+  // Comprobación (no va al manual): lista de repositorios con el candado de los privados.
+  "github-repos": async () => {
+    await app();
+    await click(el("[aria-label='GitHub']"));
+    await el(".modal, [role=dialog]");
+    await click(byText("Repositorios", "button"));
+    await el(".gh-repo-picker .gh-row");
+    await click(el(".gh-repo-picker .gh-row"));
+    await sleep(600);
+  },
 };
 
 // Más escenas en ./escenas/*.ts (cada archivo exporta `escenas`).

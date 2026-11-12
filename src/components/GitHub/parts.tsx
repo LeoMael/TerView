@@ -180,12 +180,14 @@ export function RepoPicker({ value, onPick }: { value: GhRepo | null; onPick: (r
             onClick={() => onPick(r)}
           >
             <span className="gh-row-main">
-              {r.private && <Lock size={12} aria-label="Privado" />}
-              <span className="gh-row-title">{r.fullName}</span>
-              {r.archived && <span className="gh-tag">archivado</span>}
-              {r.fork && <span className="gh-tag">fork</span>}
+              <span className="gh-row-title" title={r.fullName}>
+                {r.private && <Lock size={12} aria-label="Privado" className="gh-row-icon" />}
+                <span className="gh-ellipsis">{r.fullName}</span>
+                {r.archived && <span className="gh-tag">archivado</span>}
+                {r.fork && <span className="gh-tag">fork</span>}
+              </span>
+              <span className="gh-row-sub">{r.description ?? ""}</span>
             </span>
-            <span className="gh-row-sub">{r.description ?? ""}</span>
           </button>
         ))}
       </div>

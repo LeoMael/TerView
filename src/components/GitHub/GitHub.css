@@ -192,6 +192,10 @@ p.gh-hint {
 .gh-form .field {
   margin-bottom: 8px;
 }
+/* Que los campos en fila no se salgan de la tarjeta. */
+.gh-form .field-row > .field {
+  min-width: 0;
+}
 .gh-textarea {
   min-height: 76px;
   height: auto;
@@ -331,6 +335,15 @@ p.gh-hint {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.gh-row-icon,
+.gh-row-title .gh-tag {
+  flex: none;
+}
+.gh-ellipsis {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .gh-row-sub {
   color: var(--text-muted);
