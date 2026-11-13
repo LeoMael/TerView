@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 369 128" width="369" height="128">
+  <title>argos - propuesta pluma (fondo oscuro)</title>
+  <g transform="translate(8 8) scale(0.4375)">
+  <defs>
+    <mask id="barbas-oscuro">
+      <rect width="256" height="256" fill="#fff"/>
+      <!-- cortes en el borde: las barbas de la pluma -->
+      <g stroke="#000" stroke-width="7" stroke-linecap="round">
+        <path d="M52 128 L84 148"/><path d="M60 168 L92 182"/><path d="M80 202 L106 208"/>
+        <path d="M204 128 L172 148"/><path d="M196 168 L164 182"/><path d="M176 202 L150 208"/>
+      </g>
+    </mask>
+  </defs>
+  <!-- tallo -->
+  <path d="M128 214 L128 250" stroke="#F0A500" stroke-width="12" stroke-linecap="round"/>
+  <!-- pluma (vano) -->
+  <path mask="url(#barbas-oscuro)" d="M128 2 C180 20 208 70 202 130 C196 180 162 214 128 230 C94 214 60 180 54 130 C48 70 76 20 128 2 Z" fill="#16A34A"/>
+  <!-- ojo de la pluma: anillos -->
+  <circle cx="128" cy="92" r="62" fill="#F0A500"/>
+  <circle cx="128" cy="92" r="49" fill="#0E9F9A"/>
+  <circle cx="128" cy="92" r="37" fill="#2350C8"/>
+  <!-- terminal >_ -->
+  <path d="M108 75 L126 92 L108 109" fill="none" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M134 109 H149" stroke="#F0A500" stroke-width="12" stroke-linecap="round"/>
+  </g>
+  <!-- nombre (texto pasado a curvas; fuente: RedHatDisplay-ExtraBold.otf) -->
+  <path transform="translate(137.25 83.95) scale(0.07600 -0.07600)" fill="#F1F5F9" d="M219 -9C277 -9 324 4 368 34V0H515V339C515 464 432 535 288 535C210 535 133 517 49 478L102 368C170 397 219 410 262 410C332 410 368 382 368 325V294C328 305 286 311 244 311C108 311 28 253 28 153C28 57 107 -9 219 -9ZM170 156C170 193 205 214 265 214C301 214 335 209 368 198V127C338 106 302 97 260 97C204 97 170 120 170 156Z"/><path transform="translate(180.04 83.95) scale(0.07600 -0.07600)" fill="#F1F5F9" d="M52 0H201V337C228 383 273 409 326 409C352 409 379 404 400 394V525C385 533 370 536 340 537C283 537 236 513 201 469V525H52Z"/><path transform="translate(211.96 83.95) scale(0.07600 -0.07600)" fill="#F1F5F9" d="M318 -214C490 -214 584 -136 584 5V525H436V494C396 519 349 532 300 532C147 532 28 415 28 266C28 116 146 -2 294 -2C346 -2 394 13 434 42V6C434 -59 394 -92 315 -92C260 -92 205 -79 147 -51L96 -167C158 -198 235 -214 318 -214ZM319 124C238 124 175 185 175 266C175 345 238 405 320 405C365 405 406 389 434 362V167C406 138 366 124 319 124Z"/><path transform="translate(260.29 83.95) scale(0.07600 -0.07600)" fill="#F1F5F9" d="M311 -10C469 -10 593 109 593 262C593 415 469 535 311 535C152 535 28 415 28 262C28 109 152 -10 311 -10ZM311 119C233 119 174 182 174 262C174 343 234 405 311 405C387 405 447 343 447 262C447 182 388 119 311 119Z"/><path transform="translate(307.49 83.95) scale(0.07600 -0.07600)" fill="#F1F5F9" d="M254 -10C388 -10 487 65 487 165C487 248 429 302 326 317L223 332C175 340 157 352 157 377C157 404 187 422 233 422C285 422 336 406 393 373L464 469C399 511 323 533 247 533C109 533 25 469 25 365C25 279 80 226 185 210L287 195C328 188 347 174 347 151C347 121 309 102 253 102C198 102 146 120 82 161L9 60C70 15 156 -10 254 -10Z"/>
+</svg>

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <title>argos - propuesta anillo</title>
+  <!-- ocho ojos alrededor -->
+  <circle cx="128.0" cy="26.0" r="22" fill="#0E9F9A"/><circle cx="128.0" cy="26.0" r="9" fill="#F0A500"/><circle cx="200.1" cy="55.9" r="22" fill="#0E9F9A"/><circle cx="200.1" cy="55.9" r="9" fill="#F0A500"/><circle cx="230.0" cy="128.0" r="22" fill="#0E9F9A"/><circle cx="230.0" cy="128.0" r="9" fill="#F0A500"/><circle cx="200.1" cy="200.1" r="22" fill="#0E9F9A"/><circle cx="200.1" cy="200.1" r="9" fill="#F0A500"/><circle cx="128.0" cy="230.0" r="22" fill="#0E9F9A"/><circle cx="128.0" cy="230.0" r="9" fill="#F0A500"/><circle cx="55.9" cy="200.1" r="22" fill="#0E9F9A"/><circle cx="55.9" cy="200.1" r="9" fill="#F0A500"/><circle cx="26.0" cy="128.0" r="22" fill="#0E9F9A"/><circle cx="26.0" cy="128.0" r="9" fill="#F0A500"/><circle cx="55.9" cy="55.9" r="22" fill="#0E9F9A"/><circle cx="55.9" cy="55.9" r="9" fill="#F0A500"/>
+  <!-- terminal en el centro -->
+  <circle cx="128" cy="128" r="62" fill="#1D3FA6"/>
+  <path d="M96 102 L124 128 L96 154" fill="none" stroke="#FFFFFF" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M138 154 H162" stroke="#F0A500" stroke-width="17" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <title>argos - propuesta pluma</title>
+  <defs>
+    <mask id="barbas-claro">
+      <rect width="256" height="256" fill="#fff"/>
+      <!-- cortes en el borde: las barbas de la pluma -->
+      <g stroke="#000" stroke-width="7" stroke-linecap="round">
+        <path d="M52 128 L84 148"/><path d="M60 168 L92 182"/><path d="M80 202 L106 208"/>
+        <path d="M204 128 L172 148"/><path d="M196 168 L164 182"/><path d="M176 202 L150 208"/>
+      </g>
+    </mask>
+  </defs>
+  <!-- tallo -->
+  <path d="M128 214 L128 250" stroke="#F0A500" stroke-width="12" stroke-linecap="round"/>
+  <!-- pluma (vano) -->
+  <path mask="url(#barbas-claro)" d="M128 2 C180 20 208 70 202 130 C196 180 162 214 128 230 C94 214 60 180 54 130 C48 70 76 20 128 2 Z" fill="#16A34A"/>
+  <!-- ojo de la pluma: anillos -->
+  <circle cx="128" cy="92" r="62" fill="#F0A500"/>
+  <circle cx="128" cy="92" r="49" fill="#0E9F9A"/>
+  <circle cx="128" cy="92" r="37" fill="#1D3FA6"/>
+  <!-- terminal >_ -->
+  <path d="M108 75 L126 92 L108 109" fill="none" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M134 109 H149" stroke="#F0A500" stroke-width="12" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <title>ocelo - propuesta ocelo</title>
+  <!-- mancha ocular: anillo, iris y pupila-cursor -->
+  <circle cx="128" cy="128" r="116" fill="#6D28D9"/>
+  <circle cx="128" cy="128" r="80" fill="#F5A00B"/>
+  <rect x="104" y="92" width="48" height="72" rx="8" fill="#1E1B4B"/>
+  <!-- brillo -->
+  <circle cx="164" cy="88" r="15" fill="#FFFFFF"/>
+</svg>

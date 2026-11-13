@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <title>ocelo - propuesta ala</title>
+  <!-- alas: dos signos < > -->
+  <path d="M86 52 L22 128 L86 204" fill="none" stroke="#6D28D9" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M170 52 L234 128 L170 204" fill="none" stroke="#6D28D9" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- ocelo en el centro -->
+  <circle cx="128" cy="128" r="46" fill="#F5A00B"/>
+  <circle cx="128" cy="128" r="22" fill="#1E1B4B"/>
+  <circle cx="143" cy="111" r="9" fill="#FFFFFF"/>
+</svg>

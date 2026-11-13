@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 128" width="512" height="128">
+  <title>SSHorus - propuesta ojo (fondo oscuro)</title>
+  <g transform="translate(8 8) scale(0.4375)">
+  <!-- ceja -->
+  <path d="M34 58 Q126 18 224 46" fill="none" stroke="#F5C542" stroke-width="18" stroke-linecap="round"/>
+  <!-- ojo (almendra) con la linea que se alarga hacia atras -->
+  <path d="M26 120 Q116 40 206 112 Q116 196 26 120 Z" fill="none" stroke="#F5C542" stroke-width="16" stroke-linejoin="round"/>
+  <path d="M200 112 H236" stroke="#F5C542" stroke-width="16" stroke-linecap="round"/>
+  <!-- iris con la terminal -->
+  <circle cx="114" cy="116" r="36" fill="#3B6FF0"/>
+  <path d="M100 100 L118 116 L100 132" fill="none" stroke="#FFFFFF" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M124 132 H136" stroke="#FFFFFF" stroke-width="11" stroke-linecap="round"/>
+  <!-- lagrima vertical -->
+  <path d="M84 162 L74 222" stroke="#F5C542" stroke-width="16" stroke-linecap="round"/>
+  <!-- espiral -->
+  <path d="M138 164 C148 214 196 230 214 204 C228 184 210 164 194 176" fill="none" stroke="#F5C542" stroke-width="16" stroke-linecap="round"/>
+  </g>
+  <!-- nombre (texto pasado a curvas; fuente: Montserrat-Bold.otf) -->
+  <path transform="translate(154.75 90.60) scale(0.07600 -0.07600)" fill="#F5C542" d="M313 -12C513 -12 610 88 610 205C610 462 203 373 203 502C203 546 240 582 336 582C398 582 465 564 530 527L580 650C515 691 425 712 337 712C138 712 42 613 42 494C42 234 449 324 449 193C449 150 410 118 314 118C230 118 142 148 83 191L28 69C90 21 202 -12 313 -12Z"/><path transform="translate(203.24 90.60) scale(0.07600 -0.07600)" fill="#F5C542" d="M313 -12C513 -12 610 88 610 205C610 462 203 373 203 502C203 546 240 582 336 582C398 582 465 564 530 527L580 650C515 691 425 712 337 712C138 712 42 613 42 494C42 234 449 324 449 193C449 150 410 118 314 118C230 118 142 148 83 191L28 69C90 21 202 -12 313 -12Z"/><path transform="translate(251.73 90.60) scale(0.07600 -0.07600)" fill="#F5C542" d="M563 0H725V700H563V424H245V700H83V0H245V287H563Z"/><path transform="translate(313.13 90.60) scale(0.07600 -0.07600)" fill="#F1F5F9" d="M328 -8C499 -8 623 107 623 269C623 431 499 546 328 546C157 546 32 431 32 269C32 107 157 -8 328 -8ZM328 120C250 120 190 176 190 269C190 362 250 418 328 418C406 418 465 362 465 269C465 176 406 120 328 120Z"/><path transform="translate(362.91 90.60) scale(0.07600 -0.07600)" fill="#F1F5F9" d="M72 0H228V254C228 357 285 404 371 404C383 404 393 403 406 402V546C323 546 259 519 221 467V538H72Z"/><path transform="translate(395.67 90.60) scale(0.07600 -0.07600)" fill="#F1F5F9" d="M299 -8C364 -8 425 16 466 63V0H614V538H458V272C458 173 406 127 334 127C265 127 225 167 225 257V538H69V234C69 68 164 -8 299 -8Z"/><path transform="translate(447.88 90.60) scale(0.07600 -0.07600)" fill="#F1F5F9" d="M253 -8C414 -8 507 63 507 163C507 375 182 286 182 378C182 406 212 428 282 428C331 428 384 418 437 388L489 499C438 529 356 546 282 546C125 546 33 474 33 372C33 241 154 223 249 210C309 201 358 193 358 159C358 129 331 110 259 110C193 110 120 131 72 162L20 50C70 17 162 -8 253 -8Z"/>
+</svg>
