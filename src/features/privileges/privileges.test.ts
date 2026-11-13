@@ -7,6 +7,7 @@ import {
   storedFailed,
   storedStateAfterConfirm,
   sudoLookupPlan,
+  sudoPasswordNeeded,
   type SudoLookupInput,
 } from "./lookup";
 
@@ -74,5 +75,14 @@ ok(req.stdin.endsWith("s3cr'eto\n"), "va por stdin, tras el script");
 ok(req.script.includes("sudo -k -S -p '' -v"), "se comprueba con sudo -v antes de ejecutar");
 eq(elevationFailure(EXIT_SUDO_BAD_PASSWORD, "__TV_SUDO_BAD__\n"), "bad-password", "contraseña incorrecta reconocida");
 eq(elevationFailure(EXIT_SUDO_BAD_PASSWORD, "otra cosa"), null, "sin la marca no se confunde con el script");
+
+// ── Comandos con sudo del asistente (MCP): ¿hace falta la contraseña? ──
+eq(sudoPasswordNeeded({ level: "root", hasSudo: true }), false, "root: no");
+eq(sudoPasswordNeeded({ level: "sudo-nopasswd", hasSudo: true }), false, "sudo sin contraseña: no");
+eq(sudoPasswordNeeded({ level: "sudo", hasSudo: true }), true, "sudo con contraseña: sí");
+eq(sudoPasswordNeeded({ level: "maybe-sudo", hasSudo: true }), true, "puede que tenga sudo: sí");
+eq(sudoPasswordNeeded({ level: "user", hasSudo: true }), true, "fuera de wheel pero con sudo instalado: se intenta");
+eq(sudoPasswordNeeded({ level: "user", hasSudo: false }), false, "sin sudo en el servidor: no");
+eq(sudoPasswordNeeded({ level: "unknown", hasSudo: false }), true, "sin comprobar: se intenta");
 
 console.log(`privileges: ${passed} comprobaciones correctas`);

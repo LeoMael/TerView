@@ -7,7 +7,8 @@ import { clipboard } from "../../lib/clipboard";
 import { useProfiles } from "../../stores/profiles";
 import { toast } from "../../stores/toasts";
 import { confirmDialog } from "../ui/dialogs";
-import { openActivity, refreshStatus, useMcp } from "../../features/mcp/store";
+import { activeAuto, openActivity, refreshAuto, refreshStatus, useMcp } from "../../features/mcp/store";
+import { AutoAcceptPicker, autoText, useMinuteClock } from "../../features/mcp/AutoAccept";
 import "../../features/mcp/Mcp.css";
 
 const ACCESS: { v: McpAccess; label: string }[] = [
@@ -82,6 +83,9 @@ export function McpSection() {
   const [port, setPort] = useState("");
   const [busy, setBusy] = useState(false);
   const [openRules, setOpenRules] = useState<string | null>(null);
+  const [openAuto, setOpenAuto] = useState<string | null>(null);
+  const now = useMinuteClock();
+  const autoList = activeAuto(useMcp((s) => s.auto), now);
   const enabled = !!status?.enabled;
 
   const loadClient = useCallback(async () => {
@@ -95,6 +99,7 @@ export function McpSection() {
 
   useEffect(() => {
     void refreshStatus();
+    void refreshAuto();
     void mcp.config().then(setCfg).catch(() => {});
   }, []);
   useEffect(() => {
@@ -154,6 +159,7 @@ export function McpSection() {
   const setAccess = async (serverId: string, access: McpAccess) => {
     try {
       setCfg(await mcp.setAccess(serverId, access));
+      if (access !== "full") void refreshAuto();
     } catch (e) {
       toast.error("No se pudo guardar el permiso", e);
     }
@@ -260,7 +266,9 @@ export function McpSection() {
       <p className="mcp-note">
         <strong>Sin acceso</strong>: el asistente ni lo ve. <strong>Solo lectura</strong>: listar, leer archivos y comandos
         📊 de la Biblioteca. <strong>Completo</strong>: también cambios, siempre con tu permiso. Lo peligroso (rm -rf, prune,
-        sudo, reboot…) se pregunta siempre.
+        sudo, reboot…) se pregunta siempre. <strong>Automático</strong> (solo con acceso Completo): deja de preguntar los
+        cambios normales, o todo incluido sudo, durante un tiempo. Nunca con TerView bloqueado; cada acción queda en la
+        actividad marcada como «automático».
       </p>
       {servers.length === 0 ? (
         <div className="empty-state">Aún no tienes servidores guardados.</div>
@@ -269,6 +277,7 @@ export function McpSection() {
           {servers.map((s) => {
             const access = cfg?.access[s.id] ?? "none";
             const rules = cfg?.remembered[s.id] ?? [];
+            const auto = autoList.find((a) => a.serverId === s.id);
             return (
               <div key={s.id} className="mcp-server">
                 <div className="mcp-server-row">
@@ -277,7 +286,21 @@ export function McpSection() {
                     <small className="faint">
                       {s.username}@{s.host}
                     </small>
+                    {auto && access === "full" && (
+                      <small className={auto.level === "all" ? "mcp-auto-state all" : "mcp-auto-state"}>
+                        Automático: {autoText(auto, now)}
+                      </small>
+                    )}
                   </div>
+                  {access === "full" && (
+                    <button
+                      className="btn btn-sm"
+                      onClick={() => setOpenAuto(openAuto === s.id ? null : s.id)}
+                      title="Aceptar automáticamente las peticiones del asistente en este servidor"
+                    >
+                      {auto ? "Automático (activo)" : "Automático…"}
+                    </button>
+                  )}
                   {rules.length > 0 && (
                     <button className="btn btn-sm" onClick={() => setOpenRules(openRules === s.id ? null : s.id)}>
                       {rules.length === 1 ? "1 regla «siempre»" : `${rules.length} reglas «siempre»`}
@@ -297,6 +320,9 @@ export function McpSection() {
                     ))}
                   </div>
                 </div>
+                {openAuto === s.id && access === "full" && (
+                  <AutoAcceptPicker serverId={s.id} serverName={s.name} onApplied={() => setOpenAuto(null)} />
+                )}
                 {openRules === s.id && rules.length > 0 && (
                   <div className="mcp-rules">
                     {rules.map((k) => (

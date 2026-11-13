@@ -58,6 +58,17 @@ struct Mock {
     scans: Mutex<Vec<(String, ScanOptions)>>,
     /// Análisis en curso por exec_id (para `cancel_exec`, el «Detener» del panel).
     scan_stops: Mutex<HashMap<String, CancellationToken>>,
+    /// stdin de cada ejecución (None = sin stdin).
+    stdins: Mutex<Vec<Option<Vec<u8>>>>,
+    /// Respuesta de la interfaz a «sudo» y peticiones recibidas (tipo, payload).
+    sudo_reply: Mutex<Value>,
+    ui_payloads: Mutex<Vec<(String, Value)>>,
+    /// Resultado fijo de exec (si no, stdout de `stdout` con código 0).
+    exec_result: Mutex<Option<ExecResult>>,
+    /// Ejecutar de verdad con `sh` en este equipo, con un sudo simulado (ver `FakeSudo`).
+    local: Mutex<Option<FakeSudo>>,
+    /// Se bloquea TerView mientras se busca la contraseña de sudo.
+    lock_on_sudo: AtomicBool,
 }
 
 fn server(id: &str, name: &str) -> ServerProfile {
@@ -115,6 +126,12 @@ impl Mock {
             scan_takes: Mutex::new(Duration::from_secs(5)),
             scans: Mutex::new(Vec::new()),
             scan_stops: Mutex::new(HashMap::new()),
+            stdins: Mutex::new(Vec::new()),
+            sudo_reply: Mutex::new(json!({ "elevate": false })),
+            ui_payloads: Mutex::new(Vec::new()),
+            exec_result: Mutex::new(None),
+            local: Mutex::new(None),
+            lock_on_sudo: AtomicBool::new(false),
         }
     }
 }
@@ -144,8 +161,16 @@ impl Backend for Mock {
     async fn sessions(&self) -> Vec<SessionInfo> {
         self.sessions.clone()
     }
-    async fn exec(&self, _sid: &str, command: &str, _t: u32, _id: &str) -> AppResult<ExecResult> {
+    async fn exec(&self, _sid: &str, command: &str, stdin: Option<&[u8]>, _t: u32, _id: &str) -> AppResult<ExecResult> {
         self.ran.lock().unwrap().push(command.to_string());
+        self.stdins.lock().unwrap().push(stdin.map(<[u8]>::to_vec));
+        let local = self.local.lock().unwrap().clone();
+        if let Some(fake) = local {
+            return Ok(fake.run(command, stdin));
+        }
+        if let Some(r) = self.exec_result.lock().unwrap().clone() {
+            return Ok(r);
+        }
         Ok(ExecResult {
             stdout: self.stdout.lock().unwrap().clone(),
             stderr: String::new(),
@@ -224,10 +249,18 @@ impl Backend for Mock {
         }
         Ok(r)
     }
-    async fn ui_request(&self, kind: &str, _payload: Value, _t: Duration) -> AppResult<Value> {
+    async fn ui_request(&self, kind: &str, payload: Value, _t: Duration) -> AppResult<Value> {
         self.ui_calls.lock().unwrap().push(kind.to_string());
+        self.ui_payloads.lock().unwrap().push((kind.to_string(), payload));
         match kind {
             "connect" => Ok(json!({ "sessionId": "nueva" })),
+            "sudo" => {
+                if self.lock_on_sudo.load(Ordering::SeqCst) {
+                    self.locked.store(true, Ordering::SeqCst);
+                }
+                Ok(self.sudo_reply.lock().unwrap().clone())
+            }
+            "sudo-rejected" => Ok(Value::Null),
             "ports" => Ok(json!({ "tool": "ss", "ports": [{ "port": 22 }] })),
             _ => Err(AppError::Invalid("no disponible".into())),
         }
@@ -1101,4 +1134,567 @@ fn vuln_tools_are_announced_as_reads() {
         assert_eq!(t.annotations.as_ref().and_then(|a| a.read_only_hint), Some(true), "{name}");
     }
     assert_eq!(tools.len(), 19);
+}
+
+// ───────────────────────── sudo con contraseña ─────────────────────────
+
+/// sudo simulado en una carpeta temporal de este equipo: el envoltorio de `sudo.rs` se prueba con un `sh`
+/// de verdad. Acepta la contraseña de `<dir>/pw` por `-S` o por el askpass (`-A`), apunta cada intento en
+/// `<dir>/log` («ok S», «ok A», «bad S»…) y, como no es root de verdad, `whoami` responde «root».
+#[derive(Clone)]
+struct FakeSudo(Arc<FakeDir>);
+
+struct FakeDir(std::path::PathBuf);
+
+impl Drop for FakeDir {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.0);
+    }
+}
+
+pub(super) const FAKE_SUDO: &str = r#"#!/bin/sh
+ask=0 std=0 val=0 non=0
+while [ $# -gt 0 ]; do
+  case $1 in
+    -A) ask=1 ;; -S) std=1 ;; -n) non=1 ;; -k) ;; -v) val=1 ;;
+    -p|-u) shift ;;
+    --) shift; break ;;
+    -*) ;;
+    *) break ;;
+  esac
+  shift
+done
+if [ $std = 1 ] && [ $ask = 1 ]; then echo "sudo: the -A and -S options may not be used together" >&2; exit 1; fi
+if [ $std = 1 ]; then IFS= read -r pw || pw=; how=S
+elif [ $ask = 1 ]; then pw=$("$SUDO_ASKPASS" "[sudo] password: "); how=A
+elif [ $non = 1 ]; then echo "sudo: a password is required" >&2; exit 1
+else
+  echo "sudo: a terminal is required to read the password; either use ssh's -t option or configure an askpass helper" >&2
+  echo "sudo: a password is required" >&2; exit 1
+fi
+if [ "$pw" != "$(cat "$TV_FAKE_DIR/pw")" ]; then
+  echo "bad $how" >> "$TV_FAKE_DIR/log"; echo "Sorry, try again." >&2; echo "sudo: 1 incorrect password attempt" >&2; exit 1
+fi
+echo "ok $how" >> "$TV_FAKE_DIR/log"
+[ $val = 1 ] && exit 0
+[ $# -gt 0 ] || exit 0
+case $1 in
+  whoami) echo root; exit 0 ;;
+  useradd) shift; echo "useradd $*"; exit 0 ;;
+esac
+exec "$@"
+"#;
+
+pub(super) const SUDO_PW: &str = "s3cr3t o'k \"$x\" \\n";
+
+impl FakeSudo {
+    fn new(password: &str) -> Self {
+        let dir = std::env::temp_dir().join(format!("terview-fakesudo-{}", uuid::Uuid::new_v4().simple()));
+        std::fs::create_dir_all(dir.join("bin")).unwrap();
+        std::fs::create_dir_all(dir.join("run")).unwrap();
+        std::fs::create_dir_all(dir.join("work")).unwrap();
+        std::fs::write(dir.join("pw"), password).unwrap();
+        let sudo = dir.join("bin").join("sudo");
+        std::fs::write(&sudo, FAKE_SUDO).unwrap();
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            std::fs::set_permissions(&sudo, std::fs::Permissions::from_mode(0o755)).unwrap();
+        }
+        FakeSudo(Arc::new(FakeDir(dir)))
+    }
+
+    fn dir(&self) -> &std::path::Path {
+        &self.0 .0
+    }
+
+    fn work(&self) -> String {
+        self.dir().join("work").display().to_string()
+    }
+
+    fn log(&self) -> Vec<String> {
+        std::fs::read_to_string(self.dir().join("log")).unwrap_or_default().lines().map(str::to_string).collect()
+    }
+
+    /// Lo que quedó en la carpeta temporal (XDG_RUNTIME_DIR) del envoltorio: debe quedar vacía.
+    fn leftovers(&self) -> Vec<String> {
+        std::fs::read_dir(self.dir().join("run"))
+            .unwrap()
+            .map(|e| e.unwrap().file_name().to_string_lossy().into_owned())
+            .collect()
+    }
+
+    /// Ejecuta como el canal exec tras el arranque: `sh -c COMANDO` con `stdin` (y EOF).
+    fn run(&self, command: &str, stdin: Option<&[u8]>) -> ExecResult {
+        use std::io::Write;
+        use std::process::{Command, Stdio};
+        let started = std::time::Instant::now();
+        let path = format!("{}:{}", self.dir().join("bin").display(), std::env::var("PATH").unwrap_or_default());
+        let mut child = Command::new("sh")
+            .arg("-c")
+            .arg(command)
+            .env("PATH", path)
+            .env("SHELL", "/bin/sh")
+            .env("XDG_RUNTIME_DIR", self.dir().join("run"))
+            .env("TV_FAKE_DIR", self.dir())
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .unwrap();
+        let data = stdin.map(<[u8]>::to_vec).unwrap_or_default();
+        let mut input = child.stdin.take().unwrap();
+        let writer = std::thread::spawn(move || {
+            let _ = input.write_all(&data);
+        });
+        let out = child.wait_with_output().unwrap();
+        writer.join().unwrap();
+        ExecResult {
+            stdout: String::from_utf8_lossy(&out.stdout).into_owned(),
+            stderr: String::from_utf8_lossy(&out.stderr).into_owned(),
+            exit_code: out.status.code().map(|c| c as u32),
+            duration_ms: started.elapsed().as_millis() as u64,
+            truncated: false,
+            timed_out: false,
+        }
+    }
+
+    fn run_wrapped(&self, command: &str, password: &str) -> ExecResult {
+        let w = super::sudo::wrap(command, password).unwrap();
+        self.run(&w.command, Some(&w.stdin))
+    }
+}
+
+#[test]
+fn sudo_detection() {
+    for c in ["sudo whoami", "echo hola | sudo tee /etc/x", "ls && sudo -u postgres psql", "x=$(sudo cat /etc/shadow)", "sudo"] {
+        assert!(policy::uses_sudo(c), "{c}");
+    }
+    for c in ["ls", "grep -r sudoers /etc", "pseudo x", "doas apk add x", "cat /etc/sudo.conf", "visudo -c"] {
+        assert!(!policy::uses_sudo(c), "{c}");
+    }
+}
+
+#[test]
+fn sudo_wrapper_never_puts_the_password_or_command_in_argv() {
+    let w = super::sudo::wrap("sudo useradd -m ana", SUDO_PW).unwrap();
+    // Línea de comandos remota (visible con ps): solo el arranque fijo.
+    assert!(!w.command.contains("s3cr3t") && !w.command.contains("useradd"), "{}", w.command);
+    assert!(w.command.starts_with("sh -c 'eval \"$(dd bs=1 count="), "{}", w.command);
+    // La contraseña va al final del stdin, tras el script, en una sola línea.
+    let stdin = String::from_utf8(w.stdin.to_vec()).unwrap();
+    assert!(stdin.ends_with(&format!("\n{SUDO_PW}\n")), "{stdin}");
+    assert_eq!(stdin.matches("s3cr3t").count(), 1);
+    // El script no lleva la contraseña.
+    assert!(!super::sudo::script("sudo x").contains("s3cr3t"));
+    // Contraseñas que no se pueden enviar en una línea.
+    assert!(super::sudo::wrap("sudo x", "a\nb").is_err());
+    assert!(super::sudo::wrap("sudo x", "").is_err());
+    assert!(super::sudo::wrap("sudo x", &"x".repeat(501)).is_err());
+}
+
+#[test]
+fn sudo_failures_need_code_and_mark() {
+    use super::sudo::{failure, SudoFailure};
+    assert_eq!(failure(Some(97), "__TV_SUDO_BAD__\n"), Some(SudoFailure::BadPassword));
+    assert_eq!(failure(Some(96), "x\n__TV_SUDO_DENIED__\n"), Some(SudoFailure::Denied));
+    assert_eq!(failure(Some(95), "__TV_SUDO_TTY__"), Some(SudoFailure::TtyRequired));
+    assert_eq!(failure(Some(94), "__TV_SUDO_NOTMP__"), Some(SudoFailure::NoTemp));
+    assert_eq!(failure(Some(93), "__TV_NO_SUDO__"), Some(SudoFailure::NoSudo));
+    // El comando del asistente puede salir con 97 por su cuenta: sin la marca no es un fallo de sudo.
+    assert_eq!(failure(Some(97), "otra cosa"), None);
+    assert_eq!(failure(Some(0), "__TV_SUDO_BAD__"), None);
+    assert_eq!(failure(None, "__TV_SUDO_BAD__"), None);
+    let mut t = format!("a {SUDO_PW} b {SUDO_PW}");
+    super::sudo::redact(&mut t, SUDO_PW);
+    assert_eq!(t, "a ******** b ********");
+}
+
+#[cfg(unix)]
+#[test]
+fn sudo_wrapper_runs_with_a_real_shell() {
+    let fake = FakeSudo::new(SUDO_PW);
+    let work = fake.work();
+
+    // sudo whoami → root (con la contraseña por el askpass).
+    let r = fake.run_wrapped("sudo whoami", SUDO_PW);
+    assert_eq!((r.exit_code, r.stdout.as_str()), (Some(0), "root\n"), "{}", r.stderr);
+    assert_eq!(fake.log(), ["ok S", "ok A"], "una comprobación (-S -v) y el comando (-A)");
+    assert!(fake.leftovers().is_empty(), "{:?}", fake.leftovers());
+
+    // Compuestos: tubería con el stdin propio, varios sudo, sudo dentro de otro shell y por xargs/env.
+    let cmd = format!(
+        "echo hola | sudo tee {work}/x >/dev/null && sudo sh -c 'cat {work}/x' && sudo whoami && \
+         sh -c 'sudo whoami' && echo whoami | xargs sudo && env sudo whoami"
+    );
+    let r = fake.run_wrapped(&cmd, SUDO_PW);
+    assert_eq!(r.exit_code, Some(0), "{}", r.stderr);
+    assert_eq!(r.stdout, "hola\nroot\nroot\nroot\nroot\n");
+    let log = fake.log();
+    assert_eq!(log.iter().filter(|l| l.as_str() == "ok S").count(), 2, "{log:?}");
+    assert_eq!(log.iter().filter(|l| l.as_str() == "ok A").count(), 1 + 6, "{log:?}");
+    assert!(!log.iter().any(|l| l.starts_with("bad")), "{log:?}");
+    assert!(fake.leftovers().is_empty());
+
+    // Varios sudo a la vez (tubería): cada uno recibe la contraseña entera.
+    for _ in 0..5 {
+        let r = fake.run_wrapped("sudo whoami | sudo cat | sudo cat | sudo cat | sudo cat", SUDO_PW);
+        assert_eq!((r.exit_code, r.stdout.as_str()), (Some(0), "root\n"), "{}", r.stderr);
+        assert!(!fake.log().iter().any(|l| l.starts_with("bad")), "{:?}", fake.log());
+    }
+
+    // El código de salida del comando se conserva; su stdin está cerrado (no se queda esperando).
+    let r = fake.run_wrapped("sudo sh -c 'exit 7'", SUDO_PW);
+    assert_eq!(r.exit_code, Some(7));
+    let r = fake.run_wrapped("sudo cat; echo fin", SUDO_PW);
+    assert_eq!(r.stdout, "fin\n");
+
+    // El comando no ve la contraseña: ni en variables, ni en el entorno, ni en la salida.
+    let r = fake.run_wrapped("sudo true; set; env; echo \"p=[$p] c=[$c]\"; s=$(command -v sudo); cat \"$s\" \"${s%/*/*}/a\"; true", SUDO_PW);
+    assert_eq!(r.exit_code, Some(0), "{}", r.stderr);
+    assert!(r.stdout.contains("p=[]") && r.stdout.contains("SUDO_ASKPASS"), "{}", r.stdout);
+    for out in [&r.stdout, &r.stderr] {
+        assert!(!out.contains("s3cr3t"), "la contraseña apareció en la salida:\n{out}");
+    }
+    assert!(fake.leftovers().is_empty());
+
+    // Un `sudo -S` del propio comando no recibe también -A (sudo no acepta los dos juntos).
+    let r = fake.run_wrapped("echo nada | sudo -S true; echo $?", SUDO_PW);
+    assert!(!r.stderr.contains("may not be used together"), "{}", r.stderr);
+}
+
+#[cfg(unix)]
+#[test]
+fn sudo_wrapper_bad_password_fails_fast_with_one_attempt() {
+    let fake = FakeSudo::new(SUDO_PW);
+    let r = fake.run_wrapped("sudo whoami; echo no-debe-llegar", "otra");
+    assert_eq!(super::sudo::failure(r.exit_code, &r.stderr), Some(super::sudo::SudoFailure::BadPassword), "{r:?}");
+    assert!(!r.stdout.contains("no-debe-llegar"));
+    assert_eq!(fake.log(), ["bad S"], "un solo intento fallido");
+    assert!(fake.leftovers().is_empty());
+    assert!(r.duration_ms < 5000, "{} ms", r.duration_ms);
+}
+
+fn sudo_core(fake: Option<&FakeSudo>) -> McpCore<Mock> {
+    let c = core();
+    *c.backend.local.lock().unwrap() = fake.cloned();
+    *c.backend.sudo_reply.lock().unwrap() = json!({ "elevate": true, "password": SUDO_PW });
+    c
+}
+
+fn ui_kinds(core: &McpCore<Mock>) -> Vec<String> {
+    core.backend.ui_calls.lock().unwrap().clone()
+}
+
+#[cfg(unix)]
+#[tokio::test]
+async fn run_command_with_sudo_uses_the_password_without_showing_it() {
+    let fake = FakeSudo::new(SUDO_PW);
+    let c = sudo_core(Some(&fake));
+    let out = call(&c, "run_command", json!({ "server": "web-prod", "command": "sudo whoami" })).await;
+    assert!(!out.is_error, "{}", out.text);
+    assert!(out.text.contains("Código de salida: 0") && out.text.contains("root"), "{}", out.text);
+    assert_eq!(asked(&c), 1, "sudo pide permiso siempre");
+    assert_eq!(ui_kinds(&c), ["sudo"]);
+    let (_, payload) = c.backend.ui_payloads.lock().unwrap()[0].clone();
+    assert_eq!(payload["sessionId"], "ss-full");
+    assert_eq!(payload["profileId"], "s-full");
+    // Nada con la contraseña: ni la respuesta, ni la línea de comandos, ni el registro.
+    assert!(!out.text.contains("s3cr3t"));
+    assert!(ran(&c).iter().all(|cmd| !cmd.contains("s3cr3t") && !cmd.contains("whoami")));
+    let log = serde_json::to_string(&c.audit.list()).unwrap();
+    assert!(!log.contains("s3cr3t"), "{log}");
+    assert!(log.contains("(con sudo)"), "{log}");
+    assert!(fake.leftovers().is_empty());
+}
+
+#[tokio::test]
+async fn sudo_output_is_redacted_and_non_sudo_commands_do_not_ask() {
+    let c = sudo_core(None);
+    *c.backend.exec_result.lock().unwrap() = Some(ExecResult {
+        stdout: format!("la clave es {SUDO_PW}\n"),
+        stderr: format!("[{SUDO_PW}]"),
+        exit_code: Some(0),
+        duration_ms: 1,
+        truncated: false,
+        timed_out: false,
+    });
+    let out = call(&c, "run_command", json!({ "server": "web-prod", "command": "sudo cat /tmp/x" })).await;
+    assert!(!out.is_error, "{}", out.text);
+    assert!(!out.text.contains("s3cr3t"), "{}", out.text);
+    assert!(out.text.contains("la clave es ********"), "{}", out.text);
+    // La contraseña solo viajó por stdin.
+    let stdin = c.backend.stdins.lock().unwrap()[0].clone().unwrap();
+    assert!(String::from_utf8_lossy(&stdin).contains(SUDO_PW));
+
+    // Sin sudo: ni se pide la contraseña ni hay stdin.
+    *c.backend.exec_result.lock().unwrap() = None;
+    let out = call(&c, "run_command", json!({ "server": "web-prod", "command": "touch /tmp/pseudo" })).await;
+    assert!(!out.is_error);
+    assert_eq!(ui_kinds(&c), ["sudo"]);
+    assert_eq!(c.backend.stdins.lock().unwrap()[1], None);
+    assert_eq!(ran(&c)[1], "touch /tmp/pseudo");
+}
+
+#[tokio::test]
+async fn sudo_not_needed_or_canceled() {
+    // root o sudo sin contraseña: la interfaz dice que no hace falta y se ejecuta tal cual.
+    let c = core();
+    let out = call(&c, "run_command", json!({ "server": "web-prod", "command": "sudo whoami" })).await;
+    assert!(!out.is_error, "{}", out.text);
+    assert_eq!(ran(&c), ["sudo whoami"]);
+    assert_eq!(c.backend.stdins.lock().unwrap()[0], None);
+
+    // El usuario cierra el diálogo de la contraseña: denegado y no se ejecuta.
+    *c.backend.sudo_reply.lock().unwrap() = json!({ "canceled": true });
+    let out = call(&c, "run_command", json!({ "server": "web-prod", "command": "sudo whoami" })).await;
+    assert!(out.is_error);
+    assert_eq!(out.text, super::core::SUDO_CANCELED_MSG);
+    assert_eq!(ran(&c).len(), 1);
+    assert_eq!(c.audit.list()[0].status, AuditStatus::Denied);
+
+    // TerView se bloquea mientras se busca la contraseña: nada.
+    let c = sudo_core(None);
+    c.backend.lock_on_sudo.store(true, Ordering::SeqCst);
+    let out = call(&c, "run_command", json!({ "server": "web-prod", "command": "sudo whoami" })).await;
+    assert_eq!(out.text, LOCKED_MSG);
+    assert!(ran(&c).is_empty());
+}
+
+#[cfg(unix)]
+#[tokio::test]
+async fn sudo_bad_password_is_clear_and_rejected_in_the_ui() {
+    let fake = FakeSudo::new("la-buena");
+    let c = sudo_core(Some(&fake));
+    let started = std::time::Instant::now();
+    let out = call(&c, "run_command", json!({ "server": "web-prod", "command": "sudo whoami" })).await;
+    assert!(out.is_error);
+    assert!(out.text.contains("Contraseña de sudo incorrecta"), "{}", out.text);
+    assert!(!out.text.contains("s3cr3t"));
+    assert!(started.elapsed() < Duration::from_secs(5));
+    assert_eq!(ui_kinds(&c), ["sudo", "sudo-rejected"]);
+    let (_, payload) = c.backend.ui_payloads.lock().unwrap()[1].clone();
+    assert_eq!(payload["sessionId"], "ss-full");
+    assert_eq!(fake.log(), ["bad S"]);
+    assert_eq!(c.audit.list()[0].status, AuditStatus::Error);
+}
+
+#[cfg(unix)]
+#[tokio::test]
+async fn catalog_command_with_sudo_flag() {
+    let fake = FakeSudo::new(SUDO_PW);
+    let c = sudo_core(Some(&fake));
+    c.set_catalog(vec![CatalogEntry {
+        id: "usuarios.crear-usuario".into(),
+        category: "Usuarios".into(),
+        name: "Crear usuario".into(),
+        description: None,
+        command: "sudo useradd -m {{usuario}}".into(),
+        dangerous: false,
+        sudo: true,
+        read_only: false,
+        interactive: false,
+        scope: None,
+    }]);
+    let out = call(
+        &c,
+        "run_catalog_command",
+        json!({ "server": "web-prod", "id": "usuarios.crear-usuario", "vars": { "usuario": "ana" } }),
+    )
+    .await;
+    assert!(!out.is_error, "{}", out.text);
+    assert!(out.text.contains("useradd -m ana"), "{}", out.text);
+    assert_eq!(asked(&c), 1);
+    assert_eq!(ui_kinds(&c), ["sudo"]);
+    assert!(!out.text.contains("s3cr3t"));
+    assert!(fake.leftovers().is_empty());
+}
+
+#[tokio::test]
+async fn catalog_sudo_flag_always_asks() {
+    // Marcado «sudo» aunque el texto no diga sudo: TerView pone la contraseña, así que se pregunta siempre.
+    let c = sudo_core(None);
+    c.set_catalog(vec![CatalogEntry {
+        id: "x.reiniciar".into(),
+        category: "X".into(),
+        name: "Reiniciar".into(),
+        description: None,
+        command: "systemctl restart nginx".into(),
+        dangerous: false,
+        sudo: true,
+        read_only: true,
+        interactive: false,
+        scope: None,
+    }]);
+    set_answer(&c, Answer::Give(Decision::Always));
+    for _ in 0..2 {
+        let out = call(&c, "run_catalog_command", json!({ "server": "web-prod", "id": "x.reiniciar" })).await;
+        assert!(!out.is_error, "{}", out.text);
+    }
+    assert_eq!(asked(&c), 2);
+    let reqs = c.backend.asked.lock().unwrap().clone();
+    assert!(!reqs[0].can_remember && reqs[0].danger.iter().any(|d| d.contains("sudo")), "{:?}", reqs[0]);
+    assert!(c.config.get().remembered_of("s-full").is_empty());
+    assert_eq!(ui_kinds(&c), ["sudo", "sudo"]);
+}
+
+// ───────────────────────── Aceptar automáticamente ─────────────────────────
+
+use super::core::AutoDuration;
+use super::policy::{AutoGrant, AutoLevel};
+
+#[test]
+fn auto_policy_levels() {
+    let empty = Default::default();
+    let normal = Action::change("run_command\nuptime");
+    let danger = Action::change("run_command\nrm -rf /x").with_danger(policy::danger_reasons("rm -rf /x"));
+    let sudo = Action::change("run_command\nsudo ls").with_danger(policy::danger_reasons("sudo ls"));
+    let dl = Action::change_on_read("download");
+    let read = Action::read("list_dir");
+    let d = |acc, a: &Action, lvl| policy::decide_auto("x", acc, a, &empty, lvl);
+
+    // Apagado: como siempre.
+    assert_eq!(d(Access::Full, &normal, AutoLevel::Off), Verdict::Ask { can_remember: true });
+    assert_eq!(d(Access::Full, &danger, AutoLevel::Off), Verdict::Ask { can_remember: false });
+    assert_eq!(d(Access::Full, &sudo, AutoLevel::Off), Verdict::Ask { can_remember: false });
+    // Cambios normales: lo normal pasa; lo peligroso y sudo se siguen preguntando.
+    assert_eq!(d(Access::Full, &normal, AutoLevel::Changes), Verdict::AutoAllow { danger: false });
+    assert_eq!(d(Access::Full, &danger, AutoLevel::Changes), Verdict::Ask { can_remember: false });
+    assert_eq!(d(Access::Full, &sudo, AutoLevel::Changes), Verdict::Ask { can_remember: false });
+    // Todo: también lo peligroso y sudo (marcado como peligroso).
+    assert_eq!(d(Access::Full, &normal, AutoLevel::All), Verdict::AutoAllow { danger: false });
+    assert_eq!(d(Access::Full, &danger, AutoLevel::All), Verdict::AutoAllow { danger: true });
+    assert_eq!(d(Access::Full, &sudo, AutoLevel::All), Verdict::AutoAllow { danger: true });
+    // Las lecturas siguen siendo «automático (lectura)».
+    assert_eq!(d(Access::Full, &read, AutoLevel::All), Verdict::Allow(policy::AUTO_READ));
+    // Solo lectura: los cambios se rechazan y lo que se permite se sigue preguntando.
+    for lvl in [AutoLevel::Changes, AutoLevel::All] {
+        for a in [&normal, &danger, &sudo] {
+            assert!(matches!(d(Access::Read, a, lvl), Verdict::Deny(m) if m.contains("solo lectura")));
+        }
+        assert_eq!(d(Access::Read, &dl, lvl), Verdict::Ask { can_remember: true });
+        // Sin acceso: rechazado.
+        assert!(matches!(d(Access::None, &normal, lvl), Verdict::Deny(_)));
+        assert!(matches!(d(Access::None, &read, lvl), Verdict::Deny(_)));
+    }
+    // Una regla «siempre» sigue anotándose como regla.
+    let remembered = ["run_command\nuptime".to_string()].into_iter().collect();
+    assert_eq!(
+        policy::decide_auto("x", Access::Full, &normal, &remembered, AutoLevel::Changes),
+        Verdict::Allow(policy::REMEMBERED)
+    );
+}
+
+#[test]
+fn auto_effective_lock_access_and_expiry() {
+    let now = 1_000_000;
+    let temp = |level, until| Some(AutoGrant { level, until });
+    let eff = policy::effective_auto;
+    // Bloqueado o sin acceso Completo: nunca.
+    assert_eq!(eff(Access::Full, true, Some(AutoLevel::All), temp(AutoLevel::All, None), now), AutoLevel::Off);
+    assert_eq!(eff(Access::Read, false, Some(AutoLevel::All), temp(AutoLevel::All, None), now), AutoLevel::Off);
+    assert_eq!(eff(Access::None, false, Some(AutoLevel::Changes), None, now), AutoLevel::Off);
+    // Guardado («siempre»).
+    assert_eq!(eff(Access::Full, false, Some(AutoLevel::Changes), None, now), AutoLevel::Changes);
+    // Temporal: manda sobre el guardado mientras no caduque.
+    assert_eq!(eff(Access::Full, false, Some(AutoLevel::Changes), temp(AutoLevel::All, Some(now + 1)), now), AutoLevel::All);
+    assert_eq!(eff(Access::Full, false, None, temp(AutoLevel::All, Some(now)), now), AutoLevel::Off, "caducado");
+    assert_eq!(eff(Access::Full, false, Some(AutoLevel::Changes), temp(AutoLevel::All, Some(now)), now), AutoLevel::Changes);
+    // Hasta cerrar TerView: no caduca.
+    assert_eq!(eff(Access::Full, false, None, temp(AutoLevel::Changes, None), u64::MAX - 1), AutoLevel::Changes);
+}
+
+#[tokio::test]
+async fn auto_durations_with_simulated_clock() {
+    let c = core();
+    let t0 = 5_000_000;
+    c.set_auto_at("s-full", AutoLevel::Changes, AutoDuration::Min15, t0).unwrap();
+    assert_eq!(c.auto_level_at("s-full", t0 + 15 * 60 * 1000 - 1), AutoLevel::Changes);
+    assert_eq!(c.auto_level_at("s-full", t0 + 15 * 60 * 1000), AutoLevel::Off, "15 min caducados");
+    c.set_auto_at("s-full", AutoLevel::All, AutoDuration::Hour, t0).unwrap();
+    assert_eq!(c.auto_level_at("s-full", t0 + 59 * 60 * 1000), AutoLevel::All);
+    assert_eq!(c.auto_level_at("s-full", t0 + 60 * 60 * 1000), AutoLevel::Off, "1 h caducada");
+    assert!(c.auto_list_at(t0 + 60 * 60 * 1000).is_empty());
+    // Lo temporal no se guarda en mcp.json.
+    assert!(c.config.get().auto_accept.is_empty());
+    c.set_auto_at("s-full", AutoLevel::Changes, AutoDuration::Session, t0).unwrap();
+    assert_eq!(c.auto_level_at("s-full", u64::MAX - 1), AutoLevel::Changes);
+    assert!(c.config.get().auto_accept.is_empty());
+    // «Siempre»: en la configuración (y quita el temporal).
+    c.set_auto_at("s-full", AutoLevel::All, AutoDuration::Always, t0).unwrap();
+    assert_eq!(c.config.get().auto_accept.get("s-full"), Some(&AutoLevel::All));
+    let list = c.auto_list_at(t0);
+    assert_eq!(list.len(), 1);
+    assert!(list[0].saved && list[0].level == AutoLevel::All && list[0].server_name == "web-prod");
+    // Bloqueado: no vale.
+    c.backend.locked.store(true, Ordering::SeqCst);
+    assert_eq!(c.auto_level_at("s-full", t0), AutoLevel::Off);
+    c.backend.locked.store(false, Ordering::SeqCst);
+    // Apagar: quita guardado y temporal.
+    c.set_auto_at("s-full", AutoLevel::Off, AutoDuration::Always, t0).unwrap();
+    assert!(c.config.get().auto_accept.is_empty());
+    assert_eq!(c.auto_level_at("s-full", t0), AutoLevel::Off);
+    c.set_auto_at("s-full", AutoLevel::Changes, AutoDuration::Session, t0).unwrap();
+    c.auto_off_all().unwrap();
+    assert!(c.auto_list_at(t0).is_empty());
+    // Solo lectura y sin acceso: no se puede activar.
+    assert!(c.set_auto_at("s-read", AutoLevel::Changes, AutoDuration::Session, t0).is_err());
+    assert!(c.set_auto_at("s-none", AutoLevel::All, AutoDuration::Always, t0).is_err());
+    // Si el servidor deja de tener acceso Completo, lo guardado desaparece.
+    c.set_auto_at("s-full", AutoLevel::Changes, AutoDuration::Always, t0).unwrap();
+    c.config
+        .update(|cfg| {
+            cfg.access.insert("s-full".into(), Access::Read);
+        })
+        .unwrap();
+    assert!(c.config.get().auto_accept.is_empty());
+}
+
+#[tokio::test]
+async fn auto_accept_in_calls() {
+    let c = core();
+    set_answer(&c, Answer::Give(Decision::Deny));
+    // Cambios normales: no pregunta, queda marcado como automático.
+    c.set_auto_at("s-full", AutoLevel::Changes, AutoDuration::Session, super::audit::now_ms()).unwrap();
+    let out = call(&c, "run_command", json!({ "server": "web-prod", "command": "podman restart web" })).await;
+    assert!(!out.is_error, "{}", out.text);
+    assert_eq!(asked(&c), 0);
+    let e = c.audit.list().into_iter().find(|e| e.detail == "podman restart web").unwrap();
+    assert!(e.auto && !e.auto_danger);
+    assert_eq!(e.approved_by.as_deref(), Some(policy::AUTO_CHANGE));
+    // Lo peligroso y sudo se siguen preguntando (y aquí se deniegan).
+    for cmd in ["rm -rf /tmp/x", "sudo systemctl restart nginx"] {
+        let out = call(&c, "run_command", json!({ "server": "web-prod", "command": cmd })).await;
+        assert!(out.is_error && out.text.contains("denegó"), "{cmd}: {}", out.text);
+    }
+    assert_eq!(asked(&c), 2);
+    // Solo lectura: sigue rechazando escrituras sin preguntar.
+    let out = call(&c, "write_file", json!({ "server": "db-server", "path": "/tmp/a", "content": "x" })).await;
+    assert!(out.is_error && out.text.contains("solo lectura"));
+    assert_eq!(asked(&c), 2);
+
+    // Todo: sudo y lo peligroso pasan solos, marcados como peligrosos.
+    c.set_auto_at("s-full", AutoLevel::All, AutoDuration::Session, super::audit::now_ms()).unwrap();
+    let out = call(&c, "run_command", json!({ "server": "web-prod", "command": "sudo systemctl restart nginx" })).await;
+    assert!(!out.is_error, "{}", out.text);
+    let out = call(&c, "run_catalog_command", json!({ "server": "web-prod", "id": "podman.prune" })).await;
+    assert!(!out.is_error, "{}", out.text);
+    assert_eq!(asked(&c), 2, "no debió preguntar");
+    let log = c.audit.list();
+    let e = log.iter().find(|e| e.detail.contains("sudo systemctl") && e.status == AuditStatus::Ok).unwrap();
+    assert!(e.auto && e.auto_danger);
+    assert_eq!(e.approved_by.as_deref(), Some(policy::AUTO_DANGER));
+    // La petición de la contraseña a la interfaz dice que fue automático (y nunca lleva contraseña).
+    let payloads = c.backend.ui_payloads.lock().unwrap().clone();
+    let (_, p) = payloads.iter().rev().find(|(k, _)| k == "sudo").unwrap();
+    assert_eq!(p["auto"], json!(true));
+    // Nada se recordó como regla.
+    assert!(c.config.get().remembered_of("s-full").is_empty());
+
+    // Bloqueado: no se acepta nada (se rechaza todo).
+    c.backend.locked.store(true, Ordering::SeqCst);
+    let before = ran(&c).len();
+    let out = call(&c, "run_command", json!({ "server": "web-prod", "command": "touch /tmp/y" })).await;
+    assert!(out.is_error && out.text == LOCKED_MSG, "{}", out.text);
+    assert_eq!(ran(&c).len(), before);
 }

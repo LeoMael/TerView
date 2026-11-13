@@ -1,12 +1,15 @@
 // Diálogo «Permiso del asistente»: el asistente de IA quiere cambiar algo en un servidor.
 // Muestra el comando exacto (o el archivo con sus diferencias) y espera tu respuesta.
 // Si nadie responde a tiempo, el motor lo deniega solo y el diálogo se cierra.
+// También ofrece «Aceptar automáticamente en este servidor…» (ver AutoAccept.tsx): al activarlo, si el
+// modo elegido cubre esta petición, se permite ya.
 import { useEffect, useState } from "react";
-import { AlertTriangle, Bot } from "lucide-react";
+import { AlertTriangle, Bot, Zap } from "lucide-react";
 import { Modal } from "../../components/ui/Modal";
 import { mcp, type McpApprovalRequest, type McpDecision } from "../../api/mcp";
 import { toast } from "../../stores/toasts";
 import { useMcp } from "./store";
+import { AutoAcceptPicker } from "./AutoAccept";
 import "./Mcp.css";
 
 function useSecondsLeft(expiresAt: number): number {
@@ -52,6 +55,7 @@ function alwaysLabel(r: McpApprovalRequest): string {
 function Request({ req, total }: { req: McpApprovalRequest; total: number }) {
   const left = useSecondsLeft(req.expiresAt);
   const [busy, setBusy] = useState(false);
+  const [showAuto, setShowAuto] = useState(false);
   const who = req.client ? `El asistente (${req.client})` : "El asistente";
 
   const answer = async (d: McpDecision) => {
@@ -101,7 +105,8 @@ function Request({ req, total }: { req: McpApprovalRequest; total: number }) {
           <div className="mcp-danger" role="alert">
             <AlertTriangle size={16} />
             <div>
-              <strong>Peligroso:</strong> {req.danger.join(", ")}. Esto se pregunta siempre.
+              <strong>Peligroso:</strong> {req.danger.join(", ")}. Esto se pregunta siempre (salvo con «Aceptar
+              automáticamente: todo»).
             </div>
           </div>
         )}
@@ -114,6 +119,25 @@ function Request({ req, total }: { req: McpApprovalRequest; total: number }) {
         <p className="mcp-ask-hint">
           Revisa bien qué hace antes de permitirlo. Todo queda en «Actividad del asistente».
         </p>
+        {!showAuto ? (
+          <button className="btn btn-sm mcp-auto-open" onClick={() => setShowAuto(true)} disabled={busy}>
+            <Zap size={12} /> Aceptar automáticamente en este servidor…
+          </button>
+        ) : (
+          <>
+            <div className="section-label">Aceptar automáticamente en {req.serverName}</div>
+            <AutoAcceptPicker
+              compact
+              serverId={req.serverId}
+              serverName={req.serverName}
+              onApplied={(lvl) => {
+                // Si el modo cubre esta petición, se permite ya; si no (peligrosa con «cambios normales»), sigue aquí.
+                if (lvl === "all" || (lvl === "changes" && req.danger.length === 0)) void answer("once");
+                else setShowAuto(false);
+              }}
+            />
+          </>
+        )}
       </div>
     </Modal>
   );

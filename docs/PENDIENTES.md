@@ -27,7 +27,18 @@ Al decir «continúa», empezar por aquí.
 **Estado.** La **0.5.0 está publicada** (13/11/2026). En `main`, sin publicar todavía (ver «Sin publicar» en el
 CHANGELOG): botón «Actualizar imagen» en el escáner, terminal local con Claude Code y Codex, añadir servidor
 dentro de un proyecto, sudo que usa siempre la contraseña guardada, Contenedores con sudo para todos los
-usuarios, Ajustes más anchos, y el logo nuevo en `docs/marca/sshorus/final/`.
+usuarios, Ajustes más anchos, y el logo nuevo en `docs/marca/sshorus/final/`. El 13/11 se añadieron sudo por
+el MCP, hosts guardados y prueba de conexión al crear un servidor, y la barra de estado del editor.
+
+**Plan de la próxima versión (decidido por el usuario el 13/11/2026; número aún sin decidir: 1.0.0 o 0.6.0).**
+Entra: nombre SSHorus + actualizador (punto 1, **al final**, porque toca todos los archivos), Ajustes con
+buen diseño y varias apariencias, MCP «aceptar automáticamente» (por servidor y con duración, para no aprobar
+cada rato; la contraseña de sudo nunca se pasa a la IA), crear usuario solo con clave SSH (idea de otra
+sesión: asistente con clave pegada/elegida/generada, AllowGroups, sudo y linger, prueba de acceso y
+guardar el servidor), los tres casos de sudo (punto 3), «Auditar servidor» (punto 4b, con el
+endurecimiento del 4) y limpieza (hecha). No entra: asistente en el servidor (punto 5) ni app móvil.
+El usuario pidió avanzar **por partes, máximo ~50 min por sesión**. Hecho el 13/11: limpieza; en curso:
+Ajustes + apariencias y MCP aceptar automáticamente.
 
 **1. Cambiar el nombre a SSHorus (lo siguiente).** Decidido por el usuario: nombre **SSHorus**, logo del
 ojo de Horus en un anillo con `>_`, aprobado el 13/11/2026 (`docs/marca/sshorus/final/`, ver `docs/marca/README.md`). Nadie más usa la app, así
@@ -98,8 +109,8 @@ pararlo o quitarlo. Desde la app de Claude en el celular: «¿hay algo caído?»
 **6. Más adelante: app móvil propia.** Proyecto aparte, con la misma idea que la app de escritorio
 (monitorear y usar el asistente desde el celular).
 
-**7. Limpieza.** Quedan copias de trabajo viejas, ya unidas a main: `../TERVIEW-v050` (rama `v0.5.0`) y
-tres en `.claude/worktrees/`. Para borrarlas: `git worktree remove <ruta>` y `git branch -d <rama>`.
+**7. Limpieza.** ✅ Hecha el 13/11/2026: borradas `../TERVIEW-v050` (rama `v0.5.0`; la etiqueta sigue) y
+las copias de `.claude/worktrees/`.
 
 **Forma de trabajar** (ver también la memoria): Claude coordina y los agentes programan; **pocos commits,
 uno por función terminada**; sin coautor; documentación visual en `docs/`; lenguaje simple y poco texto.
@@ -253,9 +264,9 @@ Archivos: `ssh/commands.rs` (vigilante + bucle de reintentos), `ssh/mod.rs` (`Se
 |-------------|----------|---------|
 | `list_servers` / `list_projects` / `list_sessions` | Servidores (solo los que tienen acceso), proyectos y conexiones abiertas. Sin contraseñas. | Lectura |
 | `connect` | Abre una conexión a un servidor guardado (aparece como pestaña; si pide contraseña o huella, la pides tú en TerView) | Pide permiso (también en solo lectura) |
-| `run_command` | Comando no interactivo por el exec cancelable: código, stdout y stderr. 60 s por defecto (máx. 600) y 64 KB por flujo (máx. 512) | Pide permiso; en solo lectura, rechazado |
+| `run_command` | Comando no interactivo por el exec cancelable: código, stdout y stderr. 60 s por defecto (máx. 600) y 64 KB por flujo (máx. 512). Con `sudo`, TerView pone la contraseña de la conexión (ver abajo) | Pide permiso; en solo lectura, rechazado; con sudo, siempre |
 | `list_catalog` | Comandos de la Biblioteca y de «Mis comandos», con sus variables | Lectura |
-| `run_catalog_command` | Un comando de la Biblioteca con sus variables (citadas como en la interfaz; no pueden empezar por «-») | 📊 de solo lectura: pasa; el resto pide permiso |
+| `run_catalog_command` | Un comando de la Biblioteca con sus variables (citadas como en la interfaz; no pueden empezar por «-»). Los marcados «sudo» se elevan igual que `run_command` | 📊 de solo lectura: pasa; el resto pide permiso |
 | `list_dir` / `stat` / `read_file` | SFTP. `read_file` por trozos: 64 KB por defecto, 1 MB máx. por llamada; binarios no se muestran | Lectura |
 | `write_file` | Guardado atómico (hasta 1 MB). El diálogo muestra las diferencias | Pide permiso; en solo lectura, rechazado |
 | `upload` / `download` | Con la cola de transferencias de la app (rutas locales absolutas) | Pide permiso (descargar también en solo lectura) |
@@ -281,6 +292,17 @@ Archivos: `ssh/commands.rs` (vigilante + bucle de reintentos), `ssh/mod.rs` (`Se
   comando en este servidor (se guarda la acción exacta en `mcp.json` y se puede quitar en Ajustes) /
   Denegar. Sin respuesta en 2 min (30 s–5 min en Ajustes) → denegado. La ventana se trae al frente.
 - **Las contraseñas y llaves nunca salen**: el asistente solo usa conexiones abiertas en la app.
+- **sudo en los comandos del asistente** (`mcp/sudo.rs`, `src/features/mcp/sudoAsk.ts`): tras aprobar un
+  comando con `sudo` (o del catálogo marcado «sudo»), el motor pide la contraseña a la interfaz (petición
+  `sudo`), que la busca como los paneles (`obtainSudoPassword`: en memoria → guardada → otra pestaña) o la
+  pide con `SudoDialog`; root o sudo sin contraseña → se ejecuta tal cual. El comando va dentro de un
+  envoltorio POSIX: contraseña en la primera línea de stdin, comprobada una vez con `sudo -k -S -v`
+  (incorrecta → sale en seguida con la marca `__TV_SUDO_BAD__`, la interfaz la olvida y marca la guardada
+  «rejected»), y luego un askpass temporal (carpeta mktemp 0700 con un FIFO que alimenta un proceso hijo;
+  nada escrito en disco) y un `sudo` de paso con `-A` delante en PATH, así sirve para `sudo a && sudo b`,
+  tuberías y `sudo bash -c`. La salida se devuelve sin la contraseña. No cubre un `/usr/bin/sudo` con ruta
+  absoluta. Límite conocido: un comando aprobado que quiera robarla a propósito (leyendo el FIFO mientras
+  corre) podría; por eso sudo pregunta siempre.
 - **Registro**: `<config>/terview/mcp-audit.jsonl` (una línea por acción: herramienta, servidor, comando o
   ruta, resultado, quién lo aprobó, duración, cliente). Al pasar de 1 MiB se renombra a
   `mcp-audit.1.jsonl`. Panel **Actividad del asistente** (botón del robot en la barra de pestañas) con
@@ -294,7 +316,8 @@ Archivos: `ssh/commands.rs` (vigilante + bucle de reintentos), `ssh/mod.rs` (`Se
 | Transporte | `mcp/http.rs` | HTTP «streamable» del SDK, sin sesiones y con respuestas JSON, detrás de hyper con token y bloqueo |
 | Puente stdio | `src-tauri/src/bin/terview-mcp.rs` + `mcp/bridge.rs` | Reenvía cada mensaje JSON-RPC a la app; responde él mismo si está cerrada |
 | Motor real | `mcp/backend.rs` | Sesiones, exec cancelable (`ExecRegistry`), SFTP, transferencias |
-| Peticiones a la interfaz | `mcp/ui.rs` + `src/features/mcp/uiBridge.ts` | Abrir pestaña, catálogo, puertos, sitios y contenedores (reutiliza el TypeScript ya probado) |
+| Peticiones a la interfaz | `mcp/ui.rs` + `src/features/mcp/uiBridge.ts` | Abrir pestaña, catálogo, puertos, sitios y contenedores (reutiliza el TypeScript ya probado) y la contraseña de sudo |
+| sudo | `mcp/sudo.rs` + `src/features/mcp/sudoAsk.ts`, `SudoAskHost.tsx` | Envoltorio con askpass temporal; la contraseña sale de la misma memoria que la interfaz (o del `SudoDialog`) |
 | Aprobaciones | `src/features/mcp/ApprovalDialog.tsx` | Diálogo con cuenta atrás, diferencias y peligro |
 | Ajustes | `src/components/Settings/McpSection.tsx` | Activar, puerto, tiempo, token, permisos, reglas, configuración para copiar |
 | Actividad | `src/components/McpActivity/` | Lista de acciones con resultado y quién aprobó |
@@ -328,14 +351,24 @@ Archivos: `ssh/commands.rs` (vigilante + bucle de reintentos), `ssh/mod.rs` (`Se
   (sin informe, resumido con límite, sin conexión, sin acceso), `scan_vulnerabilities` con permiso y
   «Permitir siempre» en solo lectura, denegado, sin conexión, tiempo límite (reloj simulado), «Detener»,
   cancelación del cliente y uno a la vez por servidor (`mcp/vuln.rs`: orden y límite del resumen).
+  sudo: el envoltorio se ejecuta con un `sh` de verdad y un sudo simulado (`sudo whoami`, tuberías,
+  `sudo sh -c`, `xargs`/`env sudo`, varios sudo a la vez, código de salida, stdin cerrado, contraseña
+  incorrecta con un solo intento, sin restos en la carpeta temporal y la contraseña fuera de la salida, las
+  variables y el entorno del comando), y el flujo MCP (`run_command`, `run_catalog_command` con
+  `usuarios.crear-usuario`, no hace falta, cancelado, bloqueo, contraseña rechazada, salida tapada).
 - `cargo test --lib mcp::e2e -- --ignored --test-threads=1` contra `terview-sshd`: cliente oficial de
   `rmcp` (initialize, tools/list, list_servers, run_command, tiempo límite, peligroso denegado,
   write_file/read_file/list_dir), JSON-RPC a mano como `curl`, el puente stdio y
-  `get_vuln_report` + `scan_vulnerabilities` de verdad (Alpine sin sudo, con OSV.dev).
+  `get_vuln_report` + `scan_vulnerabilities` de verdad (Alpine sin sudo, con OSV.dev) y el envoltorio de sudo
+  por un canal exec real con busybox sh (sudo simulado: tuberías, varios sudo, la contraseña fuera de `ps`,
+  /dev/shm noexec → /tmp, sin restos también al vencer el tiempo; sudo real: «no tiene permiso»).
 
 ### Sin verificar
 - Con **Claude Code y Claude Desktop reales** (solo se probó con el cliente de `rmcp`, JSON-RPC a mano y el puente).
 - La **interfaz en la app real**: diálogo, Ajustes, panel y botón (compila, pero no se abrió la ventana).
+- **sudo por MCP contra un sudo real con contraseña** (Rocky/RHEL con `wheel`): el servidor de pruebas no tiene
+  sudo para `test`, así que el camino bueno se probó con un sudo simulado; tampoco se abrió el diálogo de la
+  contraseña en la app.
 - Las herramientas que pasan por la interfaz (`connect`, `list_catalog`, `list_ports`, `list_sites`,
   `list_containers`) y `upload` / `download` con el motor de transferencias real: probadas solo con el motor simulado.
 - Que los **instaladores** incluyan `terview-mcp` junto a `terview` (el CLI de Tauri empaqueta los binarios de

@@ -57,10 +57,10 @@ impl Backend for Real {
     async fn sessions(&self) -> Vec<SessionInfo> {
         self.sessions.list().await
     }
-    async fn exec(&self, sid: &str, command: &str, timeout: u32, exec_id: &str) -> AppResult<ExecResult> {
+    async fn exec(&self, sid: &str, command: &str, stdin: Option<&[u8]>, timeout: u32, exec_id: &str) -> AppResult<ExecResult> {
         let ticket = self.registry.register(exec_id)?;
         let s = self.sessions.get(sid).await?;
-        exec::run_cancellable(&s, command, None, timeout, &ticket.token).await
+        exec::run_cancellable(&s, command, stdin, timeout, &ticket.token).await
     }
     fn cancel_exec(&self, exec_id: &str) -> bool {
         self.registry.cancel(exec_id)
@@ -380,4 +380,85 @@ async fn vuln_tools_end_to_end() {
 
     let _ = client.cancel().await;
     env.cleanup().await;
+}
+
+/// Envoltorio de sudo (`sudo.rs`) por un canal exec real. El servidor de pruebas es Alpine (el script lo
+/// ejecuta busybox sh; /dev/shm es noexec, así que se usa /tmp) y su usuario `test` no tiene sudo: el
+/// camino bueno se prueba con el sudo simulado de `tests.rs` delante en PATH, y el sudo real, con los
+/// rechazos (contraseña incorrecta y «no tiene permiso»).
+#[tokio::test]
+#[ignore]
+async fn sudo_wrapper_on_real_server() {
+    use super::sudo::{failure, wrap, SudoFailure};
+    use super::tests::{FAKE_SUDO, SUDO_PW};
+    use crate::ssh::connect::testutil::TEST_PASSWORD;
+
+    let s = connect_test_server().await;
+    let base = format!("/config/tmp-mcp-sudo-{}", uuid::Uuid::new_v4().simple());
+    let setup = format!("mkdir -p {base}/bin {base}/work && cat > {base}/bin/sudo && chmod 755 {base}/bin/sudo");
+    let r = exec::run_with_stdin(&s, &setup, FAKE_SUDO.as_bytes(), 10).await.unwrap();
+    assert_eq!(r.exit_code, Some(0), "{}", r.stderr);
+    let r = exec::run_with_stdin(&s, &format!("cat > {base}/pw"), SUDO_PW.as_bytes(), 10).await.unwrap();
+    assert_eq!(r.exit_code, Some(0), "{}", r.stderr);
+
+    // Camino bueno (sudo simulado): tubería, sudo dentro de sh y varios sudo en la misma línea.
+    let cmd = format!(
+        "echo hola | sudo tee {base}/work/x >/dev/null && sudo sh -c 'cat {base}/work/x' && sudo whoami && sudo sh -c 'sleep 2'"
+    );
+    let w = wrap(&cmd, SUDO_PW).unwrap();
+    let full = format!("PATH={base}/bin:$PATH TV_FAKE_DIR={base} {}", w.command);
+    let run = exec::run_with_stdin(&s, &full, &w.stdin, 30);
+    // Mientras corre, la contraseña no está en la línea de comandos de ningún proceso.
+    let ps = async {
+        tokio::time::sleep(Duration::from_millis(1200)).await;
+        exec::run(&s, "ps -o args 2>/dev/null || ps -ef", 10).await.unwrap()
+    };
+    let (r, ps) = tokio::join!(run, ps);
+    let r = r.unwrap();
+    assert_eq!(r.exit_code, Some(0), "{}", r.stderr);
+    assert_eq!(r.stdout, "hola\nroot\n");
+    assert!(ps.stdout.contains("sleep 2"), "{}", ps.stdout);
+    assert!(!ps.stdout.contains("s3cr3t"), "{}", ps.stdout);
+    assert!(!r.stdout.contains("s3cr3t") && !r.stderr.contains("s3cr3t"));
+    let r = exec::run(&s, &format!("cat {base}/log; ls -a /tmp /dev/shm"), 10).await.unwrap();
+    assert_eq!(r.stdout.matches("ok S").count(), 1, "{}", r.stdout);
+    assert_eq!(r.stdout.matches("ok A").count(), 4, "{}", r.stdout);
+    assert!(!r.stdout.contains("bad"), "{}", r.stdout);
+    assert!(!r.stdout.contains(".terview-sudo."), "quedaron archivos temporales:\n{}", r.stdout);
+
+    // Varios sudo a la vez (tubería).
+    let w = wrap("sudo whoami | sudo cat | sudo cat | sudo cat", SUDO_PW).unwrap();
+    let full = format!("PATH={base}/bin:$PATH TV_FAKE_DIR={base} {}", w.command);
+    let r = exec::run_with_stdin(&s, &full, &w.stdin, 30).await.unwrap();
+    assert_eq!((r.exit_code, r.stdout.as_str()), (Some(0), "root\n"), "{}", r.stderr);
+
+    // Tiempo límite: se detiene en el servidor y la carpeta temporal se borra igual.
+    let w = wrap("sudo sh -c 'sleep 30'", SUDO_PW).unwrap();
+    let full = format!("PATH={base}/bin:$PATH TV_FAKE_DIR={base} {}", w.command);
+    let r = exec::run_with_stdin(&s, &full, &w.stdin, 2).await.unwrap();
+    assert!(r.timed_out, "{r:?}");
+    let r = exec::run(&s, "sleep 1; ls -a /tmp /dev/shm; ps -o args 2>/dev/null || ps -ef", 10).await.unwrap();
+    assert!(!r.stdout.contains(".terview-sudo."), "quedaron archivos temporales:\n{}", r.stdout);
+    assert!(!r.stdout.contains("sleep 30"), "{}", r.stdout);
+
+    // Contraseña incorrecta (sudo simulado): rechazo rápido, con un solo intento y sin ejecutar nada.
+    let w = wrap("sudo whoami; echo no-debe-llegar", "incorrecta").unwrap();
+    let full = format!("PATH={base}/bin:$PATH TV_FAKE_DIR={base} {}", w.command);
+    let started = std::time::Instant::now();
+    let r = exec::run_with_stdin(&s, &full, &w.stdin, 30).await.unwrap();
+    assert_eq!(failure(r.exit_code, &r.stderr), Some(SudoFailure::BadPassword), "{r:?}");
+    assert!(!r.stdout.contains("no-debe-llegar"));
+    assert!(started.elapsed() < Duration::from_secs(10), "{:?}", started.elapsed());
+    let r = exec::run(&s, &format!("cat {base}/log"), 10).await.unwrap();
+    assert_eq!(r.stdout.matches("bad S").count(), 1, "{}", r.stdout);
+
+    // sudo real: `test` no está en sudoers → «no tiene permiso», con cualquier contraseña.
+    for pw in [TEST_PASSWORD, "incorrecta"] {
+        let w = wrap("sudo whoami", pw).unwrap();
+        let r = exec::run_with_stdin(&s, &w.command, &w.stdin, 30).await.unwrap();
+        assert_eq!(failure(r.exit_code, &r.stderr), Some(SudoFailure::Denied), "{r:?}");
+        assert!(!r.stderr.contains(pw));
+    }
+
+    let _ = exec::run(&s, &format!("rm -rf {base}"), 10).await;
 }

@@ -1,7 +1,8 @@
 // Pide y valida la contraseña de sudo. Queda en memoria mientras dure la conexión y, si se marca
 // «Guardar para este servidor», también en la bóveda (o el llavero) como contraseña de sudo guardada.
 // Antes de preguntar busca la que ya hay (`obtainSudoPassword`: en memoria, guardada u otra pestaña del
-// mismo servidor): si sirve, se cierra solo. Lo usan Administración, Contenedores y el escáner.
+// mismo servidor): si sirve, se cierra solo. Lo usan Administración, Contenedores, el escáner y los comandos
+// con sudo del asistente de IA (features/mcp/SudoAskHost.tsx).
 import { useEffect, useState } from "react";
 import { KeyRound } from "lucide-react";
 import {
@@ -40,6 +41,7 @@ export function SudoDialog({
   profileId,
   user,
   change = false,
+  reason,
   onClose,
 }: {
   sessionId: string;
@@ -47,6 +49,8 @@ export function SudoDialog({
   user: string | null;
   /** «Cambiar contraseña de sudo…»: guardar marcado por defecto. */
   change?: boolean;
+  /** Para qué se pide (p. ej. un comando del asistente). */
+  reason?: string;
   onClose: () => void;
 }) {
   const stored = useStoredSudoState(sessionId);
@@ -125,6 +129,7 @@ export function SudoDialog({
         }}
       >
         <div className="modal-body">
+          {reason && <div className="faint sudo-dialog-reason">{reason}</div>}
           {looking ? (
             <div className="faint" role="status">
               <span className="spinner adm-spinner-btn" /> Buscando la contraseña de sudo guardada…

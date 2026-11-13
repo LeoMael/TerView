@@ -6,6 +6,8 @@
 //!   en ese servidor.
 //! - Lo peligroso (`rm -rf`, `prune`, `sudo`, `reboot`… o un comando ⚠️ del catálogo) pide permiso
 //!   SIEMPRE: no se puede recordar.
+//! - «Aceptar automáticamente» (por servidor, solo con acceso Completo y TerView desbloqueado):
+//!   `Changes` acepta los cambios normales; `All` también lo peligroso y sudo. Ver `decide_auto`.
 
 use std::collections::BTreeSet;
 use std::sync::OnceLock;
@@ -77,11 +79,53 @@ impl Action {
     }
 }
 
+/// Modo «Aceptar automáticamente» de un servidor.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum AutoLevel {
+    /// Apagado: se pregunta como siempre.
+    #[default]
+    Off,
+    /// Los cambios normales (lo que no es peligroso) pasan solos.
+    Changes,
+    /// Todo pasa solo, también lo peligroso y sudo.
+    All,
+}
+
+/// Modo automático temporal (solo en memoria). `until` = Unix ms en que se apaga; None = hasta
+/// cerrar TerView.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AutoGrant {
+    pub level: AutoLevel,
+    pub until: Option<u64>,
+}
+
+impl AutoGrant {
+    pub fn active(&self, now: u64) -> bool {
+        self.level != AutoLevel::Off && self.until.is_none_or(|u| now < u)
+    }
+}
+
+/// Nivel automático que vale ahora: el temporal (si no caducó) manda sobre el guardado («siempre»).
+/// Nunca con TerView bloqueado ni en servidores que no tengan acceso Completo.
+pub fn effective_auto(access: Access, locked: bool, saved: Option<AutoLevel>, temp: Option<AutoGrant>, now: u64) -> AutoLevel {
+    if locked || access != Access::Full {
+        return AutoLevel::Off;
+    }
+    match temp {
+        Some(g) if g.active(now) => g.level,
+        _ => saved.unwrap_or_default(),
+    }
+}
+
 /// Resultado de aplicar las reglas.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Verdict {
     /// Pasa sin preguntar. El texto dice por qué (para el registro).
     Allow(&'static str),
+    /// Pasa sin preguntar por el modo «Aceptar automáticamente». `danger` = era peligrosa (o sudo).
+    AutoAllow { danger: bool },
     /// Hay que preguntar en TerView. `can_remember` = se ofrece «Permitir siempre».
     Ask { can_remember: bool },
     /// No se permite. El texto es el motivo, listo para el asistente.
@@ -107,8 +151,21 @@ pub fn read_only_msg(server: &str) -> String {
     )
 }
 
-/// Decide qué pasa con `action` en un servidor con `access` y estas reglas recordadas.
+/// Motivo de registro: aceptado por el modo automático (cambio normal).
+pub const AUTO_CHANGE: &str = "automático (modo «aceptar automáticamente»)";
+/// Motivo de registro: aceptado por el modo automático aunque era peligroso o con sudo.
+pub const AUTO_DANGER: &str = "automático (modo «todo», peligroso)";
+
+/// Decide qué pasa con `action` en un servidor con `access` y estas reglas recordadas (sin modo
+/// automático).
 pub fn decide(server: &str, access: Access, action: &Action, remembered: &BTreeSet<String>) -> Verdict {
+    decide_auto(server, access, action, remembered, AutoLevel::Off)
+}
+
+/// Como `decide`, con el modo automático que vale ahora (ver `effective_auto`, que ya lo apaga con
+/// TerView bloqueado o sin acceso Completo). Sin acceso y solo lectura no cambian.
+pub fn decide_auto(server: &str, access: Access, action: &Action, remembered: &BTreeSet<String>, auto: AutoLevel) -> Verdict {
+    let auto = if access == Access::Full { auto } else { AutoLevel::Off };
     if access == Access::None {
         return Verdict::Deny(no_access_msg(server));
     }
@@ -119,10 +176,16 @@ pub fn decide(server: &str, access: Access, action: &Action, remembered: &BTreeS
         return Verdict::Deny(read_only_msg(server));
     }
     if !action.danger.is_empty() {
+        if auto == AutoLevel::All {
+            return Verdict::AutoAllow { danger: true };
+        }
         return Verdict::Ask { can_remember: false };
     }
     if remembered.contains(&action.key) {
         return Verdict::Allow(REMEMBERED);
+    }
+    if auto != AutoLevel::Off {
+        return Verdict::AutoAllow { danger: false };
     }
     Verdict::Ask { can_remember: true }
 }
@@ -211,6 +274,15 @@ pub fn danger_reasons(command: &str) -> Vec<String> {
         out.retain(|x| x != "borrado recursivo (rm -r)");
     }
     out
+}
+
+/// ¿El comando usa sudo? (la misma regla que «usa sudo» de `danger_reasons`, solo para sudo: doas y
+/// pkexec solo aceptan la contraseña desde una terminal). Si lo usa, TerView le da la contraseña.
+pub fn uses_sudo(command: &str) -> bool {
+    static RE: OnceLock<Option<Regex>> = OnceLock::new();
+    RE.get_or_init(|| Regex::new(&format!(r"{W}sudo(?:\s|$)")).ok())
+        .as_ref()
+        .is_some_and(|re| re.is_match(command))
 }
 
 /// ¿El comando no termina solo (top, tail -f…)? Por el canal exec se cortaría por tiempo.

@@ -5,12 +5,17 @@
 // - catalog: el catálogo base de la Biblioteca (components/Commands/catalog.ts).
 // - ports / sites: los scripts y analizadores de Administración (features/admin/ports.ts y web.ts).
 // - containers: la detección de Podman/Docker y la lista de contenedores (features/containers).
-// Las lecturas se hacen como el usuario conectado (sin sudo): el asistente nunca usa contraseñas.
+// - sudo / sudo-rejected: la contraseña de sudo de un comando del asistente ya aprobado (sudoAsk.ts) y el
+//   aviso de que sudo la rechazó. La contraseña va al motor (que la pasa por stdin), nunca al asistente.
+// Las lecturas se hacen como el usuario conectado (sin sudo).
 import { errorMessage } from "../../api/core";
 import { mcp, type McpUiRequest } from "../../api/mcp";
 import { useProfiles } from "../../stores/profiles";
 import { useTabs } from "../../stores/tabs";
+import { toast } from "../../stores/toasts";
 import { connectToServer } from "../connect";
+import { sudoRejectedNotified } from "../privileges";
+import { sudoForAssistant } from "./sudoAsk";
 
 async function connect(profileId: string): Promise<{ sessionId: string }> {
   const findTab = () =>
@@ -105,6 +110,15 @@ async function run(req: McpUiRequest): Promise<unknown> {
       return sites(sessionOf(req.payload));
     case "containers":
       return containers(sessionOf(req.payload));
+    case "sudo":
+      return sudoForAssistant(req.payload);
+    case "sudo-rejected": {
+      // Igual que la interfaz: se olvida la de memoria y la guardada queda como rechazada.
+      sudoRejectedNotified(sessionOf(req.payload));
+      const name = typeof req.payload.serverName === "string" ? req.payload.serverName : "el servidor";
+      toast.error("Contraseña de sudo incorrecta", `sudo la rechazó en «${name}» (comando del asistente). Se pedirá de nuevo.`);
+      return null;
+    }
     default:
       throw new Error(`Petición desconocida: ${req.kind}`);
   }

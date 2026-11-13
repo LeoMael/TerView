@@ -47,7 +47,26 @@ siguen [Versionado Semántico](https://semver.org/lang/es/).
   encontrado, puerto cerrado, contraseña o llave rechazada…) y deja «Guardar de todos modos». La
   contraseña escrita solo se usa en memoria durante la prueba.
 
+- **Asistentes de IA (MCP): «Aceptar automáticamente».** Por servidor (solo con acceso Completo), para no
+  aprobar cada rato: **cambios normales** o **todo** (también lo peligroso y sudo, con advertencia en rojo y
+  confirmación), durante 15 min, 1 h, hasta cerrar TerView o siempre. Se activa en Ajustes → Asistentes de
+  IA o desde el propio diálogo de permiso. Con sudo usa la contraseña en memoria o guardada sin preguntar
+  (la IA nunca la ve). Nunca con TerView bloqueado ni en solo lectura. Indicador «Automático» en la barra de
+  pestañas (un clic lo apaga), etiqueta «automático» en la actividad y aviso en lo peligroso.
+
 ### Corregido
+- **Asistentes de IA (MCP): los comandos con sudo funcionan.** `run_command` (p. ej. `sudo whoami`) y
+  `run_catalog_command` (p. ej. «Crear usuario») fallaban con «sudo: a terminal is required to read the
+  password». Ahora, tras aprobarlo en TerView, se usa la contraseña de sudo de esa conexión igual que en
+  Administración: la que ya está en memoria, la guardada (o la de la conexión) o la de otra pestaña del
+  mismo servidor; si no hay ninguna, se pide con el diálogo de siempre. Es la misma memoria que la de la
+  interfaz: se pide como mucho una vez por conexión, también con varios `sudo` en un comando.
+  - El asistente nunca la ve: va por la entrada estándar a un envoltorio que se la da a cada `sudo` (también
+    en tuberías como `echo x | sudo tee /etc/y` o `sudo bash -c '…'`), sin dejarla en archivos, en la línea
+    de comandos ni en el registro; si un comando la mostrara, se tapa en la respuesta.
+  - Contraseña incorrecta: error claro en unos segundos («Contraseña de sudo incorrecta»), con un solo
+    intento fallido; se olvida y la guardada queda marcada como rechazada, igual que en la interfaz.
+  - Los comandos con sudo siguen pidiendo permiso siempre; con TerView bloqueado no se hace nada.
 - **Añadir un servidor desde un proyecto**: cada proyecto de la barra lateral tiene ahora un botón **+**
   (y, con clic derecho, **Añadir servidor nuevo…** y **Añadir servidor existente**). El editor se abre
   indicando «Se añadirá al proyecto X», con un selector para cambiarlo o dejarlo sin proyecto. Al guardar,

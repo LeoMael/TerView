@@ -9,7 +9,7 @@ use std::sync::{Mutex, MutexGuard};
 
 use serde::{Deserialize, Serialize};
 
-use super::policy::Access;
+use super::policy::{Access, AutoLevel};
 use crate::error::{AppError, AppResult};
 use crate::storage::fsutil;
 
@@ -35,6 +35,9 @@ pub struct McpConfig {
     pub access: BTreeMap<String, Access>,
     /// «Permitir siempre»: por servidor, las acciones exactas ya permitidas.
     pub remembered: BTreeMap<String, BTreeSet<String>>,
+    /// «Aceptar automáticamente» guardado («siempre»): id → nivel. Lo temporal (15 min, 1 h, hasta
+    /// cerrar TerView) vive solo en memoria (`McpCore`).
+    pub auto_accept: BTreeMap<String, AutoLevel>,
 }
 
 impl Default for McpConfig {
@@ -45,6 +48,7 @@ impl Default for McpConfig {
             approval_timeout_secs: DEFAULT_APPROVAL_SECS,
             access: BTreeMap::new(),
             remembered: BTreeMap::new(),
+            auto_accept: BTreeMap::new(),
         }
     }
 }
@@ -67,6 +71,10 @@ impl McpConfig {
         self.approval_timeout_secs = self.approval_timeout_secs.clamp(lo, hi);
         self.access.retain(|k, v| !k.trim().is_empty() && *v != Access::None);
         self.remembered.retain(|k, v| !k.trim().is_empty() && !v.is_empty());
+        // El modo automático solo vale con acceso Completo.
+        let access = self.access.clone();
+        self.auto_accept
+            .retain(|k, v| *v != AutoLevel::Off && access.get(k).copied() == Some(Access::Full));
         self
     }
 }

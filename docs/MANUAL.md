@@ -451,6 +451,14 @@ claude mcp add --env TERVIEW_MCP_TOKEN=<token> --transport stdio terview -- /rut
 - Lo que solo lee pasa solo. Lo peligroso (`rm -rf`, `sudo`, `reboot`…) se pregunta siempre. Si no respondes a tiempo, se deniega.
 - El botón del **robot** en la barra de pestañas abre **Actividad del asistente**, con todo lo que ha hecho.
 
+**Aceptar automáticamente:** si te cansa aprobar cada paso, en **Ajustes → Asistentes de IA (MCP)** pulsa **Automático…** junto a un servidor con acceso **Completo** (o, en el propio diálogo de permiso, **Aceptar automáticamente en este servidor…**).
+
+- **Cambios normales**: lo que no es peligroso pasa sin preguntar.
+- **Todo (incluido sudo)**: también lo peligroso y los comandos con sudo. Se marca en rojo y se pide confirmación. Si TerView tiene la contraseña de sudo (en memoria o guardada) la usa sin preguntar; si no, la pide una vez.
+- Duración: **15 min**, **1 hora**, **hasta cerrar TerView** o **siempre**.
+- Mientras esté activo verás **Automático** en la barra de pestañas: un clic lo apaga en todos los servidores.
+- Nunca funciona con TerView bloqueado ni en servidores de solo lectura. Cada acción queda en **Actividad del asistente** marcada como «automático», y las peligrosas muestran un aviso.
+
 ## Terminal local, Claude Code y Codex
 
 **Para qué sirve:** tener en TerView una terminal de **tu propio PC** y abrir **Claude Code** o **Codex** que ya saben qué servidores tienes.

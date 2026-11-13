@@ -9,6 +9,7 @@
 //  4. Preguntar al usuario.
 // Si el usuario pulsó «Olvidar», no se vuelve a mirar la guardada ni las de otras pestañas hasta reconectar.
 import type { SudoMode } from "../../api/types";
+import type { PrivilegeInfo } from "./detect";
 
 /**
  * Contraseña guardada de la sesión: "loading" leyendo/comprobando, "ok" en memoria, "none" no hay o
@@ -72,4 +73,14 @@ export function otherSessionPasswords(
     if (pw !== undefined && !out.includes(pw)) out.push(pw);
   }
   return out;
+}
+
+/**
+ * Un comando con sudo de fuera de los paneles (el asistente de IA, por MCP): ¿hay que darle la contraseña?
+ * No con root ni con sudo sin contraseña, ni si el servidor no tiene sudo. Si no se pudo comprobar, sí
+ * (si sobra, sudo lo dirá).
+ */
+export function sudoPasswordNeeded(info: Pick<PrivilegeInfo, "level" | "hasSudo">): boolean {
+  if (info.level === "root" || info.level === "sudo-nopasswd") return false;
+  return info.level === "unknown" || info.hasSudo;
 }

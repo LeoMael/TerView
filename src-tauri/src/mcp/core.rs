@@ -3,11 +3,15 @@
 //! Orden de cada llamada:
 //! 1. ¿MCP encendido? ¿TerView desbloqueado? Si no, se rechaza todo con un mensaje claro.
 //! 2. Se busca el servidor y su nivel de acceso (Sin acceso = rechazado).
-//! 3. `policy::decide`: lectura → pasa; cambio → diálogo en TerView (o regla «siempre»);
-//!    peligroso → diálogo siempre; solo lectura → los cambios se rechazan.
+//! 3. `policy::decide_auto`: lectura → pasa; cambio → diálogo en TerView (o regla «siempre», o el modo
+//!    «Aceptar automáticamente» del servidor); peligroso → diálogo (salvo modo automático «todo»);
+//!    solo lectura → los cambios se rechazan. El modo automático nunca vale con TerView bloqueado.
 //! 4. Se ejecuta con los límites de tiempo y de salida, y se anota en el registro.
 //!
-//! Las contraseñas y llaves nunca pasan por aquí: el asistente usa conexiones ya abiertas en la app.
+//! Las contraseñas y llaves nunca llegan al asistente: usa conexiones ya abiertas en la app. La única que
+//! pasa por aquí es la de sudo (si el usuario aprueba un comando con sudo): la consigue la interfaz y va
+//! por stdin al envoltorio de `sudo.rs`; no aparece en la respuesta, en el registro ni en la línea de
+//! comandos remota.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Mutex;
@@ -17,14 +21,15 @@ use rmcp::schemars::{self, JsonSchema};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use tokio_util::sync::CancellationToken;
+use zeroize::Zeroizing;
 
 use super::approval::{ApprovalRequest, Decision};
 use super::audit::{now_ms, AuditEntry, AuditLog, AuditStatus};
 use super::backend::Backend;
 use super::config::McpConfigStore;
-use super::policy::{self, Access, Action, Verdict};
-use super::{diff, template};
-use crate::error::AppError;
+use super::policy::{self, Access, Action, AutoGrant, AutoLevel, Verdict};
+use super::{diff, sudo, template};
+use crate::error::{AppError, AppResult};
 use crate::types::{ExecResult, FileEntry, FileKind, ServerProfile, SessionInfo, SnippetScope, TransferJob};
 use crate::vulnscan::scan::ScanOptions;
 
@@ -55,6 +60,11 @@ pub const MIN_VULN_SCAN_SECS: u32 = 60;
 pub const MAX_VULN_SCAN_SECS: u32 = 1800;
 /// Margen para que el análisis termine de detenerse en el servidor tras el tiempo límite.
 const VULN_STOP_GRACE: Duration = Duration::from_secs(30);
+/// Tiempo mínimo para escribir la contraseña de sudo en TerView (s) y margen para comprobarla.
+const MIN_SUDO_ASK_SECS: u32 = 60;
+const SUDO_ASK_MARGIN_SECS: u64 = 30;
+pub const SUDO_CANCELED_MSG: &str =
+    "El usuario no dio la contraseña de sudo en TerView: no se ejecutó el comando.";
 
 // ───────────────────────── Parámetros de las herramientas ─────────────────────────
 
@@ -309,11 +319,129 @@ pub struct McpCore<B: Backend> {
     catalog: Mutex<Option<Vec<CatalogEntry>>>,
     /// Servidores con un `scan_vulnerabilities` en curso (uno a la vez por servidor).
     vuln_scans: Mutex<BTreeSet<String>>,
+    /// «Aceptar automáticamente» temporal (15 min, 1 h, hasta cerrar TerView): solo en memoria.
+    auto_temp: Mutex<BTreeMap<String, AutoGrant>>,
+}
+
+/// Cuánto dura el modo «Aceptar automáticamente».
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum AutoDuration {
+    #[serde(rename = "15m")]
+    Min15,
+    #[serde(rename = "1h")]
+    Hour,
+    /// Hasta cerrar TerView (en memoria).
+    #[serde(rename = "session")]
+    Session,
+    /// Guardado en `mcp.json`.
+    #[serde(rename = "always")]
+    Always,
+}
+
+/// Modo automático activo de un servidor (para la interfaz).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AutoState {
+    pub server_id: String,
+    pub server_name: String,
+    pub level: AutoLevel,
+    /// Unix ms en que se apaga; None = hasta cerrar TerView o «siempre» (`saved`).
+    pub until: Option<u64>,
+    /// Guardado («siempre»).
+    pub saved: bool,
 }
 
 impl<B: Backend> McpCore<B> {
     pub fn new(backend: B, config: McpConfigStore, audit: AuditLog) -> Self {
-        McpCore { backend, config, audit, catalog: Mutex::new(None), vuln_scans: Mutex::new(BTreeSet::new()) }
+        McpCore {
+            backend,
+            config,
+            audit,
+            catalog: Mutex::new(None),
+            vuln_scans: Mutex::new(BTreeSet::new()),
+            auto_temp: Mutex::new(BTreeMap::new()),
+        }
+    }
+
+    // ───────────── Aceptar automáticamente ─────────────
+
+    fn auto_temp(&self) -> std::sync::MutexGuard<'_, BTreeMap<String, AutoGrant>> {
+        self.auto_temp.lock().unwrap_or_else(|p| p.into_inner())
+    }
+
+    /// Nivel automático que vale ahora en un servidor (`now` en Unix ms).
+    pub fn auto_level_at(&self, server_id: &str, now: u64) -> AutoLevel {
+        let cfg = self.config.get();
+        let temp = self.auto_temp().get(server_id).copied();
+        policy::effective_auto(
+            cfg.access_of(server_id),
+            self.backend.vault_locked(),
+            cfg.auto_accept.get(server_id).copied(),
+            temp,
+            now,
+        )
+    }
+
+    /// Activa (o apaga con `AutoLevel::Off`) el modo automático de un servidor. Quita lo que hubiera
+    /// antes (temporal y guardado). Solo con acceso Completo.
+    pub fn set_auto_at(&self, server_id: &str, level: AutoLevel, duration: AutoDuration, now: u64) -> AppResult<()> {
+        if level != AutoLevel::Off && self.config.get().access_of(server_id) != Access::Full {
+            return Err(AppError::Invalid(
+                "El modo automático solo se puede usar en servidores con acceso Completo.".into(),
+            ));
+        }
+        let sid = server_id.to_string();
+        let save = level != AutoLevel::Off && duration == AutoDuration::Always;
+        self.config.update(|c| {
+            if save {
+                c.auto_accept.insert(sid.clone(), level);
+            } else {
+                c.auto_accept.remove(&sid);
+            }
+        })?;
+        let mut temp = self.auto_temp();
+        temp.remove(server_id);
+        if level != AutoLevel::Off && !save {
+            let until = match duration {
+                AutoDuration::Min15 => Some(now + 15 * 60 * 1000),
+                AutoDuration::Hour => Some(now + 60 * 60 * 1000),
+                AutoDuration::Session | AutoDuration::Always => None,
+            };
+            temp.insert(server_id.to_string(), AutoGrant { level, until });
+        }
+        Ok(())
+    }
+
+    /// Apaga el modo automático en todos los servidores (temporal y guardado).
+    pub fn auto_off_all(&self) -> AppResult<()> {
+        self.auto_temp().clear();
+        self.config.update(|c| c.auto_accept.clear())?;
+        Ok(())
+    }
+
+    /// Servidores con el modo automático activo ahora (aunque TerView esté bloqueado: es lo que se
+    /// configuró; mientras esté bloqueado no se acepta nada).
+    pub fn auto_list_at(&self, now: u64) -> Vec<AutoState> {
+        let cfg = self.config.get();
+        let mut temp = self.auto_temp();
+        temp.retain(|_, g| g.active(now));
+        let names: BTreeMap<String, String> =
+            self.backend.profiles().servers.into_iter().map(|s| (s.id, s.name)).collect();
+        let mut out = Vec::new();
+        for (id, name) in &names {
+            if cfg.access_of(id) != Access::Full {
+                continue;
+            }
+            let (level, until, saved) = match temp.get(id) {
+                Some(g) => (g.level, g.until, false),
+                None => match cfg.auto_accept.get(id) {
+                    Some(l) => (*l, None, true),
+                    None => continue,
+                },
+            };
+            out.push(AutoState { server_id: id.clone(), server_name: name.clone(), level, until, saved });
+        }
+        out
     }
 
     /// Ejecuta una herramienta. `cancel` se dispara si el cliente cancela la petición.
@@ -332,6 +460,8 @@ impl<B: Backend> McpCore<B> {
                 duration_ms: None,
                 client,
                 exec_id: None,
+                auto: false,
+                auto_danger: false,
             },
             started: Instant::now(),
         };
@@ -452,9 +582,16 @@ impl<B: Backend> McpCore<B> {
     /// Aplica las reglas y, si hace falta, pregunta en TerView.
     async fn authorize(&self, rec: &mut Rec, t: &Target, action: Action, title: &str, shown: &str, diff: Option<String>) -> Res<()> {
         let cfg = self.config.get();
-        match policy::decide(&t.server.name, t.access, &action, &cfg.remembered_of(&t.server.id)) {
+        let auto = self.auto_level_at(&t.server.id, now_ms());
+        match policy::decide_auto(&t.server.name, t.access, &action, &cfg.remembered_of(&t.server.id), auto) {
             Verdict::Allow(why) => {
                 rec.entry.approved_by = Some(why.to_string());
+                Ok(())
+            }
+            Verdict::AutoAllow { danger } => {
+                rec.entry.approved_by = Some(if danger { policy::AUTO_DANGER } else { policy::AUTO_CHANGE }.to_string());
+                rec.entry.auto = true;
+                rec.entry.auto_danger = danger;
                 Ok(())
             }
             Verdict::Deny(msg) => Err(Fail::Denied(msg)),
@@ -756,7 +893,8 @@ impl<B: Backend> McpCore<B> {
         let sid = t.session_id()?.to_string();
         let action = Action::change(format!("run_command\n{command}")).with_danger(policy::danger_reasons(&command));
         self.authorize(rec, &t, action, "quiere ejecutar un comando", &command, None).await?;
-        self.exec(rec, &sid, &command, p.timeout_secs, p.max_output_kb, cancel).await
+        let sudo = policy::uses_sudo(&command);
+        self.exec(rec, &t, &sid, &command, sudo, p.timeout_secs, p.max_output_kb, cancel).await
     }
 
     async fn run_catalog(&self, p: CatalogRunParams, rec: &mut Rec, cancel: &CancellationToken) -> Res<String> {
@@ -793,6 +931,11 @@ impl<B: Backend> McpCore<B> {
         if entry.dangerous && danger.is_empty() {
             danger.push("marcado como peligroso en la Biblioteca".into());
         }
+        // Con sudo TerView pone la contraseña: se pregunta siempre (como `sudo` en run_command).
+        let sudo = entry.sudo || policy::uses_sudo(&command);
+        if sudo && danger.is_empty() {
+            danger.push("usa sudo (permisos de administrador)".into());
+        }
         let action = if entry.is_read() && danger.is_empty() {
             Action::read(format!("catalog\n{command}"))
         } else {
@@ -800,28 +943,92 @@ impl<B: Backend> McpCore<B> {
         };
         let title = format!("quiere ejecutar «{}» de la Biblioteca", entry.name);
         self.authorize(rec, &t, action, &title, &command, None).await?;
-        self.exec(rec, &sid, &command, p.timeout_secs, p.max_output_kb, cancel).await
+        self.exec(rec, &t, &sid, &command, sudo, p.timeout_secs, p.max_output_kb, cancel).await
     }
 
+    /// Ejecuta un comando ya aprobado. Si usa sudo (`sudo`), TerView pone la contraseña: la consigue la
+    /// interfaz (igual que en Administración) y va por stdin al envoltorio de `sudo.rs`.
+    #[allow(clippy::too_many_arguments)]
     async fn exec(
         &self,
         rec: &mut Rec,
+        t: &Target,
         session_id: &str,
         command: &str,
+        sudo: bool,
         timeout_secs: Option<u32>,
         max_output_kb: Option<u32>,
         cancel: &CancellationToken,
     ) -> Res<String> {
+        let timeout = timeout_secs.unwrap_or(DEFAULT_TIMEOUT_SECS).clamp(1, 600);
+        let max = (max_output_kb.unwrap_or(DEFAULT_OUTPUT_KB).clamp(1, MAX_OUTPUT_KB) as usize) * 1024;
+        let password = if sudo { self.sudo_password(rec, t, session_id).await? } else { None };
+        let Some(password) = password else {
+            let r = self.exec_raw(rec, session_id, command, None, timeout, cancel).await?;
+            rec.entry.message = Some(exec_summary(&r));
+            return Ok(format_exec(&r, max));
+        };
+        let wrapped = sudo::wrap(command, &password).map_err(Fail::Error)?;
+        let result = self.exec_raw(rec, session_id, &wrapped.command, Some(&wrapped.stdin), timeout, cancel).await;
+        drop(wrapped); // borra el script y la contraseña del stdin
+        let mut r = result?;
+        sudo::redact(&mut r.stdout, &password);
+        sudo::redact(&mut r.stderr, &password);
+        if let Some(f) = sudo::failure(r.exit_code, &r.stderr) {
+            if f == sudo::SudoFailure::BadPassword {
+                // Igual que la interfaz: se olvida la de memoria y la guardada queda como rechazada.
+                let payload = json!({ "sessionId": session_id, "serverName": t.server.name });
+                if let Err(e) = self.backend.ui_request("sudo-rejected", payload, Duration::from_secs(10)).await {
+                    log::warn!("MCP: no se pudo avisar a la interfaz de la contraseña de sudo rechazada: {e}");
+                }
+            }
+            return Err(Fail::Error(sudo::failure_message(f, &t.server.name)));
+        }
+        rec.entry.message = Some(format!("{} (con sudo)", exec_summary(&r)));
+        Ok(format_exec(&r, max))
+    }
+
+    /// Pide a la interfaz la contraseña de sudo de la conexión (en memoria → guardada → otra pestaña →
+    /// diálogo, según el ajuste del servidor). None = no hace falta (root o sudo sin contraseña).
+    async fn sudo_password(&self, rec: &mut Rec, t: &Target, session_id: &str) -> Res<Option<Zeroizing<String>>> {
+        let secs = self.config.get().approval_timeout_secs.max(MIN_SUDO_ASK_SECS);
+        rec.entry.message = Some("Buscando la contraseña de sudo en TerView".into());
+        self.audit.record(rec.entry.clone());
+        rec.entry.message = None;
+        let payload = json!({
+            "sessionId": session_id,
+            "profileId": t.server.id,
+            "serverName": t.server.name,
+            "timeoutSecs": secs,
+            "auto": rec.entry.auto,
+        });
+        let wait = Duration::from_secs(u64::from(secs) + SUDO_ASK_MARGIN_SECS);
+        let answer = self.backend.ui_request("sudo", payload, wait).await;
+        // Si se bloqueó mientras tanto, no se hace nada.
+        if self.backend.vault_locked() {
+            return Err(Fail::Locked);
+        }
+        sudo_answer(answer?)
+    }
+
+    /// Ejecuta tal cual (con `stdin` si lo hay), con registro y cancelación.
+    async fn exec_raw(
+        &self,
+        rec: &mut Rec,
+        session_id: &str,
+        command: &str,
+        stdin: Option<&[u8]>,
+        timeout: u32,
+        cancel: &CancellationToken,
+    ) -> Res<ExecResult> {
         let exec_id = format!("mcp-{}", uuid::Uuid::new_v4().simple());
         rec.entry.exec_id = Some(exec_id.clone());
         rec.entry.message = Some("Ejecutando".into());
         self.audit.record(rec.entry.clone());
         rec.entry.message = None;
-        let timeout = timeout_secs.unwrap_or(DEFAULT_TIMEOUT_SECS).clamp(1, 600);
-        let max = (max_output_kb.unwrap_or(DEFAULT_OUTPUT_KB).clamp(1, MAX_OUTPUT_KB) as usize) * 1024;
 
         // Si el cliente cancela la petición, se detiene también en el servidor.
-        let run = self.backend.exec(session_id, command, timeout, &exec_id);
+        let run = self.backend.exec(session_id, command, stdin, timeout, &exec_id);
         tokio::pin!(run);
         let result = tokio::select! {
             r = &mut run => r,
@@ -831,10 +1038,7 @@ impl<B: Backend> McpCore<B> {
             }
         };
         match result {
-            Ok(r) => {
-                rec.entry.message = Some(exec_summary(&r));
-                Ok(format_exec(&r, max))
-            }
+            Ok(r) => Ok(r),
             Err(AppError::Canceled) => Err(Fail::Error("Se canceló el comando (y se detuvo en el servidor).".into())),
             Err(e) => Err(e.into()),
         }
@@ -1125,6 +1329,26 @@ impl Drop for RunningScan<'_> {
 }
 
 // ───────────────────────── Utilidades ─────────────────────────
+
+/// Respuesta de la interfaz a «sudo»: `{ elevate: false }` (no hace falta), `{ elevate: true, password }`
+/// o `{ canceled: true }`. La contraseña se saca sin copiarla y se borra de memoria al soltarla.
+fn sudo_answer(v: Value) -> Res<Option<Zeroizing<String>>> {
+    let Value::Object(mut m) = v else {
+        return Err(Fail::Error("La ventana de TerView respondió algo no válido a la petición de sudo.".into()));
+    };
+    if m.get("canceled").and_then(Value::as_bool) == Some(true) {
+        return Err(Fail::Denied(SUDO_CANCELED_MSG.into()));
+    }
+    match m.remove("password") {
+        Some(Value::String(pw)) if !pw.is_empty() => Ok(Some(Zeroizing::new(pw))),
+        Some(Value::String(pw)) => {
+            drop(Zeroizing::new(pw));
+            Err(Fail::Error("La contraseña de sudo está vacía.".into()))
+        }
+        Some(_) => Err(Fail::Error("La ventana de TerView respondió algo no válido a la petición de sudo.".into())),
+        None => Ok(None),
+    }
+}
 
 fn parse<T: serde::de::DeserializeOwned>(args: Value) -> Res<T> {
     let args = if args.is_null() { json!({}) } else { args };

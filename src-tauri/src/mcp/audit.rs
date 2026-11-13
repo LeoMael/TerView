@@ -62,6 +62,16 @@ pub struct AuditEntry {
     /// Ejecución en curso que se puede detener desde el panel (`exec_cancel`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub exec_id: Option<String>,
+    /// La aceptó el modo «Aceptar automáticamente» (sin preguntarte).
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub auto: bool,
+    /// Aceptada automáticamente aunque era peligrosa o usaba sudo (la interfaz avisa).
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub auto_danger: bool,
+}
+
+fn is_false(b: &bool) -> bool {
+    !*b
 }
 
 pub fn now_ms() -> u64 {

@@ -8,6 +8,7 @@
 //! - `policy`: reglas de acceso y comandos peligrosos. `config`: `mcp.json`. `audit`: registro.
 //! - `approval` y `ui`: diálogos y peticiones a la interfaz. `backend`: el motor de la app.
 //! - `vuln`: resumen de los informes del escáner de vulnerabilidades para el asistente.
+//! - `sudo`: envoltorio que da la contraseña de sudo (la de la interfaz) sin que el asistente la vea.
 //! - `bridge`: puente stdio (`terview-mcp`), compartido con `src/bin/terview-mcp.rs`.
 //!
 //! Apagado por defecto. Se activa en Ajustes → Asistentes de IA (MCP).
@@ -24,6 +25,7 @@ pub mod diff;
 pub mod http;
 pub mod policy;
 pub mod server;
+pub mod sudo;
 pub mod template;
 pub mod ui;
 pub mod vuln;
@@ -47,7 +49,8 @@ use approval::{ApprovalRequest, Decision, PendingApprovals};
 use audit::{AuditEntry, AuditLog};
 use backend::TauriBackend;
 use config::{McpConfig, McpConfigStore};
-use policy::Access;
+use policy::{Access, AutoLevel};
+use core::{AutoDuration, AutoState};
 use ui::UiBridge;
 
 /// Id del token en la bóveda o el llavero.
@@ -56,6 +59,8 @@ pub const TOKEN_ID: &str = secrets::MCP_TOKEN_USER;
 pub const EV_ACTIVITY: &str = "mcp://activity";
 /// Payload: `McpStatus`. El servidor se encendió, se apagó o falló.
 pub const EV_STATUS: &str = "mcp://status";
+/// Payload: `Vec<AutoState>`. Cambió el modo «Aceptar automáticamente» de algún servidor.
+pub const EV_AUTO: &str = "mcp://auto";
 
 /// Nombre del programa puente.
 pub fn bridge_file_name() -> String {
@@ -369,10 +374,54 @@ pub async fn mcp_config(state: State<'_, McpState>) -> AppResult<McpConfig> {
 }
 
 #[tauri::command]
-pub async fn mcp_set_access(state: State<'_, McpState>, server_id: String, access: Access) -> AppResult<McpConfig> {
+pub async fn mcp_set_access(app: AppHandle, state: State<'_, McpState>, server_id: String, access: Access) -> AppResult<McpConfig> {
     state.core.config.update(|c| {
-        c.access.insert(server_id, access);
-    })
+        c.access.insert(server_id.clone(), access);
+    })?;
+    // Sin acceso Completo no hay modo automático (lo guardado ya lo quita `sanitize`).
+    if access != Access::Full {
+        state.core.set_auto_at(&server_id, AutoLevel::Off, AutoDuration::Session, audit::now_ms())?;
+        emit_auto(&app, &state);
+    }
+    Ok(state.core.config.get())
+}
+
+fn emit_auto(app: &AppHandle, state: &McpState) -> Vec<AutoState> {
+    let list = state.core.auto_list_at(audit::now_ms());
+    let _ = app.emit(EV_AUTO, &list);
+    list
+}
+
+/// Servidores con «Aceptar automáticamente» activo ahora.
+#[tauri::command]
+pub async fn mcp_auto_list(state: State<'_, McpState>) -> AppResult<Vec<AutoState>> {
+    Ok(state.core.auto_list_at(audit::now_ms()))
+}
+
+/// Activa o apaga «Aceptar automáticamente» en un servidor. `duration`: "15m", "1h", "session" (hasta
+/// cerrar TerView, en memoria) o "always" (guardado en mcp.json).
+#[tauri::command]
+pub async fn mcp_set_auto(
+    app: AppHandle,
+    state: State<'_, McpState>,
+    server_id: String,
+    level: AutoLevel,
+    duration: AutoDuration,
+) -> AppResult<Vec<AutoState>> {
+    if level != AutoLevel::Off && Vault::global().status().locked {
+        return Err(AppError::Locked);
+    }
+    state.core.set_auto_at(&server_id, level, duration, audit::now_ms())?;
+    log::info!("MCP: aceptar automáticamente en {server_id}: {level:?} ({duration:?})");
+    Ok(emit_auto(&app, &state))
+}
+
+/// Apaga «Aceptar automáticamente» en todos los servidores.
+#[tauri::command]
+pub async fn mcp_auto_off_all(app: AppHandle, state: State<'_, McpState>) -> AppResult<Vec<AutoState>> {
+    state.core.auto_off_all()?;
+    log::info!("MCP: aceptar automáticamente apagado en todos los servidores");
+    Ok(emit_auto(&app, &state))
 }
 
 /// Borra una regla «Permitir siempre» de un servidor (o todas si `key` es None).

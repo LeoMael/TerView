@@ -71,6 +71,13 @@ export function sudoRejected(sessionId: string): void {
   }));
 }
 
+/** Como `sudoRejected`, pero fuera de un panel (un comando del asistente) y con el aviso ya mostrado: si
+ * era la guardada queda «rejected», así los paneles no abren el diálogo solos y se pide al usarla. */
+export function sudoRejectedNotified(sessionId: string): void {
+  sudoRejected(sessionId);
+  if (useSudo.getState().stored[sessionId] === "failed") setStoredSudo(sessionId, "rejected");
+}
+
 export function useStoredSudoState(sessionId: string): StoredSudoState | undefined {
   return useSudo((s) => s.stored[sessionId]);
 }

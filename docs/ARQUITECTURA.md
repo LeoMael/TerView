@@ -80,7 +80,7 @@ La app tiene dos mitades dentro del mismo programa:
 | **`vault-attempts.json`** | Fallos de PIN y hora del próximo intento permitido (5 libres; luego 30 s, el doble cada vez, hasta 15 min). | JSON | `<config>/terview/vault-attempts.json` | No (no lleva secretos) | Motor: `storage/vault.rs` |
 | **`profiles.json`** | Servidores y proyectos (host, usuario, puerto, tipo de autenticación, ruta de la llave, marcadores). Nunca contraseñas. | JSON | `<config>/terview/profiles.json` | No (archivo 0600, carpeta 0700 en Unix) | Motor: `storage/` (`ProfileStore`) |
 | **`settings.json`** | Ajustes: tema, fuentes, transferencias simultáneas, política de conflictos, señal de vida, reconexión, tamaños de paneles (`layout`), sincronizar `~/.ssh/config`. | JSON | `<config>/terview/settings.json` | No | Motor: `storage/` (`SettingsStore`) |
-| **`mcp.json`** | Servidor MCP: encendido, puerto, tiempo para responder, acceso por servidor y reglas «Permitir siempre». Nunca el token. | JSON | `<config>/terview/mcp.json` | No | Motor: `mcp/config.rs` (el puente `terview-mcp` lee de aquí el puerto) |
+| **`mcp.json`** | Servidor MCP: encendido, puerto, tiempo para responder, acceso por servidor, reglas «Permitir siempre» y «Aceptar automáticamente» guardado («siempre»; lo temporal solo vive en memoria). Nunca el token. | JSON | `<config>/terview/mcp.json` | No | Motor: `mcp/config.rs` (el puente `terview-mcp` lee de aquí el puerto) |
 | **`mcp-audit.jsonl`** | Registro de lo que hace el asistente: herramienta, servidor, comando o ruta, resultado y quién lo aprobó. Rota a `mcp-audit.1.jsonl` al pasar de 1 MiB. | JSON por línea | `<config>/terview/mcp-audit.jsonl` | No (sin contraseñas ni contenidos) | Motor: `mcp/audit.rs` |
 | **`commands.json`** | "Mis comandos" (biblioteca propia). | JSON | `<config>/terview/commands.json` | No | Motor: `snippets/store.rs` |
 | **`tunnels.json`** | Túneles guardados por servidor (tipo, puertos, destino, `autoStart`). | JSON | `<config>/terview/tunnels.json` | No | Motor: `tunnels/store.rs` |
@@ -320,6 +320,8 @@ y ver resultado"), la detección de privilegios y GitHub (clonar y desplegar).
   conexión» o «Guardar», se lee del motor (`profiles_sudo_password`) cuando un panel la necesita, se
   comprueba con `sudo -v` y, si falla, se pide otra y se ofrece guardarla. El motor nunca registra el stdin y lo
   sobrescribe con ceros al terminar.
+- **Comandos con sudo del asistente (MCP):** usan la misma contraseña en memoria (ver sección 16,
+  «sudo en los comandos del asistente»).
 - **Cancelación real:** `exec_cancel(id)` → el motor pide TERM por el mismo canal y espera 1,5 s →
   si no se cierra, abre **otro** canal y ejecuta `kill -TERM -PID` (a todo el grupo de procesos) →
   si sigue vivo, KILL. Lo mismo pasa al vencer el tiempo límite. Cerrar el canal no basta: sin
@@ -557,7 +559,7 @@ Apagado por defecto (Ajustes → Asistentes de IA (MCP)). Detalle, herramientas 
 4. **Reglas** (`mcp/core.rs` + `mcp/policy.rs`): el servidor tiene que tener acceso (Sin acceso / Solo lectura /
    Completo, en `mcp.json`); las lecturas pasan; los cambios abren el diálogo `mcp://approval` en la ventana
    principal (que se trae al frente) y esperan la respuesta (`mcp_approval_reply`) hasta el tiempo límite; lo
-   peligroso pregunta siempre.
+   peligroso pregunta siempre, salvo con el modo automático «todo» (abajo).
 5. **Motor** (`mcp/backend.rs`): exec cancelable con `ExecRegistry` (id `mcp-…`, se puede detener desde el panel),
    `SftpStore` (lectura por trozos y guardado atómico) y la cola de transferencias. Lo que vive en TypeScript se
    pide a la interfaz con `mcp://ui-request` → `mcp_ui_reply`: abrir la pestaña de conexión, el catálogo de la
@@ -565,6 +567,51 @@ Apagado por defecto (Ajustes → Asistentes de IA (MCP)). Detalle, herramientas 
    del escáner (sección 16b).
 6. **Registro** (`mcp/audit.rs`): cada acción, también las rechazadas, va a `mcp-audit.jsonl` y al panel
    «Actividad del asistente» (evento `mcp://activity`).
+
+**Aceptar automáticamente** (`policy::decide_auto` y `effective_auto`, `McpCore::set_auto_at`,
+`features/mcp/AutoAccept.tsx`)
+
+Por servidor y solo con acceso Completo. Niveles (`AutoLevel`): `off` (como siempre), `changes` (los cambios
+no peligrosos pasan solos) y `all` (también lo peligroso y sudo; la interfaz lo advierte en rojo y pide
+confirmación). Duración: 15 min, 1 h o hasta cerrar TerView viven solo en memoria (`McpCore.auto_temp`, con
+`until` en Unix ms); «siempre» se guarda en `mcp.json` (`autoAccept`). El temporal manda sobre el guardado.
+Seguridad: con TerView bloqueado no vale (`effective_auto` devuelve `off`, y la puerta ya rechaza todo); en
+Solo lectura y Sin acceso no se puede activar y las reglas no cambian (los cambios se siguen rechazando);
+`sanitize` borra el guardado si el servidor deja de tener acceso Completo, y `mcp_set_access` borra también el
+temporal. Una regla «Permitir siempre» sigue anotándose como regla. Cada acción aceptada así lleva en el
+registro `auto: true` (y `autoDanger` si era peligrosa o con sudo) y `approvedBy` «automático (…)»; la
+interfaz la marca «automático» en la actividad y avisa con un toast si era peligrosa. Comandos
+`mcp_auto_list`, `mcp_set_auto`, `mcp_auto_off_all` y evento `mcp://auto` (lista `AutoState`), que alimenta el
+indicador «Automático» de la barra de pestañas (un clic lo apaga en todos los servidores). El diálogo de
+permiso también ofrece activarlo y, si el modo cubre la petición, la permite en ese momento.
+
+**sudo en los comandos del asistente** (`mcp/sudo.rs`, `features/mcp/sudoAsk.ts`)
+
+Sin terminal, sudo no puede preguntar la contraseña. Si `run_command` lleva `sudo` (la misma regla que lo
+marca como peligroso, `policy::uses_sudo`) o `run_catalog_command` ejecuta un comando marcado «sudo»,
+después de que lo apruebes (se pregunta siempre, salvo con «Aceptar automáticamente: todo»):
+
+1. El motor pide la contraseña a la interfaz (`mcp://ui-request` de tipo `sudo`). La interfaz mira los
+   privilegios de la conexión (root o sudo sin contraseña → se ejecuta tal cual) y la busca como los paneles,
+   según el ajuste del servidor (`ask`, `login` o `saved`): `obtainSudoPassword` (en memoria → guardada → otra
+   pestaña del mismo servidor) y, si no hay, el diálogo de siempre (`SudoDialog`). Queda en memoria de esa
+   conexión: es la misma caché que la de Administración, así que se pide como mucho una vez por conexión.
+   Con el modo automático no cambia nada: si ya está en memoria o guardada no se muestra nada; si no hay
+   ninguna, el diálogo aparece una vez (con la opción de guardarla).
+2. El motor ejecuta un envoltorio POSIX con la contraseña en la primera línea de stdin (nunca en la línea de
+   comandos). El envoltorio la comprueba una vez con `sudo -k -S -v` (si es incorrecta sale en seguida, con un
+   solo intento fallido); crea una carpeta temporal 0700 (mktemp, primero en tmpfs, que permita ejecutar) con
+   un FIFO, un ayudante askpass y un `sudo` de paso que llama al de verdad con `-A`, y la pone delante en
+   PATH. Un proceso hijo escribe la contraseña en el FIFO cada vez que el askpass la lee: no queda en ningún
+   archivo ni en el entorno o las variables del comando. Así funcionan `sudo a && sudo b`,
+   `echo x | sudo tee /etc/y` (el stdin del comando no se toca), `sudo bash -c '…'`, `xargs sudo`…
+   (cada sudo sin terminal vuelve a autenticarse; no hace falta compartir la marca de tiempo). Al terminar,
+   cancelar o vencer el tiempo, se detiene el escritor y se borra la carpeta. Un `sudo` con ruta absoluta
+   (`/usr/bin/sudo`) no pasa por PATH y no recibe la contraseña.
+3. La salida se devuelve sin la contraseña (por si un comando la mostrara se cambia por `********`). Si sudo
+   la rechaza: error «Contraseña de sudo incorrecta», la interfaz la olvida y la guardada queda como
+   rechazada (`sudoRejectedNotified`, estado «rejected»); la próxima vez se pide. El registro solo guarda el
+   comando del asistente y «(con sudo)».
 
 **Herramientas**
 
@@ -574,7 +621,7 @@ Apagado por defecto (Ajustes → Asistentes de IA (MCP)). Detalle, herramientas 
 | `list_dir`, `stat`, `read_file`, `list_ports`, `list_sites`, `list_containers` | Lectura (pasa sola) |
 | `get_vuln_report` (último informe del escáner, resumido) | Lectura (pasa sola, también en Solo lectura) |
 | `connect`, `download`, `scan_vulnerabilities` (análisis sin sudo, 600 s por defecto, cancelable) | Pregunta, con «Permitir siempre»; también en Solo lectura |
-| `run_command`, `run_catalog_command` (los 📊 pasan solos), `write_file`, `upload` | Pregunta; en Solo lectura, rechazado |
+| `run_command`, `run_catalog_command` (los 📊 pasan solos; con sudo, TerView pone la contraseña), `write_file`, `upload` | Pregunta; en Solo lectura, rechazado |
 
 Lo peligroso pregunta siempre, sin «Permitir siempre». Detalle y límites de cada una en
 [PENDIENTES.md](PENDIENTES.md#herramientas).
@@ -649,6 +696,12 @@ defecto, máximo 100). El análisis pide permiso la primera vez, tiene tiempo l�
   de comandos ni en el historial. El motor borra el búfer al terminar.
 - **Asistentes de IA (MCP)** apagados por defecto; solo `127.0.0.1` con token; permiso por servidor; los cambios
   piden tu aprobación y lo peligroso siempre; con TerView bloqueado no hacen nada; nunca reciben contraseñas.
+  Un comando con sudo que apruebas se eleva con la contraseña de sudo de la conexión (la de la interfaz, o el
+  diálogo), pero el asistente no la ve: va por stdin a un envoltorio que se la da a sudo por un askpass
+  temporal (FIFO, sin archivos con la contraseña), no aparece en la respuesta (se tapa si un comando la
+  muestra), ni en la línea de comandos remota, ni en el registro. Límite: un comando aprobado se ejecuta como
+  tu usuario y, con sudo, como root; uno escrito a propósito para robarla (leyendo el FIFO mientras corre)
+  podría hacerlo, por eso los comandos con sudo piden tu aprobación siempre: revísalos.
 - **Verificación de huella** del servidor con `~/.ssh/known_hosts`, igual que `ssh`.
 - **Antes de cambiar algo como root** se muestra el comando exacto (Plan) y lo peligroso pide confirmación escrita.
 - **Permisos de Tauri (capabilities):** la interfaz solo puede llamar a los comandos definidos; las

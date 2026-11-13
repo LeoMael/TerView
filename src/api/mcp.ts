@@ -9,6 +9,8 @@ export const EV_MCP_APPROVAL_DONE = "mcp://approval-done";
 export const EV_MCP_ACTIVITY = "mcp://activity";
 /** Payload: `McpStatus`. */
 export const EV_MCP_STATUS = "mcp://status";
+/** Payload: `McpAutoState[]`. Cambió «Aceptar automáticamente» de algún servidor. */
+export const EV_MCP_AUTO = "mcp://auto";
 /** Payload: `McpUiRequest`. El motor pide algo a la interfaz. */
 export const EV_MCP_UI_REQUEST = "mcp://ui-request";
 
@@ -23,6 +25,22 @@ export interface McpConfig {
   access: Record<string, McpAccess>;
   /** id de servidor → acciones con «Permitir siempre». */
   remembered: Record<string, string[]>;
+  /** id de servidor → «Aceptar automáticamente» guardado («siempre»). */
+  autoAccept: Record<string, McpAutoLevel>;
+}
+
+/** «Aceptar automáticamente»: apagado, cambios normales o todo (también lo peligroso y sudo). */
+export type McpAutoLevel = "off" | "changes" | "all";
+/** Cuánto dura: lo temporal vive solo en memoria; «always» se guarda en mcp.json. */
+export type McpAutoDuration = "15m" | "1h" | "session" | "always";
+
+export interface McpAutoState {
+  serverId: string;
+  serverName: string;
+  level: McpAutoLevel;
+  /** Unix ms en que se apaga; null = hasta cerrar TerView o guardado (`saved`). */
+  until: number | null;
+  saved: boolean;
 }
 
 export interface McpStatus {
@@ -80,11 +98,15 @@ export interface AuditEntry {
   durationMs: number | null;
   client: string | null;
   execId?: string | null;
+  /** La aceptó el modo «Aceptar automáticamente». */
+  auto?: boolean;
+  /** Aceptada automáticamente aunque era peligrosa o con sudo. */
+  autoDanger?: boolean;
 }
 
 export interface McpUiRequest {
   id: string;
-  kind: "connect" | "catalog" | "ports" | "sites" | "containers" | string;
+  kind: "connect" | "catalog" | "ports" | "sites" | "containers" | "sudo" | "sudo-rejected" | string;
   payload: Record<string, unknown>;
 }
 
@@ -105,5 +127,9 @@ export const mcp = {
   uiReply: (id: string, ok: boolean, value: unknown, error: string | null) =>
     call<boolean>("mcp_ui_reply", { id, ok, value: value ?? null, error }),
   activity: () => call<AuditEntry[]>("mcp_activity"),
+  autoList: () => call<McpAutoState[]>("mcp_auto_list"),
+  setAuto: (serverId: string, level: McpAutoLevel, duration: McpAutoDuration) =>
+    call<McpAutoState[]>("mcp_set_auto", { serverId, level, duration }),
+  autoOffAll: () => call<McpAutoState[]>("mcp_auto_off_all"),
   clearActivity: () => call<void>("mcp_activity_clear"),
 };

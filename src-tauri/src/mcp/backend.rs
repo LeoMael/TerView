@@ -34,11 +34,14 @@ pub trait Backend: Send + Sync + 'static {
     /// Servidores y proyectos guardados (sin contraseñas: nunca las hay en este dato).
     fn profiles(&self) -> ProfilesData;
     fn sessions(&self) -> impl Future<Output = Vec<SessionInfo>> + Send;
-    /// Ejecuta en un canal exec aparte, cancelable con `cancel_exec(exec_id)`.
+    /// Ejecuta en un canal exec aparte, cancelable con `cancel_exec(exec_id)`. `stdin` (si lo hay) se
+    /// escribe en la entrada del comando y después se envía EOF; puede llevar la contraseña de sudo: nunca
+    /// se registra.
     fn exec(
         &self,
         session_id: &str,
         command: &str,
+        stdin: Option<&[u8]>,
         timeout_secs: u32,
         exec_id: &str,
     ) -> impl Future<Output = AppResult<ExecResult>> + Send;
@@ -133,14 +136,21 @@ impl Backend for TauriBackend {
         }
     }
 
-    async fn exec(&self, session_id: &str, command: &str, timeout_secs: u32, exec_id: &str) -> AppResult<ExecResult> {
+    async fn exec(
+        &self,
+        session_id: &str,
+        command: &str,
+        stdin: Option<&[u8]>,
+        timeout_secs: u32,
+        exec_id: &str,
+    ) -> AppResult<ExecResult> {
         let registry = self
             .app
             .try_state::<ExecRegistry>()
             .ok_or_else(|| AppError::Invalid("TerView aún está arrancando".into()))?;
         let ticket = registry.register(exec_id)?;
         let session = self.ssh(session_id).await?;
-        exec::run_cancellable(&session, command, None, timeout_secs, &ticket.token).await
+        exec::run_cancellable(&session, command, stdin, timeout_secs, &ticket.token).await
     }
 
     fn cancel_exec(&self, exec_id: &str) -> bool {

@@ -292,3 +292,78 @@
   word-break: break-all;
   user-select: text;
 }
+
+/* Contraseña de sudo para un comando del asistente: SudoDialog de Administración sin Admin.css cargado */
+.mcp-sudo .adm-modal .modal-body {
+  flex: 1;
+  min-height: 0;
+}
+.mcp-sudo .adm-modal > form {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.mcp-sudo .adm-spinner-btn {
+  width: 12px;
+  height: 12px;
+}
+.sudo-dialog-reason {
+  margin-bottom: 12px;
+  line-height: 1.45;
+}
+
+/* ───── Aceptar automáticamente ───── */
+.mcp-auto {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 4px 0 8px;
+}
+.mcp-auto-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.mcp-auto-label {
+  min-width: 60px;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+.st-segmented button.active.mcp-auto-changes {
+  color: var(--orange);
+}
+.st-segmented button.active.mcp-auto-all {
+  color: var(--red);
+}
+.mcp-auto-open {
+  align-self: flex-start;
+}
+.mcp-auto-state {
+  color: var(--orange);
+  font-size: var(--fs-sm);
+}
+.mcp-auto-state.all {
+  color: var(--red);
+}
+.mcp-auto-ind {
+  align-self: center;
+  margin-right: 4px;
+  color: var(--orange);
+  border-color: var(--orange);
+}
+.mcp-auto-ind.all {
+  color: var(--red);
+  border-color: var(--red);
+}
+.mcp-act-auto {
+  padding: 0 6px;
+  border: 1px solid var(--orange);
+  border-radius: var(--radius-sm);
+  color: var(--orange);
+  font-size: var(--fs-sm);
+}
+.mcp-act-auto.danger {
+  border-color: var(--red);
+  color: var(--red);
+}

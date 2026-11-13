@@ -22,6 +22,7 @@ import { initPrivileges } from "./features/privileges";
 import { PinDialogHost } from "./features/lock/PinDialog";
 import { initMcp } from "./features/mcp/store";
 import { ApprovalDialogHost } from "./features/mcp/ApprovalDialog";
+import { SudoAskHost } from "./features/mcp/SudoAskHost";
 import { McpActivity } from "./components/McpActivity/McpActivity";
 import { useUi } from "./stores/ui";
 import { allTabIds, closeLocalTab, initLocalTabs, isLocalTabId, useLocalTabs } from "./features/localterm/store";
@@ -310,6 +311,7 @@ export default function App() {
       <McpActivity />
       <ApprovalDialogHost />
       <ChoiceDialogHost />
+      <SudoAskHost />
     </>
   );
 }

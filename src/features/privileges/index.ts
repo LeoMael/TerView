@@ -26,6 +26,7 @@ export {
   forgetSudoByUser,
   setStoredSudo,
   sudoRejected,
+  sudoRejectedNotified,
   useStoredSudoState,
   type StoredSudoState,
   getSudoPassword,
@@ -51,5 +52,6 @@ export {
   storedFailed,
   storedStateAfterConfirm,
   sudoLookupPlan,
+  sudoPasswordNeeded,
   type SudoSource,
 } from "./lookup";

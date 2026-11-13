@@ -240,6 +240,8 @@ Qué esperar:
 - Lo que **cambia algo** abre un aviso en TerView con el comando exacto: **Permitir una vez**,
   **Permitir siempre** o **Denegar**. Si no respondes en 2 minutos, se deniega.
 - Lo **peligroso** (`rm -rf`, `sudo`, `reboot`, `prune`…) se pregunta siempre.
+- Los comandos con **`sudo`** funcionan: tras tu permiso, TerView usa la contraseña de sudo de esa conexión
+  (la que ya escribiste, la guardada o, si no hay, te la pide) y se la da a sudo. El asistente no la ve.
 - Si TerView está **bloqueado** con el PIN, el asistente no puede hacer nada.
 - Todo queda en **Actividad del asistente** (botón del robot en la barra de pestañas) y en
   `mcp-audit.jsonl`, en la carpeta de configuración.

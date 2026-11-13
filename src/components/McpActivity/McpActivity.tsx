@@ -40,6 +40,11 @@ function Row({ e }: { e: AuditEntry }) {
         <div className="mcp-act-top">
           <span className="mcp-act-tool">{e.tool}</span>
           {e.serverName && <span className="mcp-act-server">{e.serverName}</span>}
+          {e.auto && (
+            <span className={e.autoDanger ? "mcp-act-auto danger" : "mcp-act-auto"} title="Aceptado sin preguntar (modo «Aceptar automáticamente»)">
+              automático
+            </span>
+          )}
           <span className="mcp-act-time">{when(e.at)}</span>
         </div>
         {e.detail && (
