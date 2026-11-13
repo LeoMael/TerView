@@ -30,7 +30,7 @@ dentro de un proyecto, sudo que usa siempre la contraseña guardada, Contenedore
 usuarios, Ajustes más anchos, y el logo nuevo en `docs/marca/sshorus/final/`.
 
 **1. Cambiar el nombre a SSHorus (lo siguiente).** Decidido por el usuario: nombre **SSHorus**, logo del
-ojo de Horus con `>_` (`docs/marca/sshorus/final/`, ver `docs/marca/README.md`). Nadie más usa la app, así
+ojo de Horus en un anillo con `>_`, aprobado el 13/11/2026 (`docs/marca/sshorus/final/`, ver `docs/marca/README.md`). Nadie más usa la app, así
 que **se cambia todo, sin migrar datos ni mantener compatibilidad con la 0.5.0**:
 - Textos de la app, README, manual, web, CHANGELOG (la versión nueva ya como SSHorus) y `docs/`.
 - Crate y binarios: `terview` → `sshorus`, `terview-mcp` → `sshorus-mcp`; nombre del servidor MCP

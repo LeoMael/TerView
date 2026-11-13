@@ -1,15 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
   <title>SSHorus - icono de la app</title>
-  <rect x="100" y="100" width="824" height="824" rx="185" fill="#1D3FA6"/>
-  <rect x="104" y="104" width="816" height="816" rx="181" fill="none" stroke="#3B6FF0" stroke-width="8"/>
-  <g transform="translate(176.6 204.8) scale(2.56)">
-    <path d="M34 54 Q126 14 224 42" fill="none" stroke="#F5C542" stroke-width="22.0" stroke-linecap="round"/>
-    <path d="M24 120 Q116 34 206 112 Q116 202 24 120 Z" fill="none" stroke="#F5C542" stroke-width="20.0" stroke-linejoin="round"/>
-    <path d="M200 112 H238" stroke="#F5C542" stroke-width="20.0" stroke-linecap="round"/>
-    <circle cx="114" cy="115" r="47" fill="#FFFFFF"/>
-    <path d="M94 94 L117 115 L94 136" fill="none" stroke="#1D3FA6" stroke-width="18.0" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M127 136 H143" stroke="#1D3FA6" stroke-width="18.0" stroke-linecap="round"/>
-    <path d="M84 168 L76 226" stroke="#F5C542" stroke-width="20.0" stroke-linecap="round"/>
-    <path d="M140 168 C150 216 196 232 214 206 C228 186 210 166 194 178" fill="none" stroke="#F5C542" stroke-width="20.0" stroke-linecap="round"/>
+  <circle cx="512" cy="512" r="412" fill="#0B1733"/>
+  <g transform="translate(76.17 76.17) scale(3.4050)">
+  <path d="M235.49 151.37 A110 110 0 0 1 151.37 235.49 M104.63 235.49 A110 110 0 0 1 20.51 151.37 M20.51 104.63 A110 110 0 0 1 104.63 20.51 M151.37 20.51 A110 110 0 0 1 235.49 104.63" fill="none" stroke="#2F74F0" stroke-width="11"/>
+  <g fill="#2F74F0"><circle cx="238.00" cy="128.00" r="11"/><circle cx="128.00" cy="238.00" r="11"/><circle cx="18.00" cy="128.00" r="11"/><circle cx="128.00" cy="18.00" r="11"/></g>
+  <path d="M66 64 C100 40 158 34 198 50" fill="none" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M38 102 C84 64 168 58 220 94" fill="none" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M38 102 C76 132 150 136 198 100" fill="none" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M180 118 V172" fill="none" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M160 124 C142 160 112 178 86 172 C62 166 56 140 74 132 C90 126 102 142 90 152" fill="none" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="126" cy="90" r="22" fill="#FFFFFF"/>
+  <path d="M112 186 L132 201 L112 216" fill="none" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/><path d="M144 216 H166" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round"/>
   </g>
 </svg>
