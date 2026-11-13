@@ -41,6 +41,8 @@ export interface Container {
   composeWorkingDir: string | null;
   composeConfigFiles: string | null;
   pod: string | null;
+  /** Dueño (clave de `owner.ts`), puesto al leer la lista. */
+  owner?: string;
 }
 
 export interface ImageInfo {
@@ -55,6 +57,7 @@ export interface ImageInfo {
   /** Número de contenedores que la usan (null = el motor no lo dice). */
   containers: number | null;
   dangling: boolean;
+  owner?: string;
 }
 
 export interface VolumeInfo {
@@ -66,6 +69,7 @@ export interface VolumeInfo {
   anonymous: boolean;
   /** Sin contenedores que lo usen (filtro dangling=true). */
   unused: boolean;
+  owner?: string;
 }
 
 export interface NetworkInfo {
@@ -78,6 +82,7 @@ export interface NetworkInfo {
   labels: Record<string, string>;
   /** Red integrada del motor (no se puede borrar). */
   builtin: boolean;
+  owner?: string;
 }
 
 export interface DfRow {
@@ -99,6 +104,7 @@ export interface ContainerStats {
   memUsage: number | null;
   memLimit: number | null;
   memPercent: number | null;
+  owner?: string;
 }
 
 export interface InspectSummary {

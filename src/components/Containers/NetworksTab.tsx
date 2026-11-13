@@ -1,14 +1,14 @@
 // Redes: listar, crear, eliminar y limpiar las que no usa ningún contenedor.
 import { useMemo, useState } from "react";
 import { Brush, Plus, RefreshCw, Search, Trash2, X } from "lucide-react";
-import { ago, createNetwork, pruneNetworks, removeNetworks, validateObjName, type Container, type NetworkInfo } from "../../features/containers";
+import { ago, createNetwork, ownedBy, pruneNetworks, removeNetworks, validateObjName, withOwner, type Container, type NetworkInfo } from "../../features/containers";
 import { toast } from "../../stores/toasts";
 import { promptDialog } from "../ui/dialogs";
-import { useCt } from "./context";
+import { PICK_OWNER_HINT, useCt } from "./context";
 
-/** Contenedores conectados a la red (según la lista de `ps`). */
+/** Contenedores conectados a la red (según la lista de `ps`), del mismo dueño. */
 function membersOf(n: NetworkInfo, containers: Container[]): Container[] {
-  return containers.filter((c) => c.networks.includes(n.name));
+  return ownedBy(containers, n.owner).filter((c) => c.networks.includes(n.name));
 }
 
 export function NetworksTab() {
@@ -21,9 +21,16 @@ export function NetworksTab() {
   const rows = useMemo(() => {
     const s = search.trim().toLowerCase();
     return nets
-      .filter((n) => !s || n.name.toLowerCase().includes(s) || n.subnets.some((x) => x.includes(s)))
+      .filter(
+        (n) =>
+          !s ||
+          n.name.toLowerCase().includes(s) ||
+          n.subnets.some((x) => x.includes(s)) ||
+          (ct.allOwners && ct.ownerLabel(n.owner).toLowerCase().includes(s)),
+      )
       .sort((a, b) => Number(b.builtin) - Number(a.builtin) || a.name.localeCompare(b.name));
-  }, [nets, search]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nets, search, ct.allOwners, ct.ownerLabel]);
 
   const unused = nets.filter((n) => !n.builtin && membersOf(n, containers).length === 0);
 
@@ -34,7 +41,8 @@ export function NetworksTab() {
       label: "Nombre",
       placeholder: "mi_red",
       confirmText: "Crear",
-      validate: (v) => validateObjName(v.trim()) ?? (nets.some((x) => x.name === v.trim()) ? "Ya existe una red con ese nombre" : null),
+      validate: (v) =>
+        validateObjName(v.trim()) ?? (ownedBy(nets, ct.newOwner ?? undefined).some((x) => x.name === v.trim()) ? "Ya existe una red con ese nombre" : null),
     });
     if (!name) return;
     const r = await ct.run([createNetwork(engine, name.trim())], 30);
@@ -46,12 +54,12 @@ export function NetworksTab() {
   const remove = (n: NetworkInfo) => {
     const members = membersOf(n, containers);
     ct.review({
-      title: `Eliminar red «${n.name}»`,
+      title: ct.allOwners ? `Eliminar red «${n.name}» (${ct.ownerLabel(n.owner)})` : `Eliminar red «${n.name}»`,
       message:
         members.length > 0
           ? `La usan ${members.length} contenedor(es): ${members.map((m) => m.name).join(", ")}. Hay que eliminarlos o desconectarlos antes.`
           : "Se elimina la red. Los contenedores que se creen después ya no podrán usarla.",
-      build: () => [removeNetworks(engine, [n.name])],
+      build: () => [withOwner(removeNetworks(engine, [n.name]), n.owner)],
       danger: true,
       runLabel: "Eliminar",
       success: "Red eliminada",
@@ -96,10 +104,10 @@ export function NetworksTab() {
         <button className="icon-btn" onClick={() => void ct.reload("networks", "containers")} title="Actualizar" aria-label="Actualizar" disabled={res.networks.loading}>
           <RefreshCw size={14} className={res.networks.loading ? "ct-spin" : undefined} />
         </button>
-        <button className="btn btn-sm" onClick={prune} disabled={unused.length === 0}>
+        <button className="btn btn-sm" onClick={prune} disabled={unused.length === 0 || !ct.newOwner} title={ct.newOwner ? undefined : PICK_OWNER_HINT}>
           <Brush size={13} /> Limpiar sin usar
         </button>
-        <button className="btn btn-sm btn-primary" onClick={() => void create()}>
+        <button className="btn btn-sm btn-primary" onClick={() => void create()} disabled={!ct.newOwner} title={ct.newOwner ? undefined : PICK_OWNER_HINT}>
           <Plus size={13} /> Nueva red
         </button>
       </div>
@@ -121,6 +129,7 @@ export function NetworksTab() {
             <thead>
               <tr>
                 <th className="ct-col-name">Nombre</th>
+                {ct.allOwners && <th className="ct-col-owner">Usuario</th>}
                 <th className="ct-col-short">Driver</th>
                 <th className="ct-col-image">Subred</th>
                 <th className="ct-col-state">Contenedores</th>
@@ -134,7 +143,7 @@ export function NetworksTab() {
               {rows.map((n) => {
                 const members = membersOf(n, containers);
                 return (
-                  <tr key={n.name} tabIndex={0} onKeyDown={(e) => e.target === e.currentTarget && e.key === "Delete" && !n.builtin && remove(n)}>
+                  <tr key={`${n.owner ?? ""}/${n.name}`} tabIndex={0} onKeyDown={(e) => e.target === e.currentTarget && e.key === "Delete" && !n.builtin && remove(n)}>
                     <td className="ct-col-name mono">
                       <span className="ct-cell-flex">
                         <span className="ct-ellipsis">{n.name}</span>
@@ -143,6 +152,7 @@ export function NetworksTab() {
                         {n.labels["com.docker.compose.project"] && <span className="ct-tag">{n.labels["com.docker.compose.project"]}</span>}
                       </span>
                     </td>
+                    {ct.allOwners && <td className="ct-col-owner ct-ellipsis">{ct.ownerLabel(n.owner)}</td>}
                     <td className="ct-col-short faint">{n.driver}</td>
                     <td className="ct-col-image mono faint">{n.subnets.join(", ") || "—"}</td>
                     <td className="ct-col-state ct-ellipsis" title={members.map((m) => m.name).join("\n")}>
@@ -168,7 +178,7 @@ export function NetworksTab() {
               })}
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="ct-norows">
+                  <td colSpan={ct.allOwners ? 7 : 6} className="ct-norows">
                     Ninguna red coincide
                   </td>
                 </tr>

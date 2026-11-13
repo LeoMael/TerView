@@ -4,6 +4,7 @@ import type {
   Cmd,
   ComposeTool,
   Container,
+  CtOwner,
   ContainerStats,
   DetectResult,
   DfRow,
@@ -88,18 +89,41 @@ export interface CtContextValue {
   res: ResourceMap;
   stats: ContainerStats[];
   reload: (...kinds: ResourceKind[]) => Promise<void>;
-  /** Ejecuta comandos con la elevación del motor (pide sudo si hace falta). */
+  /**
+   * Ejecuta comandos, cada uno como su dueño (`Cmd.owner`; sin él, el usuario elegido arriba), con la
+   * elevación que toque. Pide sudo si hace falta.
+   */
   run: (cmds: Cmd[], timeoutSecs?: number) => Promise<EngineRun>;
+  /** Script libre (ya citado) como ese dueño, por ejemplo para comprobar una carpeta. */
+  runRawAs: (owner: string | undefined, script: string, timeoutSecs?: number) => Promise<EngineRun>;
   review: (req: ReviewRequest) => void;
   askSudo: () => void;
   openLogs: (t: LogsTarget) => void;
   openInspect: (c: Container) => void;
-  openRunForm: (prefill?: Partial<RunForm>) => void;
-  /** Escribe el comando en la terminal de la sesión (con «sudo » si aplica). */
+  /** `owner`: con qué usuario se crea (sin él, el elegido arriba). */
+  openRunForm: (prefill?: Partial<RunForm>, owner?: string) => void;
+  /** Escribe el comando en la terminal de la sesión (con «sudo » o como el dueño, si aplica). */
   toTerminal: (cmd: Cmd, execute: boolean) => boolean;
   /** Muestra el comando antes de ejecutarlo (Ajustes de la pestaña). */
   render: (cmd: Cmd) => string;
+
+  // ───────── Usuarios (con root o sudo) ─────────
+  /** Dueños que se están viendo (uno, o varios con «Todos»). */
+  owners: CtOwner[];
+  /** «Todos»: las listas mezclan usuarios y llevan la columna «Usuario». */
+  allOwners: boolean;
+  /** Dueño con el que se crean cosas nuevas (null con «Todos»: hay que elegir uno arriba). */
+  newOwner: string | null;
+  /** Nombre del dueño para mostrar. */
+  ownerLabel: (owner: string | undefined) => string;
+  /** El dueño es root (puertos bajos, linger…). */
+  ownerIsRoot: (owner: string | undefined) => boolean;
+  /** Un comando por dueño de los elementos (acciones en lote). */
+  perOwner: <T extends { owner?: string }>(items: T[], build: (items: T[]) => Cmd) => Cmd[];
 }
+
+/** Aviso de los botones de crear y limpiar con «Todos». */
+export const PICK_OWNER_HINT = "Con «Todos», elige arriba el usuario con el que hacerlo";
 
 export const CtContext = createContext<CtContextValue | null>(null);
 

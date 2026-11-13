@@ -6,7 +6,9 @@ import {
   pullImage,
   pruneImages,
   removeImages,
+  ownedBy,
   validateImage,
+  withOwner,
   type Container,
   type Engine,
   type ImageInfo,
@@ -14,7 +16,7 @@ import {
 import { formatBytes } from "../../lib/format";
 import { toast } from "../../stores/toasts";
 import { AdmModal } from "../Admin/AdmModal";
-import { useCt } from "./context";
+import { PICK_OWNER_HINT, useCt } from "./context";
 import { useVulnNav } from "../../features/vulnscan/nav";
 
 /** Normaliza una referencia para comparar («nginx» = «docker.io/library/nginx:latest»). */
@@ -27,10 +29,10 @@ export function normRef(ref: string): string {
   return r;
 }
 
-/** Contenedores que usan la imagen (por etiqueta o por id). */
+/** Contenedores que usan la imagen (por etiqueta o por id), del mismo dueño. */
 export function usersOf(img: ImageInfo, containers: Container[]): Container[] {
   const tags = new Set(img.tags.map(normRef));
-  return containers.filter((c) => {
+  return ownedBy(containers, img.owner).filter((c) => {
     const ref = c.image.replace(/^sha256:/, "").toLowerCase();
     if (ref.length >= 12 && /^[0-9a-f]+$/.test(ref) && img.id.startsWith(ref)) return true;
     return tags.has(normRef(c.image));
@@ -41,6 +43,8 @@ function inUseCount(img: ImageInfo, containers: Container[]): number {
   return Math.max(img.containers ?? 0, usersOf(img, containers).length);
 }
 
+type SortKey = "name" | "owner" | "size" | "created";
+
 export function ImagesTab() {
   const ct = useCt();
   const { engine, res } = ct;
@@ -48,22 +52,36 @@ export function ImagesTab() {
   const containers = useMemo(() => res.containers.data ?? [], [res.containers.data]);
   const [search, setSearch] = useState("");
   const [showDangling, setShowDangling] = useState(false);
-  /** null = cerrado; texto = imagen precargada. */
-  const [pull, setPull] = useState<string | null>(null);
-  const [sort, setSort] = useState<{ key: "name" | "size" | "created"; dir: 1 | -1 }>({ key: "name", dir: 1 });
+  /** null = cerrado; si no, imagen precargada y con qué usuario se descarga. */
+  const [pull, setPull] = useState<{ ref: string; owner?: string } | null>(null);
+  const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 }>({ key: "name", dir: 1 });
 
   const rows = useMemo(() => {
     const s = search.trim().toLowerCase();
     return images
       .filter((i) => (showDangling ? true : !i.dangling))
-      .filter((i) => !s || i.tags.some((t) => t.toLowerCase().includes(s)) || i.shortId.includes(s))
+      .filter(
+        (i) =>
+          !s ||
+          i.tags.some((t) => t.toLowerCase().includes(s)) ||
+          i.shortId.includes(s) ||
+          (ct.allOwners && ct.ownerLabel(i.owner).toLowerCase().includes(s)),
+      )
       .sort((a, b) => {
-        const v = (i: ImageInfo) => (sort.key === "name" ? (i.tags[0] ?? "~").toLowerCase() : sort.key === "size" ? (i.size ?? 0) : (i.created ?? 0));
+        const v = (i: ImageInfo) =>
+          sort.key === "name"
+            ? (i.tags[0] ?? "~").toLowerCase()
+            : sort.key === "owner"
+              ? `${ct.ownerLabel(i.owner)} ${(i.tags[0] ?? "~").toLowerCase()}`
+              : sort.key === "size"
+                ? (i.size ?? 0)
+                : (i.created ?? 0);
         const x = v(a);
         const y = v(b);
         return (x < y ? -1 : x > y ? 1 : 0) * sort.dir;
       });
-  }, [images, search, showDangling, sort]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [images, search, showDangling, sort, ct.allOwners, ct.ownerLabel]);
 
   const dangling = images.filter((i) => i.dangling).length;
 
@@ -85,7 +103,7 @@ export function ImagesTab() {
           "Se borra la imagen del servidor. Podrás volver a descargarla."
         ),
       options: count > 0 ? [{ key: "force", label: "Forzar el borrado aunque esté en uso (-f)" }] : img.tags.length > 1 ? [{ key: "force", label: "Forzar (necesario con varias etiquetas)", initial: true }] : undefined,
-      build: (o) => [removeImages(engine, [ref], !!o.force)],
+      build: (o) => [withOwner(removeImages(engine, [ref], !!o.force), img.owner)],
       danger: true,
       runLabel: "Eliminar",
       success: "Imagen eliminada",
@@ -115,8 +133,8 @@ export function ImagesTab() {
     });
   };
 
-  const sortBy = (key: "name" | "size" | "created") => setSort((s) => ({ key, dir: s.key === key ? ((-s.dir) as 1 | -1) : key === "name" ? 1 : -1 }));
-  const th = (key: "name" | "size" | "created", label: string, cls: string) => (
+  const sortBy = (key: SortKey) => setSort((s) => ({ key, dir: s.key === key ? ((-s.dir) as 1 | -1) : key === "name" ? 1 : -1 }));
+  const th = (key: SortKey, label: string, cls: string) => (
     <th className={cls} aria-sort={sort.key === key ? (sort.dir === 1 ? "ascending" : "descending") : "none"}>
       <button className="ct-th" onClick={() => sortBy(key)}>
         {label}
@@ -145,10 +163,10 @@ export function ImagesTab() {
         <button className="icon-btn" onClick={() => void ct.reload("images", "containers")} title="Actualizar" aria-label="Actualizar" disabled={res.images.loading}>
           <RefreshCw size={14} className={res.images.loading ? "ct-spin" : undefined} />
         </button>
-        <button className="btn btn-sm" onClick={prune} disabled={!images.length}>
+        <button className="btn btn-sm" onClick={prune} disabled={!images.length || !ct.newOwner} title={ct.newOwner ? undefined : PICK_OWNER_HINT}>
           <Brush size={13} /> Limpiar sin usar
         </button>
-        <button className="btn btn-sm btn-primary" onClick={() => setPull("")}>
+        <button className="btn btn-sm btn-primary" onClick={() => setPull({ ref: "" })} disabled={!ct.newOwner} title={ct.newOwner ? undefined : PICK_OWNER_HINT}>
           <Download size={13} /> Descargar imagen
         </button>
       </div>
@@ -171,6 +189,7 @@ export function ImagesTab() {
             <thead>
               <tr>
                 {th("name", "Imagen", "ct-col-name")}
+                {ct.allOwners && th("owner", "Usuario", "ct-col-owner")}
                 <th className="ct-col-id">ID</th>
                 {th("size", "Tamaño", "ct-col-num")}
                 {th("created", "Creada", "ct-col-created")}
@@ -185,13 +204,14 @@ export function ImagesTab() {
                 const n = inUseCount(img, containers);
                 const users = usersOf(img, containers);
                 return (
-                  <tr key={img.id} tabIndex={0} onKeyDown={(e) => e.target === e.currentTarget && e.key === "Delete" && remove(img)}>
+                  <tr key={`${img.owner ?? ""}/${img.id}`} tabIndex={0} onKeyDown={(e) => e.target === e.currentTarget && e.key === "Delete" && remove(img)}>
                     <td className="ct-col-name mono" title={img.tags.join("\n") || "<sin nombre>"}>
                       <span className="ct-cell-flex">
                         <span className="ct-ellipsis">{img.tags[0] ?? <span className="faint">&lt;sin nombre&gt;</span>}</span>
                         {img.tags.length > 1 && <span className="ct-tag">+{img.tags.length - 1}</span>}
                       </span>
                     </td>
+                    {ct.allOwners && <td className="ct-col-owner ct-ellipsis">{ct.ownerLabel(img.owner)}</td>}
                     <td className="ct-col-id mono faint">{img.shortId}</td>
                     <td className="ct-col-num mono">{img.size !== null ? formatBytes(img.size) : "—"}</td>
                     <td className="ct-col-created faint">{ago(img.created)}</td>
@@ -204,7 +224,7 @@ export function ImagesTab() {
                           className="icon-btn ct-go"
                           title="Crear contenedor con esta imagen"
                           aria-label="Crear contenedor"
-                          onClick={() => ct.openRunForm({ image: img.tags[0] ?? img.id })}
+                          onClick={() => ct.openRunForm({ image: img.tags[0] ?? img.id }, img.owner)}
                           tabIndex={-1}
                         >
                           <Rocket size={13} />
@@ -214,7 +234,7 @@ export function ImagesTab() {
                           title="Actualizar (volver a descargar)"
                           aria-label="Actualizar imagen"
                           disabled={!img.tags[0] || img.tags[0].startsWith("localhost/")}
-                          onClick={() => setPull(img.tags[0] ?? "")}
+                          onClick={() => setPull({ ref: img.tags[0] ?? "", owner: img.owner })}
                           tabIndex={-1}
                         >
                           <Download size={13} />
@@ -238,7 +258,7 @@ export function ImagesTab() {
               })}
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="ct-norows">
+                  <td colSpan={ct.allOwners ? 7 : 6} className="ct-norows">
                     {images.length ? "Ninguna imagen coincide" : "No hay imágenes. Descarga una con «Descargar imagen»."}
                   </td>
                 </tr>
@@ -247,7 +267,7 @@ export function ImagesTab() {
           </table>
         )}
       </div>
-      {pull !== null && <PullDialog initial={pull} onClose={() => setPull(null)} />}
+      {pull !== null && <PullDialog initial={pull.ref} owner={pull.owner} onClose={() => setPull(null)} />}
     </div>
   );
 }
@@ -291,8 +311,9 @@ function PruneList({ all, images, containers, engine }: { all: boolean; images: 
   );
 }
 
-function PullDialog({ initial, onClose }: { initial: string; onClose: () => void }) {
+function PullDialog({ initial, owner, onClose }: { initial: string; owner?: string; onClose: () => void }) {
   const ct = useCt();
+  const who = owner ?? ct.newOwner ?? undefined;
   const [ref, setRef] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [elapsed, setElapsed] = useState(0);
@@ -308,7 +329,7 @@ function PullDialog({ initial, onClose }: { initial: string; onClose: () => void
 
   const v = ref.trim();
   const invalid = v ? validateImage(v) : null;
-  const cmd = { ...pullImage(ct.engine, v || "<imagen>"), mergeStderr: true };
+  const cmd = withOwner({ ...pullImage(ct.engine, v || "<imagen>"), mergeStderr: true }, who);
 
   const pull = async () => {
     if (!v || invalid || busy) return;
@@ -327,7 +348,11 @@ function PullDialog({ initial, onClose }: { initial: string; onClose: () => void
   };
 
   return (
-    <AdmModal title="Descargar imagen" onClose={busy ? () => {} : onClose} width={640}>
+    <AdmModal
+      title={ct.allOwners || (who && who !== "self") ? `Descargar imagen (como ${ct.ownerLabel(who)})` : "Descargar imagen"}
+      onClose={busy ? () => {} : onClose}
+      width={640}
+    >
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -375,7 +400,7 @@ function PullDialog({ initial, onClose }: { initial: string; onClose: () => void
             disabled={!v || !!invalid || busy}
             title="Ver el progreso detallado en la terminal"
             onClick={() => {
-              if (ct.toTerminal(pullImage(ct.engine, v), true)) onClose();
+              if (ct.toTerminal(withOwner(pullImage(ct.engine, v), who), true)) onClose();
             }}
           >
             <TerminalSquare size={13} /> En la terminal

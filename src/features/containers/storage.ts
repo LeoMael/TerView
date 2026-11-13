@@ -1,4 +1,4 @@
-// Preferencias locales por servidor (motor elegido, modo de Podman, carpetas de Compose usadas).
+// Preferencias locales por servidor (motor elegido, de qué usuario se ven, carpetas de Compose usadas).
 // localStorage puede fallar (modo privado, cuota): todo va con try/catch y valores por defecto.
 import type { Engine } from "./types";
 
@@ -30,18 +30,25 @@ export function saveEngine(profileId: string, engine: Engine): void {
   write(`engine.${profileId}`, engine);
 }
 
-/** Podman como root (sudo) en vez de rootless. */
-export function loadPodmanRoot(profileId: string): boolean {
-  return read<boolean>(`podmanRoot.${profileId}`, false) === true;
+/**
+ * De quién se ven los contenedores (selector «Usuario»): "self", "root", "u:<usuario>" o "all" (Todos).
+ * Antes solo había «Mi usuario / Sistema (root)» (`podmanRoot`): se respeta esa elección.
+ */
+export function loadOwnerChoice(profileId: string): string {
+  const v = read<unknown>(`owner.${profileId}`, null);
+  if (typeof v === "string" && /^(self|root|all|u:[A-Za-z0-9_.][A-Za-z0-9_.-]{0,31})$/.test(v)) return v;
+  return read<boolean>(`podmanRoot.${profileId}`, false) === true ? "root" : "self";
 }
 
-export function savePodmanRoot(profileId: string, v: boolean): void {
-  write(`podmanRoot.${profileId}`, v);
+export function saveOwnerChoice(profileId: string, v: string): void {
+  write(`owner.${profileId}`, v);
 }
 
 export interface ComposeFolder {
   dir: string;
   file: string;
+  /** Usuario con el que se usa (clave de `owner.ts`); sin él, el conectado. */
+  owner?: string;
   /** Unix ms del último uso. */
   usedAt: number;
 }
@@ -56,9 +63,10 @@ export function loadComposeFolders(profileId: string): ComposeFolder[] {
     .slice(0, MAX_FOLDERS);
 }
 
-export function rememberComposeFolder(profileId: string, dir: string, file: string): ComposeFolder[] {
+export function rememberComposeFolder(profileId: string, dir: string, file: string, owner?: string): ComposeFolder[] {
   const list = loadComposeFolders(profileId).filter((f) => f.dir !== dir);
-  const next = [{ dir, file, usedAt: Date.now() }, ...list].slice(0, MAX_FOLDERS);
+  const item: ComposeFolder = { dir, file, usedAt: Date.now(), ...(owner && owner !== "self" ? { owner } : {}) };
+  const next = [item, ...list].slice(0, MAX_FOLDERS);
   write(`compose.${profileId}`, next);
   return next;
 }

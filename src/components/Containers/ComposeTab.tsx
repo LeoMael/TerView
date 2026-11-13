@@ -10,10 +10,12 @@ import {
   forgetComposeFolder,
   loadComposeFolders,
   rememberComposeFolder,
-  runRaw,
   stateText,
   stateTone,
   validateServerPath,
+  withOwner,
+  ownerKey,
+  OWNER_SELF,
   q,
   type Cmd,
   type ComposeFolder,
@@ -21,7 +23,7 @@ import {
   type Container,
 } from "../../features/containers";
 import { toast } from "../../stores/toasts";
-import { useCt } from "./context";
+import { PICK_OWNER_HINT, useCt } from "./context";
 
 interface Project {
   key: string;
@@ -31,6 +33,8 @@ interface Project {
   file: string;
   saved: boolean;
   containers: Container[];
+  /** Usuario dueño (clave de `owner.ts`). */
+  owner: string;
 }
 
 function basename(p: string): string {
@@ -64,33 +68,44 @@ export function ComposeTab() {
     setTool(composeFor(engine, composeTools) ?? composeTools[0] ?? null);
   }, [engine, composeTools]);
 
+  // Proyectos por dueño: con «Todos», dos usuarios pueden tener un proyecto con el mismo nombre.
+  const ownerKeys = useMemo(() => new Set(ct.owners.map(ownerKey)), [ct.owners]);
+  const fallbackOwner = ct.newOwner ?? OWNER_SELF;
   const projects = useMemo(() => {
     const map = new Map<string, Project>();
     for (const c of containers) {
       if (!c.composeProject) continue;
-      const k = c.composeWorkingDir || `project:${c.composeProject}`;
+      const owner = c.owner ?? fallbackOwner;
+      const k = `${owner}|${c.composeWorkingDir || `project:${c.composeProject}`}`;
       let p = map.get(k);
       if (!p) {
         const file = (c.composeConfigFiles ?? "").split(",")[0]?.trim() ?? "";
-        p = { key: k, name: c.composeProject, dir: c.composeWorkingDir ?? "", file, saved: false, containers: [] };
+        p = { key: k, name: c.composeProject, dir: c.composeWorkingDir ?? "", file, saved: false, containers: [], owner };
         map.set(k, p);
       }
       p.containers.push(c);
     }
     for (const f of saved) {
-      const p = map.get(f.dir) ?? [...map.values()].find((x) => !x.dir && x.name === defaultProjectName(f.dir));
+      // Las guardadas antes de haber usuarios (sin dueño) se ven como antes, con el usuario elegido.
+      const owner = f.owner ?? (ct.allOwners ? OWNER_SELF : fallbackOwner);
+      // Las carpetas guardadas se muestran con su usuario (si se está viendo).
+      if (!ownerKeys.has(owner)) continue;
+      const k = `${owner}|${f.dir}`;
+      const p = map.get(k) ?? [...map.values()].find((x) => x.owner === owner && !x.dir && x.name === defaultProjectName(f.dir));
       if (p) {
         p.saved = true;
         if (!p.dir) p.dir = f.dir;
         if (!p.file) p.file = f.file;
-      } else map.set(f.dir, { key: f.dir, name: defaultProjectName(f.dir) || basename(f.dir), dir: f.dir, file: f.file, saved: true, containers: [] });
+      } else map.set(k, { key: k, name: defaultProjectName(f.dir) || basename(f.dir), dir: f.dir, file: f.file, saved: true, containers: [], owner });
     }
     return [...map.values()].sort((a, b) => Number(b.containers.some((c) => c.state === "running")) - Number(a.containers.some((c) => c.state === "running")) || a.name.localeCompare(b.name));
-  }, [containers, saved]);
+  }, [containers, saved, ownerKeys, fallbackOwner, ct.allOwners]);
 
   const sel = projects.find((p) => p.key === selKey) ?? projects[0] ?? null;
 
   const addFolder = async () => {
+    const owner = ct.newOwner;
+    if (!owner) return;
     const dir = newDir.trim();
     const v = validateServerPath(dir);
     if (v) {
@@ -105,7 +120,8 @@ export function ComposeTab() {
       `  for f in ${COMPOSE_FILES.join(" ")}; do if [ -f "$f" ]; then echo "file=$f"; fi; done`,
       "else echo nodir=1; fi",
     ].join("\n");
-    const r = await runRaw(ct.sessionId, script, { kind: "none" }, 15);
+    // Se comprueba como el usuario con el que se va a usar (su HOME, sus permisos).
+    const r = await ct.runRawAs(owner, script, 15);
     setAdding(false);
     const out = r.result?.stdout ?? "";
     if (!r.ok || /nodir=1/.test(out)) {
@@ -118,8 +134,8 @@ export function ComposeTab() {
       setAddError(`No hay ${COMPOSE_FILES.join(", ")} en ${real}`);
       return;
     }
-    setSaved(rememberComposeFolder(profileId, real, file));
-    setSelKey(real);
+    setSaved(rememberComposeFolder(profileId, real, file, owner));
+    setSelKey(`${owner}|${real}`);
     setNewDir("");
     toast.success("Carpeta de Compose añadida", `${real}/${file}`);
   };
@@ -146,7 +162,9 @@ export function ComposeTab() {
         <div className="ct-compose-add">
           <input
             className="input mono"
-            placeholder="/ruta/de/la/carpeta"
+            placeholder={ct.newOwner ? "/ruta/de/la/carpeta" : "Elige arriba un usuario"}
+            title={ct.newOwner ? undefined : PICK_OWNER_HINT}
+            disabled={!ct.newOwner}
             value={newDir}
             onChange={(e) => {
               setNewDir(e.target.value);
@@ -156,7 +174,7 @@ export function ComposeTab() {
             aria-label="Carpeta con compose.yml"
             spellCheck={false}
           />
-          <button className="icon-btn" onClick={() => void addFolder()} disabled={adding || !newDir.trim()} title="Añadir carpeta" aria-label="Añadir carpeta">
+          <button className="icon-btn" onClick={() => void addFolder()} disabled={adding || !newDir.trim() || !ct.newOwner} title="Añadir carpeta" aria-label="Añadir carpeta">
             {adding ? <span className="spinner ct-spinner-xs" /> : <FolderPlus size={14} />}
           </button>
         </div>
@@ -183,7 +201,10 @@ export function ComposeTab() {
               >
                 <span className={`ct-dot ct-${up > 0 ? "ok" : "off"}`} />
                 <span className="ct-compose-name">
-                  <strong className="ct-ellipsis">{p.name}</strong>
+                  <strong className="ct-ellipsis">
+                    {p.name}
+                    {ct.allOwners && <span className="ct-tag">{ct.ownerLabel(p.owner)}</span>}
+                  </strong>
                   <span className="faint ct-ellipsis mono">{p.dir || "carpeta desconocida"}</span>
                 </span>
                 <span className="faint ct-small">{p.containers.length ? `${up}/${p.containers.length}` : ""}</span>
@@ -207,7 +228,7 @@ export function ComposeTab() {
       </aside>
       <section className="ct-compose-detail">
         {sel ? (
-          <ProjectView key={sel.key} p={sel} tool={tool} tools={composeTools} setTool={setTool} onUsed={(dir, file) => setSaved(rememberComposeFolder(profileId, dir, file))} />
+          <ProjectView key={sel.key} p={sel} tool={tool} tools={composeTools} setTool={setTool} onUsed={(dir, file) => setSaved(rememberComposeFolder(profileId, dir, file, sel.owner))} />
         ) : (
           <div className="empty-state">
             <Layers size={26} />
@@ -245,7 +266,11 @@ function ProjectView({
   const anyUp = p.containers.some((c) => c.state === "running" || c.state === "paused" || c.state === "restarting");
   const anyDown = p.containers.some((c) => c.state !== "running" && c.state !== "paused" && c.state !== "restarting");
 
-  const cmd = useCallback((action: Parameters<typeof composeCmd>[3], opts: { volumes?: boolean; tail?: number } = {}): Cmd => composeCmd(tool, p.dir, p.file, action, opts), [tool, p.dir, p.file]);
+  const cmd = useCallback(
+    (action: Parameters<typeof composeCmd>[3], opts: { volumes?: boolean; tail?: number } = {}): Cmd =>
+      withOwner(composeCmd(tool, p.dir, p.file, action, opts), p.owner),
+    [tool, p.dir, p.file, p.owner],
+  );
 
   const loadServices = useCallback(async () => {
     if (!canRun) return;
@@ -319,7 +344,10 @@ function ProjectView({
     <div className="ct-project">
       <div className="ct-project-head">
         <div>
-          <h3>{p.name}</h3>
+          <h3>
+            {p.name}
+            {ct.allOwners && <span className="ct-tag">{ct.ownerLabel(p.owner)}</span>}
+          </h3>
           <div className="faint mono ct-small">{fileLabel}</div>
         </div>
         <span className="ct-grow" />
@@ -390,7 +418,7 @@ function ProjectView({
           className="btn btn-sm"
           disabled={!canRun || !!busy}
           onClick={async () => {
-            const r = await ct.run([{ bin: ["cat"], args: ["--", p.file || "compose.yml"], cwd: p.dir }], 20);
+            const r = await ct.run([{ bin: ["cat"], args: ["--", p.file || "compose.yml"], cwd: p.dir, owner: p.owner }], 20);
             setOutput({ title: fileLabel, text: r.ok ? (r.result?.stdout ?? "") : (r.error ?? ""), ok: r.ok });
           }}
         >
@@ -403,7 +431,7 @@ function ProjectView({
               className="btn btn-sm"
               disabled={!anyDown || !!busy}
               title="Arranca los contenedores ya creados (sin Compose)"
-              onClick={() => void exec("Iniciar contenedores", [containerAction(ct.engine, "start", ids)], "Contenedores iniciados")}
+              onClick={() => void exec("Iniciar contenedores", [withOwner(containerAction(ct.engine, "start", ids), p.owner)], "Contenedores iniciados")}
             >
               <Play size={13} /> Iniciar todos
             </button>
@@ -411,7 +439,7 @@ function ProjectView({
               className="btn btn-sm"
               disabled={!anyUp || !!busy}
               onClick={() =>
-                review("Parar", "Para los contenedores del proyecto sin borrarlos.", () => [containerAction(ct.engine, "stop", ids)], "Contenedores parados")
+                review("Parar", "Para los contenedores del proyecto sin borrarlos.", () => [withOwner(containerAction(ct.engine, "stop", ids), p.owner)], "Contenedores parados")
               }
             >
               <Square size={13} /> Parar todos

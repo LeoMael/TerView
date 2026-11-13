@@ -440,8 +440,11 @@ export function parseStats(text: string): ContainerStats[] {
 }
 
 /** Busca las estadísticas de un contenedor (por id corto/largo o nombre). */
-export function statsFor(stats: ContainerStats[], c: { id: string; name: string }): ContainerStats | undefined {
-  return stats.find((s) => (s.id && (c.id.startsWith(s.id) || s.id.startsWith(c.id))) || (s.name && s.name === c.name));
+export function statsFor(stats: ContainerStats[], c: { id: string; name: string; owner?: string }): ContainerStats | undefined {
+  // Con «Todos», dos usuarios pueden tener contenedores con el mismo nombre: se compara también el dueño.
+  return stats.find(
+    (s) => (s.owner ?? "") === (c.owner ?? "") && ((s.id && (c.id.startsWith(s.id) || s.id.startsWith(c.id))) || (s.name && s.name === c.name)),
+  );
 }
 
 /** Resumen legible de `inspect <contenedor>` (igual para Podman y Docker). */

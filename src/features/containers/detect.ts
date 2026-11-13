@@ -33,6 +33,8 @@ export const DETECT_SCRIPT = [
   "fi",
   "if command -v docker-compose >/dev/null 2>&1; then echo docker_compose_py=1; fi",
   "if command -v getent >/dev/null 2>&1 && getent group docker >/dev/null 2>&1; then echo docker_group=1; fi",
+  // Para entrar como otro usuario (contenedores de otros usuarios, con sudo).
+  "if command -v runuser >/dev/null 2>&1; then echo runuser=1; fi",
   "echo tv_end=1",
 ].join("\n");
 
@@ -65,6 +67,8 @@ export interface DetectResult {
   docker: EngineStatus | null;
   /** El comando «docker» es el emulador de Podman (podman-docker). */
   dockerIsShim: boolean;
+  /** Hay `runuser` (util-linux) para entrar como otro usuario. */
+  runuser: boolean;
 }
 
 function empty(engine: Engine): EngineStatus {
@@ -115,6 +119,7 @@ export function parseDetect(stdout: string): DetectResult {
     podman: null,
     docker: null,
     dockerIsShim: kv.docker_shim === "1",
+    runuser: kv.runuser === "1",
   };
 
   if (kv.podman === "1") {

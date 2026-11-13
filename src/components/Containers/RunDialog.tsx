@@ -2,7 +2,7 @@
 // reinicio, red, comando) → `run -d`. Muestra el comando exacto mientras se rellena.
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AlertTriangle, Rocket, TerminalSquare } from "lucide-react";
-import { TEMPLATES, emptyRunForm, runCmd, validateRunForm, type RunForm } from "../../features/containers";
+import { OWNER_SELF, TEMPLATES, emptyRunForm, ownedBy, runCmd, validateRunForm, withOwner, type RunForm } from "../../features/containers";
 import { toast } from "../../stores/toasts";
 import { AdmModal } from "../Admin/AdmModal";
 import { useCt } from "./context";
@@ -10,9 +10,21 @@ import { RunFormFields } from "./RunFormFields";
 
 const RUN_TIMEOUT = 600;
 
-export function RunDialog({ prefill, onClose }: { prefill?: Partial<RunForm>; onClose: () => void }) {
+/** `owner`: usuario con el que se crea (sin él, el elegido arriba). */
+export function RunDialog({ prefill, owner: ownerProp, onClose }: { prefill?: Partial<RunForm>; owner?: string; onClose: () => void }) {
   const ct = useCt();
-  const { engine, res } = ct;
+  const { engine } = ct;
+  const owner = ownerProp ?? ct.newOwner ?? OWNER_SELF;
+  // Sugerencias (imágenes, nombres, volúmenes, redes) solo de ese usuario.
+  const res = useMemo(() => {
+    const own = <T extends { owner?: string }>(r: { data: T[] | null }) => (r.data ? ownedBy(r.data, owner) : null);
+    return {
+      images: { ...ct.res.images, data: own(ct.res.images) },
+      containers: { ...ct.res.containers, data: own(ct.res.containers) },
+      volumes: { ...ct.res.volumes, data: own(ct.res.volumes) },
+      networks: { ...ct.res.networks, data: own(ct.res.networks) },
+    };
+  }, [ct.res, owner]);
   const [f, setF] = useState<RunForm>(() => ({ ...emptyRunForm(), ...prefill }));
   const [template, setTemplate] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -35,7 +47,7 @@ export function RunDialog({ prefill, onClose }: { prefill?: Partial<RunForm>; on
 
   const errors = validateRunForm(f);
   const valid = Object.keys(errors).length === 0;
-  const cmd = useMemo(() => runCmd(engine, f), [engine, f]);
+  const cmd = useMemo(() => withOwner(runCmd(engine, f), owner), [engine, f, owner]);
   const shown = ct.render(cmd);
 
   const imageTags = useMemo(() => {
@@ -79,7 +91,11 @@ export function RunDialog({ prefill, onClose }: { prefill?: Partial<RunForm>; on
   };
 
   return (
-    <AdmModal title="Nuevo contenedor" onClose={busy ? () => {} : onClose} width={760}>
+    <AdmModal
+      title={ct.owners.length > 1 || owner !== OWNER_SELF ? `Nuevo contenedor (como ${ct.ownerLabel(owner)})` : "Nuevo contenedor"}
+      onClose={busy ? () => {} : onClose}
+      width={760}
+    >
       <form
         className="ct-form"
         onSubmit={(e) => {
@@ -113,7 +129,7 @@ export function RunDialog({ prefill, onClose }: { prefill?: Partial<RunForm>; on
             imageTags={imageTags}
             volumeNames={(res.volumes.data ?? []).filter((v) => !v.anonymous).map((v) => v.name)}
             networkNames={(res.networks.data ?? []).map((n) => n.name)}
-            lingerHint={!ct.needsSudo}
+            lingerHint={!ct.ownerIsRoot(owner)}
             afterName={
               <>
                 {nameTaken && <div className="field-error">Ya hay un contenedor con ese nombre</div>}

@@ -63,6 +63,19 @@ siguen [Versionado Semántico](https://semver.org/lang/es/).
   - Una segunda pestaña al mismo servidor reutiliza la contraseña ya escrita en la primera (comprobada con
     sudo antes de usarla). «Olvidar contraseña de sudo» lo sigue respetando hasta reconectar.
 
+- **Contenedores con sudo ya ven los de todos los usuarios.** Con root o sudo aparece el selector
+  **Usuario**: tú, **root** y cada usuario con contenedores propios (Podman rootless; también Docker
+  rootless si su demonio está en marcha), o **Todos**. La lista de usuarios es la misma que usa el escáner.
+  - Con **Todos**, las listas (contenedores, imágenes, volúmenes, redes y proyectos Compose) llevan la
+    columna **Usuario**. Se leen todos a la vez en un solo script; si un usuario falla, se ve su error y
+    los demás aparecen igual.
+  - **Cada acción se ejecuta como el dueño** (iniciar, parar, logs, terminal dentro, inspeccionar,
+    borrar, descargar imagen, volúmenes, redes, Compose, nuevo contenedor y limpieza): se entra como él
+    con `runuser` (o `sudo -u`, o `su`) con su HOME y su `XDG_RUNTIME_DIR`, nunca como root. El comando
+    que se muestra y el que va a la terminal lo dicen («sudo runuser -u ana -- …»).
+  - Con **Todos**, crear y limpiar piden elegir antes un usuario arriba.
+  - Sin sudo todo sigue como antes: solo lo de tu usuario.
+
 ## [0.5.0] - 2026-11-12
 
 ### Añadido

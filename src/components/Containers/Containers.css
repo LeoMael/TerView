@@ -93,6 +93,16 @@
 .ct-ver {
   font-size: var(--fs-sm);
 }
+/* Selector «Usuario» (con root o sudo). */
+.ct-owner {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-sm);
+}
+.ct-owner .select {
+  max-width: 200px;
+}
 .ct-seg {
   display: inline-flex;
   border: 1px solid var(--border-strong);
@@ -461,6 +471,10 @@
 }
 .ct-col-short {
   width: 80px;
+}
+/* Columna «Usuario» (solo con «Todos»). */
+.ct-col-owner {
+  width: 96px;
 }
 .ct-col-id {
   width: 120px;

@@ -184,6 +184,18 @@ export function CleanupTab() {
 
   const loading = all.some((k) => res[k].loading);
 
+  if (ct.allOwners) {
+    return (
+      <div className="ct-tab-body ct-cleanup">
+        <div className="empty-state">
+          <Brush size={26} />
+          <div>Elige arriba un usuario para ver su espacio usado y limpiar</div>
+          <div className="faint ct-small">Cada usuario tiene sus propias imágenes, volúmenes y caché.</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="ct-tab-body ct-cleanup">
       <div className="ct-toolbar">

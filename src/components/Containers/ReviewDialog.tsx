@@ -1,7 +1,7 @@
 // Revisión de una acción antes de ejecutarla: opciones, comando exacto, confirmación y resultado.
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, Copy, KeyRound, Play } from "lucide-react";
-import { displayCmds, runEngine, type EngineRun } from "../../features/containers";
+import { displayCmds, runEngine, type Cmd, type EngineRun } from "../../features/containers";
 import { wrapScript, type Elevation } from "../../features/privileges";
 import { scriptFor } from "../../features/containers/run";
 import { clipboard } from "../../lib/clipboard";
@@ -25,14 +25,23 @@ function elevationText(el: Elevation | null): string {
 interface Props {
   req: ReviewRequest;
   sessionId: string;
-  elevation: Elevation | null;
+  /** Ejecuta como el dueño de cada comando (lo da el panel). */
+  exec: (cmds: Cmd[], timeoutSecs: number) => Promise<EngineRun>;
+  /** Elevación de esos comandos (null = falta sudo). */
+  elevationOf: (cmds: Cmd[]) => Elevation | null;
+  /** Comando tal y como se muestra. */
+  render: (c: Cmd) => string;
+  /** Script completo enviado al servidor (sin secretos). */
+  fullScript: (cmds: Cmd[]) => Promise<string>;
+  /** Usuarios (que no son tú) con los que se ejecuta, o null. */
+  who: (cmds: Cmd[]) => string | null;
   disabled: boolean;
   onAskSudo: () => void;
   onClose: () => void;
   onFinished: (req: ReviewRequest, r: EngineRun) => void;
 }
 
-export function ReviewDialog({ req, sessionId, elevation, disabled, onAskSudo, onClose, onFinished }: Props) {
+export function ReviewDialog({ req, sessionId, exec, elevationOf, render, fullScript, who, disabled, onAskSudo, onClose, onFinished }: Props) {
   const [opts, setOpts] = useState<Record<string, boolean>>(() =>
     Object.fromEntries((req.options ?? []).map((o) => [o.key, o.initial ?? false])),
   );
@@ -41,9 +50,27 @@ export function ReviewDialog({ req, sessionId, elevation, disabled, onAskSudo, o
   const [error, setError] = useState<string | null>(null);
   const [needSudo, setNeedSudo] = useState(false);
 
-  const el = req.elevationOverride !== undefined ? req.elevationOverride : elevation;
+  // `elevationOverride`: comandos del sistema (systemctl, usermod), no del motor: siempre con esa elevación.
+  const override = req.elevationOverride !== undefined;
   const cmds = useMemo(() => req.build(opts), [req, opts]);
-  const shown = el ? displayCmds(cmds, el) : cmds.map((c) => displayCmds([c], { kind: "none" })[0]);
+  const el = override ? (req.elevationOverride ?? null) : elevationOf(cmds);
+  const shown = override ? (el ? displayCmds(cmds, el) : cmds.map((c) => displayCmds([c], { kind: "none" })[0])) : cmds.map(render);
+  const asUser = override ? null : who(cmds);
+  const [full, setFull] = useState<string | null>(null);
+  useEffect(() => {
+    let alive = true;
+    if (override) setFull(el && el.kind !== "none" ? wrapScript(scriptFor(cmds), el) : null);
+    else if (el && (el.kind !== "none" || asUser))
+      fullScript(cmds).then(
+        (t) => alive && setFull(t),
+        () => alive && setFull(null),
+      );
+    else setFull(null);
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cmds, el?.kind, override, asUser]);
   const blocked = !el || disabled || busy || cmds.length === 0 || (req.confirmWord !== undefined && typed !== req.confirmWord);
 
   const run = async () => {
@@ -51,7 +78,7 @@ export function ReviewDialog({ req, sessionId, elevation, disabled, onAskSudo, o
     setBusy(true);
     setError(null);
     setNeedSudo(false);
-    const r = await runEngine(sessionId, cmds, el, req.timeoutSecs ?? 120);
+    const r = override ? await runEngine(sessionId, cmds, el, req.timeoutSecs ?? 120) : await exec(cmds, req.timeoutSecs ?? 120);
     setBusy(false);
     if (r.ok) {
       onFinished(req, r);
@@ -83,6 +110,11 @@ export function ReviewDialog({ req, sessionId, elevation, disabled, onAskSudo, o
           </div>
         )}
         {req.details && <div className="ct-review-details">{req.details(opts)}</div>}
+        {asUser && (
+          <div className="ct-review-label">
+            Como el usuario <strong>{asUser}</strong> (con su carpeta personal y su sesión de Podman/Docker).
+          </div>
+        )}
         <div className="ct-review-label">
           {elevationText(el)}
           <button
@@ -102,10 +134,10 @@ export function ReviewDialog({ req, sessionId, elevation, disabled, onAskSudo, o
         <pre className="ct-cmd" aria-label="Comando que se ejecutará">
           {shown.join("\n")}
         </pre>
-        {el && el.kind !== "none" && (
+        {full && (
           <details className="ct-details">
             <summary>Script completo enviado al servidor</summary>
-            <pre className="ct-cmd ct-cmd-sm">{wrapScript(scriptFor(cmds), el)}</pre>
+            <pre className="ct-cmd ct-cmd-sm">{full}</pre>
           </details>
         )}
         {!el && <div className="ct-warn">Hace falta sudo para ejecutar esto.</div>}

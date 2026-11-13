@@ -22,6 +22,8 @@ export interface Cmd {
   cwd?: string;
   /** Une stderr a stdout (logs). */
   mergeStderr?: boolean;
+  /** Dueño (clave de `owner.ts`: "self", "root" o "u:<usuario>"). Sin él, el elegido arriba. */
+  owner?: string;
 }
 
 export function engineCmd(engine: Engine, ...args: string[]): Cmd {

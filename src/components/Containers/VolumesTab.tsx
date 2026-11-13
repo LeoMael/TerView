@@ -1,12 +1,15 @@
 // Volúmenes: listar, crear, eliminar y limpiar los que no usa ningún contenedor.
 import { useMemo, useState } from "react";
 import { Brush, Copy, Plus, RefreshCw, Search, Trash2, X } from "lucide-react";
-import { ago, createVolume, pruneVolumes, removeVolumes, validateObjName, type VolumeInfo } from "../../features/containers";
+import { ago, createVolume, ownedBy, pruneVolumes, removeVolumes, validateObjName, type VolumeInfo } from "../../features/containers";
 import { clipboard } from "../../lib/clipboard";
 import { toast } from "../../stores/toasts";
 import { promptDialog } from "../ui/dialogs";
-import { useCt } from "./context";
+import { PICK_OWNER_HINT, useCt } from "./context";
 import { reclaimed } from "./ImagesTab";
+
+/** Clave única (con «Todos», dos usuarios pueden tener un volumen con el mismo nombre). */
+const volKey = (v: VolumeInfo) => `${v.owner ?? ""}/${v.name}`;
 
 export function VolumesTab() {
   const ct = useCt();
@@ -19,11 +22,19 @@ export function VolumesTab() {
   const rows = useMemo(() => {
     const s = search.trim().toLowerCase();
     return vols
-      .filter((v) => (!onlyUnused || v.unused) && (!s || v.name.toLowerCase().includes(s) || v.mountpoint.toLowerCase().includes(s)))
+      .filter(
+        (v) =>
+          (!onlyUnused || v.unused) &&
+          (!s ||
+            v.name.toLowerCase().includes(s) ||
+            v.mountpoint.toLowerCase().includes(s) ||
+            (ct.allOwners && ct.ownerLabel(v.owner).toLowerCase().includes(s))),
+      )
       .sort((a, b) => Number(a.anonymous) - Number(b.anonymous) || a.name.localeCompare(b.name));
-  }, [vols, search, onlyUnused]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vols, search, onlyUnused, ct.allOwners, ct.ownerLabel]);
   const unused = vols.filter((v) => v.unused);
-  const sel = vols.filter((v) => selected.has(v.name));
+  const sel = vols.filter((v) => selected.has(volKey(v)));
 
   const create = async () => {
     const name = await promptDialog({
@@ -31,7 +42,8 @@ export function VolumesTab() {
       label: "Nombre",
       placeholder: "datos_app",
       confirmText: "Crear",
-      validate: (v) => validateObjName(v.trim()) ?? (vols.some((x) => x.name === v.trim()) ? "Ya existe un volumen con ese nombre" : null),
+      validate: (v) =>
+        validateObjName(v.trim()) ?? (ownedBy(vols, ct.newOwner ?? undefined).some((x) => x.name === v.trim()) ? "Ya existe un volumen con ese nombre" : null),
     });
     if (!name) return;
     const r = await ct.run([createVolume(engine, name.trim())], 30);
@@ -53,14 +65,15 @@ export function VolumesTab() {
       details: () => (
         <ul className="ct-list ct-list-scroll">
           {list.map((v) => (
-            <li key={v.name} className="mono">
+            <li key={volKey(v)} className="mono">
               {v.name} {!v.unused && <span className="ct-tag">en uso</span>}
+              {ct.allOwners && <span className="ct-tag">{ct.ownerLabel(v.owner)}</span>}
             </li>
           ))}
         </ul>
       ),
       options: inUse.length ? [{ key: "force", label: "Forzar aunque estén en uso (-f)" }] : undefined,
-      build: (o) => [removeVolumes(engine, list.map((v) => v.name), !!o.force)],
+      build: (o) => ct.perOwner(list, (g) => removeVolumes(engine, g.map((v) => v.name), !!o.force)),
       danger: true,
       confirmWord: list.length > 1 || inUse.length ? "BORRAR" : undefined,
       runLabel: "Eliminar",
@@ -141,10 +154,10 @@ export function VolumesTab() {
         <button className="icon-btn" onClick={() => void ct.reload("volumes")} title="Actualizar" aria-label="Actualizar" disabled={res.volumes.loading}>
           <RefreshCw size={14} className={res.volumes.loading ? "ct-spin" : undefined} />
         </button>
-        <button className="btn btn-sm" onClick={prune} disabled={unused.length === 0}>
+        <button className="btn btn-sm" onClick={prune} disabled={unused.length === 0 || !ct.newOwner} title={ct.newOwner ? undefined : PICK_OWNER_HINT}>
           <Brush size={13} /> Limpiar sin usar
         </button>
-        <button className="btn btn-sm btn-primary" onClick={() => void create()}>
+        <button className="btn btn-sm btn-primary" onClick={() => void create()} disabled={!ct.newOwner} title={ct.newOwner ? undefined : PICK_OWNER_HINT}>
           <Plus size={13} /> Nuevo volumen
         </button>
       </div>
@@ -169,6 +182,7 @@ export function VolumesTab() {
                   <span className="sr-only">Seleccionar</span>
                 </th>
                 <th className="ct-col-name">Nombre</th>
+                {ct.allOwners && <th className="ct-col-owner">Usuario</th>}
                 <th className="ct-col-state">Estado</th>
                 <th className="ct-col-short">Driver</th>
                 <th className="ct-col-image">Ubicación en el servidor</th>
@@ -181,19 +195,19 @@ export function VolumesTab() {
             <tbody>
               {rows.map((v) => (
                 <tr
-                  key={v.name}
+                  key={volKey(v)}
                   tabIndex={0}
-                  className={selected.has(v.name) ? "sel" : undefined}
+                  className={selected.has(volKey(v)) ? "sel" : undefined}
                   onKeyDown={(e) => {
                     if (e.target !== e.currentTarget) return;
                     if (e.key === " ") {
                       e.preventDefault();
-                      toggle(v.name);
+                      toggle(volKey(v));
                     } else if (e.key === "Delete") remove([v]);
                   }}
                 >
                   <td className="ct-col-chk">
-                    <input type="checkbox" checked={selected.has(v.name)} onChange={() => toggle(v.name)} aria-label={`Seleccionar ${v.name}`} tabIndex={-1} />
+                    <input type="checkbox" checked={selected.has(volKey(v))} onChange={() => toggle(volKey(v))} aria-label={`Seleccionar ${v.name}`} tabIndex={-1} />
                   </td>
                   <td className="ct-col-name mono" title={v.name}>
                     <span className="ct-cell-flex">
@@ -202,6 +216,7 @@ export function VolumesTab() {
                       {v.labels["com.docker.compose.project"] && <span className="ct-tag">{v.labels["com.docker.compose.project"]}</span>}
                     </span>
                   </td>
+                  {ct.allOwners && <td className="ct-col-owner ct-ellipsis">{ct.ownerLabel(v.owner)}</td>}
                   <td className="ct-col-state">{v.unused ? <span className="faint">Sin usar</span> : <span className="ct-yes">En uso</span>}</td>
                   <td className="ct-col-short faint">{v.driver}</td>
                   <td className="ct-col-image mono faint ct-ellipsis-start" title={v.mountpoint}>
@@ -234,7 +249,7 @@ export function VolumesTab() {
               ))}
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="ct-norows">
+                  <td colSpan={ct.allOwners ? 8 : 7} className="ct-norows">
                     {vols.length ? "Ningún volumen coincide" : "No hay volúmenes"}
                   </td>
                 </tr>

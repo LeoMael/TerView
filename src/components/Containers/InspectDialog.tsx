@@ -1,7 +1,7 @@
 // Inspeccionar un contenedor: resumen legible (variables, montajes, red, puertos, reinicio) + JSON completo.
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { AlertTriangle, Copy, Eye, EyeOff } from "lucide-react";
-import { inspect, parseInspect, RESTART_LABELS, type Container, type InspectSummary, type RestartPolicy } from "../../features/containers";
+import { inspect, parseInspect, withOwner, RESTART_LABELS, type Container, type InspectSummary, type RestartPolicy } from "../../features/containers";
 import { clipboard } from "../../lib/clipboard";
 import { toast } from "../../stores/toasts";
 import { AdmModal } from "../Admin/AdmModal";
@@ -37,7 +37,7 @@ export function InspectDialog({ container, onClose }: { container: Container; on
 
   useEffect(() => {
     let alive = true;
-    void ct.run([inspect(ct.engine, container.id)], 30).then((r) => {
+    void ct.run([withOwner(inspect(ct.engine, container.id), container.owner)], 30).then((r) => {
       if (!alive) return;
       if (r.ok && r.result) {
         const p = parseInspect(r.result.stdout);
@@ -56,7 +56,7 @@ export function InspectDialog({ container, onClose }: { container: Container; on
   const rp = s?.restartPolicy || "no";
 
   return (
-    <AdmModal title={`Inspeccionar «${container.name}»`} onClose={onClose} width={860}>
+    <AdmModal title={ct.allOwners ? `Inspeccionar «${container.name}» (${ct.ownerLabel(container.owner)})` : `Inspeccionar «${container.name}»`} onClose={onClose} width={860}>
       <div className="modal-body ct-inspect">
         <div className="ct-toolbar">
           <div className="ct-seg ct-seg-sm" role="radiogroup" aria-label="Vista">

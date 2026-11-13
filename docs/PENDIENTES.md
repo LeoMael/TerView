@@ -32,9 +32,15 @@ El usuario lo publica a mano («Publish release»).
 **1. Errores que vio el usuario al probar:**
 - ✅ **Arreglado.** **Proyecto → añadir servidor** abría la misma ventana que «Servidores», sin relación con el proyecto.
   Debería crear el servidor ya dentro de ese proyecto (o dejar elegir el proyecto) y volver a él.
-- **Contenedores con sudo no ve todo.** Con root/sudo debe mostrar los contenedores de root **y** los de
-  cada usuario (Podman rootless), con selector de usuarios como el escáner. Reutilizar lo del escáner:
-  `runuser -u U -- env HOME=…` o `sudo -u U -H podman …` (ver sección 10.4).
+- ✅ **Contenedores con sudo no ve todo** — **arreglado** (sin publicar). Selector «Usuario: tú / root /
+  ana / … / Todos» con la lista de usuarios del escáner (`users_script`). Cada contenedor, imagen,
+  volumen, red y comando lleva su dueño (`src/features/containers/owner.ts`); para otro usuario se ejecuta
+  con `as_owner_script` (el de «Actualizar imagen»), y con «Todos» se leen todos a la vez en un script
+  (`multiOwnerScript`, cada uno en segundo plano y con `timeout`). Probado en un contenedor
+  `quay.io/podman/stable` como root: listar los de root y de `ana` juntos, un usuario que falla sin
+  romper al resto, parar como `ana`, Compose en su HOME con permisos 700 y la terminal dentro del
+  contenedor de `ana` con TTY (`runuser … podman exec -it`). Falta probarlo en un servidor real con sudo
+  con contraseña y con Docker rootless.
 - ✅ **Pide contraseñas que ya están guardadas** «en varios casos» — **arreglado** (sin publicar).
   Todo pasa por `obtainSudoPassword` (`src/features/privileges/stored.ts`, orden en `lookup.ts`): en
   memoria → guardada → otra pestaña del mismo servidor → preguntar. `SudoDialog` la llama antes de mostrar

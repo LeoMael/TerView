@@ -255,7 +255,8 @@ Este manual también está dentro de TerView: pulsa el botón **?** de la barra 
 
 **Notas:**
 
-- Con Podman puedes elegir **Mi usuario** o **Sistema (root)** (este necesita sudo).
+- Con root o sudo, arriba eliges **Usuario**: tú, **root**, cada usuario con contenedores propios o
+  **Todos** (con una columna «Usuario»). Lo que hagas se ejecuta como el dueño de cada contenedor.
 - Clic en un puerto de un contenedor → **Abrir túnel a mi PC…** para usarlo en tu navegador.
 - En **Imágenes**, el botón de vulnerabilidades te lleva a Administración → Vulnerabilidades.
 
