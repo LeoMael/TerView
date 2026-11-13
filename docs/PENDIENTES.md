@@ -20,6 +20,59 @@ construidos y salen en la **0.5.0**.
 - **Probar con el ratón el arrastre al sistema** (ya implementado en Linux, Windows y macOS; macOS sin compilar).
 - **Pruebas automáticas de la interfaz** dentro de la app real.
 
+## Próxima sesión (anotado el 13/11/2026)
+
+Al decir «continúa», empezar por aquí.
+
+**0. Publicar la 0.5.0.** El borrador `v0.5.0` en GitHub Releases ya tiene los instaladores de Linux y
+Windows; el de macOS se estaba generando (run «Publicar versión» de la etiqueta `v0.5.0`, commit `4233baf`).
+Comprobar con `gh release view v0.5.0`. Si macOS falló, ver el log con `gh run list --workflow release.yml`.
+El usuario lo publica a mano («Publish release»).
+
+**1. Errores que vio el usuario al probar:**
+- **Proyecto → añadir servidor** abre la misma ventana que «Servidores», sin relación con el proyecto.
+  Debería crear el servidor ya dentro de ese proyecto (o dejar elegir el proyecto) y volver a él.
+- **Contenedores con sudo no ve todo.** Con root/sudo debe mostrar los contenedores de root **y** los de
+  cada usuario (Podman rootless), con selector de usuarios como el escáner. Reutilizar lo del escáner:
+  `runuser -u U -- env HOME=…` o `sudo -u U -H podman …` (ver sección 10.4).
+- **Pide contraseñas que ya están guardadas** «en varios casos». Revisar dónde: sudo en Administración y
+  Contenedores, reconexión, editor, transferencias, ventanas aparte, tras desbloquear el PIN. Reproducir
+  y unificar con `src/features/privileges/stored.ts` y `secrets.rs`.
+
+**2. Pregunta del usuario: ¿es normal que un usuario sin sudo vea nginx, Caddy y todos los procesos?**
+Sí, en un Linux por defecto: `/proc` deja a cualquiera ver los procesos de todos, y los archivos de
+`/etc/nginx` y `/etc/caddy` suelen poder leerse por todos (los certificados y las llaves privadas no).
+Idea: añadir al escáner o a Administración un aviso de **endurecimiento**, por ejemplo: montar `/proc` con
+`hidepid=2`, dejar la configuración web con permisos 640, y revisar puertos expuestos y `PermitRootLogin`.
+
+**3. Función nueva: terminal local (del PC).** Pestañas de terminal **del propio PC**, no del servidor,
+para lanzar Claude Code, Codex, etc. junto a los servidores. Idea: un PTY local en Rust (`portable-pty`)
+con la misma vista de xterm.js; botones rápidos «Claude Code», «Codex»; abrir en la carpeta que se elija; y
+opción de que el asistente use el MCP de TerView ya configurado.
+
+**4. Nombre y logo nuevos.** Al usuario no le gustan ni «TerView» ni el logo actual. Le gustan
+**Argos** (el gigante de cien ojos que todo lo vigila; logo: pluma de pavo real cuyo ojo es una terminal) y
+la idea **SSHorus** (SSH + Horus; logo: el ojo de Horus con `>_`). Pasos:
+1. Comprobar si el nombre está libre en GitHub, crates.io, npm, dominios `.app`/`.dev` y en marcas parecidas
+   (Argos es una tienda grande del Reino Unido; Argus es nombre de varias herramientas de monitoreo).
+2. Hacer 3 propuestas de logo en `docs/marca/` (SVG y PNG, en claro y oscuro, y cómo se ve en pequeño).
+3. Renombrar **migrando los datos**: carpeta de configuración `~/.config/terview`, servicio del llavero
+   `terview`, `vault.json`, el id de la app `com.terview.app`, el repositorio y la URL del actualizador.
+
+Qué diferencia a la app (para el README y la web): no instala nada en los servidores, es cliente SSH y
+panel de administración a la vez (contenedores, usuarios, puertos, sitios, monitor, vulnerabilidades)
+para varios servidores, la IA trabaja con aprobación y con PIN, muestra el comando exacto antes de cada
+cambio, está en español y es gratis y de código abierto.
+
+**5. Limpieza.** Quedan copias de trabajo (worktrees) que ya no hacen falta, todas unidas a main:
+`../TERVIEW-v050` (rama `v0.5.0`) y tres en `.claude/worktrees/`. El usuario pidió dejarlas por ahora.
+Para borrarlas: `git worktree remove <ruta>` y `git branch -d <rama>`.
+
+**Forma de trabajar** (ver también la memoria): Claude coordina y los agentes programan; **pocos commits,
+uno por función terminada**; sin coautor; documentación visual en `docs/`; lenguaje simple y poco texto.
+
+---
+
 Este documento guarda lo que falta, **con suficiente detalle para retomarlo más tarde**.
 
 | # | Función | Prioridad | Estado |
