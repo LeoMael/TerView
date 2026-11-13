@@ -2,10 +2,18 @@
 import { create } from "zustand";
 import type { Project, ServerProfile } from "../api/types";
 
+/** Opciones del editor de servidor cuando se abre desde un proyecto. */
+export interface ServerEditorOptions {
+  /** Proyecto desde el que se abre: el selector «Proyecto» empieza en él. */
+  projectId?: string | null;
+  /** Se llama tras guardar, con el servidor y el proyecto elegido ("" = ninguno). */
+  onSaved?: (server: ServerProfile, projectId: string) => void;
+}
+
 interface UiState {
   /** Editor de servidor: null = cerrado; server.id "" = nuevo. */
-  serverEditor: { server: ServerProfile | null } | null;
-  openServerEditor: (server?: ServerProfile | null) => void;
+  serverEditor: ({ server: ServerProfile | null } & ServerEditorOptions) | null;
+  openServerEditor: (server?: ServerProfile | null, opts?: ServerEditorOptions) => void;
   closeServerEditor: () => void;
 
   /** Editor de proyecto: null = cerrado. */
@@ -23,7 +31,7 @@ interface UiState {
 
 export const useUi = create<UiState>((set) => ({
   serverEditor: null,
-  openServerEditor: (server = null) => set({ serverEditor: { server } }),
+  openServerEditor: (server = null, opts = {}) => set({ serverEditor: { server, ...opts } }),
   closeServerEditor: () => set({ serverEditor: null }),
   projectEditor: null,
   openProjectEditor: (project = null) => set({ projectEditor: { project } }),

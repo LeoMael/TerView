@@ -83,7 +83,10 @@ Este manual también está dentro de TerView: pulsa el botón **?** de la barra 
 2. En **Marcadores (carpetas favoritas)** añade un servidor y una ruta, por ejemplo `/var/www/app`.
 3. Pulsa un marcador en la barra lateral para abrir el servidor directamente en esa carpeta.
 4. Con clic derecho en un servidor tienes **Añadir a proyecto** y **Añadir marcador…**.
-5. Con clic derecho en un proyecto tienes **Conectar a todos** y **Ejecutar comando en el proyecto…**.
+5. Para meter un servidor en un proyecto, pulsa el **+** de su fila (o clic derecho en el proyecto):
+   **Añadir servidor nuevo…** abre el editor ya dentro del proyecto; **Añadir servidor existente** muestra
+   los servidores guardados que aún no están en él.
+6. Con clic derecho en un proyecto tienes también **Conectar a todos** y **Ejecutar comando en el proyecto…**.
 
 **Importar o exportar `~/.ssh/config`:**
 

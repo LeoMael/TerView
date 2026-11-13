@@ -16,6 +16,15 @@ siguen [Versionado Semántico](https://semver.org/lang/es/).
   con su salida y «Cancelar». Al terminar vuelve a analizar esa imagen y avisa si todavía tiene
   vulnerabilidades.
 
+### Corregido
+- **Añadir un servidor desde un proyecto**: cada proyecto de la barra lateral tiene ahora un botón **+**
+  (y, con clic derecho, **Añadir servidor nuevo…** y **Añadir servidor existente**). El editor se abre
+  indicando «Se añadirá al proyecto X», con un selector para cambiarlo o dejarlo sin proyecto. Al guardar,
+  el servidor queda dentro del proyecto y aparece seleccionado en él. Antes se abría el editor normal y el
+  servidor no quedaba en el proyecto.
+- Los menús de la barra lateral con muchas entradas (p. ej. la lista de servidores) se desplazan en vez de
+  salirse de la ventana.
+
 ## [0.5.0] - 2026-11-12
 
 ### Añadido

@@ -208,6 +208,18 @@
   flex: 1 1 auto;
   font-weight: 600;
 }
+/* Botón «+» de la fila de un proyecto: aparece al pasar el ratón o con el foco. */
+.sb-row-btn {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  opacity: 0;
+}
+.sb-row:hover .sb-row-btn,
+.sb-row:focus-within .sb-row-btn,
+.sb-row.selected .sb-row-btn {
+  opacity: 1;
+}
 .sb-count {
   flex: none;
   font-size: 11px;
@@ -238,6 +250,19 @@
   font-size: var(--fs-sm);
   font-style: italic;
 }
+.sb-linkbtn {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-style: normal;
+  cursor: pointer;
+}
+.sb-linkbtn:hover,
+.sb-linkbtn:focus-visible {
+  text-decoration: underline;
+}
 .sb-loading,
 .sb-no-results {
   display: flex;
@@ -256,6 +281,9 @@
 /* Menú contextual (usa .context-menu del tema) */
 .sb-menu {
   font-size: var(--fs);
+  /* Listas largas (p. ej. muchos servidores en un submenú): se desplazan en vez de salirse. */
+  max-height: calc(100vh - 8px);
+  overflow-y: auto;
 }
 .sb-menu button {
   height: 28px;

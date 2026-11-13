@@ -42,6 +42,7 @@ import { preloadable } from "../../lib/lazy";
 import "./Sidebar.css";
 import { SSH_CONFIG_LABEL, isMac, isModKey } from "../../lib/platform";
 import { checkSshAliasesBeforeExport } from "../../features/sshAliases";
+import { serversNotInProject } from "../../features/projectServers";
 
 const ImportSshConfigDialog = preloadable(() => import("./ImportSshConfigDialog").then((m) => m.ImportSshConfigDialog));
 
@@ -134,6 +135,8 @@ export function Sidebar() {
   const [selected, setSelected] = useState<string | null>(null);
   const [menu, setMenu] = useState<MenuState | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+  /** Fila que hay que mostrar (desplazar y enfocar) en cuanto aparezca, p. ej. un servidor recién añadido. */
+  const [reveal, setReveal] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -141,6 +144,17 @@ export function Sidebar() {
   }, [loaded, load]);
 
   const tabStates = useMemo(() => parseTabStates(tabStatesKeyValue), [tabStatesKeyValue]);
+
+  useEffect(() => {
+    if (!reveal) return;
+    const row = Array.from(listRef.current?.querySelectorAll<HTMLElement>("[data-sb-key]") ?? []).find(
+      (el) => el.dataset.sbKey === reveal,
+    );
+    if (!row) return; // aún no está en la lista: se reintenta en el siguiente render
+    row.scrollIntoView({ block: "nearest" });
+    row.focus();
+    setReveal(null);
+  });
 
   const serverById = useMemo(() => new Map(servers.map((s) => [s.id, s])), [servers]);
 
@@ -217,6 +231,42 @@ export function Sidebar() {
     });
     if (ok) await useProfiles.getState().deleteProject(p.id);
   };
+
+  /** Selecciona y muestra un servidor: dentro de su proyecto (que se despliega) o en «Servidores». */
+  const revealServer = (s: ServerProfile, projectId: string) => {
+    const key = projectId ? `p:${projectId}:s:${s.id}` : `s:${s.id}`;
+    if (projectId) toggleProject(projectId, true);
+    if (q && !matches(s, q)) setQuery("");
+    setSelected(key);
+    setReveal(key);
+  };
+
+  /** Editor de servidor nuevo que lo guarda ya dentro del proyecto (se puede cambiar en el selector). */
+  const newServerInProject = (p: Project) => openServerEditor(null, { projectId: p.id, onSaved: revealServer });
+
+  /** Submenú con los servidores guardados que aún no están en el proyecto. */
+  const existingServerItems = (p: Project): MenuItem[] => {
+    const all = useProfiles.getState().servers;
+    const candidates = serversNotInProject(all, p);
+    if (candidates.length === 0) {
+      return [{ label: all.length === 0 ? "No hay servidores guardados" : "Ya están todos en el proyecto", disabled: true }];
+    }
+    return candidates.map((s) => ({
+      label: s.name,
+      icon: <Server size={14} />,
+      onClick: () =>
+        void useProfiles
+          .getState()
+          .addServerToProject(p.id, s.id)
+          .then((ok) => ok && revealServer(s, p.id)),
+    }));
+  };
+
+  /** Lo que se puede añadir a un proyecto (menú del botón + y parte del menú contextual). */
+  const addToProjectItems = (p: Project): MenuItem[] => [
+    { label: "Añadir servidor nuevo…", icon: <Plus size={14} />, onClick: () => newServerInProject(p) },
+    { label: "Añadir servidor existente", icon: <Server size={14} />, submenu: existingServerItems(p) },
+  ];
 
   const addBookmarkFor = async (projectId: string, s: ServerProfile) => {
     const path = await promptDialog({
@@ -305,6 +355,8 @@ export function Sidebar() {
     const projServers = p.serverIds.map((id) => serverById.get(id)).filter((s): s is ServerProfile => !!s);
     return [
       { label: "Editar…", icon: <Pencil size={14} />, onClick: () => openProjectEditor(p) },
+      ...addToProjectItems(p),
+      "separator",
       {
         label: "Conectar a todos",
         icon: <Plug size={14} />,
@@ -444,6 +496,7 @@ export function Sidebar() {
       <div
         key={key}
         data-sb-row
+        data-sb-key={key}
         tabIndex={0}
         role="treeitem"
         aria-selected={selected === key}
@@ -538,6 +591,21 @@ export function Sidebar() {
           <span className="sb-lead">{open ? <ChevronDown size={14} /> : <ChevronRight size={14} />}</span>
           <span className="sb-chip" style={{ background: p.color ?? undefined }} />
           <span className="sb-name sb-project-name">{p.name}</span>
+          <button
+            type="button"
+            className="icon-btn sb-row-btn"
+            title="Añadir un servidor a este proyecto"
+            aria-label={`Añadir servidor a ${p.name}`}
+            aria-haspopup="menu"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelected(key);
+              openMenuForElement(e.currentTarget, key, addToProjectItems(p));
+            }}
+            onKeyDown={(e) => e.stopPropagation()}
+          >
+            <Plus size={13} />
+          </button>
           <span className="sb-count">{p.serverIds.length}</span>
         </div>
         {open && (
@@ -545,7 +613,22 @@ export function Sidebar() {
             {entry.servers.map((s) => renderServer(s, p.id))}
             {entry.bookmarks.map((b) => renderBookmark(p, b))}
             {entry.servers.length === 0 && entry.bookmarks.length === 0 && (
-              <div className="sb-row sb-indent sb-placeholder">Sin servidores</div>
+              <div className="sb-row sb-indent sb-placeholder">
+                {q ? (
+                  "Sin servidores"
+                ) : (
+                  <>
+                    Sin servidores ·{" "}
+                    <button
+                      type="button"
+                      className="sb-linkbtn"
+                      onClick={(e) => openMenuForElement(e.currentTarget, key, addToProjectItems(p))}
+                    >
+                      Añadir
+                    </button>
+                  </>
+                )}
+              </div>
             )}
           </>
         )}

@@ -30,7 +30,7 @@ Comprobar con `gh release view v0.5.0`. Si macOS falló, ver el log con `gh run 
 El usuario lo publica a mano («Publish release»).
 
 **1. Errores que vio el usuario al probar:**
-- **Proyecto → añadir servidor** abre la misma ventana que «Servidores», sin relación con el proyecto.
+- ✅ **Arreglado.** **Proyecto → añadir servidor** abría la misma ventana que «Servidores», sin relación con el proyecto.
   Debería crear el servidor ya dentro de ese proyecto (o dejar elegir el proyecto) y volver a él.
 - **Contenedores con sudo no ve todo.** Con root/sudo debe mostrar los contenedores de root **y** los de
   cada usuario (Podman rootless), con selector de usuarios como el escáner. Reutilizar lo del escáner:
@@ -607,6 +607,15 @@ En **Administración**, dos sub-pestañas nuevas:
 reconecta si estaba cerrada; si no hay pestaña, conecta (`openOrFocusServer` en `src/features/connect.ts`,
 usado por `openOrFocus` en `Sidebar.tsx`). Para abrir una conexión adicional al mismo servidor:
 Ctrl+doble clic, clic central o «Abrir otra conexión» en el menú.
+
+### Corrección — añadir un servidor desde un proyecto
+✅ **Arreglado (sin publicar).** Antes, para meter un servidor en un proyecto solo estaba el editor de
+servidor normal, sin relación con el proyecto. Ahora cada proyecto de la barra lateral tiene un botón **+**
+(al pasar el ratón), un enlace **Añadir** cuando está vacío y, en el clic derecho, **Añadir servidor
+nuevo…** y **Añadir servidor existente** (lista de los servidores que aún no están en él). El editor se abre
+con «Se añadirá al proyecto X» y un selector para cambiarlo o dejarlo sin proyecto; al guardar, el servidor
+queda en el proyecto, que se despliega con el servidor nuevo seleccionado. La lógica pura está en
+`src/features/projectServers.ts` (con pruebas en `projectServers.test.ts`).
 
 ### 8.6 Ejecutar en varios servidores a la vez
 - Elegir servidores (o un proyecto completo) y ejecutar un comando de la biblioteca en todos.

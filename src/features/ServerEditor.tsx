@@ -8,7 +8,7 @@ import { profiles as profilesApi, sshAliases, type SshAliasInfo } from "../api/p
 import { errorMessage } from "../api/core";
 import type { AuthMethod, ServerProfile, SudoMode, TmuxMode } from "../api/types";
 import { useProfiles } from "../stores/profiles";
-import { useUi } from "../stores/ui";
+import { useUi, type ServerEditorOptions } from "../stores/ui";
 import { toast } from "../stores/toasts";
 import { ColorPicker } from "./ColorPicker";
 import { SSH_CONFIG_LABEL, SSH_KEY_EXAMPLE } from "../lib/platform";
@@ -16,6 +16,7 @@ import { SshAliasMatches, describeMatch } from "./sshAliases";
 import { TMUX_MODE_HINTS, TMUX_MODE_LABELS } from "./tmux/logic";
 import { useSettings } from "../stores/settings";
 import { SecretInput } from "./SecretInput";
+import { initialProjectFor, projectChanges } from "./projectServers";
 
 /** Dónde van las contraseñas guardadas. */
 const SAVE_TIP = "Se guarda cifrada con tu PIN o, si no tienes PIN, en el llavero del sistema.";
@@ -24,7 +25,15 @@ export function ServerEditorHost() {
   const editor = useUi((s) => s.serverEditor);
   const close = useUi((s) => s.closeServerEditor);
   if (!editor) return null;
-  return <ServerEditor key={editor.server?.id || "new"} initial={editor.server} onClose={close} />;
+  return (
+    <ServerEditor
+      key={`${editor.server?.id || "new"}:${editor.projectId ?? ""}`}
+      initial={editor.server}
+      fromProjectId={editor.projectId ?? null}
+      onSaved={editor.onSaved}
+      onClose={close}
+    />
+  );
 }
 
 type Errors = Partial<Record<"name" | "host" | "port" | "username" | "keyPath" | "alias", string>>;
@@ -41,13 +50,29 @@ const SUDO_OPTIONS: { value: SudoMode; label: string; hint: string }[] = [
   { value: "saved", label: "Guardar", hint: "Útil si entras con llave SSH: sudo sigue pidiendo tu contraseña." },
 ];
 
-function ServerEditor({ initial, onClose }: { initial: ServerProfile | null; onClose: () => void }) {
+function ServerEditor({
+  initial,
+  fromProjectId,
+  onSaved,
+  onClose,
+}: {
+  initial: ServerProfile | null;
+  /** Abierto desde un proyecto (p. ej. «Añadir servidor nuevo…» en la barra lateral). */
+  fromProjectId: string | null;
+  onSaved?: ServerEditorOptions["onSaved"];
+  onClose: () => void;
+}) {
   const isNew = !initial || initial.id === "";
   const projects = useProfiles((s) => s.projects);
   const saveServer = useProfiles((s) => s.saveServer);
   const saveProject = useProfiles((s) => s.saveProject);
 
-  const initialProjectId = initial?.id ? (projects.find((p) => p.serverIds.includes(initial.id))?.id ?? "") : "";
+  // Proyecto en el que empieza el selector y proyecto en el que está de verdad el servidor
+  // (un servidor nuevo aún no está en ninguno).
+  const [initialProjectId] = useState(() => initialProjectFor(projects, initial?.id ?? "", fromProjectId));
+  const memberProjectId = isNew ? "" : initialProjectId;
+  /** Con un proyecto de origen, el selector va arriba y se explica dónde quedará el servidor. */
+  const showProjectOnTop = isNew && initialProjectId !== "";
 
   const [name, setName] = useState(initial?.name ?? "");
   const [host, setHost] = useState(initial?.host ?? "");
@@ -176,24 +201,30 @@ function ServerEditor({ initial, onClose }: { initial: ServerProfile | null; onC
         toast.error(`No se pudo guardar el alias de ${SSH_CONFIG_LABEL}`, err);
       }
     }
-    if (projectId !== initialProjectId) {
-      const st = useProfiles.getState();
-      const oldP = st.projects.find((p) => p.id === initialProjectId);
-      if (oldP) {
-        await saveProject({
-          ...oldP,
-          serverIds: oldP.serverIds.filter((x) => x !== saved.id),
-          bookmarks: oldP.bookmarks.filter((b) => b.serverId !== saved.id),
-        });
-      }
-      const newP = useProfiles.getState().projects.find((p) => p.id === projectId);
-      if (newP && !newP.serverIds.includes(saved.id)) {
-        await saveProject({ ...newP, serverIds: [...newP.serverIds, saved.id] });
-      }
+    for (const p of projectChanges(useProfiles.getState().projects, saved.id, memberProjectId, projectId)) {
+      await saveProject(p);
     }
     setSaving(false);
     onClose();
+    onSaved?.(saved, projectId);
   };
+
+  const projectSelect = (
+    <select
+      className="select"
+      value={projectId}
+      aria-label="Proyecto"
+      onChange={(e) => setProjectId(e.target.value)}
+    >
+      <option value="">{showProjectOnTop ? "Ninguno (sin proyecto)" : "Ninguno"}</option>
+      {projects.map((p) => (
+        <option key={p.id} value={p.id}>
+          {p.name}
+        </option>
+      ))}
+    </select>
+  );
+  const chosenProject = projects.find((p) => p.id === projectId);
 
   const onEnter = (e: KeyboardEvent) => {
     if (e.key === "Enter" && !(e.target instanceof HTMLButtonElement)) {
@@ -223,6 +254,22 @@ function ServerEditor({ initial, onClose }: { initial: ServerProfile | null; onC
       }
     >
       <div className="cd-form" onKeyDown={onEnter}>
+        {showProjectOnTop && (
+          <label className="field">
+            <span>Proyecto</span>
+            {projectSelect}
+            <small className="cd-field-hint">
+              {chosenProject ? (
+                <>
+                  Se añadirá al proyecto <strong>{chosenProject.name}</strong>.
+                </>
+              ) : (
+                "No se añadirá a ningún proyecto; quedará solo en «Servidores»."
+              )}
+            </small>
+          </label>
+        )}
+
         <label className="field">
           <span>Nombre</span>
           <input
@@ -449,17 +496,12 @@ function ServerEditor({ initial, onClose }: { initial: ServerProfile | null; onC
             <span>Color</span>
             <ColorPicker value={color} onChange={setColor} />
           </div>
-          <label className="field">
-            <span>Proyecto</span>
-            <select className="select" value={projectId} onChange={(e) => setProjectId(e.target.value)}>
-              <option value="">Ninguno</option>
-              {projects.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-          </label>
+          {!showProjectOnTop && (
+            <label className="field">
+              <span>Proyecto</span>
+              {projectSelect}
+            </label>
+          )}
         </div>
       </div>
     </Modal>
