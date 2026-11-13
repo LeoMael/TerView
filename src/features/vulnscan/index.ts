@@ -3,3 +3,5 @@ export * from "./run";
 export * from "./fixCommand";
 export * from "./aiPayload";
 export * from "./nav";
+export * from "./imageUpdate";
+export * from "./updateRun";

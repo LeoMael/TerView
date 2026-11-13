@@ -34,6 +34,10 @@ pub enum ScriptRequest {
     Images { engine: Engine, user: Option<UserCtx> },
     #[serde(rename_all = "camelCase")]
     Image { engine: Engine, user: Option<UserCtx>, image_id: String, trivy: bool },
+    /// «Actualizar imagen»: comandos ya revisados por el usuario, como el dueño de la imagen.
+    /// Solo la interfaz lo pide (no es una herramienta del MCP).
+    #[serde(rename_all = "camelCase")]
+    AsOwner { engine: Engine, user: Option<UserCtx>, script: String },
 }
 
 pub fn script_for(req: &ScriptRequest) -> String {
@@ -44,6 +48,7 @@ pub fn script_for(req: &ScriptRequest) -> String {
         ScriptRequest::Distro { tool, codename } => scripts::distro_script(*tool, codename.as_deref().unwrap_or("")),
         ScriptRequest::Images { engine, user } => scripts::images_list_script(*engine, user.as_ref()),
         ScriptRequest::Image { engine, user, image_id, trivy } => scripts::image_script(*engine, user.as_ref(), image_id, *trivy),
+        ScriptRequest::AsOwner { engine, user, script } => scripts::as_owner_script(*engine, user.as_ref(), script),
     }
 }
 
@@ -202,6 +207,35 @@ pub async fn vulnscan_analyze(app: AppHandle, input: ScanInput, scan_id: String)
         );
     };
     analyze_and_save(&input, &ticket.token, &emit, true).await
+}
+
+/// Vuelve a analizar solo las imágenes de `images` (tras «Actualizar imagen») y las pone en lugar de
+/// `old_key` en el informe `report_id`. Guarda el resultado como un análisis nuevo y lo devuelve.
+#[tauri::command]
+pub async fn vulnscan_rescan_image(
+    app: AppHandle,
+    server_id: String,
+    report_id: String,
+    old_key: String,
+    images: Vec<ImageRaw>,
+    use_osv: bool,
+    scan_id: String,
+) -> AppResult<Report> {
+    let history = History::system();
+    let base = history.get(&server_id, &report_id)?;
+    let input = ScanInput { server_id: server_id.clone(), images, elevated: base.elevated, use_osv, ..Default::default() };
+    let ticket = ScanTicket::new(&scan_id);
+    let sid = scan_id.clone();
+    let emit = move |phase: &str, done: usize, total: usize, text: &str| {
+        let _ = app.emit(
+            PROGRESS_EVENT,
+            ProgressPayload { scan_id: sid.clone(), phase: phase.into(), done, total, text: text.into() },
+        );
+    };
+    let partial = analyze_and_save(&input, &ticket.token, &emit, false).await?;
+    let merged = super::analyze::merge_rescan(&base, &old_key, &partial);
+    history.save(&merged)?;
+    Ok(merged)
 }
 
 /// Cancela las peticiones a OSV de un análisis. false si ya terminó.

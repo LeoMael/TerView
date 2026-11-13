@@ -56,6 +56,8 @@
 - **Ejecutar un comando en varios servidores** a la vez y comparar los resultados.
 - **Buscar vulnerabilidades** en el servidor y en sus contenedores, con datos de OSV.dev y de tu distro, y
   el comando para actualizar. Si quieres, una IA te lo explica.
+  Las imágenes de contenedores se actualizan con un botón («Actualizar imagen»): te muestra los comandos,
+  recrea sus contenedores y vuelve a analizarla.
 - **Conectar tu cuenta de GitHub**: llaves SSH, clonar, desplegar y sincronizar tu configuración.
 - **Proteger tus contraseñas con un PIN**: quedan cifradas y TerView se bloquea al abrirlo y tras un rato sin uso.
 - **Dejar que un asistente de IA te ayude** (Claude Code, Claude Desktop…) con tus servidores, sin darle

@@ -424,6 +424,9 @@ fn scripts_are_valid_sh() {
         scripts::image_script(Engine::Podman, Some(&user), "5e2b554c1c45", false),
         scripts::image_script(Engine::Docker, None, "sha256:5e2b554c1c45", true),
         scripts::image_script(Engine::Docker, Some(&user), "5e2b554c1c45", false),
+        scripts::as_owner_script(Engine::Podman, None, "podman pull docker.io/library/nginx:1.27"),
+        scripts::as_owner_script(Engine::Podman, Some(&user), "podman pull 'a b'\nsystemctl --user restart web.service"),
+        scripts::as_owner_script(Engine::Docker, Some(&user), "cd /srv/app && docker compose pull"),
     ];
     for s in all {
         let mut child = std::process::Command::new("sh")
@@ -441,6 +444,24 @@ fn scripts_are_valid_sh() {
     let bad = scripts::UserCtx { name: "a;b".into(), uid: 1, home: "/x".into() };
     assert!(!scripts::images_list_script(Engine::Podman, Some(&bad)).contains("a;b"));
     assert!(scripts::distro_script(DistroTool::Debsecan, "x; rm").contains("debsecan --format"));
+    // «Actualizar imagen» con un usuario raro: no se ejecuta nada (ni como root).
+    let s = scripts::as_owner_script(Engine::Podman, Some(&bad), "podman pull x");
+    assert!(!s.contains("podman pull") && s.contains("exit 1"), "{s}");
+    let s = scripts::as_owner_script(Engine::Podman, Some(&user), "podman pull x");
+    assert!(s.contains("runuser -u 'ana'") && s.contains("XDG_RUNTIME_DIR=/run/user/1000"), "{s}");
+    assert!(scripts::as_owner_script(Engine::Docker, Some(&user), "docker pull x").contains("DOCKER_HOST=unix://$s"));
+}
+
+/// «Actualizar imagen» sin el sh del contenedor: el script sale con el código de lo de dentro.
+#[cfg(unix)]
+#[test]
+fn as_owner_script_keeps_exit_code() {
+    let run = |inner: &str| {
+        std::process::Command::new("sh").arg("-c").arg(scripts::as_owner_script(Engine::Podman, None, inner)).output().unwrap()
+    };
+    assert!(run("true").status.success());
+    assert_eq!(run("echo hola; exit 3").status.code(), Some(3));
+    assert_eq!(String::from_utf8_lossy(&run("echo hola").stdout), "hola\n");
 }
 
 /// Fases 1 y 2 de verdad en este PC (Linux): el inventario sale con paquetes.
@@ -921,4 +942,51 @@ async fn export_markdown_and_json() {
     let back: Report = serde_json::from_str(&j).unwrap();
     assert_eq!(back.server_id, "servidor-1");
     assert_eq!(back.findings.len(), r.findings.len());
+}
+
+// ───────────── Volver a analizar una imagen («Actualizar imagen») ─────────────
+
+#[tokio::test]
+async fn rescan_replaces_only_that_image() {
+    let mut input = debian_input();
+    input.use_osv = false;
+    input.elevated = true;
+    let listing = "@@images\ndd89c878aa26\tdocker.io/library/rockylinux:9.0\n@@containers\nc1c1c1c1c1c1\tapp\tdd89c878aa26ffff\trunning\n@@end\n";
+    let trivy = format!("@@os\n{}\n@@trivyver\nVersion: 0.76.2\n@@trivy\n{}@@rc 0\n@@end\n", fx!("os-release-rockylinux.txt"), fx!("trivy-rootfs-rocky90.tsv"));
+    input.images = vec![
+        ImageRaw { engine: Some(Engine::Podman), user: Some("ana".into()), listing: Some(listing.into()), ..Default::default() },
+        ImageRaw { engine: Some(Engine::Podman), user: Some("ana".into()), image_id: "dd89c878aa26".into(), output: Some(raw(trivy)), ..Default::default() },
+    ];
+    let p = no_progress();
+    let base = analyze::<FakeOsv>(&input, None, &OsvCache::none(), &CancellationToken::new(), &p).await.unwrap();
+    let old_key = "image:podman:ana:dd89c878aa26";
+    let system = base.findings.iter().filter(|f| f.target == "system").count();
+    assert!(base.findings.iter().any(|f| f.target == old_key));
+
+    // La imagen nueva (otro id, misma etiqueta) ya no tiene nada.
+    let listing = "@@images\neeeeeeeeeeee\tdocker.io/library/rockylinux:9.0\n@@containers\nc2c2c2c2c2c2\tapp\teeeeeeeeeeeeffff\trunning\n@@end\n";
+    let out = format!("@@os\n{}\n@@trivyver\nVersion: 0.76.2\n@@trivy\n@@rc 0\n@@end\n", fx!("os-release-rockylinux.txt"));
+    let partial_input = ScanInput {
+        server_id: base.server_id.clone(),
+        images: vec![
+            ImageRaw { engine: Some(Engine::Podman), user: Some("ana".into()), listing: Some(listing.into()), ..Default::default() },
+            ImageRaw { engine: Some(Engine::Podman), user: Some("ana".into()), image_id: "eeeeeeeeeeee".into(), output: Some(raw(out)), ..Default::default() },
+        ],
+        elevated: true,
+        ..Default::default()
+    };
+    let partial = analyze::<FakeOsv>(&partial_input, None, &OsvCache::none(), &CancellationToken::new(), &p).await.unwrap();
+    let m = super::analyze::merge_rescan(&base, old_key, &partial);
+    assert_ne!(m.id, base.id);
+    assert!(m.targets.iter().all(|t| t.key != old_key), "la imagen vieja se quita");
+    let t = m.targets.iter().find(|t| t.key == "image:podman:ana:eeeeeeeeeeee").unwrap();
+    assert_eq!(t.image.as_ref().unwrap().containers[0].name, "app");
+    assert!(m.findings.iter().all(|f| f.target != old_key));
+    assert_eq!(m.findings.iter().filter(|f| f.target == "system").count(), system, "el sistema no cambia");
+    assert!(m.targets.iter().any(|t| t.key == "system"));
+    assert_eq!(m.summary.total + m.summary.unimportant, m.findings.len() as u32);
+    assert!(m.summary.total < base.summary.total);
+    assert!(m.notes.iter().any(|n| n.text.contains("Actualizar imagen")));
+    // Solo los avisos de imágenes del análisis parcial (no «detección incompleta», etc.).
+    assert!(!m.notes.iter().any(|n| n.text.contains("detección")));
 }

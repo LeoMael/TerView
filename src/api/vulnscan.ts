@@ -66,7 +66,9 @@ export type ScriptRequest =
   | { kind: "inventory" }
   | { kind: "distro"; tool: DistroTool; codename: string | null }
   | { kind: "images"; engine: Engine; user: UserCtx | null }
-  | { kind: "image"; engine: Engine; user: UserCtx | null; imageId: string; trivy: boolean };
+  | { kind: "image"; engine: Engine; user: UserCtx | null; imageId: string; trivy: boolean }
+  /** «Actualizar imagen»: comandos ya revisados por el usuario, como el dueño de la imagen. */
+  | { kind: "asOwner"; engine: Engine; user: UserCtx | null; script: string };
 
 /** Qué hacer tras la fase 1. */
 export interface ScanPlan {
@@ -328,6 +330,12 @@ export const vulnscan = {
     call<void>("vulnscan_export", { serverId, reportId, path, format, serverName }),
   /** Descripción completa y enlaces (caché de OSV o la API). */
   detail: (id: string) => call<VulnDetail>("vulnscan_vuln_detail", { id }),
+  /**
+   * Vuelve a analizar solo las imágenes de `images` (tras «Actualizar imagen») y las pone en lugar de
+   * `oldKey` en el informe `reportId`. Se guarda como un análisis nuevo. Progreso y cancelación como `analyze`.
+   */
+  rescanImage: (serverId: string, reportId: string, oldKey: string, images: ImageRaw[], useOsv: boolean, scanId: string) =>
+    call<Report>("vulnscan_rescan_image", { serverId, reportId, oldKey, images, useOsv, scanId }),
   onProgress: (cb: (p: ProgressPayload) => void): Promise<UnlistenFn> =>
     listen<ProgressPayload>("vulnscan://progress", (e) => cb(e.payload)),
 };

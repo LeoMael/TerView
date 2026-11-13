@@ -387,6 +387,29 @@ fn programs(inv: &Inventory, os: &OsRelease, out_q: &mut Vec<QueryUse>) -> Vec<P
     list
 }
 
+/// Resumen (cuántas de cada gravedad) de una lista de hallazgos.
+pub fn summary_of(findings: &[Finding]) -> Summary {
+    let mut summary = Summary::default();
+    for f in findings {
+        if f.unimportant {
+            summary.unimportant += 1;
+            continue;
+        }
+        summary.total += 1;
+        if f.has_fix {
+            summary.with_fix += 1;
+        }
+        match f.severity {
+            Severity::Critical => summary.critical += 1,
+            Severity::High => summary.high += 1,
+            Severity::Medium => summary.medium += 1,
+            Severity::Low => summary.low += 1,
+            Severity::Unknown => summary.unknown += 1,
+        }
+    }
+    summary
+}
+
 fn image_label(img: &ImageInfo, user: Option<&str>) -> String {
     let name = img.tags.first().map(|t| t.as_str()).unwrap_or("(sin etiqueta)");
     match user {
@@ -694,24 +717,7 @@ pub async fn analyze<A: OsvApi>(
     }
     all_targets.extend(targets);
 
-    let mut summary = Summary::default();
-    for f in &findings {
-        if f.unimportant {
-            summary.unimportant += 1;
-            continue;
-        }
-        summary.total += 1;
-        if f.has_fix {
-            summary.with_fix += 1;
-        }
-        match f.severity {
-            Severity::Critical => summary.critical += 1,
-            Severity::High => summary.high += 1,
-            Severity::Medium => summary.medium += 1,
-            Severity::Low => summary.low += 1,
-            Severity::Unknown => summary.unknown += 1,
-        }
-    }
+    let summary = summary_of(&findings);
 
     let mut sources = vec![SourceInfo {
         id: SourceId::Osv,
@@ -765,4 +771,41 @@ pub async fn analyze<A: OsvApi>(
         ai: None,
         osv_sample: sample.into_iter().collect(),
     })
+}
+
+/// Tras «Actualizar imagen»: el informe `base` con la imagen `old_key` sustituida por las imágenes
+/// recién leídas de `partial` (un análisis que solo trae esas imágenes). Es un informe nuevo (otro id y
+/// otra fecha); el resto (sistema, programas, otras imágenes) se copia tal cual.
+pub fn merge_rescan(base: &Report, old_key: &str, partial: &Report) -> Report {
+    let new_keys: BTreeSet<&str> = partial.targets.iter().filter(|t| t.kind == TargetKind::Image).map(|t| t.key.as_str()).collect();
+    let drop = |k: &str| k == old_key || new_keys.contains(k);
+    let mut targets: Vec<Target> = base.targets.iter().filter(|t| !drop(&t.key)).cloned().collect();
+    targets.extend(partial.targets.iter().filter(|t| t.kind == TargetKind::Image).cloned());
+    let mut findings: Vec<Finding> = base.findings.iter().filter(|f| !drop(&f.target)).cloned().collect();
+    findings.extend(partial.findings.iter().filter(|f| new_keys.contains(f.target.as_str())).cloned());
+    let mut notes = base.notes.clone();
+    notes.extend(partial.notes.iter().filter(|n| n.phase == "images" && n.level != NoteLevel::Info).cloned());
+    let label = partial.targets.iter().find(|t| t.kind == TargetKind::Image).map(|t| t.label.clone()).unwrap_or_else(|| old_key.to_string());
+    notes.push(ScanNote::new("images", NoteLevel::Info, format!("{label}: vuelta a analizar tras «Actualizar imagen»")));
+    let mut sources = base.sources.clone();
+    for s in sources.iter_mut().filter(|s| !s.used) {
+        if let Some(p) = partial.sources.iter().find(|p| p.id == s.id && p.used) {
+            *s = p.clone();
+        }
+    }
+    let mut sample: BTreeSet<OsvQueryView> = base.osv_sample.iter().cloned().collect();
+    sample.extend(partial.osv_sample.iter().cloned());
+    Report {
+        id: uuid::Uuid::new_v4().to_string(),
+        created_at: partial.created_at.clone(),
+        duration_ms: partial.duration_ms,
+        summary: summary_of(&findings),
+        targets,
+        findings,
+        notes,
+        sources,
+        osv_sample: sample.into_iter().collect(),
+        ai: None,
+        ..base.clone()
+    }
 }

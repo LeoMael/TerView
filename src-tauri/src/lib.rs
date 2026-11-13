@@ -208,6 +208,7 @@ pub fn run() {
             vulnscan::vulnscan_set_ai,
             vulnscan::vulnscan_export,
             vulnscan::vulnscan_vuln_detail,
+            vulnscan::vulnscan_rescan_image,
             // asistente de IA opcional (solo explica informes)
             ai::ai_status,
             ai::ai_set_token,

@@ -274,6 +274,34 @@ pub fn images_list_script(engine: Engine, user: Option<&UserCtx>) -> String {
     format!("{PATH_LINE}\n{body}\n")
 }
 
+/// «Actualizar imagen» (lo único del escáner que cambia algo, y solo tras confirmar en la interfaz):
+/// ejecuta `inner` (los comandos ya citados que se le mostraron al usuario) como el dueño de la imagen.
+/// - `user` = None: tal cual (el usuario conectado, o root si la interfaz eleva).
+/// - Podman de otro usuario: se entra como él igual que al analizar (`run_as`: su HOME y su
+///   XDG_RUNTIME_DIR, necesario también para `systemctl --user`).
+/// - Docker rootless de otro usuario: su demonio, por su socket (como al analizar).
+///
+/// Si el usuario no es válido no se ejecuta nada (nunca se cae a root por error). Sale con el código de `inner`.
+pub fn as_owner_script(engine: Engine, user: Option<&UserCtx>, inner: &str) -> String {
+    let inner = format!("{PATH_LINE}\n{inner}");
+    let body = match user {
+        None => inner,
+        Some(u) if !valid_user(u) => "echo 'Usuario no válido' >&2\nexit 1".to_string(),
+        Some(u) => match engine {
+            Engine::Podman => run_as(Some(u), false, &inner),
+            Engine::Docker => format!(
+                "s=/run/user/{uid}/docker.sock\n\
+                 if [ ! -S \"$s\" ]; then echo 'Docker rootless de este usuario: su demonio está parado' >&2; exit 1; fi\n\
+                 DOCKER_HOST=unix://$s; export DOCKER_HOST\n\
+                 sh -c {}",
+                sh_quote(&inner),
+                uid = u.uid
+            ),
+        },
+    };
+    format!("{PATH_LINE}\n{body}\n")
+}
+
 /// Docker rootless de otro usuario: su socket en /run/user/<uid>.
 fn docker_host(user: Option<&UserCtx>) -> String {
     match user.filter(|u| valid_user(u)) {

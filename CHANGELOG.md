@@ -6,6 +6,16 @@ siguen [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Sin publicar]
 
+### Añadido
+- **Escáner → «Actualizar imagen»**: en las vulnerabilidades de una imagen de Podman o Docker, un botón
+  que la actualiza de verdad y dice qué contenedores se recrean. Lee en el momento cómo se creó cada
+  contenedor: si es de **Compose**, hace `compose pull` y `compose up -d` en su carpeta; si lo arranca
+  **systemd/Quadlet**, descarga la imagen y reinicia la unidad; si se creó **a mano**, descarga la imagen
+  y abre el formulario «Nuevo contenedor» ya relleno para reemplazarlo (si el nuevo no arranca, vuelve el
+  viejo). Antes muestra los comandos exactos y pide confirmación; se ejecuta como el dueño de la imagen,
+  con su salida y «Cancelar». Al terminar vuelve a analizar esa imagen y avisa si todavía tiene
+  vulnerabilidades.
+
 ## [0.5.0] - 2026-11-12
 
 ### Añadido

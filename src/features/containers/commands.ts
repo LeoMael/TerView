@@ -62,8 +62,20 @@ export const COMPOSE_FILES = ["compose.yaml", "compose.yml", "docker-compose.yam
 
 export type ComposeAction = "up" | "down" | "restart" | "pull" | "logs" | "services" | "ps" | "stop" | "start";
 
-export function composeCmd(tool: ComposeTool, dir: string, file: string, action: ComposeAction, opts: { volumes?: boolean; tail?: number } = {}): Cmd {
-  const base = file ? ["-f", file] : [];
+export interface ComposeOpts {
+  volumes?: boolean;
+  tail?: number;
+  /** Nombre del proyecto (`-p`), para no crear otro si se arrancó con un nombre distinto al de la carpeta. */
+  project?: string;
+  /** Solo estos servicios (up, pull, restart, stop, start). */
+  services?: string[];
+}
+
+/** `file`: un archivo, varios (cada uno con `-f`) o "" para el de la carpeta. */
+export function composeCmd(tool: ComposeTool, dir: string, file: string | string[], action: ComposeAction, opts: ComposeOpts = {}): Cmd {
+  const files = (Array.isArray(file) ? file : [file]).filter(Boolean);
+  const base = [...(opts.project ? ["-p", opts.project] : []), ...files.flatMap((f) => ["-f", f])];
+  const svc = ["up", "pull", "restart", "stop", "start"].includes(action) ? (opts.services ?? []) : [];
   const args: Record<ComposeAction, string[]> = {
     up: ["up", "-d"],
     down: ["down", ...(opts.volumes ? ["-v"] : [])],
@@ -75,7 +87,7 @@ export function composeCmd(tool: ComposeTool, dir: string, file: string, action:
     services: ["config", "--services"],
     ps: ["ps"],
   };
-  return { bin: composeBin(tool), args: [...base, ...args[action]], cwd: dir, mergeStderr: action === "logs" };
+  return { bin: composeBin(tool), args: [...base, ...args[action], ...svc], cwd: dir, mergeStderr: action === "logs" };
 }
 
 /** Compose preferido para el motor (el primero disponible). */

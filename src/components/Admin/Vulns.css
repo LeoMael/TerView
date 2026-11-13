@@ -478,3 +478,63 @@
   padding: 4px 6px;
   border-top: 1px solid var(--border);
 }
+
+/* «Actualizar imagen» (detalle y diálogo) */
+.vs-d-recreate {
+  margin: 4px 0;
+  font-size: var(--fs-sm);
+}
+.vs-up {
+  user-select: text;
+}
+.vs-up-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin-bottom: 8px;
+  word-break: break-all;
+}
+.vs-up-progress {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0;
+  color: var(--text-muted);
+}
+.vs-up-groups {
+  margin: 4px 0 8px;
+  padding-left: 18px;
+  font-size: var(--fs-sm);
+  line-height: 1.6;
+}
+.vs-up-manual {
+  color: var(--orange);
+}
+.vs-up-recreate {
+  margin: 4px 0 8px;
+}
+.vs-up-steps {
+  list-style: none;
+  margin: 8px 0;
+  padding: 0;
+  font-size: var(--fs-sm);
+}
+.vs-up-steps li {
+  margin-bottom: 4px;
+}
+.vs-up-step {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.vs-up-steps .ct-cmd {
+  margin: 4px 0 6px 19px;
+}
+.vs-up-ok {
+  padding: 6px 10px;
+  margin: 6px 0;
+  border-left: 3px solid var(--green);
+  background: var(--mix-green-14);
+  font-size: var(--fs-sm);
+}

@@ -2,7 +2,19 @@
 // Ejecutar: npx rolldown src/features/vulnscan/vulnscan.test.ts -p node -f esm -o /tmp/vt.mjs && node /tmp/vt.mjs
 import type { Finding, Report, Target } from "../../api/vulnscan";
 import { buildAiMessages, buildAiPayload, DEFAULT_AI_OPTIONS, stripRegistry } from "./aiPayload";
-import { fixSuggestion, kernelSuggestion } from "./fixCommand";
+import { fixSuggestion, kernelSuggestion, updatableTag } from "./fixCommand";
+import {
+  canUpdateImage,
+  ownerOf,
+  parseRead,
+  planUpdate,
+  readScript,
+  replaceScript,
+  rescanMessage,
+  runFormFrom,
+  stepScript,
+} from "./imageUpdate";
+import { validateRunForm } from "../containers/commands";
 
 let passed = 0;
 function eq<T>(got: T, want: T, what: string) {
@@ -175,6 +187,154 @@ eq(stripRegistry("equipo/app:1"), "equipo/app:1", "usuario de Docker Hub");
   const caddy = fixSuggestion(deb, finding({ package: "caddy", target: "runtime", upstream: true, binaries: ["/usr/local/bin/caddy"] }));
   eq(caddy.command, null, "programa suelto sin instalador conocido: sin comando");
   eq(fixSuggestion(deb, finding({ package: "x; rm -rf /", binaries: [] })).command, null, "nombres raros no llegan al comando");
+}
+
+
+// ── «Actualizar imagen» ──
+{
+  const IMG = "abcdef123456";
+  const FULL = `${IMG}${"0".repeat(52)}`;
+  const imgTarget = targets[2];
+  ok(canUpdateImage(imgTarget), "imagen con etiqueta: se puede actualizar");
+  eq(updatableTag({ ...imgTarget, image: { ...imgTarget.image!, tags: ["localhost/app:dev"] } }), null, "imagen local: sin botón");
+  ok(!canUpdateImage({ ...imgTarget, image: { ...imgTarget.image!, tags: [] } }), "sin etiqueta: sin botón");
+  ok(!canUpdateImage(targets[0]), "el sistema no");
+
+  eq(ownerOf(imgTarget, "leo", false), { kind: "user", name: "maria" }, "dueño: otro usuario");
+  eq(ownerOf(imgTarget, "maria", false), { kind: "self" }, "dueño: el conectado");
+  eq(ownerOf({ ...imgTarget, user: null }, "leo", false), { kind: "self" }, "sin dueño: el conectado");
+  eq(ownerOf({ ...imgTarget, user: "root" }, "leo", false), { kind: "root" }, "root con sudo");
+  eq(ownerOf({ ...imgTarget, user: "root" }, "root", true), { kind: "self" }, "conectado como root");
+
+  const rs = readScript("podman", "abc;rm -rf /");
+  ok(!rs.includes("rm -rf"), "el id de la imagen se limpia");
+  ok(readScript("docker", IMG).includes("docker compose version"), "Docker: busca docker compose");
+
+  const imageJson = JSON.stringify([
+    { Id: FULL, Config: { Env: ["PATH=/usr/bin", "NGINX_VERSION=1.25"], Cmd: ["nginx", "-g", "daemon off;"], Entrypoint: ["/docker-entrypoint.sh"], Labels: { maintainer: "x" } } },
+  ]);
+  const base = (name: string, extra: Record<string, unknown> = {}, labels: Record<string, string> = {}) => ({
+    Id: `${name}-id`,
+    Name: name,
+    Image: FULL,
+    ImageName: "registry.miempresa.local:5000/equipo/app:1.2",
+    State: { Running: true },
+    Config: { Env: ["PATH=/usr/bin", "NGINX_VERSION=1.25", "HOSTNAME=x", "container=podman", "HOME=/root", "APP_MODE=prod"], Cmd: ["nginx", "-g", "daemon off;"], Entrypoint: ["/docker-entrypoint.sh"], Labels: labels },
+    HostConfig: { RestartPolicy: { Name: "unless-stopped" }, NetworkMode: "bridge", Binds: [] },
+    NetworkSettings: { Networks: { podman: {} } },
+    Mounts: [],
+    ...extra,
+  });
+  const compose = (name: string, svc: string) =>
+    base(name, {}, {
+      "com.docker.compose.project": "tienda",
+      "com.docker.compose.project.working_dir": "/srv/tienda",
+      "com.docker.compose.project.config_files": "/srv/tienda/compose.yaml,/srv/tienda/compose.override.yaml",
+      "com.docker.compose.service": svc,
+    });
+  const runC = base("/web", {
+    HostConfig: {
+      RestartPolicy: { Name: "always" },
+      NetworkMode: "bridge",
+      Binds: ["/srv/web:/usr/share/nginx/html:ro,Z"],
+      PortBindings: { "80/tcp": [{ HostIp: "", HostPort: "8080" }], "443/tcp": [{ HostIp: "127.0.0.1", HostPort: "8443" }] },
+      Privileged: true,
+    },
+    NetworkSettings: { Networks: { web_net: {} } },
+    Mounts: [
+      { Type: "bind", Source: "/srv/web", Destination: "/usr/share/nginx/html", RW: false },
+      { Type: "volume", Name: "datos", Source: "/var/lib/containers/storage/volumes/datos/_data", Destination: "/data", RW: true },
+      { Type: "tmpfs", Destination: "/tmp" },
+    ],
+  });
+  const other = { ...base("ajeno"), Image: "ffff" + "0".repeat(60) };
+  const out = [
+    "@@tv:compose",
+    "podman compose",
+    "@@tv:image",
+    imageJson,
+    "@@tv:containers",
+    JSON.stringify([
+      compose("tienda-web-1", "web"),
+      compose("tienda-api-1", "api"),
+      base("cron", {}, { PODMAN_SYSTEMD_UNIT: "cron.service" }),
+      runC,
+      base("enpod", { Pod: "abc" }),
+      other,
+    ]),
+    "@@tv:end",
+  ].join("\n");
+  const read = parseRead(out, IMG);
+  ok(read.complete, "lectura completa");
+  eq(read.composeTools, ["podman compose"], "herramientas de Compose");
+  eq(read.containers.map((c) => c.name), ["tienda-web-1", "tienda-api-1", "cron", "web", "enpod"], "solo los de esta imagen; sin «/» en Docker");
+
+  const tag = updatableTag(imgTarget)!;
+  const plan = planUpdate({ engine: "podman", tag, tags: imgTarget.image!.tags, read, ownerIsRoot: false });
+  eq(plan.groups.map((g) => g.kind), ["compose", "systemd", "run", "manual"], "un grupo por camino; Compose una vez por proyecto");
+  eq(plan.recreated, ["tienda-web-1", "tienda-api-1", "cron", "web"], "se recrean");
+  const scripts = plan.steps.map(stepScript);
+  eq(scripts[0], "set -e\npodman pull registry.miempresa.local:5000/equipo/app:1.2", "primero el pull");
+  eq(
+    scripts[1],
+    "set -e\ncd /srv/tienda && podman compose -p tienda -f /srv/tienda/compose.yaml -f /srv/tienda/compose.override.yaml pull web api\n" +
+      "cd /srv/tienda && podman compose -p tienda -f /srv/tienda/compose.yaml -f /srv/tienda/compose.override.yaml up -d web api",
+    "Compose: pull + up -d en su carpeta, con sus archivos, su proyecto y sus servicios",
+  );
+  eq(scripts[2], "set -e\nsystemctl --user restart cron.service", "systemd de usuario (rootless)");
+  const asRoot = planUpdate({ engine: "podman", tag, tags: imgTarget.image!.tags, read, ownerIsRoot: true });
+  ok(asRoot.steps.some((s) => stepScript(s) === "set -e\nsystemctl restart cron.service"), "systemd de sistema (root)");
+  const man = plan.groups.find((g) => g.kind === "manual");
+  ok(man?.kind === "manual" && man.containers[0] === "enpod" && man.reason.includes("pod"), "pod: a mano");
+
+  // podman-compose sin instalar → a mano (otra herramienta duplicaría los contenedores).
+  const pc = parseRead(out.replace("podman compose", "").replace('"com.docker.compose.project":"tienda"', '"com.docker.compose.project":"tienda","io.podman.compose.project":"tienda"'), IMG);
+  const pcPlan = planUpdate({ engine: "podman", tag, tags: [tag], read: pc, ownerIsRoot: false });
+  ok(pcPlan.groups.some((g) => g.kind === "manual" && g.reason.includes("podman-compose")), "podman-compose sin instalar: a mano");
+
+  // Sin contenedores: solo el pull.
+  const empty = planUpdate({ engine: "docker", tag, tags: [tag], read: { complete: true, composeTools: [], image: null, containers: [] }, ownerIsRoot: true });
+  eq(empty.steps.map(stepScript), ["set -e\ndocker pull registry.miempresa.local:5000/equipo/app:1.2"], "sin contenedores: solo el pull");
+  ok(empty.notes[0].includes("borrarla"), "sin contenedores: quizá basta con borrarla");
+
+  // Formulario relleno desde inspect.
+  const web = read.containers.find((c) => c.name === "web")!;
+  const { form, warnings } = runFormFrom(web, read.image, tag, "podman");
+  eq(form.name, "web", "mismo nombre");
+  eq(form.image, tag, "imagen");
+  eq(
+    form.ports.sort((a, b) => a.container.localeCompare(b.container)),
+    [
+      { host: "8443", container: "443", protocol: "tcp", localOnly: true },
+      { host: "8080", container: "80", protocol: "tcp", localOnly: false },
+    ],
+    "puertos (127.0.0.1 = solo local)",
+  );
+  eq(form.volumes, [
+    { source: "/srv/web", target: "/usr/share/nginx/html", readOnly: true },
+    { source: "datos", target: "/data", readOnly: false },
+  ], "carpetas y volúmenes");
+  ok(form.selinuxLabel, ":Z se mantiene");
+  eq(form.env, [{ key: "APP_MODE", value: "prod" }], "solo las variables propias (no las de la imagen ni las automáticas)");
+  eq(form.restart, "always", "reinicio");
+  eq(form.network, "web_net", "red propia");
+  eq(form.command, "", "mismo comando que la imagen: vacío");
+  ok(warnings.some((w) => w.includes("privilegiado")), "avisa de lo que no se copia (--privileged)");
+  ok(warnings.some((w) => w.includes("/tmp")), "avisa del tmpfs");
+  eq(validateRunForm(form), {}, "el formulario relleno es válido");
+  const custom = runFormFrom({ ...web, cmd: ["redis-server", "--save", "60 1"] }, read.image, tag, "podman").form;
+  eq(custom.command, "redis-server --save '60 1'", "comando propio, citado");
+
+  const rep = replaceScript("podman", "web", true, form);
+  ok(rep.includes("podman rename web web-viejo || exit 1"), "renombra el viejo");
+  ok(rep.includes("podman run -d --name web "), "crea el nuevo con el nombre original");
+  ok(rep.includes(`podman inspect --format '{{.State.Running}} {{.RestartCount}}' web 2>/dev/null)" != "true 0"`), "comprueba que sigue en marcha sin reiniciarse");
+  ok(rep.includes("podman rm web-viejo"), "si va bien, borra el viejo");
+  ok(rep.includes("podman rm -f web") && rep.includes("podman rename web-viejo web") && rep.includes("podman start web"), "si falla, vuelve al viejo");
+  ok(!replaceScript("docker", "web", false, form).includes("sleep"), "si estaba parado no espera a ver si sigue en marcha");
+
+  eq(rescanMessage(0), "La imagen nueva no tiene vulnerabilidades conocidas.", "sin vulnerabilidades");
+  ok(rescanMessage(3).startsWith("La imagen nueva todavía tiene 3 vulnerabilidades: el autor aún no la ha actualizado"), "siguen las vulnerabilidades");
 }
 
 console.log(`vulnscan.test.ts: ${passed} comprobaciones correctas`);

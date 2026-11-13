@@ -1,21 +1,60 @@
 // Panel lateral con el detalle de un hallazgo (o de la fila agrupada del kernel).
-import { useEffect, useState } from "react";
-import { Box, ExternalLink, RotateCcw, X } from "lucide-react";
+import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
+import { Box, CloudDownload, ExternalLink, RotateCcw, X } from "lucide-react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { errorMessage } from "../../api/core";
-import { vulnscan, type Finding, type Report, type VulnDetail as Detail } from "../../api/vulnscan";
-import { fixSuggestion, kernelSuggestion, targetOf, type FixSuggestion, type SudoTool } from "../../features/vulnscan";
+import { vulnscan, type Finding, type Report, type Target, type VulnDetail as Detail } from "../../api/vulnscan";
+import { canUpdateImage, fixSuggestion, kernelSuggestion, targetOf, type FixSuggestion, type SudoTool } from "../../features/vulnscan";
 import { toast } from "../../stores/toasts";
+import { useAdmin } from "./context";
 import { CommandActions, findingLinks, originLabel, SevTag, SOURCE_LABEL } from "./vulnUi";
+
+const ImageUpdateDialog = lazy(() => import("./ImageUpdateDialog").then((m) => ({ default: m.ImageUpdateDialog })));
 
 function open(url: string) {
   openUrl(url).catch((e) => toast.error("No se pudo abrir el enlace", e));
 }
 
-function Fix({ sessionId, fix }: { sessionId: string; fix: FixSuggestion }) {
+/** Botón «Actualizar imagen» y qué contenedores se recrean (según el último análisis). */
+function ImageUpdate({ report, target }: { report: Report; target: Target }) {
+  const { disabled } = useAdmin();
+  const [open, setOpen] = useState(false);
+  const names = target.image?.containers.map((c) => c.name) ?? [];
+  return (
+    <>
+      <div className="vs-d-actions">
+        <button
+          className="btn btn-sm btn-primary"
+          onClick={() => setOpen(true)}
+          disabled={disabled}
+          title="Descarga la versión nueva y recrea sus contenedores. Antes muestra los comandos y pide confirmación."
+        >
+          <CloudDownload size={12} /> Actualizar imagen
+        </button>
+      </div>
+      <p className="vs-d-recreate">
+        {names.length ? (
+          <>
+            Se recrean: <strong>{names.join(", ")}</strong>
+          </>
+        ) : (
+          <span className="faint">Ningún contenedor la usa: solo se descarga la versión nueva.</span>
+        )}
+      </p>
+      {open && (
+        <Suspense fallback={null}>
+          <ImageUpdateDialog report={report} target={target} onClose={() => setOpen(false)} />
+        </Suspense>
+      )}
+    </>
+  );
+}
+
+function Fix({ sessionId, fix, update }: { sessionId: string; fix: FixSuggestion; update?: ReactNode }) {
   return (
     <section className="vs-d-sec">
       <h4>Cómo arreglarlo</h4>
+      {update}
       {fix.command && (
         <>
           <pre className="mono vs-cmd">{fix.command}</pre>
@@ -29,7 +68,11 @@ function Fix({ sessionId, fix }: { sessionId: string; fix: FixSuggestion }) {
           {n}
         </p>
       ))}
-      <p className="vs-d-note faint">TerView nunca lo ejecuta: revísalo antes de pulsar Enter.</p>
+      <p className="vs-d-note faint">
+        {update
+          ? "«Actualizar imagen» muestra los comandos exactos y pide confirmación antes de ejecutar nada."
+          : "TerView no lo ejecuta: revísalo antes de pulsar Enter."}
+      </p>
     </section>
   );
 }
@@ -131,6 +174,7 @@ export function VulnDetail({
   if (!finding) return null;
   const f = finding;
   const fix = fixSuggestion(report, f, tool);
+  const target = targetOf(report, f);
   const links = findingLinks(report, f);
   const sevBits: string[] = [];
   if (f.distroSeverity) sevBits.push(`${f.upstream || targetOf(report, f)?.kind === "image" ? "Base" : "Distro"}: ${f.distroSeverity}`);
@@ -179,7 +223,7 @@ export function VulnDetail({
         {f.unimportant && <p className="vs-d-note">La distro lo considera sin importancia (no suele afectar en la práctica).</p>}
         {f.upstream && <p className="vs-d-note">Programa sin paquete de la distro: se compara su versión de origen, el resultado es aproximado.</p>}
         <Containers report={report} f={f} />
-        <Fix sessionId={sessionId} fix={fix} />
+        <Fix sessionId={sessionId} fix={fix} update={target && canUpdateImage(target) ? <ImageUpdate report={report} target={target} /> : undefined} />
         <section className="vs-d-sec">
           <h4>Descripción</h4>
           {loading && <span className="spinner adm-spinner-btn" aria-label="Cargando" />}

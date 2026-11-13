@@ -948,7 +948,8 @@ Contenido:
   - zypper: `sudo zypper patch --cve=<CVE>`;
   - kernel: además «reinicia» y cómo comprobarlo (`needs-restarting -r`, `/var/run/reboot-required`);
   - imagen: «actualiza la imagen y recrea sus contenedores» (`podman pull <img>` y, si viene de Compose,
-    `podman compose up -d`); nunca `apt` dentro de un contenedor;
+    `podman compose up -d`); nunca `apt` dentro de un contenedor. Además, el botón **«Actualizar imagen»**
+    lo hace de verdad, tras mostrar los comandos y pedir confirmación ([10.17](#1017-botón-actualizar-imagen--hecho-sin-publicar));
   - runtime suelto: el comando de su instalador (`nvm install <versión>`, `pyenv install …`).
 - **Historial**: lista de análisis del servidor (fecha, totales, fuentes); abrir uno antiguo y comparar.
 - **Exportar**: JSON (el mismo formato del historial) y Markdown (resumen + tabla por gravedad). Diálogo
@@ -1055,6 +1056,8 @@ TSV, `zypper --xmlout list-patches`.
   y la «Actividad del asistente» con el botón Detener durante un análisis en la app real.
 - La IA: que modelos distintos respeten «no inventes CVE». Por eso el panel lo marca como texto de IA y
   la tabla nunca se toca.
+- **«Actualizar imagen»** (10.17): el camino de `run` y el de Compose se probaron con Podman en este PC;
+  falta probar systemd/Quadlet, Docker, `podman-compose`, otro usuario con sudo y el diálogo con el ratón.
 
 ### 10.15 Pruebas
 
@@ -1131,3 +1134,49 @@ el diseño y respuestas reales de OSV en `fixtures/osv/`).
 - **Kernel**: `linux-signed-*` se consulta también como `linux` (o `linux-hwe-…`).
 - **Runtimes de `$HOME`**: solo los del usuario conectado (con sudo no se miran los de otros usuarios).
 - **Docker**: `docker ps` no da el id de imagen; los contenedores se relacionan con `docker inspect`.
+
+### 10.17 Botón «Actualizar imagen» — hecho (sin publicar)
+
+En el detalle de un hallazgo de una **imagen de Podman o Docker** hay un botón **«Actualizar imagen»** y,
+debajo, qué contenedores se recrean («Se recrean: web, api»). Es lo único del escáner que cambia algo, y
+siempre después de mostrar los comandos exactos y pedir confirmación. No es una herramienta del MCP.
+
+Al pulsarlo:
+1. **Lee en el momento** (como el dueño de la imagen) los contenedores que la usan, con `inspect`, y qué
+   Compose hay. Así no depende de un informe viejo.
+2. **Elige el camino de cada contenedor** y los agrupa:
+   - **Compose** (etiquetas `com.docker.compose.*` con su carpeta): `compose pull` + `compose up -d` en
+     esa carpeta, con sus archivos (`-f`), su proyecto (`-p`) y solo sus servicios. Una vez por proyecto.
+     Si se creó con `podman-compose` y no está instalado, queda «a mano» (otra herramienta pondría otros
+     nombres y duplicaría los contenedores).
+   - **systemd / Quadlet** (Podman, etiqueta `PODMAN_SYSTEMD_UNIT`): `pull` + `systemctl restart` de la
+     unidad (`--user` si el dueño no es root; para otro usuario se entra como él con su
+     `XDG_RUNTIME_DIR`).
+   - **Creado con `run` a mano**: `pull` y después el formulario **«Nuevo contenedor» ya relleno** (nombre,
+     puertos, volúmenes, variables, reinicio, red, comando y `:Z`) en modo «reemplazar». Al confirmar: el
+     viejo pasa a `<nombre>-viejo` y se para; se crea el nuevo con el nombre original; si sigue en marcha
+     a los 5 s sin reiniciarse, se borra el viejo; si no, se borra el nuevo, el viejo recupera su nombre y
+     se arranca. Lo que no se copia (otro `--entrypoint`, `--user`, `--privileged`, `--cap-add`,
+     dispositivos, límites, DNS, etiquetas propias, tmpfs, varias redes…) se lista antes de confirmar.
+   - **A mano**: pods, Docker Swarm, Compose sin carpeta o sin la herramienta.
+   - **Sin contenedores**: solo el `pull` (y la nota de que quizá basta con borrarla).
+   - **Imagen local o sin etiqueta**: no hay botón; queda la nota de reconstruirla.
+3. **Ejecuta paso a paso** como el dueño (el conectado, root o, con sudo, otro usuario: `runuser`/`sudo -u`
+   como al analizar), con la salida de cada paso y **Cancelar**. Usa la contraseña de sudo guardada.
+4. **Vuelve a analizar solo esa imagen** (su id nuevo) y la pone en lugar de la vieja en un informe nuevo
+   del historial. Si siguen las vulnerabilidades: «La imagen nueva todavía tiene N vulnerabilidades: el
+   autor aún no la ha actualizado o la etiqueta es vieja (prueba una más nueva).» Si falla, botón
+   «Volver a escanear».
+
+Cómo está hecho:
+- Lógica pura y probada en `src/features/vulnscan/imageUpdate.ts` (elegir el camino, comandos, formulario
+  desde `inspect`, script de reemplazo); ejecución en `updateRun.ts`; diálogo en
+  `src/components/Admin/ImageUpdateDialog.tsx`. Reutiliza de Contenedores `pullImage`, `composeCmd` (ahora
+  acepta varios `-f`, `-p` y servicios), `runCmd`, `validateRunForm` y los campos del formulario
+  (`RunFormFields.tsx`, sacados de `RunDialog`).
+- En el motor: `vulnscan_script` con `asOwner` (envuelve los comandos para el dueño, reutilizando
+  `run_as`; con un usuario no válido no ejecuta nada) y `vulnscan_rescan_image` (analiza solo esas
+  imágenes y las junta con el informe: `merge_rescan`).
+- Pruebas: `vulnscan.test.ts` (84 comprobaciones), `cargo test --lib vulnscan` (35). A mano en este PC con
+  Podman 6.1.3: lectura, formulario relleno y reemplazo (bien y con vuelta al viejo cuando el nuevo falla),
+  y `podman compose up -d` con `-p`/`-f` sin duplicar contenedores.

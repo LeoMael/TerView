@@ -1,5 +1,7 @@
 // Comando sugerido para arreglar un hallazgo. Solo texto para copiar o insertar en la terminal (sin
-// Enter): TerView nunca lo ejecuta. Funciones puras, sin React ni Tauri.
+// Enter): TerView no lo ejecuta. La única excepción es el botón «Actualizar imagen» de las imágenes
+// de contenedores (ver imageUpdate.ts), que muestra los comandos exactos y pide confirmación antes.
+// Funciones puras, sin React ni Tauri.
 import type { Finding, Report, Target } from "../../api/vulnscan";
 
 /** Cómo se eleva en el servidor: "sudo", "doas" o "" (ya es root). */
@@ -13,7 +15,7 @@ export interface FixSuggestion {
 }
 
 /** Nombre de paquete o referencia de imagen seguros para el shell (sin espacios ni caracteres raros). */
-const SAFE = /^[A-Za-z0-9][A-Za-z0-9._+:@/~=-]*$/;
+export const SAFE = /^[A-Za-z0-9][A-Za-z0-9._+:@/~=-]*$/;
 
 function safe(list: string[]): string[] {
   return [...new Set(list.filter((x) => SAFE.test(x)))];
@@ -108,11 +110,16 @@ function runtimeCommand(f: Finding): FixSuggestion {
   };
 }
 
+/** Etiqueta de la imagen que se puede volver a descargar (null si es local o no tiene etiqueta). */
+export function updatableTag(t: Target | undefined): string | null {
+  return t?.image?.tags.find((x) => SAFE.test(x) && !x.startsWith("localhost/") && !x.includes("<none>")) ?? null;
+}
+
 function imageCommand(report: Report, f: Finding): FixSuggestion {
   const t = targetOf(report, f);
   const img = t?.image;
   const engine = img?.engine ?? "podman";
-  const tag = img?.tags.find((x) => SAFE.test(x) && !x.startsWith("localhost/"));
+  const tag = updatableTag(t);
   const notes = [
     "Actualiza la imagen y vuelve a crear sus contenedores; no actualices paquetes dentro de un contenedor (se pierde al recrearlo).",
   ];
