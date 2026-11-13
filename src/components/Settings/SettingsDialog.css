@@ -7,7 +7,7 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  width: 190px;
+  width: 240px;
   flex: none;
   padding-right: 12px;
   border-right: 1px solid var(--border);
@@ -236,7 +236,7 @@
 /* Ventanas estrechas: menú lateral más corto y controles que pueden bajar de línea. */
 @media (max-width: 720px) {
   .st-nav {
-    width: 140px;
+    width: 170px;
   }
   .st-row {
     flex-wrap: wrap;

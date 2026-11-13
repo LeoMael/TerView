@@ -93,8 +93,9 @@ export function SettingsDialog() {
       open
       title="Ajustes"
       onClose={close}
-      // Un 22 % más ancha que antes (720 px); en pantallas pequeñas, como mucho el 92 % de la ventana.
-      width="min(880px, 92vw)"
+      // Ancha para que quepan las secciones largas (MCP, terminal local e IA); en pantallas pequeñas,
+      // como mucho el 94 % de la ventana.
+      width="min(1080px, 94vw)"
       footer={
         <>
           <button className="btn st-reset" onClick={() => void resetAll()}>

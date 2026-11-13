@@ -1,7 +1,7 @@
 # TerView — Pendientes y próximas funciones
 
-Estado al 12/11/2026: versión publicada **0.3.0**; la que se publica ahora es la **0.5.0**. La 0.4.0
-no llegó a publicarse: lo marcado **v0.4.0** en este documento salió publicado en la 0.5.0 (en el
+Estado al 13/11/2026: versión publicada **0.5.0**. La 0.4.0
+no llegó a publicarse: lo marcado **v0.4.0** en este documento salió en la 0.5.0 (en el
 CHANGELOG todo va en la sección 0.5.0). Todo el plan de la sección 8 está construido:
 administración (usuarios, grupos, **puertos y sitios web**), monitor, túneles, contenedores, ejecutar en
 varios servidores, GitHub, versiones y actualizaciones. Los comandos que se ejecutan aparte ya se pueden
@@ -24,75 +24,62 @@ construidos y salen en la **0.5.0**.
 
 Al decir «continúa», empezar por aquí.
 
-**0. Publicar la 0.5.0.** El borrador `v0.5.0` en GitHub Releases ya tiene los instaladores de Linux y
-Windows; el de macOS se estaba generando (run «Publicar versión» de la etiqueta `v0.5.0`, commit `4233baf`).
-Comprobar con `gh release view v0.5.0`. Si macOS falló, ver el log con `gh run list --workflow release.yml`.
-El usuario lo publica a mano («Publish release»).
+**Estado.** La **0.5.0 está publicada** (13/11/2026). En `main`, sin publicar todavía (ver «Sin publicar» en el
+CHANGELOG): botón «Actualizar imagen» en el escáner, terminal local con Claude Code y Codex, añadir servidor
+dentro de un proyecto, sudo que usa siempre la contraseña guardada, Contenedores con sudo para todos los
+usuarios, Ajustes más anchos, y el logo nuevo en `docs/marca/sshorus/final/`.
 
-**1. Errores que vio el usuario al probar:**
-- ✅ **Arreglado.** **Proyecto → añadir servidor** abría la misma ventana que «Servidores», sin relación con el proyecto.
-  Debería crear el servidor ya dentro de ese proyecto (o dejar elegir el proyecto) y volver a él.
-- ✅ **Contenedores con sudo no ve todo** — **arreglado** (sin publicar). Selector «Usuario: tú / root /
-  ana / … / Todos» con la lista de usuarios del escáner (`users_script`). Cada contenedor, imagen,
-  volumen, red y comando lleva su dueño (`src/features/containers/owner.ts`); para otro usuario se ejecuta
-  con `as_owner_script` (el de «Actualizar imagen»), y con «Todos» se leen todos a la vez en un script
-  (`multiOwnerScript`, cada uno en segundo plano y con `timeout`). Probado en un contenedor
-  `quay.io/podman/stable` como root: listar los de root y de `ana` juntos, un usuario que falla sin
-  romper al resto, parar como `ana`, Compose en su HOME con permisos 700 y la terminal dentro del
-  contenedor de `ana` con TTY (`runuser … podman exec -it`). Falta probarlo en un servidor real con sudo
-  con contraseña y con Docker rootless.
-- ✅ **Pide contraseñas que ya están guardadas** «en varios casos» — **arreglado** (sin publicar).
-  Todo pasa por `obtainSudoPassword` (`src/features/privileges/stored.ts`, orden en `lookup.ts`): en
-  memoria → guardada → otra pestaña del mismo servidor → preguntar. `SudoDialog` la llama antes de mostrar
-  el formulario, así que Administración, Contenedores, el escáner y «Actualizar imagen» la usan sin
-  cambios. Causas: el diálogo salía mientras la guardada aún se comprobaba; con la guardada mala volvía a
-  abrirse cada vez que se entraba en la pestaña (nuevo estado `rejected`); tras desbloquear no se
-  releía si la lectura había fallado por estar bloqueado. Revisado y sin problema: reconexión SSH (lee
-  la bóveda en cada intento y espera al desbloqueo), ventanas aparte (solo el editor, que no usa sudo),
-  MCP y «ejecutar en varios servidores» (no usan la contraseña de sudo). **Falta probarlo con un
-  servidor real** (sudo con contraseña, guardada buena y mala, PIN bloqueado/desbloqueado, dos pestañas).
+**1. Cambiar el nombre a SSHorus (lo siguiente).** Decidido por el usuario: nombre **SSHorus**, logo del
+ojo de Horus con `>_` (`docs/marca/sshorus/final/`, ver `docs/marca/README.md`). Nadie más usa la app, así
+que **se cambia todo, sin migrar datos ni mantener compatibilidad con la 0.5.0**:
+- Textos de la app, README, manual, web, CHANGELOG (la versión nueva ya como SSHorus) y `docs/`.
+- Crate y binarios: `terview` → `sshorus`, `terview-mcp` → `sshorus-mcp`; nombre del servidor MCP
+  `terview` y variables `TERVIEW_MCP_TOKEN` / `TERVIEW_MCP_PORT` → `SSHORUS_…`; el contexto de la terminal
+  local (`src-tauri/src/localterm/`).
+- Identificador `com.terview.app` → `com.sshorus.app`, carpeta de configuración, servicio del llavero,
+  `vault.json`, `productName` y los nombres de los instaladores en `.github/workflows/release.yml`.
+- Iconos: `npx tauri icon docs/marca/sshorus/final/icono-app-1024.png`; luego poner `icono-app-24/32.png`
+  en los tamaños pequeños, el monocromo en la bandeja y `favicon.svg` en `public/`.
+- **Actualizador roto:** ni la 0.3.0 ni la 0.5.0 subieron `latest.json` ni las firmas `.sig`, así que la
+  app nunca encuentra versiones nuevas. Revisar `createUpdaterArtifacts`, la llave de firma en los secretos
+  de GitHub y que el workflow suba `latest.json`. Endpoint nuevo con el repo nuevo.
+- Renombrar el repositorio: `gh repo rename SSHorus` (el usuario lo autorizó) y `git remote set-url`.
+- Versión: proponer **0.6.0** (o 1.0.0) al usuario.
 
-**2. Pregunta del usuario: ¿es normal que un usuario sin sudo vea nginx, Caddy y todos los procesos?**
-Sí, en un Linux por defecto: `/proc` deja a cualquiera ver los procesos de todos, y los archivos de
-`/etc/nginx` y `/etc/caddy` suelen poder leerse por todos (los certificados y las llaves privadas no).
-Idea: añadir al escáner o a Administración un aviso de **endurecimiento**, por ejemplo: montar `/proc` con
-`hidepid=2`, dejar la configuración web con permisos 640, y revisar puertos expuestos y `PermitRootLogin`.
+**2. Probar en un servidor real** (todo pasó compilación y pruebas automáticas, pero no se abrió la app):
+- «Actualizar imagen»: systemd/Quadlet, Docker, `podman-compose`, imágenes de otro usuario.
+- sudo con contraseña: guardada buena y mala, bloquear y desbloquear el PIN, dos pestañas al mismo servidor.
+- Contenedores con sudo: varios usuarios, Docker rootless, `doas`. Con «Todos», crear y limpiar están
+  desactivados (hay que elegir un usuario arriba) para no crear cosas como root sin querer; preguntar si
+  le parece bien.
+- Proyecto → «+» / «Añadir servidor nuevo…» / «Añadir servidor existente».
+- Terminal local: Linux a mano; compilar y probar en Windows y macOS.
 
-**3. ✅ Hecho: terminal local (del PC) y asistentes de IA con contexto.** Pestañas «Este equipo» con un PTY
-local (`portable-pty`, módulo `src-tauri/src/localterm/`) y la misma vista xterm.js; botones «Claude Code» y
-«Codex» que detectan si están instalados (y ofrecen instalarlos mostrando el comando); contexto de TerView
-(servidores con alias de ssh, usuario, host, proyecto, pestaña que se miraba, fecha) y el MCP ya configurado,
-sin escribir nada en la carpeta del usuario; Ajustes → Terminal local e IA; «Enviar a la IA» en el menú de la
-terminal de servidor. Detalle en el README («Terminal local y asistentes de IA») y en el CHANGELOG.
-Quedó fuera o sin probar:
-- **Sin probar en la app real** (solo pruebas automáticas: PTY real en Linux, `claude`/`codex` reales
-  aceptando los argumentos). Falta probar a mano en Linux, y compilar y probar en **Windows** (ConPTY,
-  PowerShell, `taskkill /T`, Codex instalado con npm lanzado con node) y **macOS** (shell de login, PATH).
-- En macOS no hay `/proc`: al cerrar se termina el grupo de procesos y el sistema avisa (SIGHUP) al resto
-  de la sesión; un proceso que se cambie de grupo e ignore SIGHUP podría quedar vivo.
-- El contexto no dice qué **contenedores o sitios** tiene cada servidor (TerView no los guarda); el asistente
-  puede pedirlos con el MCP (`list_containers`, `list_sites`) o por ssh.
-- Las pestañas locales no se recuerdan al reiniciar la app (las de servidor tampoco).
-- Si el usuario ya tiene `developer_instructions` en `~/.codex/config.toml`, en esa sesión gana el de
-  TerView (Codex no permite sumar los dos con `-c`).
+**3. sudo: tres casos que quedaron fuera (preguntar al usuario):**
+- «Ejecutar en varios servidores» lanza los comandos con `sudo` sin contraseña: fallan si sudo la pide.
+- El escáner no avisa como el resto cuando la contraseña de sudo guardada es incorrecta (`sudoRejected`).
+- En modo «La de la conexión», la contraseña SSH escrita al conectar sin guardarla no se usa para sudo
+  (requiere cambios en Rust).
 
-**4. Nombre y logo nuevos.** Al usuario no le gustan ni «TerView» ni el logo actual. Le gustan
-**Argos** (el gigante de cien ojos que todo lo vigila; logo: pluma de pavo real cuyo ojo es una terminal) y
-la idea **SSHorus** (SSH + Horus; logo: el ojo de Horus con `>_`). Pasos:
-1. Comprobar si el nombre está libre en GitHub, crates.io, npm, dominios `.app`/`.dev` y en marcas parecidas
-   (Argos es una tienda grande del Reino Unido; Argus es nombre de varias herramientas de monitoreo).
-2. Hacer 3 propuestas de logo en `docs/marca/` (SVG y PNG, en claro y oscuro, y cómo se ve en pequeño).
-3. Renombrar **migrando los datos**: carpeta de configuración `~/.config/terview`, servicio del llavero
-   `terview`, `vault.json`, el id de la app `com.terview.app`, el repositorio y la URL del actualizador.
+**4. Endurecimiento.** Pregunta del usuario: ¿es normal que un usuario sin sudo vea nginx, Caddy y todos los
+procesos? Sí, en un Linux por defecto (`/proc` es visible para todos y `/etc/nginx`, `/etc/caddy` suelen
+leerse por todos; las llaves privadas no). Idea: aviso de endurecimiento en el escáner o en Administración:
+`/proc` con `hidepid=2`, configuración web con permisos 640, puertos expuestos y `PermitRootLogin`.
 
-Qué diferencia a la app (para el README y la web): no instala nada en los servidores, es cliente SSH y
-panel de administración a la vez (contenedores, usuarios, puertos, sitios, monitor, vulnerabilidades)
-para varios servidores, la IA trabaja con aprobación y con PIN, muestra el comando exacto antes de cada
-cambio, está en español y es gratis y de código abierto.
+**5. Plan (no programar aún): asistente en el servidor, para usarlo desde el celular.** Botón «Asistente en
+el servidor»: instalar Claude Code en el servidor con un **usuario aparte** (sudo solo para lo que se
+permita); sesión oficial (el enlace de `/login` o un token de `claude setup-token`, nunca copiar
+`~/.claude`); una carpeta con el contexto del servidor (sitios, logs para ver visitas, contenedores, cómo
+actualizar); `claude remote-control` como servicio para que siga activo; desde TerView ver si está activo,
+pararlo o quitarlo. Desde la app de Claude en el celular: «¿hay algo caído?», «¿cuántas visitas hoy?»,
+«actualiza la imagen de nginx», con aprobación en el celular. Codex tiene `codex remote-control`
+(experimental). Ojo: quien tenga root en el servidor podría usar la sesión.
 
-**5. Limpieza.** Quedan copias de trabajo (worktrees) que ya no hacen falta, todas unidas a main:
-`../TERVIEW-v050` (rama `v0.5.0`) y tres en `.claude/worktrees/`. El usuario pidió dejarlas por ahora.
-Para borrarlas: `git worktree remove <ruta>` y `git branch -d <rama>`.
+**6. Más adelante: app móvil propia.** Proyecto aparte, con la misma idea que la app de escritorio
+(monitorear y usar el asistente desde el celular).
+
+**7. Limpieza.** Quedan copias de trabajo viejas, ya unidas a main: `../TERVIEW-v050` (rama `v0.5.0`) y
+tres en `.claude/worktrees/`. Para borrarlas: `git worktree remove <ruta>` y `git branch -d <rama>`.
 
 **Forma de trabajar** (ver también la memoria): Claude coordina y los agentes programan; **pocos commits,
 uno por función terminada**; sin coautor; documentación visual en `docs/`; lenguaje simple y poco texto.
