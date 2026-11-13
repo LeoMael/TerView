@@ -66,6 +66,26 @@ procesos? Sí, en un Linux por defecto (`/proc` es visible para todos y `/etc/ng
 leerse por todos; las llaves privadas no). Idea: aviso de endurecimiento en el escáner o en Administración:
 `/proc` con `hidepid=2`, configuración web con permisos 640, puertos expuestos y `PermitRootLogin`.
 
+**4b. Idea: auditoría completa con un botón** (pedida por el usuario el 13/11/2026; incluye el
+endurecimiento del punto 4). Un botón **«Auditar servidor»** (y «Auditar proyecto» para varios a la vez) que
+revisa todo de una vez, sin instalar nada en el servidor, y al final da un **reporte**:
+- **Qué revisa:** vulnerabilidades (el escáner actual); SSH (`PermitRootLogin`, `PasswordAuthentication`,
+  llaves autorizadas); usuarios con sudo, sudo sin contraseña, cuentas sin contraseña; puertos abiertos al
+  exterior y cortafuegos; actualizaciones pendientes y reinicio pendiente; certificados de los sitios que
+  caducan pronto; contenedores como root, `--privileged` o con puertos expuestos; servicios caídos;
+  intentos de entrada fallidos (`journalctl`, `lastb`, fail2ban); disco y memoria; permisos de `/etc`,
+  archivos escribibles por todos, `cron`; `/proc` con `hidepid`.
+- **Sin IA:** comprobaciones fijas con resultado claro (bien / aviso / mal), una **nota por categoría** y
+  una nota general, y para cada problema el **comando exacto para arreglarlo** (con botón, mostrando antes
+  el comando, como «Actualizar imagen»).
+- **Con IA (opcional):** explica el reporte en lenguaje simple, ordena qué arreglar primero y propone
+  pasos; con la clave de API ya configurada o con el asistente de la terminal local. Enviar solo lo
+  necesario (sin contraseñas, llaves ni datos personales) y decir qué se envía.
+- **Reporte:** en pantalla, comparado con la auditoría anterior (qué mejoró o empeoró), y exportable
+  (HTML/PDF/Markdown). Historial por servidor. Más adelante: auditoría programada y aviso si algo empeora.
+- Reutilizar el escáner (`src-tauri/src/vulnscan/`), Administración (puertos, sitios, usuarios), Monitor y
+  Contenedores; también exponerlo por el MCP para el asistente.
+
 **5. Plan (no programar aún): asistente en el servidor, para usarlo desde el celular.** Botón «Asistente en
 el servidor»: instalar Claude Code en el servidor con un **usuario aparte** (sudo solo para lo que se
 permita); sesión oficial (el enlace de `/login` o un token de `claude setup-token`, nunca copiar
