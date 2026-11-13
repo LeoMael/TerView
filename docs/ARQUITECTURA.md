@@ -271,6 +271,11 @@ Librerías clave de la interfaz: `react`, `@xterm/xterm` (con WebGL), `@monaco-e
 - La autenticación puede encadenar llave, contraseña, agente y código 2FA. Si falta un dato, el
   motor lo dice (`NeedsPassword`, `NeedsPassphrase`, `NeedsOtp`), la interfaz lo pide y repite.
   Con "Recordar", el secreto se guarda en el llavero solo si la conexión funcionó. El código 2FA nunca se guarda.
+- **Probar conexión** (editor de servidor, `features/serverTest.ts`): `ssh_test_connection` recibe el
+  perfil y el secreto aún sin guardar (solo en memoria, nunca en disco ni en el registro), usa el mismo
+  `connect_full` (huella incluida), desconecta enseguida y no crea sesión. Tiempo límite 10 s;
+  `ssh_cancel_test` la corta. Si falta la contraseña o la frase, solo prueba red y huella (`skipped`).
+  Las sugerencias de host y el aviso de servidor repetido salen de `features/serverMatches.ts`.
 - El motor arranca el vigilante (`ssh/reconnect.rs`): señal de vida cada 10 s, caída tras 3 sin
   respuesta y reconexión automática en la misma pestaña (5 intentos por defecto).
 - Después, en segundo plano: la terminal abre su canal PTY, el explorador su canal SFTP al primer

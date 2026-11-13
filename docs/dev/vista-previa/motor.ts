@@ -103,6 +103,8 @@ const handlers: Record<string, (a: Args) => unknown> = {
     };
   },
   ssh_list_sessions: () => [],
+  ssh_test_connection: () => ({ skipped: null, elapsedMs: 420 }),
+  ssh_cancel_test: () => null,
 
   // Terminal
   term_open: (a) => {

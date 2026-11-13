@@ -137,13 +137,14 @@ export function ConnectDialogHost() {
 
   return (
     <>
-      {dialog}
       {(serverEditorOpen || projectEditorOpen) && (
         <Suspense fallback={null}>
           {serverEditorOpen && <ServerEditorHost />}
           {projectEditorOpen && <ProjectEditorHost />}
         </Suspense>
       )}
+      {/* Después de los editores: la huella de «Probar conexión» se ve encima del editor de servidor. */}
+      {dialog}
     </>
   );
 }

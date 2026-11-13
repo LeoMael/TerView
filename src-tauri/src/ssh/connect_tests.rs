@@ -443,3 +443,122 @@ fn needs_otp_prompt_text() {
     assert_eq!(super::prompt_text("  Verification code: "), "Verification code:");
     assert_eq!(super::prompt_text(""), "Código de verificación");
 }
+
+// ───────── Probar conexión (editor de servidor) ─────────
+
+fn local_profile(port: u16) -> crate::types::ServerProfile {
+    let mut p = test_profile();
+    p.host = "127.0.0.1".into();
+    p.port = port;
+    p
+}
+
+/// Puerto local que acepta la conexión TCP pero nunca habla SSH (como un servidor colgado).
+async fn silent_listener() -> u16 {
+    let l = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let port = l.local_addr().unwrap().port();
+    tokio::spawn(async move {
+        let mut held = Vec::new();
+        while let Ok((s, _)) = l.accept().await {
+            held.push(s);
+        }
+    });
+    port
+}
+
+#[tokio::test]
+async fn test_connection_port_closed() {
+    // Puerto libre: se abre y se cierra para que nadie escuche en él.
+    let port = {
+        let l = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        l.local_addr().unwrap().port()
+    };
+    let cancel = tokio_util::sync::CancellationToken::new();
+    let r = test_connection(&local_profile(port), pw("x"), HostKeyPolicy::AcceptAny, TEST_TIMEOUT, &cancel).await;
+    match r {
+        Err(AppError::Network(m)) => assert!(m.contains("rechazó"), "{m}"),
+        other => panic!("se esperaba Network, llegó {other:?}"),
+    }
+}
+
+#[tokio::test]
+async fn test_connection_times_out() {
+    let port = silent_listener().await;
+    let cancel = tokio_util::sync::CancellationToken::new();
+    let t0 = std::time::Instant::now();
+    let r = test_connection(
+        &local_profile(port),
+        pw("x"),
+        HostKeyPolicy::AcceptAny,
+        Duration::from_millis(300),
+        &cancel,
+    )
+    .await;
+    assert!(t0.elapsed() < Duration::from_secs(3));
+    match r {
+        Err(AppError::Network(m)) => assert!(m.contains("no respondió"), "{m}"),
+        other => panic!("se esperaba Network por tiempo, llegó {other:?}"),
+    }
+}
+
+#[tokio::test]
+async fn test_connection_can_be_canceled() {
+    let port = silent_listener().await;
+    let cancel = tokio_util::sync::CancellationToken::new();
+    let c = cancel.clone();
+    tokio::spawn(async move {
+        tokio::time::sleep(Duration::from_millis(100)).await;
+        c.cancel();
+    });
+    let t0 = std::time::Instant::now();
+    let r = test_connection(&local_profile(port), pw("x"), HostKeyPolicy::AcceptAny, TEST_TIMEOUT, &cancel).await;
+    assert!(matches!(r, Err(AppError::Canceled)), "{r:?}");
+    assert!(t0.elapsed() < Duration::from_secs(3));
+}
+
+#[tokio::test]
+async fn test_connection_requires_host_and_user() {
+    let cancel = tokio_util::sync::CancellationToken::new();
+    let mut p = local_profile(22);
+    p.host = "  ".into();
+    let r = test_connection(&p, pw("x"), HostKeyPolicy::AcceptAny, TEST_TIMEOUT, &cancel).await;
+    assert!(matches!(r, Err(AppError::Invalid(_))), "{r:?}");
+    let mut p = local_profile(22);
+    p.username = String::new();
+    let r = test_connection(&p, pw("x"), HostKeyPolicy::AcceptAny, TEST_TIMEOUT, &cancel).await;
+    assert!(matches!(r, Err(AppError::Invalid(_))), "{r:?}");
+}
+
+#[test]
+fn connection_test_serializes_for_the_ui() {
+    let t = ConnectionTest {
+        skipped: Some(AuthSkipped::Passphrase),
+        elapsed_ms: 12,
+    };
+    assert_eq!(
+        serde_json::to_value(&t).unwrap(),
+        serde_json::json!({ "skipped": "passphrase", "elapsedMs": 12 })
+    );
+}
+
+#[tokio::test]
+#[ignore]
+async fn test_connection_against_test_server() {
+    let tmp = TmpDir::new();
+    let cancel = tokio_util::sync::CancellationToken::new();
+    // Huella desconocida: no se acepta sola.
+    let policy = HostKeyPolicy::KnownHosts(tmp.kh());
+    let r = test_connection(&test_profile(), pw(TEST_PASSWORD), policy, TEST_TIMEOUT, &cancel).await;
+    assert!(matches!(r, Err(AppError::HostKeyUnknown(_))), "{r:?}");
+    let kh = trusted_kh(&tmp).await;
+    let policy = || HostKeyPolicy::KnownHosts(kh.clone());
+    // Todo correcto.
+    let r = test_connection(&test_profile(), pw(TEST_PASSWORD), policy(), TEST_TIMEOUT, &cancel).await;
+    assert_eq!(r.unwrap().skipped, None);
+    // Contraseña incorrecta.
+    let r = test_connection(&test_profile(), pw("mala"), policy(), TEST_TIMEOUT, &cancel).await;
+    assert!(matches!(r, Err(AppError::AuthFailed(_))), "{r:?}");
+    // Sin contraseña: solo red y huella.
+    let r = test_connection(&test_profile(), Credentials::default(), policy(), TEST_TIMEOUT, &cancel).await;
+    assert_eq!(r.unwrap().skipped, Some(AuthSkipped::Password));
+}

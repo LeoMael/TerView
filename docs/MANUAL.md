@@ -59,16 +59,19 @@ Este manual también está dentro de TerView: pulsa el botón **?** de la barra 
 **Cómo se usa:**
 
 1. En la barra lateral pulsa **+ Nuevo → Servidor**.
-2. Escribe **Nombre**, **Host**, **Puerto** y **Usuario**.
+2. Escribe **Nombre**, **Host**, **Puerto** y **Usuario**. Al escribir el host verás tus servidores guardados; elige uno para copiar su host y puerto.
 3. En **Autenticación** elige **Contraseña**, **Llave SSH** o **Agente SSH**.
 4. En **Contraseña de sudo** elige **Pedir cada vez**, **La de la conexión** o **Guardar**.
-5. Pulsa **Guardar** y haz **doble clic** en el servidor para conectarte.
+5. Pulsa **Guardar**. Antes de guardar, TerView prueba la conexión (máx. 10 s) y desconecta.
 6. La primera vez verás la huella del servidor: si es el tuyo, pulsa **Confiar y conectar**.
+7. Haz **doble clic** en el servidor para conectarte.
 
 **Notas:**
 
 - **Llave SSH**: elige la llave **privada** (sin `.pub`). Si tiene frase, escríbela y marca **Guardar la frase**.
 - **2FA**: si el servidor pide un código, sale la ventana **Código de verificación**. Escribe el código de tu app y pulsa **Verificar**.
+- **Probar conexión**: pruébala cuando quieras sin guardar. Si falla, verás el motivo (no se encuentra el host, puerto cerrado, contraseña o llave rechazada, huella cambiada) y puedes pulsar **Guardar de todos modos** (por ejemplo, si el servidor está apagado ahora). Al editar solo se prueba si cambias host, puerto, usuario o autenticación.
+- **Servidor repetido**: si ya tienes uno con el mismo host, puerto y usuario, verás «Ya tienes este servidor guardado como «X»» con **Abrir** para ir a ese.
 - **Terminales persistentes (tmux)**: **Automático**, **Siempre** o **Nunca**. Lo normal es dejar «Como en Ajustes».
 - Para entrar rápido sin guardar nada, escribe `usuario@host:puerto` en **Conexión rápida** y pulsa `Enter`.
 

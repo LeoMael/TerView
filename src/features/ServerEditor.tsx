@@ -1,11 +1,12 @@
 // Diálogo «Nuevo servidor / Editar servidor», ligado a useUi().serverEditor.
-import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { open as openFileDialog } from "@tauri-apps/plugin-dialog";
 import { homeDir, join } from "@tauri-apps/api/path";
-import { AlertTriangle, FolderOpen } from "lucide-react";
+import { AlertTriangle, Check, ChevronDown, CircleCheck, CircleX, FolderOpen, Info, PlugZap } from "lucide-react";
 import { Modal } from "../components/ui/Modal";
 import { profiles as profilesApi, sshAliases, type SshAliasInfo } from "../api/profiles";
 import { errorMessage } from "../api/core";
+import { ssh } from "../api/ssh";
 import type { AuthMethod, ServerProfile, SudoMode, TmuxMode } from "../api/types";
 import { useProfiles } from "../stores/profiles";
 import { useUi, type ServerEditorOptions } from "../stores/ui";
@@ -17,6 +18,8 @@ import { TMUX_MODE_HINTS, TMUX_MODE_LABELS } from "./tmux/logic";
 import { useSettings } from "../stores/settings";
 import { SecretInput } from "./SecretInput";
 import { initialProjectFor, projectChanges } from "./projectServers";
+import { findMatches, hostSuggestions, serverAddress, type ServerMatches } from "./serverMatches";
+import { describeTestOk, testServerConnection, type TestOutcome } from "./serverTest";
 
 /** Dónde van las contraseñas guardadas. */
 const SAVE_TIP = "Se guarda cifrada con tu PIN o, si no tienes PIN, en el llavero del sistema.";
@@ -97,6 +100,30 @@ function ServerEditor({
   const [hasSudoSecret, setHasSudoSecret] = useState<boolean | null>(null);
   const firstRef = useRef<HTMLInputElement>(null);
   const alias = useSshAlias(initial?.id ?? "", name, host);
+  const servers = useProfiles((s) => s.servers);
+  const selfId = initial?.id ?? "";
+  const matches = useMemo(() => findMatches(servers, selfId, host, port, username), [servers, selfId, host, port, username]);
+
+  // ── Probar conexión ──
+  /** Datos de conexión del formulario (sin el secreto): si cambian, hay que volver a probar. */
+  const connKey = (h: string, p: string, u: string, a: AuthMethod, k: string) =>
+    JSON.stringify([h.trim().toLowerCase(), Number(p) || 22, u.trim(), a, a === "key" ? k.trim() : ""]);
+  const [initialConnKey] = useState(() =>
+    connKey(initial?.host ?? "", String(initial?.port ?? 22), initial?.username ?? "", initial?.auth ?? "password", initial?.keyPath ?? ""),
+  );
+  const baseKey = connKey(host, port, username, auth, keyPath);
+  /** Firma de lo que se prueba (incluye el secreto escrito; solo vive en memoria). */
+  const testSig = JSON.stringify([baseKey, auth === "agent" ? "" : secret]);
+  /** Servidor nuevo, o al editar: cambió el host, puerto, usuario, autenticación o el secreto. */
+  const connChanged = isNew || baseKey !== initialConnKey || (auth !== "agent" && secret !== "");
+  const [test, setTest] = useState<{ sig: string; outcome: TestOutcome } | null>(null);
+  /** Prueba en curso: «manual» (botón) o «save» (al guardar). */
+  const [testing, setTesting] = useState<"manual" | "save" | null>(null);
+  const runRef = useRef<{ id: string | null; canceled: boolean; sig: string } | null>(null);
+  const testBoxRef = useRef<HTMLDivElement>(null);
+  /** Resultado de la última prueba si sigue valiendo para los datos actuales. */
+  const current = test && test.sig === testSig ? test.outcome : null;
+  const failedNow = current?.status === "error";
 
   useEffect(() => {
     firstRef.current?.focus();
@@ -150,24 +177,88 @@ function ServerEditor({
     }
   };
 
-  const save = async () => {
+  /** Servidor con los datos del formulario (para guardar o probar). */
+  const buildServer = (): ServerProfile => ({
+    id: initial?.id ?? "",
+    name: name.trim() || host.trim(),
+    host: host.trim(),
+    port: Number(port),
+    username: username.trim(),
+    auth,
+    keyPath: auth === "key" ? keyPath.trim() : null,
+    defaultPath: defaultPath.trim() || null,
+    color,
+    tmux,
+    sudoMode: sudoMode === "login" && auth !== "password" ? "ask" : sudoMode,
+  });
+
+  /** Cancela la prueba en curso. Devuelve si había una. */
+  const cancelTest = (): boolean => {
+    const run = runRef.current;
+    if (!run) return false;
+    run.canceled = true;
+    runRef.current = null;
+    if (run.id) ssh.cancelTest(run.id).catch(() => {});
+    setTesting(null);
+    setTest({ sig: run.sig, outcome: { status: "canceled" } });
+    return true;
+  };
+  // Al cerrar el editor no se deja ninguna prueba en marcha.
+  const cancelRef = useRef(cancelTest);
+  cancelRef.current = cancelTest;
+  useEffect(() => () => void cancelRef.current(), []);
+
+  useEffect(() => {
+    if (test) testBoxRef.current?.scrollIntoView({ block: "nearest" });
+  }, [test]);
+
+  /** Prueba la conexión con lo escrito (nada se guarda). null = datos incompletos o cancelada. */
+  const runTest = async (why: "manual" | "save"): Promise<TestOutcome | null> => {
+    const e = validate();
+    const connErrors: Errors = { host: e.host, port: e.port, username: e.username, keyPath: e.keyPath };
+    if (Object.values(connErrors).some(Boolean)) {
+      setErrors((old) => ({ ...old, ...connErrors }));
+      return null;
+    }
+    cancelRef.current();
+    const run = { id: null as string | null, canceled: false, sig: testSig };
+    runRef.current = run;
+    setTesting(why);
+    setTest(null);
+    const typed = auth === "agent" ? "" : secret;
+    const outcome = await testServerConnection(
+      buildServer(),
+      {
+        password: auth === "password" && typed ? typed : undefined,
+        passphrase: auth === "key" && typed ? typed : undefined,
+        // Al editar sin escribir el secreto: el ya guardado (si es del mismo método).
+        useSavedSecret: !isNew && !typed && !!hasSecret && initial?.auth === auth,
+      },
+      (id) => (run.id = id),
+      () => run.canceled,
+    );
+    if (runRef.current !== run) return null; // cancelada o cerrada
+    runRef.current = null;
+    setTesting(null);
+    setTest({ sig: run.sig, outcome });
+    return outcome.status === "canceled" ? null : outcome;
+  };
+
+  /** Guarda. Si cambiaron los datos de conexión, antes prueba la conexión (salvo `force`). */
+  const save = async (force = false) => {
+    if (testing) return;
     const e = validate();
     setErrors(e);
     if (Object.values(e).some(Boolean)) return;
 
-    const server: ServerProfile = {
-      id: initial?.id ?? "",
-      name: name.trim() || host.trim(),
-      host: host.trim(),
-      port: Number(port),
-      username: username.trim(),
-      auth,
-      keyPath: auth === "key" ? keyPath.trim() : null,
-      defaultPath: defaultPath.trim() || null,
-      color,
-      tmux,
-      sudoMode: sudoMode === "login" && auth !== "password" ? "ask" : sudoMode,
-    };
+    if (!force && connChanged) {
+      // Si ya se probó con estos mismos datos no se repite; si no (o se canceló), se prueba ahora.
+      const outcome = current && current.status !== "canceled" ? current : await runTest("save");
+      // Fallo: el resultado queda a la vista con «Guardar de todos modos».
+      if (!outcome || outcome.status !== "ok") return;
+    }
+
+    const server = buildServer();
 
     // Qué hacer con el llavero: undefined = no tocar, "" = borrar, texto = guardar.
     let newSecret: string | undefined;
@@ -229,8 +320,28 @@ function ServerEditor({
   const onEnter = (e: KeyboardEvent) => {
     if (e.key === "Enter" && !(e.target instanceof HTMLButtonElement)) {
       e.preventDefault();
-      void save();
+      void save(failedNow);
     }
+  };
+
+  /** Escape / cerrar con una prueba en marcha: primero se cancela la prueba. */
+  const close = () => {
+    if (!cancelTest()) onClose();
+  };
+
+  /** Abre el servidor ya guardado que coincide (descarta lo escrito aquí). */
+  const openExisting = (s: ServerProfile) => {
+    cancelTest();
+    useUi.getState().openServerEditor(s, { projectId: fromProjectId, onSaved });
+  };
+  /** Abierto desde un proyecto: añade a él el servidor ya guardado en vez de crear otro igual. */
+  const addExistingToProject = async (s: ServerProfile, projectToAdd: string) => {
+    const proj = useProfiles.getState().projects.find((x) => x.id === projectToAdd);
+    if (!proj || proj.serverIds.includes(s.id)) return;
+    cancelTest();
+    await saveProject({ ...proj, serverIds: [...proj.serverIds, s.id] });
+    onClose();
+    onSaved?.(s, proj.id);
   };
 
   const secretPlaceholder = hasSecret ? "•••••• (guardada; escribe para cambiarla)" : "";
@@ -239,16 +350,30 @@ function ServerEditor({
     <Modal
       open
       title={isNew ? "Nuevo servidor" : "Editar servidor"}
-      onClose={onClose}
+      onClose={close}
       width={520}
       footer={
         <>
-          <button className="btn" onClick={onClose}>
+          {testing ? (
+            <button className="btn cd-footer-left" onClick={() => cancelTest()}>
+              Cancelar prueba
+            </button>
+          ) : (
+            <button
+              className="btn cd-footer-left"
+              onClick={() => void runTest("manual")}
+              disabled={saving}
+              title="Conecta con estos datos, sin guardar nada, y desconecta (máx. 10 s)"
+            >
+              <PlugZap size={14} /> Probar conexión
+            </button>
+          )}
+          <button className="btn" onClick={close}>
             Cancelar
           </button>
-          <button className="btn btn-primary" onClick={() => void save()} disabled={saving}>
-            {saving ? <span className="spinner cd-btn-spinner" /> : null}
-            Guardar
+          <button className="btn btn-primary" onClick={() => void save(failedNow)} disabled={saving || testing !== null}>
+            {saving || testing === "save" ? <span className="spinner cd-btn-spinner" /> : null}
+            {testing === "save" ? "Probando conexión…" : failedNow ? "Guardar de todos modos" : "Guardar"}
           </button>
         </>
       }
@@ -298,21 +423,25 @@ function ServerEditor({
         </label>
 
         <div className="field-row">
-          <label className="field cd-grow">
-            <span>Host</span>
-            <input
-              className="input mono"
+          <div className="field cd-grow">
+            <span id="cd-host-label">Host</span>
+            <HostCombo
               value={host}
-              spellCheck={false}
-              autoCapitalize="off"
-              placeholder="servidor.com o 192.168.1.10"
-              onChange={(e) => {
-                setHost(e.target.value);
+              servers={servers}
+              selfId={selfId}
+              onChange={(v) => {
+                setHost(v);
                 clearErr("host");
+              }}
+              onPick={(s) => {
+                setHost(s.host.trim());
+                setPort(String(s.port || 22));
+                clearErr("host");
+                clearErr("port");
               }}
             />
             {errors.host && <div className="cd-err">{errors.host}</div>}
-          </label>
+          </div>
           <label className="field cd-port">
             <span>Puerto</span>
             <input
@@ -343,6 +472,13 @@ function ServerEditor({
           />
           {errors.username && <div className="cd-err">{errors.username}</div>}
         </label>
+
+        <MatchNote
+          matches={matches}
+          onOpen={openExisting}
+          addTo={isNew && projectId ? projects.find((p) => p.id === projectId) ?? null : null}
+          onAdd={(s, pid) => void addExistingToProject(s, pid)}
+        />
 
         <div className="field">
           <span>Autenticación</span>
@@ -431,6 +567,10 @@ function ServerEditor({
           <div className="cd-hint">Se usarán las llaves cargadas en tu agente SSH (ssh-agent).</div>
         )}
 
+        <div ref={testBoxRef}>
+          <TestResult testing={testing} outcome={current} auth={auth} onSaveAnyway={() => void save(true)} />
+        </div>
+
         <div className="field">
           <span>Contraseña de sudo</span>
           <div className="cd-segmented" role="radiogroup" aria-label="Contraseña de sudo">
@@ -505,6 +645,251 @@ function ServerEditor({
         </div>
       </div>
     </Modal>
+  );
+}
+
+// ───────── Host con sugerencias de los servidores guardados ─────────
+
+function HostCombo({
+  value,
+  servers,
+  selfId,
+  onChange,
+  onPick,
+}: {
+  value: string;
+  servers: readonly ServerProfile[];
+  selfId: string;
+  onChange: (v: string) => void;
+  onPick: (s: ServerProfile) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [hi, setHi] = useState(-1);
+  /** Al enfocar se ven todos; al escribir, solo los que coinciden. */
+  const [filterOn, setFilterOn] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const all = useMemo(() => hostSuggestions(servers, selfId), [servers, selfId]);
+  const shown = useMemo(
+    () => (filterOn && value.trim() ? hostSuggestions(servers, selfId, value) : all),
+    [all, servers, selfId, value, filterOn],
+  );
+  const show = open && shown.length > 0;
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (!wrapRef.current?.contains(e.target as Node)) setOpen(false);
+    };
+    window.addEventListener("mousedown", onDown);
+    return () => window.removeEventListener("mousedown", onDown);
+  }, [open]);
+
+  useEffect(() => {
+    if (hi >= 0) listRef.current?.children[hi]?.scrollIntoView({ block: "nearest" });
+  }, [hi]);
+
+  const pick = (s: ServerProfile) => {
+    onPick(s);
+    setOpen(false);
+    setHi(-1);
+  };
+
+  return (
+    <div className="cd-combo" ref={wrapRef}>
+      <input
+        id="cd-host"
+        aria-labelledby="cd-host-label"
+        className="input mono"
+        value={value}
+        spellCheck={false}
+        autoCapitalize="off"
+        autoComplete="off"
+        placeholder="servidor.com o 192.168.1.10"
+        role="combobox"
+        aria-expanded={show}
+        aria-controls="cd-host-list"
+        aria-autocomplete="list"
+        onChange={(e) => {
+          onChange(e.target.value);
+          setFilterOn(true);
+          setOpen(true);
+          setHi(-1);
+        }}
+        onFocus={() => {
+          setFilterOn(false);
+          setOpen(true);
+        }}
+        onBlur={() => setOpen(false)}
+        onKeyDown={(e) => {
+          if (e.key === "ArrowDown" && shown.length) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (!open) {
+              setOpen(true);
+              setHi(0);
+            } else setHi((h) => Math.min(shown.length - 1, h + 1));
+          } else if (e.key === "ArrowUp" && show) {
+            e.preventDefault();
+            e.stopPropagation();
+            setHi((h) => Math.max(0, h - 1));
+          } else if (e.key === "Enter" && show && hi >= 0 && shown[hi]) {
+            // Elegir la sugerencia, no guardar el formulario.
+            e.preventDefault();
+            e.stopPropagation();
+            pick(shown[hi]);
+          } else if (e.key === "Escape" && show) {
+            // Cerrar la lista sin cerrar el editor.
+            e.preventDefault();
+            e.stopPropagation();
+            setOpen(false);
+          }
+        }}
+      />
+      {all.length > 0 && (
+        <button
+          type="button"
+          className="cd-combo-btn"
+          tabIndex={-1}
+          title="Servidores guardados"
+          aria-label="Ver servidores guardados"
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => {
+            setFilterOn(false);
+            setOpen((o) => !o);
+          }}
+        >
+          <ChevronDown size={14} />
+        </button>
+      )}
+      {show && (
+        <div className="cd-combo-list" id="cd-host-list" ref={listRef} role="listbox" aria-label="Servidores guardados">
+          {shown.map((s, i) => {
+            const sel = s.host.trim().toLowerCase() === value.trim().toLowerCase();
+            return (
+              <div
+                key={s.id}
+                role="option"
+                aria-selected={sel}
+                className={`cd-combo-item${i === hi ? " hi" : ""}`}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => pick(s)}
+                onMouseEnter={() => setHi(i)}
+              >
+                <span className="cd-combo-name">{s.name || s.host}</span>
+                <span className="mono faint">{serverAddress(s)}</span>
+                {sel && <Check size={13} />}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Aviso de servidor repetido (mismo host, puerto y usuario) o del mismo host con otro usuario. */
+function MatchNote({
+  matches,
+  onOpen,
+  addTo,
+  onAdd,
+}: {
+  matches: ServerMatches;
+  onOpen: (s: ServerProfile) => void;
+  /** Proyecto al que se va a añadir el servidor nuevo (para ofrecer añadir el ya guardado). */
+  addTo: { id: string; name: string; serverIds: string[] } | null;
+  onAdd: (s: ServerProfile, projectId: string) => void;
+}) {
+  const { exact, sameHost } = matches;
+  if (exact) {
+    return (
+      <div className="ssha-inline warn cd-match" role="status">
+        <div className="ssha-inline-row">
+          <AlertTriangle size={13} />
+          <span>
+            Ya tienes este servidor guardado como «<strong>{exact.name || exact.host}</strong>».
+          </span>
+          <button type="button" className="ssha-linkbtn" onClick={() => onOpen(exact)}>
+            Abrir «{exact.name || exact.host}»
+          </button>
+          {addTo && !addTo.serverIds.includes(exact.id) && (
+            <button type="button" className="ssha-linkbtn" onClick={() => onAdd(exact, addTo.id)}>
+              Añadirlo a «{addTo.name}»
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+  if (sameHost.length === 0) return null;
+  const names = sameHost.slice(0, 3).map((s) => `«${s.name || s.host}» (${serverAddress(s)})`);
+  return (
+    <div className="ssha-inline cd-match" role="status">
+      <div className="ssha-inline-row">
+        <Info size={13} />
+        <span>
+          Este host ya está guardado: {names.join(", ")}
+          {sameHost.length > 3 ? ` y ${sameHost.length - 3} más` : ""}.
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/** Resultado de «Probar conexión» dentro del formulario. */
+function TestResult({
+  testing,
+  outcome,
+  auth,
+  onSaveAnyway,
+}: {
+  testing: "manual" | "save" | null;
+  outcome: TestOutcome | null;
+  auth: AuthMethod;
+  onSaveAnyway: () => void;
+}) {
+  if (testing) {
+    return (
+      <div className="cd-test" role="status">
+        <span className="spinner cd-btn-spinner" />
+        <span>
+          {testing === "save" ? "Probando la conexión antes de guardar…" : "Probando la conexión…"}{" "}
+          <span className="faint">(máx. 10 s)</span>
+        </span>
+      </div>
+    );
+  }
+  if (!outcome) return null;
+  if (outcome.status === "canceled") {
+    return (
+      <div className="cd-test" role="status">
+        <span className="faint">Prueba cancelada.</span>
+      </div>
+    );
+  }
+  if (outcome.status === "ok") {
+    const partial = outcome.result.skipped !== null;
+    return (
+      <div className={`cd-test ${partial ? "cd-test-partial" : "cd-test-ok"}`} role="status">
+        <CircleCheck size={15} />
+        <span>{describeTestOk(outcome.result, auth)}</span>
+      </div>
+    );
+  }
+  return (
+    <div className="cd-test cd-test-error" role="alert">
+      <CircleX size={15} />
+      <div className="cd-test-body">
+        <span>{outcome.message}</span>
+        <span className="cd-test-actions">
+          <span className="faint">¿Está apagado ahora? Puedes guardarlo igualmente.</span>
+          <button type="button" className="ssha-linkbtn" onClick={onSaveAnyway}>
+            Guardar de todos modos
+          </button>
+        </span>
+      </div>
+    </div>
   );
 }
 

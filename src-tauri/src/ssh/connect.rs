@@ -12,6 +12,7 @@ use russh::keys::agent::client::{AgentClient, AgentStream};
 use russh::keys::agent::AgentIdentity;
 use russh::keys::{PrivateKeyWithHashAlg, PublicKey};
 use russh::MethodKind;
+use serde::Serialize;
 use tokio::net::TcpStream;
 
 use crate::error::{AppError, AppResult};
@@ -111,14 +112,7 @@ pub(crate) async fn connect_full(
     policy: HostKeyPolicy,
     keepalive: Duration,
 ) -> AppResult<(SshSession, Arc<Mutex<SharedState>>)> {
-    let host = profile.host.trim().to_string();
-    if host.is_empty() {
-        return Err(AppError::Invalid("El servidor no tiene host configurado".into()));
-    }
-    if profile.username.trim().is_empty() {
-        return Err(AppError::Invalid("El servidor no tiene usuario configurado".into()));
-    }
-    let port = if profile.port == 0 { 22 } else { profile.port };
+    let (host, port) = target(profile)?;
 
     // Preparar la llave antes de abrir la red: errores de archivo/frase llegan antes.
     let key = match profile.auth {
@@ -127,23 +121,7 @@ pub(crate) async fn connect_full(
         _ => None,
     };
 
-    let stream = tcp_connect(&host, port).await?;
-    let handler = ClientHandler::new(&host, port, policy);
-    let shared = handler.shared.clone();
-    let config = Arc::new(client_config(keepalive));
-
-    let mut handle =
-        match tokio::time::timeout(HANDSHAKE_TIMEOUT, client::connect_stream(config, stream, handler))
-            .await
-        {
-            Err(_) => {
-                return Err(AppError::Network(format!(
-                    "{host}:{port} no completó la negociación SSH a tiempo"
-                )));
-            }
-            Ok(Err(e)) => return Err(handshake_error(&shared, &host, port, e)),
-            Ok(Ok(h)) => h,
-        };
+    let (mut handle, shared) = open_transport(&host, port, policy, keepalive).await?;
 
     let user = profile.username.trim().to_string();
     let mut ctx = AuthCtx {
@@ -183,6 +161,120 @@ pub(crate) async fn connect_full(
         connected_at: now_ms(),
     };
     Ok((SshSession { info, handle }, shared))
+}
+
+/// Host (sin espacios) y puerto (0 → 22) del perfil; error si falta el host o el usuario.
+fn target(profile: &ServerProfile) -> AppResult<(String, u16)> {
+    let host = profile.host.trim().to_string();
+    if host.is_empty() {
+        return Err(AppError::Invalid("El servidor no tiene host configurado".into()));
+    }
+    if profile.username.trim().is_empty() {
+        return Err(AppError::Invalid("El servidor no tiene usuario configurado".into()));
+    }
+    let port = if profile.port == 0 { 22 } else { profile.port };
+    Ok((host, port))
+}
+
+/// Abre TCP y hace la negociación SSH (incluida la verificación de la huella), sin autenticar.
+async fn open_transport(
+    host: &str,
+    port: u16,
+    policy: HostKeyPolicy,
+    keepalive: Duration,
+) -> AppResult<(Handle<ClientHandler>, Arc<Mutex<SharedState>>)> {
+    let stream = tcp_connect(host, port).await?;
+    let handler = ClientHandler::new(host, port, policy);
+    let shared = handler.shared.clone();
+    let config = Arc::new(client_config(keepalive));
+    match tokio::time::timeout(HANDSHAKE_TIMEOUT, client::connect_stream(config, stream, handler)).await {
+        Err(_) => Err(AppError::Network(format!(
+            "{host}:{port} no completó la negociación SSH a tiempo"
+        ))),
+        Ok(Err(e)) => Err(handshake_error(&shared, host, port, e)),
+        Ok(Ok(h)) => Ok((h, shared)),
+    }
+}
+
+// ───────────────────────── Probar conexión ─────────────────────────
+
+/// Tiempo máximo de «Probar conexión» (red + huella + autenticación).
+pub const TEST_TIMEOUT: Duration = Duration::from_secs(10);
+
+/// Parte de la autenticación que «Probar conexión» no pudo comprobar.
+#[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum AuthSkipped {
+    /// No se escribió la contraseña (se pedirá al conectar).
+    Password,
+    /// La llave tiene frase y no se escribió.
+    Passphrase,
+    /// El servidor pide además un código de verificación (2FA).
+    Otp,
+}
+
+/// Resultado correcto de «Probar conexión».
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct ConnectionTest {
+    /// None = se comprobó todo (red, huella y autenticación).
+    pub skipped: Option<AuthSkipped>,
+    /// Duración de la prueba (ms).
+    pub elapsed_ms: u64,
+}
+
+/// Cierra una conexión de prueba sin esperar más de 2 s.
+async fn close_quietly(handle: &Handle<ClientHandler>) {
+    let fut = handle.disconnect(russh::Disconnect::ByApplication, "Prueba de conexión", "es");
+    let _ = tokio::time::timeout(Duration::from_secs(2), fut).await;
+}
+
+/// Comprueba que se puede entrar con estos datos (aún sin guardar) y desconecta enseguida.
+/// La huella se verifica igual que al conectar (`HostKeyUnknown` / `HostKeyChanged`).
+/// Si falta la contraseña o la frase, solo comprueba la red y la huella (`skipped`).
+/// Termina con `Network` si pasa `limit` y con `Canceled` si se cancela `cancel`.
+pub async fn test_connection(
+    profile: &ServerProfile,
+    creds: Credentials,
+    policy: HostKeyPolicy,
+    limit: Duration,
+    cancel: &tokio_util::sync::CancellationToken,
+) -> AppResult<ConnectionTest> {
+    let (host, port) = target(profile)?;
+    let start = std::time::Instant::now();
+    let keepalive = keepalive_interval(DEFAULT_KEEPALIVE_SECS);
+    let work = async {
+        let skipped = match connect_full(profile, creds, policy.clone(), keepalive).await {
+            Ok((session, _)) => {
+                close_quietly(&session.handle).await;
+                return Ok(None);
+            }
+            Err(AppError::NeedsOtp(_)) => return Ok(Some(AuthSkipped::Otp)),
+            // Sin el secreto no se puede autenticar: se comprueba al menos la red y la huella.
+            Err(AppError::NeedsPassword) => AuthSkipped::Password,
+            Err(AppError::NeedsPassphrase) => AuthSkipped::Passphrase,
+            Err(e) => return Err(e),
+        };
+        let (handle, _) = open_transport(&host, port, policy, keepalive).await?;
+        close_quietly(&handle).await;
+        Ok(Some(skipped))
+    };
+    let skipped = tokio::select! {
+        _ = cancel.cancelled() => return Err(AppError::Canceled),
+        r = tokio::time::timeout(limit, work) => match r {
+            Ok(r) => r?,
+            Err(_) => {
+                return Err(AppError::Network(format!(
+                    "{host}:{port} no respondió en {} s (puede estar apagado, el puerto cerrado o un cortafuegos en medio)",
+                    limit.as_secs().max(1)
+                )));
+            }
+        },
+    };
+    Ok(ConnectionTest {
+        skipped,
+        elapsed_ms: start.elapsed().as_millis() as u64,
+    })
 }
 
 pub fn now_ms() -> u64 {

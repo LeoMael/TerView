@@ -1,19 +1,23 @@
 //! Comandos Tauri de SSH. DUEÑO: agente SSH.
 
+use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
 
 use tauri::{AppHandle, Emitter, Manager, State};
+use tokio_util::sync::CancellationToken;
 
 use crate::error::{AppError, AppResult};
-use crate::ssh::connect::{self, Credentials, WRONG_PASSPHRASE_MSG, WRONG_PASSWORD_MSG};
+use crate::ssh::connect::{
+    self, ConnectionTest, Credentials, WRONG_PASSPHRASE_MSG, WRONG_PASSWORD_MSG,
+};
 use crate::ssh::handler::HostKeyPolicy;
 use crate::ssh::reconnect::{self, ReconnectEnv, ReconnectSettings, Supervised, Timing};
 use crate::ssh::{known_hosts, SessionStore, SshSession};
 use crate::storage::vault::Vault;
 use crate::storage::{secrets, ProfileStore, SettingsStore};
 use crate::types::{
-    AuthMethod, SessionClosed, SessionInfo, SessionReconnecting, EV_SESSION_CLOSED,
+    AuthMethod, ServerProfile, SessionClosed, SessionInfo, SessionReconnecting, EV_SESSION_CLOSED,
     EV_SESSION_RECONNECTED, EV_SESSION_RECONNECTING,
 };
 
@@ -239,6 +243,95 @@ impl ReconnectEnv for TauriEnv {
                 .map(non_empty)
         })
     }
+}
+
+/// Pruebas de conexión en curso (id de la prueba → token para cancelarla).
+static TESTS: std::sync::LazyLock<std::sync::Mutex<HashMap<String, CancellationToken>>> =
+    std::sync::LazyLock::new(Default::default);
+
+/// Quita la prueba del registro al terminar (también si la tarea se interrumpe).
+struct TestGuard(String);
+impl Drop for TestGuard {
+    fn drop(&mut self) {
+        if let Ok(mut t) = TESTS.lock() {
+            t.remove(&self.0);
+        }
+    }
+}
+
+/// «Probar conexión» del editor de servidor: conecta y autentica con los datos del formulario
+/// (aún sin guardar) y desconecta enseguida. No abre pestaña ni deja la sesión abierta.
+/// - `password` / `passphrase`: lo escrito en el formulario. Solo viven en memoria durante la
+///   prueba: no se guardan ni se registran.
+/// - `use_saved_secret`: si no se escribió nada, usar el secreto ya guardado del servidor
+///   (`profile.id`), p. ej. al editar uno existente sin cambiar la contraseña.
+/// - Huella desconocida o cambiada: `HostKeyUnknown` / `HostKeyChanged`, como `ssh_connect`
+///   (la interfaz pregunta, llama a `ssh_trust_host` y repite la prueba).
+/// - Tiempo límite: 10 s. `ssh_cancel_test(test_id)` la cancela (`Canceled`).
+#[tauri::command]
+pub async fn ssh_test_connection(
+    test_id: String,
+    profile: ServerProfile,
+    password: Option<String>,
+    passphrase: Option<String>,
+    use_saved_secret: Option<bool>,
+) -> AppResult<ConnectionTest> {
+    let token = CancellationToken::new();
+    if let Ok(mut t) = TESTS.lock()
+        && let Some(old) = t.insert(test_id.clone(), token.clone())
+    {
+        old.cancel();
+    }
+    let _guard = TestGuard(test_id);
+
+    let mut creds = Credentials {
+        password: non_empty(password),
+        passphrase: non_empty(passphrase),
+        otp: None,
+    };
+    let saved_wanted = use_saved_secret == Some(true) && !profile.id.is_empty();
+    match profile.auth {
+        AuthMethod::Password if creds.password.is_none() && saved_wanted => {
+            creds.password = keyring_get(&profile.id).await?;
+        }
+        AuthMethod::Key if creds.passphrase.is_none() && saved_wanted => {
+            creds.passphrase = keyring_get(&profile.id).await?;
+        }
+        _ => {}
+    }
+    // La contraseña solo se usa con el método «Contraseña» (sin segundo factor en la prueba).
+    if profile.auth != AuthMethod::Password {
+        creds.password = None;
+    }
+
+    let policy = HostKeyPolicy::KnownHosts(known_hosts::default_path()?);
+    let r = connect::test_connection(&profile, creds, policy, connect::TEST_TIMEOUT, &token).await;
+    match &r {
+        Ok(t) => log::info!(
+            "prueba de conexión a {}@{}:{}: correcta ({} ms)",
+            profile.username.trim(),
+            profile.host.trim(),
+            profile.port,
+            t.elapsed_ms
+        ),
+        Err(e) => log::info!(
+            "prueba de conexión a {}@{}:{}: {}",
+            profile.username.trim(),
+            profile.host.trim(),
+            profile.port,
+            e.kind()
+        ),
+    }
+    r
+}
+
+/// Cancela una prueba de conexión en curso (si ya terminó, no hace nada).
+#[tauri::command]
+pub async fn ssh_cancel_test(test_id: String) -> AppResult<()> {
+    if let Some(t) = TESTS.lock().ok().and_then(|mut t| t.remove(&test_id)) {
+        t.cancel();
+    }
+    Ok(())
 }
 
 /// Guarda la huella aceptada por el usuario en ~/.ssh/known_hosts.

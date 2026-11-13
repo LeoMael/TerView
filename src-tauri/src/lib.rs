@@ -72,6 +72,8 @@ pub fn run() {
             // ssh
             ssh::ssh_connect,
             ssh::ssh_trust_host,
+            ssh::ssh_test_connection,
+            ssh::ssh_cancel_test,
             ssh::ssh_disconnect,
             ssh::ssh_list_sessions,
             // terminal

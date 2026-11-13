@@ -39,6 +39,13 @@ siguen [Versionado Semántico](https://semver.org/lang/es/).
     carpeta de trabajo, ver el contexto exacto y si cada asistente está instalado.
 - **Enviar a la IA**: en una terminal de servidor, selecciona texto y, con clic derecho, «Enviar a la IA».
   Se pega en la pestaña del asistente abierto (sin pulsar Enter, para que añadas tu pregunta) o abre uno.
+- **Servidor nuevo: hosts guardados y prueba de conexión.** El campo Host sugiere tus servidores guardados
+  (nombre y `usuario@host:puerto`) y avisa si ya tienes uno con el mismo host, puerto y usuario («Abrir»
+  o, desde un proyecto, «Añadirlo»). Botón **«Probar conexión»**, y al guardar un servidor nuevo (o al
+  cambiar sus datos de conexión) se prueba antes: conecta, comprueba la huella con el diálogo de siempre y
+  desconecta, sin abrir pestaña, con 10 s de límite y «Cancelar prueba». Si falla dice por qué (host no
+  encontrado, puerto cerrado, contraseña o llave rechazada…) y deja «Guardar de todos modos». La
+  contraseña escrita solo se usa en memoria durante la prueba.
 
 ### Corregido
 - **Añadir un servidor desde un proyecto**: cada proyecto de la barra lateral tiene ahora un botón **+**
