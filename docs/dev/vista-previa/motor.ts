@@ -6,11 +6,12 @@ import type { Channel } from "@tauri-apps/api/core";
 import { DIRS, HOME, NGINX_CONF, COMPOSE, PHP, PROFILES, SNIPPETS, MCP_STATUS, MCP_CONFIG, MCP_ACTIVITY, MCP_CLIENT } from "./datos";
 import { execOutput } from "./salidas";
 import { terminalBanner } from "./terminal";
+import { normalizeTheme } from "../../../src/styles/themes";
 
 type Args = Record<string, unknown> | undefined;
 
 const params = new URLSearchParams(location.search);
-export const TEMA = (params.get("tema") ?? "dark") as "dark" | "light" | "system";
+export const TEMA = normalizeTheme(params.get("tema") ?? "dark");
 
 /** Tamaños de paneles: barra lateral un poco más ancha; `?sesion=40,60` cambia archivos/terminal. */
 const LAYOUT: Record<string, number[]> = { main: [21, 79] };
@@ -144,6 +145,9 @@ const handlers: Record<string, (a: Args) => unknown> = {
   mcp_config: () => MCP_CONFIG,
   mcp_activity: () => MCP_ACTIVITY,
   mcp_pending_approvals: () => [],
+  mcp_auto_list: () => [],
+  mcp_set_auto: () => [],
+  mcp_auto_off_all: () => [],
   mcp_client_config: () => MCP_CLIENT,
   mcp_get_token: () => MCP_CLIENT.token,
 

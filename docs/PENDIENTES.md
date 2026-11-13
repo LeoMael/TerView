@@ -37,8 +37,10 @@ cada rato; la contraseña de sudo nunca se pasa a la IA), crear usuario solo con
 sesión: asistente con clave pegada/elegida/generada, AllowGroups, sudo y linger, prueba de acceso y
 guardar el servidor), los tres casos de sudo (punto 3), «Auditar servidor» (punto 4b, con el
 endurecimiento del 4) y limpieza (hecha). No entra: asistente en el servidor (punto 5) ni app móvil.
-El usuario pidió avanzar **por partes, máximo ~50 min por sesión**. Hecho el 13/11: limpieza; en curso:
-Ajustes + apariencias y MCP aceptar automáticamente.
+El usuario pidió avanzar **por partes, máximo ~50 min por sesión**. Hecho el 13/11: limpieza, Ajustes +
+apariencias y MCP aceptar automáticamente (falta probarlos en la app; regenerar `docs/manual/19-ajustes.png`
+con `node docs/dev/vista-previa/capturar.mjs ajustes`). Siguiente tanda: crear usuario solo por clave y los
+tres casos de sudo; luego «Auditar servidor»; al final SSHorus + actualizador y elegir el número de versión.
 
 **1. Cambiar el nombre a SSHorus (lo siguiente).** Decidido por el usuario: nombre **SSHorus**, logo del
 ojo de Horus en un anillo con `>_`, aprobado el 13/11/2026 (`docs/marca/sshorus/final/`, ver `docs/marca/README.md`). Nadie más usa la app, así

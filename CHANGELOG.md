@@ -54,7 +54,15 @@ siguen [Versionado Semántico](https://semver.org/lang/es/).
   (la IA nunca la ve). Nunca con TerView bloqueado ni en solo lectura. Indicador «Automático» en la barra de
   pestañas (un clic lo apaga), etiqueta «automático» en la actividad y aviso en lo peligroso.
 
+- **Ajustes con diseño nuevo y apariencias.** Menú lateral con iconos por grupos, buscador de ajustes,
+  cabecera por sección y ajustes en tarjetas; se adapta a ventanas estrechas. Nueva sección **Apariencia**
+  con 7 temas (Sistema, Oscuro, Claro, Medianoche, Arena, Fiordo y Alto contraste) que cambian también la
+  terminal y el editor, al momento; color de acento elegible y tamaño de letra de la interfaz.
+  Textos más cortos: una línea de ayuda como máximo y los detalles en tooltips.
+
 ### Corregido
+- **Editor: la barra de estado se veía cortada** (el selector de lenguaje, p. ej. «Markdown», salía por
+  la mitad en Linux por el aspecto nativo de GTK). Ahora tiene su propio estilo y la barra un poco más alta.
 - **Asistentes de IA (MCP): los comandos con sudo funcionan.** `run_command` (p. ej. `sudo whoami`) y
   `run_catalog_command` (p. ej. «Crear usuario») fallaban con «sudo: a terminal is required to read the
   password». Ahora, tras aprobarlo en TerView, se usa la contraseña de sudo de esa conexión igual que en

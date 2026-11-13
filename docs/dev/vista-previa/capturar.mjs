@@ -156,10 +156,12 @@ mkdirSync(outDir, { recursive: true });
 
 let failed = 0;
 for (const c of list) {
-  const tema = c.tema ?? "dark";
-  const [w, h] = c.size ?? [1280, 800];
+  // TEMA=<apariencia> y VENTANA=<ancho>x<alto> fuerzan otra apariencia o tamaño (pruebas, no el manual).
+  const tema = process.env.TEMA ?? c.tema ?? "dark";
+  const [w, h] = process.env.VENTANA ? process.env.VENTANA.split("x").map(Number) : (c.size ?? [1280, 800]);
   await send("Emulation.setDeviceMetricsOverride", { width: w, height: h, deviceScaleFactor: 1, mobile: false });
-  await send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-color-scheme", value: tema === "light" ? "light" : "dark" }] });
+  const claro = tema === "light" || tema === "sand";
+  await send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-color-scheme", value: claro ? "light" : "dark" }] });
   logs.length = 0;
   const q = new URLSearchParams({ escena: c.escena, tema, ...(c.query ?? {}) });
   await send("Page.navigate", { url: `${BASE}?${q}` });

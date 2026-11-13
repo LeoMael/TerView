@@ -1,9 +1,11 @@
 /* Ajustes → IA para explicar informes */
 .st-hint {
-  margin: 4px 0 12px;
   color: var(--text-muted);
   font-size: var(--fs-sm);
   line-height: 1.45;
+}
+.st-card > .field-error {
+  margin: 0;
 }
 .st-ai-token {
   display: flex;

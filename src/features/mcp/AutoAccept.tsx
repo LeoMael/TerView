@@ -151,7 +151,7 @@ export function AutoAcceptPicker({
         <div className="mcp-danger" role="alert">
           <AlertTriangle size={16} />
           <div>
-            <strong>Peligroso:</strong> también se aceptarán solos sudo, rm -rf, prune, reboot… Se pide confirmación.
+            <strong>Peligroso:</strong> también se aceptan solos sudo, rm -rf, prune, reboot…
           </div>
         </div>
       )}

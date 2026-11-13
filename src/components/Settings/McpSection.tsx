@@ -10,11 +10,12 @@ import { confirmDialog } from "../ui/dialogs";
 import { activeAuto, openActivity, refreshAuto, refreshStatus, useMcp } from "../../features/mcp/store";
 import { AutoAcceptPicker, autoText, useMinuteClock } from "../../features/mcp/AutoAccept";
 import "../../features/mcp/Mcp.css";
+import { SettingGroup, SettingRow as Row } from "../ui/SettingsKit";
 
-const ACCESS: { v: McpAccess; label: string }[] = [
-  { v: "none", label: "Sin acceso" },
-  { v: "read", label: "Solo lectura" },
-  { v: "full", label: "Completo" },
+const ACCESS: { v: McpAccess; label: string; title: string }[] = [
+  { v: "none", label: "Sin acceso", title: "El asistente ni ve este servidor." },
+  { v: "read", label: "Solo lectura", title: "Listar, leer archivos y comandos 📊 de la Biblioteca." },
+  { v: "full", label: "Completo", title: "También cambios, siempre con tu permiso." },
 ];
 
 const TIMEOUTS = [30, 60, 120, 300];
@@ -32,18 +33,6 @@ function desktopConfigPath(): string {
   return DESKTOP_CONFIG_PATH.linux;
 }
 
-function Row({ label, hint, children }: { label: string; hint?: ReactNode; children: ReactNode }) {
-  return (
-    <div className="st-row">
-      <div className="st-row-label">
-        <span>{label}</span>
-        {hint && <small>{hint}</small>}
-      </div>
-      <div className="st-row-control">{children}</div>
-    </div>
-  );
-}
-
 async function copy(text: string, what: string) {
   try {
     await clipboard.write(text);
@@ -55,7 +44,7 @@ async function copy(text: string, what: string) {
 
 function CopyBlock({ title, hint, text }: { title: string; hint?: ReactNode; text: string }) {
   return (
-    <div className="mcp-copy">
+    <div className="st-block mcp-copy">
       <div className="mcp-copy-head">
         <span>{title}</span>
         <button className="btn btn-sm" onClick={() => void copy(text, title)}>
@@ -182,99 +171,92 @@ export function McpSection() {
     }
   };
 
+  // Encendido y en marcha no necesita explicación; la dirección va en el tooltip.
   const stateText = !status
     ? "…"
     : !enabled
-      ? "Apagado. Ningún asistente puede usar TerView."
+      ? "Ningún asistente puede usar TerView."
       : status.running
-        ? `Encendido en ${status.url} (solo en este equipo).`
+        ? undefined
         : status.error ?? "Encendido, pero el servidor no está en marcha.";
 
   return (
     <>
-      <h3 className="st-title">Asistentes de IA (MCP)</h3>
-      <p className="mcp-intro">
-        Un asistente como Claude Code o Claude Desktop puede trabajar con tus servidores a través de TerView. Usa las
-        conexiones guardadas y <strong>nunca ve contraseñas ni llaves</strong>. Todo lo que cambie algo te lo pregunta
-        aquí, y cada acción queda registrada.
-      </p>
-
-      <Row label="Activar el servidor MCP" hint={stateText}>
-        <button
-          role="switch"
-          aria-checked={enabled}
-          aria-label="Activar el servidor MCP"
-          className={enabled ? "st-switch on" : "st-switch"}
-          onClick={() => void toggle()}
-          disabled={busy || !status}
-        >
-          <span />
-        </button>
-      </Row>
-
-      {enabled && (
-        <>
-          <Row label="Puerto" hint="Solo escucha en 127.0.0.1 (este equipo).">
-            <input
-              className="input st-num mcp-port"
-              inputMode="numeric"
-              value={port}
-              onChange={(e) => setPort(e.target.value.replace(/[^0-9]/g, ""))}
-              onKeyDown={(e) => e.key === "Enter" && void applyPort()}
-              aria-label="Puerto"
-            />
-            <button className="btn" onClick={() => void applyPort()} disabled={port === String(status?.port)}>
-              Aplicar
-            </button>
-          </Row>
-
-          <Row label="Tiempo para responder" hint="Si no respondes a un permiso en este tiempo, se deniega.">
-            <div className="st-segmented" role="radiogroup" aria-label="Tiempo para responder">
-              {TIMEOUTS.map((s) => (
-                <button
-                  key={s}
-                  role="radio"
-                  aria-checked={cfg?.approvalTimeoutSecs === s}
-                  className={cfg?.approvalTimeoutSecs === s ? "active" : ""}
-                  onClick={() => void setTimeoutSecs(s)}
-                >
-                  {s < 60 ? `${s} s` : `${s / 60} min`}
-                </button>
-              ))}
-            </div>
-          </Row>
-
-          <Row
-            label="Token"
-            hint="Lo usa el asistente para hablar con TerView. Se guarda como tus contraseñas (en la bóveda si tienes PIN)."
+      <SettingGroup>
+        <Row label="Activar el servidor MCP" hint={stateText}>
+          <button
+            role="switch"
+            aria-checked={enabled}
+            aria-label="Activar el servidor MCP"
+            title={status?.running ? `${status.url} (solo en este equipo)` : undefined}
+            className={enabled ? "st-switch on" : "st-switch"}
+            onClick={() => void toggle()}
+            disabled={busy || !status}
           >
-            <code className="mcp-token">{client ? (showToken ? client.token : "tv_" + "•".repeat(16)) : "…"}</code>
-            <button className="icon-btn" onClick={() => setShowToken((v) => !v)} title={showToken ? "Ocultar" : "Ver"} aria-label={showToken ? "Ocultar token" : "Ver token"}>
-              {showToken ? <EyeOff size={14} /> : <Eye size={14} />}
-            </button>
-            <button className="icon-btn" onClick={() => client && void copy(client.token, "Token")} title="Copiar" aria-label="Copiar token">
-              <Copy size={14} />
-            </button>
-            <button className="btn btn-sm" onClick={() => void regenerate()}>
-              <RefreshCw size={12} /> Regenerar
-            </button>
-          </Row>
-        </>
-      )}
+            <span />
+          </button>
+        </Row>
 
-      <h4 className="st-subtitle">Permisos por servidor</h4>
-      <p className="mcp-note">
-        <strong>Sin acceso</strong>: el asistente ni lo ve. <strong>Solo lectura</strong>: listar, leer archivos y comandos
-        📊 de la Biblioteca. <strong>Completo</strong>: también cambios, siempre con tu permiso. Lo peligroso (rm -rf, prune,
-        sudo, reboot…) se pregunta siempre. <strong>Automático</strong> (solo con acceso Completo): deja de preguntar los
-        cambios normales, o todo incluido sudo, durante un tiempo. Nunca con TerView bloqueado; cada acción queda en la
-        actividad marcada como «automático».
-      </p>
-      {servers.length === 0 ? (
-        <div className="empty-state">Aún no tienes servidores guardados.</div>
-      ) : (
-        <div className="mcp-servers">
-          {servers.map((s) => {
+        {enabled && (
+          <>
+            <Row label="Puerto">
+              <input
+                className="input st-num mcp-port"
+                inputMode="numeric"
+                value={port}
+                onChange={(e) => setPort(e.target.value.replace(/[^0-9]/g, ""))}
+                onKeyDown={(e) => e.key === "Enter" && void applyPort()}
+                aria-label="Puerto"
+                title="Solo escucha en este equipo (127.0.0.1)."
+              />
+              <button className="btn" onClick={() => void applyPort()} disabled={port === String(status?.port)}>
+                Aplicar
+              </button>
+            </Row>
+
+            <Row label="Tiempo para responder" hint="Si no respondes a un permiso, se deniega.">
+              <div className="st-segmented" role="radiogroup" aria-label="Tiempo para responder">
+                {TIMEOUTS.map((s) => (
+                  <button
+                    key={s}
+                    role="radio"
+                    aria-checked={cfg?.approvalTimeoutSecs === s}
+                    className={cfg?.approvalTimeoutSecs === s ? "active" : ""}
+                    onClick={() => void setTimeoutSecs(s)}
+                  >
+                    {s < 60 ? `${s} s` : `${s / 60} min`}
+                  </button>
+                ))}
+              </div>
+            </Row>
+
+            <Row label="Token" hint="Lo usa el asistente. Se guarda como tus contraseñas.">
+              <code className="mcp-token">{client ? (showToken ? client.token : "tv_" + "•".repeat(16)) : "…"}</code>
+              <button className="icon-btn" onClick={() => setShowToken((v) => !v)} title={showToken ? "Ocultar" : "Ver"} aria-label={showToken ? "Ocultar token" : "Ver token"}>
+                {showToken ? <EyeOff size={14} /> : <Eye size={14} />}
+              </button>
+              <button className="icon-btn" onClick={() => client && void copy(client.token, "Token")} title="Copiar" aria-label="Copiar token">
+                <Copy size={14} />
+              </button>
+              <button className="btn btn-sm" onClick={() => void regenerate()}>
+                <RefreshCw size={12} /> Regenerar
+              </button>
+            </Row>
+          </>
+        )}
+
+        <Row label="Actividad del asistente" hint="Qué hizo, dónde y quién lo aprobó.">
+          <button className="btn" onClick={openActivity}>
+            <Activity size={14} /> Ver actividad
+          </button>
+        </Row>
+      </SettingGroup>
+
+      <SettingGroup title="Permisos por servidor" hint="Lo peligroso (rm -rf, sudo, reboot…) se pregunta siempre.">
+        {servers.length === 0 ? (
+          <div className="st-block muted">Aún no tienes servidores guardados.</div>
+        ) : (
+          servers.map((s) => {
             const access = cfg?.access[s.id] ?? "none";
             const rules = cfg?.remembered[s.id] ?? [];
             const auto = autoList.find((a) => a.serverId === s.id);
@@ -296,7 +278,7 @@ export function McpSection() {
                     <button
                       className="btn btn-sm"
                       onClick={() => setOpenAuto(openAuto === s.id ? null : s.id)}
-                      title="Aceptar automáticamente las peticiones del asistente en este servidor"
+                      title="Deja de pedir permiso durante un tiempo (nunca con TerView bloqueado). Cada acción queda marcada como «automático»."
                     >
                       {auto ? "Automático (activo)" : "Automático…"}
                     </button>
@@ -313,6 +295,7 @@ export function McpSection() {
                         role="radio"
                         aria-checked={access === o.v}
                         className={access === o.v ? `active mcp-acc-${o.v}` : ""}
+                        title={o.title}
                         onClick={() => void setAccess(s.id, o.v)}
                       >
                         {o.label}
@@ -340,30 +323,24 @@ export function McpSection() {
                 )}
               </div>
             );
-          })}
-        </div>
-      )}
+          })
+        )}
+      </SettingGroup>
 
       {enabled && client && status && (
-        <>
-          <h4 className="st-subtitle">Conectar tu asistente</h4>
-          <p className="mcp-note">
-            TerView tiene que estar abierto mientras el asistente trabaja. La configuración lleva el token: no la compartas.
-          </p>
+        <SettingGroup title="Conectar tu asistente" hint="TerView debe estar abierto. Lleva el token: no lo compartas.">
           {!status.bridgeFound && (
-            <p className="mcp-warn">
+            <p className="st-block mcp-warn">
               No se encontró el programa puente en {status.bridgePath}. Usa la opción por HTTP o instala TerView con su
               instalador.
             </p>
           )}
           {status.appImage && (
-            <p className="mcp-warn">
-              Con la AppImage la ruta del puente cambia en cada arranque: usa la opción por HTTP.
-            </p>
+            <p className="st-block mcp-warn">Con la AppImage la ruta del puente cambia en cada arranque: usa la opción por HTTP.</p>
           )}
           <CopyBlock
             title="Claude Code (puente stdio)"
-            hint="Pégalo en una terminal. Añade «--scope user» para usarlo en todos tus proyectos."
+            hint="Añade «--scope user» para usarlo en todos tus proyectos."
             text={client.claudeCodeStdio}
           />
           <CopyBlock title="Claude Code (HTTP directo)" hint="Alternativa sin puente." text={client.claudeCodeHttp} />
@@ -376,14 +353,8 @@ export function McpSection() {
             }
             text={client.claudeDesktopJson}
           />
-        </>
+        </SettingGroup>
       )}
-
-      <Row label="Actividad del asistente" hint="Cada acción, en qué servidor, el resultado y quién la aprobó.">
-        <button className="btn" onClick={openActivity}>
-          <Activity size={14} /> Ver actividad
-        </button>
-      </Row>
     </>
   );
 }

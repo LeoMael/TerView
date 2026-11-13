@@ -1,13 +1,17 @@
 /* ───────────────────────────────────────────────────────────
    TerView · tema y clases base. BASE compartida.
    Usa SIEMPRE estas variables en vez de colores fijos.
-   Tema oscuro por defecto; claro con <html data-theme="light">.
+   Tema oscuro por defecto; claro con <html data-theme="light">; otras apariencias con data-palette.
    ─────────────────────────────────────────────────────────── */
 
 :root {
   --bg: #0f172a;            /* fondo general */
   --bg-sunken: #0b1220;     /* barra lateral, barras */
   --bg-terminal: #020617;
+  --text-terminal: #e2e8f0;  /* texto sobre --bg-terminal (salidas, comandos) */
+  --terminal-ok: #22c55e;
+  --terminal-warn: #facc15;
+  --terminal-err: #fb7185;
   --surface: #111827;       /* paneles */
   --surface-2: #1e293b;     /* tarjetas, inputs, hover */
   --surface-3: #273449;
@@ -53,7 +57,7 @@
   --border-strong: #cbd5e1;
   --text: #0f172a;
   --text-muted: #475569;
-  --text-faint: #94a3b8;
+  --text-faint: #64748b;
   --accent: #0284c7;
   --accent-strong: #0369a1;
   --accent-bg: #dbeafe;
@@ -149,6 +153,275 @@
   --mix-yellow-35: rgb(202 138 4 / 0.35);
   --mix-yellow-40: rgb(202 138 4 / 0.4);
   --mix-yellow-50: rgb(202 138 4 / 0.5);
+}
+
+/* ───────── Apariencias con personalidad ─────────
+   <html data-theme> es el modo base ("dark" | "light": lo usan las reglas propias del modo claro) y
+   <html data-palette> la apariencia elegida. Estas paletas pisan los tokens y las mezclas del modo base.
+   Lista, nombres y vista previa en src/styles/themes.ts. Mezclas calculadas igual que arriba (color-mix in srgb). */
+:root[data-palette="midnight"] {
+  --text-terminal: #e7eafb;
+  --terminal-ok: #34d399;
+  --terminal-warn: #fcd34d;
+  --terminal-err: #fb7185;
+  --bg: #0c1229;
+  --bg-sunken: #080d1f;
+  --bg-terminal: #060a1a;
+  --surface: #111936;
+  --surface-2: #1b2550;
+  --surface-3: #253163;
+  --border: #1d2747;
+  --border-strong: #33406f;
+  --text: #e7eafb;
+  --text-muted: #a9b3db;
+  --text-faint: #7d89b8;
+  --accent: #8fa2ff;
+  --accent-strong: #7085f7;
+  --accent-bg: #28327a;
+  --accent-contrast: #0c1229;
+  --orange: #fb923c;
+  --green: #34d399;
+  --yellow: #fcd34d;
+  --red: #fb7185;
+  --purple: #c4b5fd;
+  --shadow: 0 10px 30px rgba(2, 4, 16, 0.55);
+  --shadow-sm: 0 2px 8px rgba(2, 4, 16, 0.55);
+  --mix-accent-10: rgb(143 162 255 / 0.1);
+  --mix-accent-12: rgb(143 162 255 / 0.12);
+  --mix-accent-16: rgb(143 162 255 / 0.16);
+  --mix-accent-22: rgb(143 162 255 / 0.22);
+  --mix-accent-25: rgb(143 162 255 / 0.25);
+  --mix-accent-35: rgb(143 162 255 / 0.35);
+  --mix-accent-45: rgb(143 162 255 / 0.45);
+  --mix-accent-7-surface-2: #232e5c;
+  --mix-accent-75-text-muted: #96a6f6;
+  --mix-border-60: rgb(29 39 71 / 0.6);
+  --mix-green-14: rgb(52 211 153 / 0.14);
+  --mix-green-15: rgb(52 211 153 / 0.15);
+  --mix-green-20: rgb(52 211 153 / 0.2);
+  --mix-orange-15: rgb(251 146 60 / 0.15);
+  --mix-orange-18: rgb(251 146 60 / 0.18);
+  --mix-orange-55-border-strong: #a16d53;
+  --mix-orange-6: rgb(251 146 60 / 0.06);
+  --mix-red-12: rgb(251 113 133 / 0.12);
+  --mix-red-14: rgb(251 113 133 / 0.14);
+  --mix-red-14-surface: #322541;
+  --mix-red-15: rgb(251 113 133 / 0.15);
+  --mix-red-20: rgb(251 113 133 / 0.2);
+  --mix-red-22-surface: #442c47;
+  --mix-red-40: rgb(251 113 133 / 0.4);
+  --mix-red-55: rgb(251 113 133 / 0.55);
+  --mix-red-60: rgb(251 113 133 / 0.6);
+  --mix-surface-2-60: rgb(27 37 80 / 0.6);
+  --mix-surface-2-70: rgb(27 37 80 / 0.7);
+  --mix-surface-55: rgb(17 25 54 / 0.55);
+  --mix-surface-70: rgb(17 25 54 / 0.7);
+  --mix-yellow-12-surface: #2d2f39;
+  --mix-yellow-14-surface: #323339;
+  --mix-yellow-18-surface: #3b3a3a;
+  --mix-yellow-25: rgb(252 211 77 / 0.25);
+  --mix-yellow-35: rgb(252 211 77 / 0.35);
+  --mix-yellow-40: rgb(252 211 77 / 0.4);
+  --mix-yellow-50: rgb(252 211 77 / 0.5);
+  color-scheme: dark;
+}
+:root[data-palette="sand"] {
+  --text-terminal: #3a2e1c;
+  --terminal-ok: #4d7c0f;
+  --terminal-warn: #946200;
+  --terminal-err: #be123c;
+  --bg: #f6f0e1;
+  --bg-sunken: #ede4cf;
+  --bg-terminal: #fbf6ea;
+  --surface: #fffbf2;
+  --surface-2: #f0e7d3;
+  --surface-3: #e5d9bf;
+  --border: #e3d7bc;
+  --border-strong: #cdbd9b;
+  --text: #3a2e1c;
+  --text-muted: #66553b;
+  --text-faint: #76644a;
+  --accent: #0f766e;
+  --accent-strong: #115e59;
+  --accent-bg: #d3eae2;
+  --accent-contrast: #ffffff;
+  --orange: #c2410c;
+  --green: #4d7c0f;
+  --yellow: #a16207;
+  --red: #be123c;
+  --purple: #7e22ce;
+  --shadow: 0 10px 30px rgba(58, 46, 28, 0.16);
+  --shadow-sm: 0 2px 8px rgba(58, 46, 28, 0.16);
+  --mix-accent-10: rgb(15 118 110 / 0.1);
+  --mix-accent-12: rgb(15 118 110 / 0.12);
+  --mix-accent-16: rgb(15 118 110 / 0.16);
+  --mix-accent-22: rgb(15 118 110 / 0.22);
+  --mix-accent-25: rgb(15 118 110 / 0.25);
+  --mix-accent-35: rgb(15 118 110 / 0.35);
+  --mix-accent-45: rgb(15 118 110 / 0.45);
+  --mix-accent-7-surface-2: #e0dfcc;
+  --mix-accent-75-text-muted: #256e61;
+  --mix-border-60: rgb(227 215 188 / 0.6);
+  --mix-green-14: rgb(77 124 15 / 0.14);
+  --mix-green-15: rgb(77 124 15 / 0.15);
+  --mix-green-20: rgb(77 124 15 / 0.2);
+  --mix-orange-15: rgb(194 65 12 / 0.15);
+  --mix-orange-18: rgb(194 65 12 / 0.18);
+  --mix-orange-55-border-strong: #c7794c;
+  --mix-orange-6: rgb(194 65 12 / 0.06);
+  --mix-red-12: rgb(190 18 60 / 0.12);
+  --mix-red-14: rgb(190 18 60 / 0.14);
+  --mix-red-14-surface: #f6dad9;
+  --mix-red-15: rgb(190 18 60 / 0.15);
+  --mix-red-20: rgb(190 18 60 / 0.2);
+  --mix-red-22-surface: #f1c8ca;
+  --mix-red-40: rgb(190 18 60 / 0.4);
+  --mix-red-55: rgb(190 18 60 / 0.55);
+  --mix-red-60: rgb(190 18 60 / 0.6);
+  --mix-surface-2-60: rgb(240 231 211 / 0.6);
+  --mix-surface-2-70: rgb(240 231 211 / 0.7);
+  --mix-surface-55: rgb(255 251 242 / 0.55);
+  --mix-surface-70: rgb(255 251 242 / 0.7);
+  --mix-yellow-12-surface: #f4e9d6;
+  --mix-yellow-14-surface: #f2e6d1;
+  --mix-yellow-18-surface: #eedfc8;
+  --mix-yellow-25: rgb(161 98 7 / 0.25);
+  --mix-yellow-35: rgb(161 98 7 / 0.35);
+  --mix-yellow-40: rgb(161 98 7 / 0.4);
+  --mix-yellow-50: rgb(161 98 7 / 0.5);
+  color-scheme: light;
+}
+:root[data-palette="fjord"] {
+  --text-terminal: #e6eaf1;
+  --terminal-ok: #a9cc8c;
+  --terminal-warn: #ead07e;
+  --terminal-err: #e3848c;
+  --bg: #2a303b;
+  --bg-sunken: #242934;
+  --bg-terminal: #21262f;
+  --surface: #303744;
+  --surface-2: #394150;
+  --surface-3: #434c5d;
+  --border: #3a4251;
+  --border-strong: #525d70;
+  --text: #e6eaf1;
+  --text-muted: #b6bfcd;
+  --text-faint: #8f9aae;
+  --accent: #7cc4d6;
+  --accent-strong: #5eb2c7;
+  --accent-bg: #3a5566;
+  --accent-contrast: #21262f;
+  --orange: #e2a072;
+  --green: #a9cc8c;
+  --yellow: #ead07e;
+  --red: #e3848c;
+  --purple: #c4a3cc;
+  --shadow: 0 10px 30px rgba(10, 13, 18, 0.45);
+  --shadow-sm: 0 2px 8px rgba(10, 13, 18, 0.45);
+  --mix-accent-10: rgb(124 196 214 / 0.1);
+  --mix-accent-12: rgb(124 196 214 / 0.12);
+  --mix-accent-16: rgb(124 196 214 / 0.16);
+  --mix-accent-22: rgb(124 196 214 / 0.22);
+  --mix-accent-25: rgb(124 196 214 / 0.25);
+  --mix-accent-35: rgb(124 196 214 / 0.35);
+  --mix-accent-45: rgb(124 196 214 / 0.45);
+  --mix-accent-7-surface-2: #3e4a59;
+  --mix-accent-75-text-muted: #8bc3d4;
+  --mix-border-60: rgb(58 66 81 / 0.6);
+  --mix-green-14: rgb(169 204 140 / 0.14);
+  --mix-green-15: rgb(169 204 140 / 0.15);
+  --mix-green-20: rgb(169 204 140 / 0.2);
+  --mix-orange-15: rgb(226 160 114 / 0.15);
+  --mix-orange-18: rgb(226 160 114 / 0.18);
+  --mix-orange-55-border-strong: #a18271;
+  --mix-orange-6: rgb(226 160 114 / 0.06);
+  --mix-red-12: rgb(227 132 140 / 0.12);
+  --mix-red-14: rgb(227 132 140 / 0.14);
+  --mix-red-14-surface: #49424e;
+  --mix-red-15: rgb(227 132 140 / 0.15);
+  --mix-red-20: rgb(227 132 140 / 0.2);
+  --mix-red-22-surface: #574854;
+  --mix-red-40: rgb(227 132 140 / 0.4);
+  --mix-red-55: rgb(227 132 140 / 0.55);
+  --mix-red-60: rgb(227 132 140 / 0.6);
+  --mix-surface-2-60: rgb(57 65 80 / 0.6);
+  --mix-surface-2-70: rgb(57 65 80 / 0.7);
+  --mix-surface-55: rgb(48 55 68 / 0.55);
+  --mix-surface-70: rgb(48 55 68 / 0.7);
+  --mix-yellow-12-surface: #46494b;
+  --mix-yellow-14-surface: #4a4c4c;
+  --mix-yellow-18-surface: #51534e;
+  --mix-yellow-25: rgb(234 208 126 / 0.25);
+  --mix-yellow-35: rgb(234 208 126 / 0.35);
+  --mix-yellow-40: rgb(234 208 126 / 0.4);
+  --mix-yellow-50: rgb(234 208 126 / 0.5);
+  color-scheme: dark;
+}
+:root[data-palette="contrast"] {
+  --text-terminal: #ffffff;
+  --terminal-ok: #5cff8a;
+  --terminal-warn: #ffe14d;
+  --terminal-err: #ff7070;
+  --bg: #000000;
+  --bg-sunken: #000000;
+  --bg-terminal: #000000;
+  --surface: #0b0b0b;
+  --surface-2: #1c1c1c;
+  --surface-3: #2e2e2e;
+  --border: #5c5c5c;
+  --border-strong: #9e9e9e;
+  --text: #ffffff;
+  --text-muted: #e2e2e2;
+  --text-faint: #c2c2c2;
+  --accent: #ffd60a;
+  --accent-strong: #ffc300;
+  --accent-bg: #3d3300;
+  --accent-contrast: #000000;
+  --orange: #ffa94d;
+  --green: #5cff8a;
+  --yellow: #ffe14d;
+  --red: #ff7070;
+  --purple: #d4b0ff;
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.7);
+  --mix-accent-10: rgb(255 214 10 / 0.1);
+  --mix-accent-12: rgb(255 214 10 / 0.12);
+  --mix-accent-16: rgb(255 214 10 / 0.16);
+  --mix-accent-22: rgb(255 214 10 / 0.22);
+  --mix-accent-25: rgb(255 214 10 / 0.25);
+  --mix-accent-35: rgb(255 214 10 / 0.35);
+  --mix-accent-45: rgb(255 214 10 / 0.45);
+  --mix-accent-7-surface-2: #2c291b;
+  --mix-accent-75-text-muted: #f8d940;
+  --mix-border-60: rgb(92 92 92 / 0.6);
+  --mix-green-14: rgb(92 255 138 / 0.14);
+  --mix-green-15: rgb(92 255 138 / 0.15);
+  --mix-green-20: rgb(92 255 138 / 0.2);
+  --mix-orange-15: rgb(255 169 77 / 0.15);
+  --mix-orange-18: rgb(255 169 77 / 0.18);
+  --mix-orange-55-border-strong: #d3a471;
+  --mix-orange-6: rgb(255 169 77 / 0.06);
+  --mix-red-12: rgb(255 112 112 / 0.12);
+  --mix-red-14: rgb(255 112 112 / 0.14);
+  --mix-red-14-surface: #2d1919;
+  --mix-red-15: rgb(255 112 112 / 0.15);
+  --mix-red-20: rgb(255 112 112 / 0.2);
+  --mix-red-22-surface: #412121;
+  --mix-red-40: rgb(255 112 112 / 0.4);
+  --mix-red-55: rgb(255 112 112 / 0.55);
+  --mix-red-60: rgb(255 112 112 / 0.6);
+  --mix-surface-2-60: rgb(28 28 28 / 0.6);
+  --mix-surface-2-70: rgb(28 28 28 / 0.7);
+  --mix-surface-55: rgb(11 11 11 / 0.55);
+  --mix-surface-70: rgb(11 11 11 / 0.7);
+  --mix-yellow-12-surface: #282513;
+  --mix-yellow-14-surface: #2d2914;
+  --mix-yellow-18-surface: #373217;
+  --mix-yellow-25: rgb(255 225 77 / 0.25);
+  --mix-yellow-35: rgb(255 225 77 / 0.35);
+  --mix-yellow-40: rgb(255 225 77 / 0.4);
+  --mix-yellow-50: rgb(255 225 77 / 0.5);
+  color-scheme: dark;
 }
 
 *,
@@ -292,6 +565,13 @@ button {
 .field-row > .field {
   flex: 1;
 }
+/* Foco de teclado visible en botones (con ratón no se dibuja). */
+.btn:focus-visible,
+.icon-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .input,
 .select,
 .textarea {

@@ -199,11 +199,3 @@
   color: var(--accent);
 }
 
-/* Ajustes → Seguridad */
-.sec-form {
-  padding: 12px 14px;
-  margin: 4px 0 8px;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius);
-  background: var(--bg);
-}

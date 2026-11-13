@@ -114,8 +114,12 @@ pub struct ProfilesData {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 pub struct Settings {
-    /// "dark" | "light" | "system"
+    /// Apariencia: "dark" | "light" | "system" | "midnight" | "sand" | "fjord" | "contrast" (lista en src/styles/themes.ts).
     pub theme: String,
+    /// Color de acento elegido ("" = el de la apariencia).
+    pub accent: String,
+    /// Tamaño de letra de la interfaz en px (12..=16).
+    pub ui_font_size: u16,
     pub terminal_font_size: u16,
     pub terminal_font_family: String,
     /// Transferencias simultáneas (1..=8).
@@ -156,6 +160,8 @@ impl Default for Settings {
     fn default() -> Self {
         Self {
             theme: "dark".into(),
+            accent: String::new(),
+            ui_font_size: 13,
             terminal_font_size: 14,
             terminal_font_family: "'JetBrains Mono', 'Fira Code', 'Noto Sans Mono', monospace".into(),
             transfer_concurrency: 4,

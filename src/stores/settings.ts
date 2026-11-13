@@ -3,6 +3,7 @@ import { create } from "zustand";
 import { settingsApi } from "../api/profiles";
 import type { LocalAiSettings, Settings } from "../api/types";
 import { DEFAULT_AI_SETTINGS, DEFAULT_VULNSCAN_SETTINGS } from "../api/vulnscan";
+import { ACCENTS, normalizeTheme } from "../styles/themes";
 
 /** Fuente monoespaciada por defecto: Linux (JetBrains/Fira/Noto), Windows (Cascadia Mono, Consolas), macOS (Menlo). */
 export const DEFAULT_MONO_FONT = "'JetBrains Mono', 'Fira Code', 'Noto Sans Mono', 'Cascadia Mono', Consolas, Menlo, monospace";
@@ -21,6 +22,8 @@ export const DEFAULT_LOCAL_AI: LocalAiSettings = {
 
 export const DEFAULT_SETTINGS: Settings = {
   theme: "dark",
+  accent: "",
+  uiFontSize: 13,
   terminalFontSize: 14,
   terminalFontFamily: DEFAULT_MONO_FONT,
   transferConcurrency: 4,
@@ -64,6 +67,10 @@ export const useSettings = create<SettingsState>((set, get) => ({
       // El valor por defecto viejo acababa en «monospace» (Courier New en Windows): se completa.
       if (s.terminalFontFamily === OLD_DEFAULT_MONO_FONT) s.terminalFontFamily = DEFAULT_MONO_FONT;
       if (s.editorFontFamily === OLD_DEFAULT_MONO_FONT) s.editorFontFamily = DEFAULT_MONO_FONT;
+      // Apariencia desconocida (o de otra versión) → Oscuro; acento y letra fuera de rango → por defecto.
+      s.theme = normalizeTheme(s.theme);
+      if (s.accent && !ACCENTS.some((a) => a.id === s.accent)) s.accent = "";
+      if (!(s.uiFontSize >= 12 && s.uiFontSize <= 16)) s.uiFontSize = 13;
       set({ settings: s, loaded: true });
     } catch {
       set({ loaded: true });

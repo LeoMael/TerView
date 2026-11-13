@@ -483,7 +483,7 @@
   margin: 0;
   padding: 9px 12px;
   background: var(--bg-terminal);
-  color: #e2e8f0;
+  color: var(--text-terminal);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius);
   font-family: var(--font-mono);
@@ -505,11 +505,11 @@
   margin-bottom: 8px;
 }
 .cmd-prompt {
-  color: #22c55e;
+  color: var(--terminal-ok);
   user-select: none;
 }
 .cmd-preview .cmd-var-ph {
-  color: #facc15;
+  color: var(--terminal-warn);
 }
 .cmd-note {
   margin-top: 6px;
@@ -526,7 +526,7 @@
   margin: 0;
   padding: 8px 10px;
   background: var(--bg-terminal);
-  color: #e2e8f0;
+  color: var(--text-terminal);
   border-radius: var(--radius-sm);
   font-family: var(--font-mono);
   font-size: 12px;
@@ -591,7 +591,7 @@
   background: var(--bg-terminal);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius);
-  color: #e2e8f0;
+  color: var(--text-terminal);
 }
 .cmd-result.fill .cmd-result-body {
   max-height: 46vh;
@@ -606,11 +606,11 @@
   user-select: text;
 }
 .cmd-err {
-  color: #fb7185;
+  color: var(--red);
   margin-top: 6px;
 }
 .cmd-result-error {
-  color: #fb7185;
+  color: var(--red);
   font-size: var(--fs-sm);
   user-select: text;
 }
@@ -871,7 +871,7 @@
   overflow: auto;
   padding: 8px 10px;
   background: var(--bg-terminal);
-  color: #e2e8f0;
+  color: var(--text-terminal);
   border-radius: var(--radius-sm);
   font-size: 11.5px;
   white-space: pre;

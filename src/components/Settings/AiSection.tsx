@@ -1,6 +1,6 @@
 // Ajustes → IA para explicar informes (opcional): un servicio compatible con OpenAI que solo EXPLICA los informes
 // del escáner de vulnerabilidades. URL y modelo van en settings.json; el token, en la bóveda o el llavero.
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { Check, KeyRound, PlugZap, Trash2 } from "lucide-react";
 import { errorMessage } from "../../api/core";
 import { settingsApi } from "../../api/profiles";
@@ -9,18 +9,7 @@ import { useLock } from "../../features/lock/lockStore";
 import { useSettings } from "../../stores/settings";
 import { toast } from "../../stores/toasts";
 import "./AiSection.css";
-
-function Row({ label, hint, children }: { label: string; hint?: ReactNode; children: ReactNode }) {
-  return (
-    <div className="st-row">
-      <div className="st-row-label">
-        <span>{label}</span>
-        {hint && <small>{hint}</small>}
-      </div>
-      <div className="st-row-control">{children}</div>
-    </div>
-  );
-}
+import { SettingGroup, SettingRow as Row } from "../ui/SettingsKit";
 
 /** Aviso si la URL no es https (salvo en este equipo). Lo mismo comprueba el motor. */
 function urlProblem(url: string): string | null {
@@ -91,14 +80,8 @@ export function AiSection() {
   const problem = urlProblem(conf.baseUrl);
 
   return (
-    <>
-      <h3 className="st-title">IA para explicar informes</h3>
-      <p className="st-hint">
-        Opcional y apagado por defecto. Sirve para que una IA <strong>explique</strong> un informe del escáner de
-        vulnerabilidades. La lista de vulnerabilidades nunca sale de la IA, y los comandos que proponga nunca se ejecutan
-        solos. Antes de enviar nada verás el texto exacto, sin el nombre ni la IP del servidor.
-      </p>
-      <Row label="Activar" hint="Muestra «Explicar con IA» en Administración → Vulnerabilidades.">
+    <SettingGroup hint="Antes de enviar verás el texto (sin nombre ni IP); nunca ejecuta nada.">
+      <Row label="Activar" hint="Muestra «Explicar con IA» en Vulnerabilidades.">
         <button
           role="switch"
           aria-checked={conf.enabled}
@@ -109,27 +92,24 @@ export function AiSection() {
           <span />
         </button>
       </Row>
-      <Row label="URL base" hint="Compatible con OpenAI, p. ej. https://api.openai.com/v1 o un Ollama local http://localhost:11434/v1.">
+      <Row label="URL base" hint="Compatible con OpenAI (o un Ollama local).">
         <input
           className="input"
           value={conf.baseUrl}
           placeholder="https://api.openai.com/v1"
+          title="p. ej. https://api.openai.com/v1 o http://localhost:11434/v1 (Ollama)"
           spellCheck={false}
           onChange={(e) => set({ baseUrl: e.target.value })}
           aria-invalid={!!problem}
         />
       </Row>
-      {problem && <div className="field-error">{problem}</div>}
-      <Row label="Modelo" hint="Nombre exacto del modelo en ese servicio.">
+      {problem && <div className="st-block field-error">{problem}</div>}
+      <Row label="Modelo">
         <input className="input" value={conf.model} placeholder="gpt-4o-mini, llama3.1…" spellCheck={false} onChange={(e) => set({ model: e.target.value })} />
       </Row>
       <Row
         label="Token"
-        hint={
-          locked
-            ? "TerView está bloqueado: desbloquéalo para ver o cambiar el token."
-            : "Se guarda cifrado en la bóveda (o en el llavero del sistema si no usas PIN). Nunca en settings.json. Ollama local no lo necesita."
-        }
+        hint={locked ? "TerView está bloqueado: desbloquéalo para cambiarlo." : "Se guarda cifrado. Ollama local no lo necesita."}
       >
         <div className="st-ai-token">
           {status?.hasToken && (
@@ -156,14 +136,19 @@ export function AiSection() {
           )}
         </div>
       </Row>
-      <Row label="Probar" hint="Pide la lista de modelos (GET <URL base>/models).">
-        <button className="btn btn-sm" onClick={() => void test()} disabled={busy || locked || !conf.baseUrl.trim() || !!problem}>
+      <Row label="Probar">
+        <button
+          className="btn btn-sm"
+          onClick={() => void test()}
+          disabled={busy || locked || !conf.baseUrl.trim() || !!problem}
+          title="Pide la lista de modelos (GET <URL base>/models)."
+        >
           {busy ? <span className="spinner adm-spinner-btn" /> : <PlugZap size={13} />} Probar conexión
         </button>
       </Row>
-      {testError && <div className="field-error">{testError}</div>}
+      {testError && <div className="st-block field-error">{testError}</div>}
       {models && (
-        <div className="st-hint">
+        <div className="st-block st-hint">
           Conexión correcta.{" "}
           {models.length
             ? models.includes(conf.model)
@@ -172,6 +157,6 @@ export function AiSection() {
             : "El servicio no devolvió modelos."}
         </div>
       )}
-    </>
+    </SettingGroup>
   );
 }

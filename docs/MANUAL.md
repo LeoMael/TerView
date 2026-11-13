@@ -491,13 +491,14 @@ claude mcp add --env TERVIEW_MCP_TOKEN=<token> --transport stdio terview -- /rut
 **Cómo se usa:**
 
 1. Pulsa el engranaje (**Ajustes**) o `Ctrl+,`.
-2. Elige una sección a la izquierda.
+2. Elige una sección a la izquierda, o escribe en **Buscar ajuste…** (por ejemplo «letra» o «tmux»). Con la ventana estrecha, las secciones salen arriba.
 3. Cambia lo que quieras. Los cambios se guardan solos.
 4. Pulsa **Listo** para cerrar.
 
 **Lo más útil:**
 
-- **Apariencia → Tema**: **Oscuro**, **Claro** o **Sistema** (sigue el modo de tu equipo).
+- **Apariencia → Tema**: elige una tarjeta: **Sistema** (sigue el modo claro u oscuro de tu equipo), **Oscuro**, **Claro**, **Medianoche** (azul profundo), **Arena** (cálido, con la terminal también clara), **Fiordo** (gris suave) o **Alto contraste**. Cambia al momento la interfaz, la terminal y el editor (también el de ventana aparte).
+- **Apariencia → Detalles**: **Color de acento** (o «Del tema») y **Tamaño de la letra de la interfaz**. La terminal y el editor tienen su propio tamaño.
 - **Terminal**: tamaño y tipo de letra, y **Terminales persistentes (tmux)**.
 - **Conexión**: **Reconectar automáticamente** e **Intentos**.
 - **Transferencias**: **Transferencias simultáneas** y **Si el archivo ya existe**.

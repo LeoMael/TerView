@@ -194,8 +194,7 @@ function FpsSection() {
         </div>
       ) : (
         <p className="dg-muted">
-          Activa el medidor, cierra los Ajustes y mueve divisores, cambia de pestaña o haz scroll: el indicador queda abajo a la
-          izquierda. Lo ideal es 60 (o la frecuencia de tu pantalla).
+          Actívalo y usa la app: el indicador queda abajo a la izquierda. Lo ideal es 60.
         </p>
       )}
     </section>

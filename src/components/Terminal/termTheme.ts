@@ -1,6 +1,7 @@
 // Tema de xterm.js a partir de las variables CSS de la app.
 import type { ITheme } from "@xterm/xterm";
 import type { ISearchOptions } from "@xterm/addon-search";
+import { currentPalette, PALETTE_ANSI } from "../../styles/themes";
 
 type ISearchDecorationOptions = NonNullable<ISearchOptions["decorations"]>;
 
@@ -92,7 +93,8 @@ export function buildTermTheme(): ITheme {
   const accent = get("--accent", "#38bdf8");
 
   return {
-    ...(darkBg ? DARK_ANSI : LIGHT_ANSI),
+    // Cada apariencia puede traer su paleta ANSI; si no, la genérica según el fondo.
+    ...(PALETTE_ANSI[currentPalette()] ?? (darkBg ? DARK_ANSI : LIGHT_ANSI)),
     background,
     foreground,
     cursor: accent,
@@ -128,10 +130,10 @@ export function buildSearchDecorations(): ISearchDecorationOptions {
       };
 }
 
-/** Llama a `cb` cuando cambia el tema de la app (atributo data-theme / clase de <html>). */
+/** Llama a `cb` cuando cambia el tema de la app (atributos data-theme / data-palette, clase o estilo de <html>). */
 export function onAppThemeChange(cb: () => void): () => void {
   const obs = new MutationObserver(() => cb());
-  obs.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme", "class", "style"] });
+  obs.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme", "data-palette", "class", "style"] });
   const mq = window.matchMedia("(prefers-color-scheme: dark)");
   mq.addEventListener("change", cb);
   return () => {

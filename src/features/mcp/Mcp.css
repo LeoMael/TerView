@@ -26,7 +26,7 @@
   padding: 10px 12px;
   border-radius: var(--radius-sm);
   background: var(--bg-terminal);
-  color: #e2e8f0;
+  color: var(--text-terminal);
   font-family: var(--font-mono);
   font-size: var(--fs);
   white-space: pre-wrap;
@@ -192,13 +192,6 @@
 }
 
 /* ───── Ajustes ───── */
-.mcp-intro,
-.mcp-note {
-  margin: 0 0 10px;
-  color: var(--text-muted);
-  font-size: var(--fs-sm);
-  line-height: 1.5;
-}
 .mcp-warn {
   margin: 0 0 10px;
   padding: 6px 10px;
@@ -218,13 +211,15 @@
   white-space: nowrap;
   margin-right: 4px;
 }
-.mcp-servers {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 12px;
+.mcp-warn.st-block {
+  margin: 0;
 }
 .mcp-server {
+  padding: 4px 16px;
   border-bottom: 1px solid var(--border);
+}
+.mcp-server:last-child {
+  border-bottom: none;
 }
 .mcp-server-row {
   display: flex;
@@ -272,7 +267,6 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  margin-bottom: 12px;
 }
 .mcp-copy-head {
   display: flex;

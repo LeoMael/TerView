@@ -52,22 +52,45 @@ function cssVar(name: string, fallback: string): string {
   return /^#[0-9a-f]{3,8}$/i.test(v) ? v : fallback;
 }
 
-/** Define (o redefine) el tema de Monaco con los colores actuales de la app y lo aplica. */
-export function applyMonacoTheme(theme: "dark" | "light") {
-  const dark = theme === "dark";
+/** Color de una variable CSS sin «#», para las reglas de sintaxis. */
+function tokenColor(name: string, fallback: string): string {
+  return cssVar(name, fallback).replace("#", "").slice(0, 6);
+}
+
+/** Define (o redefine) el tema de Monaco con los colores de la apariencia actual y lo aplica.
+ *  Lee las variables de <html>, así que vale para cualquier apariencia y acento. */
+export function applyMonacoTheme() {
+  const root = document.documentElement;
+  const dark = root.dataset.theme !== "light";
+  const palette = root.dataset.palette ?? (dark ? "dark" : "light");
   const bg = cssVar("--surface", dark ? "#111827" : "#ffffff");
   const fg = cssVar("--text", dark ? "#e2e8f0" : "#0f172a");
-  const faint = cssVar("--text-faint", dark ? "#64748b" : "#94a3b8");
+  const faint = cssVar("--text-faint", dark ? "#64748b" : "#64748b");
   const muted = cssVar("--text-muted", dark ? "#94a3b8" : "#475569");
   const accent = cssVar("--accent", dark ? "#38bdf8" : "#0284c7");
   const accentBg = cssVar("--accent-bg", dark ? "#1e3a5f" : "#dbeafe");
   const surface2 = cssVar("--surface-2", dark ? "#1e293b" : "#f1f5f9");
   const border = cssVar("--border-strong", dark ? "#334155" : "#cbd5e1");
-  const name = dark ? "terview-dark" : "terview-light";
+  // Las apariencias propias colorean también la sintaxis con sus tonos; Oscuro y Claro dejan los de Monaco.
+  const custom = palette !== "dark" && palette !== "light";
+  const rules = custom
+    ? [
+        { token: "comment", foreground: tokenColor("--text-faint", "64748b"), fontStyle: "italic" },
+        { token: "keyword", foreground: tokenColor("--purple", "a78bfa") },
+        { token: "string", foreground: tokenColor("--green", "22c55e") },
+        { token: "number", foreground: tokenColor("--orange", "f97316") },
+        { token: "type", foreground: tokenColor("--yellow", "facc15") },
+        { token: "tag", foreground: tokenColor("--accent", "38bdf8") },
+        { token: "attribute.name", foreground: tokenColor("--yellow", "facc15") },
+        { token: "variable", foreground: tokenColor("--text", "e2e8f0") },
+        { token: "delimiter", foreground: tokenColor("--text-muted", "94a3b8") },
+      ]
+    : [];
+  const name = `terview-${palette}`;
   monaco.editor.defineTheme(name, {
-    base: dark ? "vs-dark" : "vs",
+    base: dark ? (palette === "contrast" ? "hc-black" : "vs-dark") : "vs",
     inherit: true,
-    rules: [],
+    rules,
     colors: {
       "editor.background": bg,
       "editor.foreground": fg,

@@ -647,7 +647,7 @@
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-strong);
   background: var(--bg-terminal);
-  color: #e2e8f0;
+  color: var(--text-terminal);
   font-family: var(--font-mono);
   font-size: 12px;
   white-space: pre-wrap;
@@ -728,7 +728,7 @@
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-strong);
   background: var(--bg-terminal);
-  color: #e2e8f0;
+  color: var(--text-terminal);
   font-family: var(--font-mono);
   font-size: 12px;
   line-height: 1.45;
@@ -921,7 +921,7 @@
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-strong);
   background: var(--bg-terminal);
-  color: #e2e8f0;
+  color: var(--text-terminal);
   font-family: var(--font-mono);
   font-size: 11.5px;
   white-space: pre-wrap;

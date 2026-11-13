@@ -1,9 +1,11 @@
 // Ajustes de la app. Los cambios se aplican al momento (useSettings().update guarda con retardo).
-import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
+// Navegación lateral agrupada con buscador, cabecera de sección y filas en tarjetas (ui/SettingsKit).
+import { lazy, Suspense, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   AppWindow,
   BookOpen,
   Bot,
+  Check,
   MessageSquareText,
   ArrowLeftRight,
   Columns2,
@@ -11,22 +13,21 @@ import {
   FileOutput,
   FolderTree,
   Info,
-  Minus,
   SlidersHorizontal,
   Monitor,
   PanelTop,
-  Moon,
   Palette,
   Plug,
-  Plus,
   RotateCcw,
+  Search,
   Server,
   ShieldCheck,
   Laptop,
-  Sun,
   TerminalSquare,
+  X,
 } from "lucide-react";
 import { Modal } from "../ui/Modal";
+import { NumberStepper, Segmented, SettingGroup, SettingRow as Row, Switch as Toggle } from "../ui/SettingsKit";
 import { useUi } from "../../stores/ui";
 import { DEFAULT_MONO_FONT, DEFAULT_SETTINGS, useSettings } from "../../stores/settings";
 import type { Settings } from "../../api/types";
@@ -34,6 +35,7 @@ import { confirmDialog } from "../ui/dialogs";
 import { profiles } from "../../api/profiles";
 import { toast } from "../../stores/toasts";
 import { getTerminalGpu, setTerminalGpu } from "../Terminal/gpuPref";
+import { buildTermTheme } from "../Terminal/termTheme";
 import { TMUX_MODE_HINTS, TMUX_MODE_LABELS } from "../../features/tmux/logic";
 import { getEditorOpenMode, setEditorOpenMode, type EditorOpenMode } from "../Editor/openPref";
 import "./SettingsDialog.css";
@@ -47,26 +49,63 @@ import { SecuritySection } from "./SecuritySection";
 import { McpSection } from "./McpSection";
 import { AiSection } from "./AiSection";
 import { LocalAiSection } from "./LocalAiSection";
+import { useAppTheme } from "./theme";
+import { ACCENTS, PALETTES, type AccentId, type PaletteInfo, type ThemeId } from "../../styles/themes";
 
 // El manual (texto e imágenes) va en un trozo aparte: solo se carga al abrir su sección.
 const ManualView = lazy(() => import("../About/Manual"));
 
-const SECTIONS: { id: SectionId; label: string; icon: ReactNode }[] = [
-  { id: "appearance", label: "Apariencia", icon: <Palette size={15} /> },
-  { id: "terminal", label: "Terminal", icon: <TerminalSquare size={15} /> },
-  { id: "connection", label: "Conexión", icon: <Plug size={15} /> },
-  { id: "transfers", label: "Transferencias", icon: <ArrowLeftRight size={15} /> },
-  { id: "explorer", label: "Explorador", icon: <FolderTree size={15} /> },
-  { id: "editor", label: "Editor", icon: <FileCode2 size={15} /> },
-  { id: "servers", label: "Servidores", icon: <Server size={15} /> },
-  { id: "security", label: "Seguridad", icon: <ShieldCheck size={15} /> },
-  { id: "assistants", label: "Asistentes de IA (MCP)", icon: <Bot size={15} /> },
-  { id: "localAi", label: "Terminal local e IA", icon: <Laptop size={15} /> },
-  { id: "ai", label: "IA para explicar informes", icon: <MessageSquareText size={15} /> },
-  { id: "advanced", label: "Avanzado", icon: <SlidersHorizontal size={15} /> },
-  { id: "manual", label: "Manual de uso", icon: <BookOpen size={15} /> },
-  { id: "about", label: "Acerca de", icon: <Info size={15} /> },
+interface SectionInfo {
+  id: SectionId;
+  label: string;
+  icon: ReactNode;
+  /** Frase bajo el título de la sección. */
+  desc: string;
+  /** Palabras extra para el buscador (nombres de los ajustes de la sección). */
+  keys: string;
+}
+
+const NAV: { group: string; items: SectionInfo[] }[] = [
+  {
+    group: "General",
+    items: [
+      { id: "appearance", label: "Apariencia", icon: <Palette size={15} />, desc: "Tema de colores, acento y tamaño de la letra de la interfaz.", keys: "tema claro oscuro sistema color acento letra fuente tamaño medianoche arena fiordo alto contraste" },
+      { id: "terminal", label: "Terminal", icon: <TerminalSquare size={15} />, desc: "Letra, aceleración gráfica y sesiones persistentes.", keys: "letra fuente tamaño gpu webgl tmux persistentes" },
+      { id: "editor", label: "Editor", icon: <FileCode2 size={15} />, desc: "Cómo se abren los archivos y con qué letra.", keys: "letra fuente tamaño dividido ventana pestaña máximo mb" },
+      { id: "explorer", label: "Explorador", icon: <FolderTree size={15} />, desc: "Lista de archivos del servidor.", keys: "ocultos borrar confirmar" },
+    ],
+  },
+  {
+    group: "Conexiones",
+    items: [
+      { id: "connection", label: "Conexión", icon: <Plug size={15} />, desc: "Detección de cortes y reconexión automática.", keys: "keepalive señal de vida reconectar intentos desconexión" },
+      { id: "transfers", label: "Transferencias", icon: <ArrowLeftRight size={15} />, desc: "Subidas y descargas de archivos.", keys: "simultáneas sobrescribir omitir existe conflicto" },
+      { id: "servers", label: "Servidores", icon: <Server size={15} />, desc: "Integración con la configuración de ssh del equipo.", keys: "ssh config exportar sincronizar alias" },
+      { id: "security", label: "Seguridad", icon: <ShieldCheck size={15} />, desc: "PIN de la bóveda de contraseñas y bloqueo.", keys: "pin bloqueo bóveda contraseña inactividad" },
+    ],
+  },
+  {
+    group: "Inteligencia artificial",
+    items: [
+      { id: "assistants", label: "Asistentes de IA (MCP)", icon: <Bot size={15} />, desc: "Claude, Codex y otros usan tus servidores con permiso, sin ver contraseñas ni llaves.", keys: "mcp claude codex token puerto permisos sudo" },
+      { id: "localAi", label: "Terminal local e IA", icon: <Laptop size={15} />, desc: "Terminal de tu equipo y el contexto que reciben los asistentes (nunca contraseñas ni llaves).", keys: "local claude code codex contexto carpeta" },
+      { id: "ai", label: "IA para explicar informes", icon: <MessageSquareText size={15} />, desc: "Modelo opcional que explica los informes del escáner.", keys: "openai ollama modelo url token escáner vulnerabilidades" },
+    ],
+  },
+  {
+    group: "Sistema",
+    items: [
+      { id: "advanced", label: "Avanzado", icon: <SlidersHorizontal size={15} />, desc: "Diagnóstico y datos para informar de fallos.", keys: "diagnóstico registro logs" },
+      { id: "manual", label: "Manual de uso", icon: <BookOpen size={15} />, desc: "Cómo se usa TerView, paso a paso.", keys: "ayuda guía" },
+      { id: "about", label: "Acerca de", icon: <Info size={15} />, desc: "Versión, actualizaciones y novedades.", keys: "versión actualizaciones novedades changelog" },
+    ],
+  },
 ];
+
+const ALL_SECTIONS = NAV.flatMap((g) => g.items);
+
+/** Minúsculas y sin tildes, para buscar sin importar cómo se escriba. */
+const fold = (t: string) => t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
 const FONT_PRESETS = [
   DEFAULT_MONO_FONT,
@@ -85,14 +124,13 @@ const MB = 1024 * 1024;
 export function SettingsDialog() {
   const open = useUi((s) => s.settingsOpen);
   const close = useUi((s) => s.closeSettings);
-  const section = useSettingsNav((s) => s.section);
-  const setSection = useSettingsNav((s) => s.setSection);
   if (!open) return null;
   return (
     <Modal
       open
       title="Ajustes"
       onClose={close}
+      className="st-modal"
       // Ancha para que quepan las secciones largas (MCP, terminal local e IA); en pantallas pequeñas,
       // como mucho el 94 % de la ventana.
       width="min(1080px, 94vw)"
@@ -108,21 +146,104 @@ export function SettingsDialog() {
         </>
       }
     >
-      <div className="st-root">
-        <nav className="st-nav" aria-label="Secciones">
-          {SECTIONS.map((s) => (
+      <SettingsBody />
+    </Modal>
+  );
+}
+
+function SettingsBody() {
+  const section = useSettingsNav((s) => s.section);
+  const setSection = useSettingsNav((s) => s.setSection);
+  const [query, setQuery] = useState("");
+  const searchRef = useRef<HTMLInputElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const q = fold(query.trim());
+  const groups = useMemo(
+    () =>
+      q
+        ? NAV.map((g) => ({ ...g, items: g.items.filter((s) => fold(`${s.label} ${s.desc} ${s.keys}`).includes(q)) })).filter(
+            (g) => g.items.length > 0,
+          )
+        : NAV,
+    [q],
+  );
+  const current = ALL_SECTIONS.find((s) => s.id === section) ?? ALL_SECTIONS[0];
+  const go = (id: SectionId) => {
+    setSection(id);
+    contentRef.current?.scrollTo({ top: 0 });
+  };
+
+  return (
+    <div className="st-root">
+      <nav className="st-nav" aria-label="Secciones de ajustes">
+        <div className="st-search">
+          <Search size={14} aria-hidden />
+          <input
+            ref={searchRef}
+            className="st-search-input"
+            placeholder="Buscar ajuste…"
+            value={query}
+            aria-label="Buscar ajuste"
+            spellCheck={false}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && groups[0]) go(groups[0].items[0].id);
+              if (e.key === "Escape" && query) {
+                e.stopPropagation();
+                e.nativeEvent.stopImmediatePropagation();
+                setQuery("");
+              }
+            }}
+          />
+          {query && (
             <button
-              key={s.id}
-              className={section === s.id ? "st-nav-item active" : "st-nav-item"}
-              onClick={() => setSection(s.id)}
-              aria-current={section === s.id}
+              type="button"
+              className="st-search-clear"
+              aria-label="Borrar búsqueda"
+              onClick={() => {
+                setQuery("");
+                searchRef.current?.focus();
+              }}
             >
-              {s.icon}
-              {s.label}
+              <X size={13} />
             </button>
+          )}
+        </div>
+        <div className="st-nav-list">
+          {groups.map((g) => (
+            <div className="st-nav-group" key={g.group}>
+              <div className="st-nav-group-title">{g.group}</div>
+              {g.items.map((s) => (
+                <button
+                  type="button"
+                  key={s.id}
+                  className={section === s.id ? "st-nav-item active" : "st-nav-item"}
+                  onClick={() => go(s.id)}
+                  aria-current={section === s.id ? "page" : undefined}
+                  title={s.label}
+                >
+                  {s.icon}
+                  <span>{s.label}</span>
+                </button>
+              ))}
+            </div>
           ))}
-        </nav>
-        <div className="st-content">
+          {groups.length === 0 && <div className="st-nav-empty">Sin resultados para «{query.trim()}».</div>}
+        </div>
+      </nav>
+      <div className="st-main" ref={contentRef}>
+        {section !== "manual" && section !== "about" && (
+          <header className="st-head">
+            <span className="st-head-icon" aria-hidden>
+              {current.icon}
+            </span>
+            <div>
+              <h3 className="st-head-title">{current.label}</h3>
+              <p className="st-head-desc">{current.desc}</p>
+            </div>
+          </header>
+        )}
+        <div className={`st-body st-body-${section}`}>
           {section === "appearance" && <Appearance />}
           {section === "terminal" && <TerminalSection />}
           {section === "connection" && <ConnectionSection />}
@@ -149,7 +270,7 @@ export function SettingsDialog() {
           {section === "about" && <AboutSection />}
         </div>
       </div>
-    </Modal>
+    </div>
   );
 }
 
@@ -173,87 +294,6 @@ function useSetting<K extends keyof Settings>(key: K): [Settings[K], (v: Setting
   return [value, (v) => update({ [key]: v } as Partial<Settings>)];
 }
 
-function Row({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
-  return (
-    <div className="st-row">
-      <div className="st-row-label">
-        <span>{label}</span>
-        {hint && <small>{hint}</small>}
-      </div>
-      <div className="st-row-control">{children}</div>
-    </div>
-  );
-}
-
-/** Número con − / + y escritura libre; confirma al salir o con Enter. */
-function NumberStepper({
-  value,
-  min,
-  max,
-  step = 1,
-  suffix,
-  onChange,
-}: {
-  value: number;
-  min: number;
-  max: number;
-  step?: number;
-  suffix?: string;
-  onChange: (v: number) => void;
-}) {
-  const [text, setText] = useState(String(value));
-  useEffect(() => setText(String(value)), [value]);
-  const clamp = (n: number) => Math.min(max, Math.max(min, n));
-  const commit = () => {
-    const n = Number(text.replace(",", "."));
-    if (Number.isFinite(n)) onChange(clamp(Math.round(n / step) * step));
-    else setText(String(value));
-  };
-  return (
-    <div className="st-stepper">
-      <button className="icon-btn" onClick={() => onChange(clamp(value - step))} disabled={value <= min} aria-label="Menos">
-        <Minus size={14} />
-      </button>
-      <input
-        className="input st-num"
-        inputMode="numeric"
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        onBlur={commit}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") commit();
-          if (e.key === "ArrowUp") {
-            e.preventDefault();
-            onChange(clamp(value + step));
-          }
-          if (e.key === "ArrowDown") {
-            e.preventDefault();
-            onChange(clamp(value - step));
-          }
-        }}
-      />
-      {suffix && <span className="st-suffix">{suffix}</span>}
-      <button className="icon-btn" onClick={() => onChange(clamp(value + step))} disabled={value >= max} aria-label="Más">
-        <Plus size={14} />
-      </button>
-    </div>
-  );
-}
-
-function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
-  return (
-    <button
-      role="switch"
-      aria-checked={checked}
-      aria-label={label}
-      className={checked ? "st-switch on" : "st-switch"}
-      onClick={() => onChange(!checked)}
-    >
-      <span />
-    </button>
-  );
-}
-
 function FontFamilyInput({ value, onChange, fallback }: { value: string; onChange: (v: string) => void; fallback: string }) {
   return (
     <>
@@ -274,50 +314,128 @@ function FontFamilyInput({ value, onChange, fallback }: { value: string; onChang
   );
 }
 
-function Segmented<T extends string | number>({
-  value,
-  options,
-  onChange,
-  label,
-}: {
-  value: T;
-  options: { v: T; label: string; icon?: ReactNode }[];
-  onChange: (v: T) => void;
-  label: string;
-}) {
+/** Miniatura de una apariencia: barra lateral, panel con acento y un trozo de terminal. */
+function ThemeThumb({ p }: { p: PaletteInfo["preview"] }) {
   return (
-    <div className="st-segmented" role="radiogroup" aria-label={label}>
-      {options.map((o) => (
-        <button
-          key={String(o.v)}
-          role="radio"
-          aria-checked={value === o.v}
-          className={value === o.v ? "active" : ""}
-          onClick={() => onChange(o.v)}
-        >
-          {o.icon}
-          {o.label}
-        </button>
-      ))}
-    </div>
+    <span className="st-thumb" style={{ background: p.bg, borderColor: p.border }} aria-hidden>
+      <span className="st-thumb-side" style={{ background: p.sunken, borderColor: p.border }}>
+        <i style={{ background: p.accent }} />
+        <i style={{ background: p.muted }} />
+        <i style={{ background: p.muted }} />
+      </span>
+      <span className="st-thumb-main">
+        <span className="st-thumb-bar" style={{ background: p.surface, borderColor: p.border }}>
+          <i style={{ background: p.text }} />
+          <b style={{ background: p.accent }} />
+        </span>
+        <span className="st-thumb-term" style={{ background: p.terminal, borderColor: p.border }}>
+          <i style={{ background: p.termText }} />
+          <i style={{ background: p.muted, width: "70%" }} />
+          <i style={{ background: p.muted, width: "45%" }} />
+        </span>
+      </span>
+    </span>
   );
 }
 
 function Appearance() {
   const [theme, setTheme] = useSetting("theme");
-  const opts: { v: Settings["theme"]; label: string; icon: ReactNode }[] = [
-    { v: "dark", label: "Oscuro", icon: <Moon size={15} /> },
-    { v: "light", label: "Claro", icon: <Sun size={15} /> },
-    { v: "system", label: "Sistema", icon: <Monitor size={15} /> },
+  const [accent, setAccent] = useSetting("accent");
+  const [uiSize, setUiSize] = useSetting("uiFontSize");
+  const mode = useAppTheme((s) => s.theme);
+  const dark = PALETTES.find((p) => p.id === "dark")!;
+  const light = PALETTES.find((p) => p.id === "light")!;
+  const cards: { id: ThemeId; label: string; hint: string; thumb: ReactNode }[] = [
+    {
+      id: "system",
+      label: "Sistema",
+      hint: "Claro u Oscuro según el modo de tu equipo.",
+      thumb: (
+        <span className="st-thumb-split">
+          <ThemeThumb p={light.preview} />
+          <ThemeThumb p={dark.preview} />
+        </span>
+      ),
+    },
+    ...PALETTES.map((p) => ({ id: p.id, label: p.label, hint: p.hint, thumb: <ThemeThumb p={p.preview} /> })),
   ];
   return (
     <>
-      <h3 className="st-title">Apariencia</h3>
-      <Row label="Tema" hint="«Sistema» sigue el modo claro u oscuro de tu equipo.">
-        <Segmented value={theme} options={opts} onChange={setTheme} label="Tema" />
-      </Row>
+      <SettingGroup title="Tema">
+        <div className="st-themes" role="radiogroup" aria-label="Tema">
+          {cards.map((c) => (
+            <button
+              type="button"
+              key={c.id}
+              role="radio"
+              aria-checked={theme === c.id}
+              className={theme === c.id ? "st-theme active" : "st-theme"}
+              onClick={() => setTheme(c.id)}
+            >
+              {c.thumb}
+              <span className="st-theme-name">
+                {c.id === "system" && <Monitor size={13} />}
+                {c.label}
+                {theme === c.id && <Check size={14} className="st-theme-check" />}
+              </span>
+              <span className="st-theme-hint">{c.hint}</span>
+            </button>
+          ))}
+        </div>
+      </SettingGroup>
+      <SettingGroup title="Detalles">
+        <Row label="Color de acento" hint="«Del tema» usa el de cada apariencia.">
+          <div className="st-swatches" role="radiogroup" aria-label="Color de acento">
+            <button
+              type="button"
+              role="radio"
+              aria-checked={!accent}
+              className={!accent ? "st-swatch st-swatch-auto active" : "st-swatch st-swatch-auto"}
+              onClick={() => setAccent("")}
+            >
+              Del tema
+            </button>
+            {ACCENTS.map((a) => (
+              <button
+                type="button"
+                key={a.id}
+                role="radio"
+                aria-checked={accent === a.id}
+                aria-label={a.label}
+                title={a.label}
+                className={accent === a.id ? "st-swatch active" : "st-swatch"}
+                style={{ background: mode === "dark" ? a.dark : a.light }}
+                onClick={() => setAccent(a.id as AccentId)}
+              >
+                {accent === a.id && <Check size={13} />}
+              </button>
+            ))}
+          </div>
+        </Row>
+        <Row label="Tamaño de la letra de la interfaz" hint="La terminal y el editor tienen su propio tamaño.">
+          <Segmented
+            value={uiSize}
+            label="Tamaño de la letra de la interfaz"
+            onChange={setUiSize}
+            options={[
+              { v: 12, label: "Pequeña" },
+              { v: 13, label: "Normal" },
+              { v: 14, label: "Grande" },
+              { v: 15, label: "Muy grande" },
+            ]}
+          />
+        </Row>
+      </SettingGroup>
     </>
   );
+}
+
+/** Colores de la terminal con la apariencia actual (para la vista previa). */
+function useTermColors() {
+  const palette = useAppTheme((s) => s.palette);
+  const accent = useSettings((s) => s.settings.accent);
+  // buildTermTheme lee las variables de <html>, ya actualizadas cuando cambian palette o accent.
+  return useMemo(() => (void palette, void accent, buildTermTheme()), [palette, accent]);
 }
 
 function TerminalSection() {
@@ -326,53 +444,55 @@ function TerminalSection() {
   const [tmux, setTmux] = useSetting("terminalTmux");
   // Se guarda en este equipo (localStorage), no en los ajustes del motor.
   const [gpu, setGpu] = useState(getTerminalGpu);
+  const tc = useTermColors();
   return (
     <>
-      <h3 className="st-title">Terminal</h3>
-      <Row label="Tamaño de letra">
-        <NumberStepper value={size} min={8} max={32} suffix="px" onChange={setSize} />
-      </Row>
-      <Row label="Tipo de letra" hint="Lista de fuentes CSS; se usa la primera instalada.">
-        <FontFamilyInput value={family} onChange={setFamily} fallback={DEFAULT_SETTINGS.terminalFontFamily} />
-      </Row>
-      <Row
-        label="Aceleración por GPU en la terminal"
-        hint="Dibuja la terminal con la tarjeta gráfica (WebGL): más fluida con mucha salida. Si ves fallos de dibujado, desactívala. Si no está disponible se usa el dibujado normal."
-      >
-        <Toggle
-          checked={gpu}
-          onChange={(v) => {
-            setGpu(v);
-            setTerminalGpu(v);
-          }}
-          label="Aceleración por GPU en la terminal"
-        />
-      </Row>
-      <Row
-        label="Terminales persistentes (tmux)"
-        hint={`${TMUX_MODE_HINTS[tmux]} Con tmux, lo que corre en la terminal sigue vivo en el servidor si se corta la conexión o cierras la app, y TerView vuelve a engancharse al reconectar. Cada servidor puede cambiarlo en su ficha.`}
-      >
-        <Segmented
-          value={tmux}
-          label="Terminales persistentes (tmux)"
-          onChange={setTmux}
-          options={(["auto", "always", "never"] as const).map((v) => ({ v, label: TMUX_MODE_LABELS[v] }))}
-        />
-      </Row>
-      <div className="st-preview" style={{ fontFamily: family, fontSize: size }}>
-        <span className="st-prompt">deploy@web-prod</span>:<span className="st-path">~/app</span>$ ls -la
-        <br />
-        drwxr-xr-x 4 deploy deploy 4096 public  0O1lI|
-      </div>
+      <SettingGroup title="Letra">
+        <Row label="Tamaño de letra">
+          <NumberStepper value={size} min={8} max={32} suffix="px" onChange={setSize} />
+        </Row>
+        <Row label="Tipo de letra" hint="Se usa la primera fuente instalada.">
+          <FontFamilyInput value={family} onChange={setFamily} fallback={DEFAULT_SETTINGS.terminalFontFamily} />
+        </Row>
+        <div className="st-preview" style={{ fontFamily: family, fontSize: size, background: tc.background, color: tc.foreground }}>
+          <span style={{ color: tc.green }}>deploy@web-prod</span>:<span style={{ color: tc.blue }}>~/app</span>$ ls -la
+          <br />
+          drwxr-xr-x 4 deploy deploy 4096 <span style={{ color: tc.blue }}>public</span>  0O1lI|
+        </div>
+      </SettingGroup>
+      <SettingGroup title="Funcionamiento">
+        <Row label="Aceleración por GPU en la terminal" hint="Desactívala si ves fallos de dibujado.">
+          <Toggle
+            checked={gpu}
+            onChange={(v) => {
+              setGpu(v);
+              setTerminalGpu(v);
+            }}
+            label="Aceleración por GPU en la terminal"
+          />
+        </Row>
+        <Row label="Terminales persistentes (tmux)" hint="Lo que corre sigue vivo si se corta la conexión.">
+          <Segmented
+            value={tmux}
+            label="Terminales persistentes (tmux)"
+            onChange={setTmux}
+            options={(["auto", "always", "never"] as const).map((v) => ({
+              v,
+              label: TMUX_MODE_LABELS[v],
+              title: `${TMUX_MODE_HINTS[v]} Cada servidor puede cambiarlo en su ficha.`,
+            }))}
+          />
+        </Row>
+      </SettingGroup>
     </>
   );
 }
 
 const CONFLICT_HINTS: Record<Settings["transferConflict"], string> = {
-  overwrite: "El archivo de destino se reemplaza siempre.",
-  skip: "Si ya existe, no se transfiere (queda como «omitido»).",
-  newer: "Solo se reemplaza si el origen es más reciente que el destino.",
-  ask: "Pregunta archivo por archivo qué hacer (se puede aplicar a toda la transferencia).",
+  overwrite: "Reemplaza siempre el de destino.",
+  skip: "No transfiere los que ya existen.",
+  newer: "Reemplaza solo si el origen es más reciente.",
+  ask: "Pregunta archivo por archivo.",
 };
 
 function Transfers() {
@@ -380,34 +500,35 @@ function Transfers() {
   const [conflict, setConflict] = useSetting("transferConflict");
   return (
     <>
-      <h3 className="st-title">Transferencias</h3>
-      <Row label="Transferencias simultáneas" hint="Cuántos archivos se suben o bajan a la vez. Más no siempre es más rápido.">
-        <div className="st-range">
-          <input
-            type="range"
-            min={1}
-            max={8}
-            step={1}
-            value={conc}
-            onChange={(e) => setConc(Number(e.target.value))}
-            aria-label="Transferencias simultáneas"
+      <SettingGroup>
+        <Row label="Transferencias simultáneas" hint="Más no siempre es más rápido.">
+          <div className="st-range">
+            <input
+              type="range"
+              min={1}
+              max={8}
+              step={1}
+              value={conc}
+              onChange={(e) => setConc(Number(e.target.value))}
+              aria-label="Transferencias simultáneas"
+            />
+            <span className="st-range-value">{conc}</span>
+          </div>
+        </Row>
+        <Row label="Si el archivo ya existe" hint={CONFLICT_HINTS[conflict]}>
+          <Segmented
+            value={conflict}
+            label="Si el archivo ya existe"
+            onChange={setConflict}
+            options={[
+              { v: "overwrite", label: "Sobrescribir", title: CONFLICT_HINTS.overwrite },
+              { v: "skip", label: "Omitir", title: CONFLICT_HINTS.skip },
+              { v: "newer", label: "Solo si es más nuevo", title: CONFLICT_HINTS.newer },
+              { v: "ask", label: "Preguntar", title: CONFLICT_HINTS.ask },
+            ]}
           />
-          <span className="st-range-value">{conc}</span>
-        </div>
-      </Row>
-      <Row label="Si el archivo ya existe" hint={CONFLICT_HINTS[conflict]}>
-        <Segmented
-          value={conflict}
-          label="Si el archivo ya existe"
-          onChange={setConflict}
-          options={[
-            { v: "overwrite", label: "Sobrescribir" },
-            { v: "skip", label: "Omitir" },
-            { v: "newer", label: "Solo si es más nuevo" },
-            { v: "ask", label: "Preguntar" },
-          ]}
-        />
-      </Row>
+        </Row>
+      </SettingGroup>
     </>
   );
 }
@@ -417,13 +538,14 @@ function Explorer() {
   const [confirmDel, setConfirmDel] = useSetting("confirmDelete");
   return (
     <>
-      <h3 className="st-title">Explorador</h3>
-      <Row label="Mostrar archivos ocultos" hint="Archivos y carpetas que empiezan por un punto (.env, .git…).">
-        <Toggle checked={hidden} onChange={setHidden} label="Mostrar archivos ocultos" />
-      </Row>
-      <Row label="Confirmar antes de borrar" hint="Pregunta antes de borrar archivos del servidor.">
-        <Toggle checked={confirmDel} onChange={setConfirmDel} label="Confirmar antes de borrar" />
-      </Row>
+      <SettingGroup>
+        <Row label="Mostrar archivos ocultos" hint="Los que empiezan por un punto (.env, .git…).">
+          <Toggle checked={hidden} onChange={setHidden} label="Mostrar archivos ocultos" />
+        </Row>
+        <Row label="Confirmar antes de borrar">
+          <Toggle checked={confirmDel} onChange={setConfirmDel} label="Confirmar antes de borrar" />
+        </Row>
+      </SettingGroup>
     </>
   );
 }
@@ -440,38 +562,38 @@ function EditorSection() {
   };
   return (
     <>
-      <h3 className="st-title">Editor</h3>
-      <Row
-        label="Al abrir un archivo"
-        hint="Arrastra la pestaña de un archivo fuera de la ventana para abrirlo aparte. Ctrl+Shift+M divide o quita la división."
-      >
-        <Segmented
-          value={openMode}
-          label="Al abrir un archivo"
-          onChange={setOpenMode}
-          options={[
-            { v: "tab", label: "Pestaña", icon: <PanelTop size={14} /> },
-            { v: "split", label: "Dividido", icon: <Columns2 size={14} /> },
-            { v: "window", label: "En ventana aparte", icon: <AppWindow size={14} /> },
-          ]}
-        />
-      </Row>
-      <Row label="Tamaño de letra">
-        <NumberStepper value={size} min={8} max={32} suffix="px" onChange={setSize} />
-      </Row>
-      <Row label="Tipo de letra" hint="Lista de fuentes CSS; se usa la primera instalada.">
-        <FontFamilyInput value={family} onChange={setFamily} fallback={DEFAULT_SETTINGS.editorFontFamily} />
-      </Row>
-      <Row label="Tamaño máximo para abrir" hint="Los archivos más grandes no se abren en el editor (puedes descargarlos).">
-        <NumberStepper value={mb} min={1} max={100} suffix="MB" onChange={(v) => setMaxBytes(v * MB)} />
-      </Row>
-      <div className="st-preview" style={{ fontFamily: family, fontSize: size }}>
-        <span className="st-prompt">server</span> {"{"}
-        <br />
-        &nbsp;&nbsp;listen <span className="st-path">443</span> ssl; <span className="st-comment"># 0O1lI|</span>
-        <br />
-        {"}"}
-      </div>
+      <SettingGroup title="Archivos">
+        <Row label="Al abrir un archivo" hint="Ctrl+Shift+M divide o quita la división.">
+          <Segmented
+            value={openMode}
+            label="Al abrir un archivo"
+            onChange={setOpenMode}
+            options={[
+              { v: "tab", label: "Pestaña", icon: <PanelTop size={14} /> },
+              { v: "split", label: "Dividido", icon: <Columns2 size={14} /> },
+              { v: "window", label: "En ventana aparte", icon: <AppWindow size={14} /> },
+            ]}
+          />
+        </Row>
+        <Row label="Tamaño máximo para abrir" hint="Los más grandes se pueden descargar.">
+          <NumberStepper value={mb} min={1} max={100} suffix="MB" onChange={(v) => setMaxBytes(v * MB)} />
+        </Row>
+      </SettingGroup>
+      <SettingGroup title="Letra">
+        <Row label="Tamaño de letra">
+          <NumberStepper value={size} min={8} max={32} suffix="px" onChange={setSize} />
+        </Row>
+        <Row label="Tipo de letra" hint="Se usa la primera fuente instalada.">
+          <FontFamilyInput value={family} onChange={setFamily} fallback={DEFAULT_SETTINGS.editorFontFamily} />
+        </Row>
+        <div className="st-preview st-preview-editor" style={{ fontFamily: family, fontSize: size }}>
+          <span className="st-kw">server</span> {"{"}
+          <br />
+          &nbsp;&nbsp;listen <span className="st-numlit">443</span> ssl; <span className="st-comment"># 0O1lI|</span>
+          <br />
+          {"}"}
+        </div>
+      </SettingGroup>
     </>
   );
 }
@@ -485,26 +607,24 @@ function ConnectionSection() {
   const values = KEEPALIVE_OPTIONS.includes(keepalive) ? KEEPALIVE_OPTIONS : [...KEEPALIVE_OPTIONS, keepalive].sort((a, b) => a - b);
   return (
     <>
-      <h3 className="st-title">Conexión</h3>
-      <Row
-        label="Detectar desconexión en"
-        hint={`Intervalo de la señal de vida. Se da por perdida tras ~3 intervalos sin respuesta (≈ ${keepalive * 3} s). Aplica a conexiones nuevas.`}
-      >
-        <Segmented
-          value={keepalive}
-          label="Detectar desconexión en"
-          onChange={setKeepalive}
-          options={values.map((v) => ({ v, label: `${v} s` }))}
-        />
-      </Row>
-      <Row label="Reconectar automáticamente" hint="Si se cae la conexión, se reintenta sola con la contraseña o frase guardada.">
-        <Toggle checked={auto} onChange={setAuto} label="Reconectar automáticamente" />
-      </Row>
-      <Row label="Intentos" hint="Cuántas veces se reintenta (con espera creciente) antes de darla por perdida.">
-        <div className={auto ? undefined : "st-disabled"}>
-          <NumberStepper value={attempts} min={1} max={20} onChange={setAttempts} />
-        </div>
-      </Row>
+      <SettingGroup>
+        <Row label="Detectar desconexión en" hint={`Se da por perdida tras ≈ ${keepalive * 3} s sin respuesta.`}>
+          <Segmented
+            value={keepalive}
+            label="Detectar desconexión en"
+            onChange={setKeepalive}
+            options={values.map((v) => ({ v, label: `${v} s` }))}
+          />
+        </Row>
+        <Row label="Reconectar automáticamente" hint="Con la contraseña o frase guardada.">
+          <Toggle checked={auto} onChange={setAuto} label="Reconectar automáticamente" />
+        </Row>
+        <Row label="Intentos">
+          <div className={auto ? undefined : "st-disabled"}>
+            <NumberStepper value={attempts} min={1} max={20} onChange={setAttempts} />
+          </div>
+        </Row>
+      </SettingGroup>
     </>
   );
 }
@@ -541,18 +661,16 @@ function ServersSection() {
 
   return (
     <>
-      <h3 className="st-title">Servidores</h3>
-      <Row
-        label={`Mantener ${SSH_CONFIG_LABEL} sincronizado`}
-        hint={`Tus servidores se escriben en un bloque marcado de ${SSH_CONFIG_LABEL} (el resto del archivo no se toca) y se actualizan al guardar o borrar. Así funcionan con «ssh», «scp», VS Code o Claude Code.`}
-      >
-        <Toggle checked={sync} onChange={(v) => void onToggle(v)} label={`Mantener ${SSH_CONFIG_LABEL} sincronizado`} />
-      </Row>
-      <Row label={`Exportar a ${SSH_CONFIG_LABEL}`} hint="Escribe ahora el bloque de TerView. Se guarda una copia de seguridad la primera vez.">
-        <button className="btn" onClick={() => void exportNow()} disabled={busy}>
-          {busy ? <span className="spinner" /> : <FileOutput size={14} />} Exportar ahora
-        </button>
-      </Row>
+      <SettingGroup>
+        <Row label={`Mantener ${SSH_CONFIG_LABEL} sincronizado`} hint="Para usar tus servidores con ssh, scp, VS Code o Claude Code.">
+          <Toggle checked={sync} onChange={(v) => void onToggle(v)} label={`Mantener ${SSH_CONFIG_LABEL} sincronizado`} />
+        </Row>
+        <Row label={`Exportar a ${SSH_CONFIG_LABEL}`} hint="La primera vez guarda una copia de seguridad.">
+          <button className="btn" onClick={() => void exportNow()} disabled={busy}>
+            {busy ? <span className="spinner" /> : <FileOutput size={14} />} Exportar ahora
+          </button>
+        </Row>
+      </SettingGroup>
     </>
   );
 }
@@ -560,7 +678,6 @@ function ServersSection() {
 function AdvancedSection() {
   return (
     <>
-      <h3 className="st-title">Avanzado</h3>
       <h4 className="st-subtitle">Diagnóstico</h4>
       <DiagnosticsPanel />
     </>
@@ -575,16 +692,18 @@ function AboutSection() {
       <AboutHeader />
       <h4 className="st-subtitle">Actualizaciones</h4>
       <UpdatesBox />
-      <Row label="Buscar actualizaciones automáticamente" hint="Al iniciar, sin interrumpir: si hay una versión nueva verás un aviso.">
-        <Toggle
-          checked={auto}
-          onChange={(v) => {
-            setAuto(v);
-            setAutoCheck(v);
-          }}
-          label="Buscar actualizaciones automáticamente"
-        />
-      </Row>
+      <SettingGroup>
+        <Row label="Buscar actualizaciones automáticamente" hint="Al iniciar; si hay una nueva verás un aviso.">
+          <Toggle
+            checked={auto}
+            onChange={(v) => {
+              setAuto(v);
+              setAutoCheck(v);
+            }}
+            label="Buscar actualizaciones automáticamente"
+          />
+        </Row>
+      </SettingGroup>
       <h4 className="st-subtitle">Novedades</h4>
       <ChangelogView />
     </>

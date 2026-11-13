@@ -60,7 +60,8 @@ export function RemoteEditor({ sessionId, path, active, onDirtyChange, offline =
   const [language, setLanguage] = useState(() => detectLanguage(path));
   const [info, setInfo] = useState<{ size: number; modified: number | null }>({ size: 0, modified: null });
 
-  const theme = useAppTheme((s) => s.theme);
+  const palette = useAppTheme((s) => s.palette);
+  const accent = useSettings((s) => s.settings.accent);
   const fontSize = useSettings((s) => s.settings.editorFontSize);
   const fontFamily = useSettings((s) => s.settings.editorFontFamily);
   const maxBytes = useSettings((s) => s.settings.editorMaxBytes);
@@ -195,7 +196,7 @@ export function RemoteEditor({ sessionId, path, active, onDirtyChange, offline =
   useEffect(() => {
     const host = hostRef.current;
     if (!host) return;
-    applyMonacoTheme(useAppTheme.getState().theme);
+    applyMonacoTheme();
     const uri = monaco.Uri.from({ scheme: "terview", authority: `s${++modelSeq}`, path: path.startsWith("/") ? path : `/${path}` });
     const model = monaco.editor.createModel("", detectLanguage(path), uri);
     const s = useSettings.getState().settings;
@@ -256,10 +257,10 @@ export function RemoteEditor({ sessionId, path, active, onDirtyChange, offline =
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Tema
+  // Apariencia (y acento): el tema de Monaco sale de las variables de <html>, ya aplicadas.
   useEffect(() => {
-    applyMonacoTheme(theme);
-  }, [theme]);
+    applyMonacoTheme();
+  }, [palette, accent]);
 
   // Fuente
   useEffect(() => {

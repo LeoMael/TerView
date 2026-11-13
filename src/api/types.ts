@@ -56,7 +56,12 @@ export interface ProfilesData {
 }
 
 export interface Settings {
-  theme: "dark" | "light" | "system";
+  /** Apariencia (lista en src/styles/themes.ts); "system" sigue el modo claro u oscuro del equipo. */
+  theme: import("../styles/themes").ThemeId;
+  /** Color de acento elegido ("" = el de la apariencia). */
+  accent: import("../styles/themes").AccentId;
+  /** Tamaño de letra de la interfaz en px (13 por defecto). */
+  uiFontSize: number;
   terminalFontSize: number;
   terminalFontFamily: string;
   transferConcurrency: number;
