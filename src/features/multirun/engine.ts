@@ -2,6 +2,7 @@
 // ejecución, cancelación y reintentos. No depende de Tauri: las llamadas reales se inyectan (EngineDeps),
 // así se puede probar con un motor simulado.
 import type { ExecResult } from "../../api/types";
+import type { SudoExecResult, SudoWrapFailure } from "../../api/snippets";
 import { isFinal, type AttentionKind, type PrivilegeHint, type RunSpec, type TargetInput, type TargetState } from "./types";
 
 export interface EngineDeps {
@@ -20,6 +21,37 @@ export interface EngineDeps {
   disconnect(sessionId: string): Promise<void>;
   /** Nivel de privilegios (solo lectura, informativo). */
   privilege(sessionId: string, reused: boolean): Promise<PrivilegeHint | null>;
+  /**
+   * Contraseña de sudo para ejecutar en esa sesión (en memoria → guardada → otra pestaña → diálogo en cola).
+   * `{ need: false }`: no hace falta (root, sudo sin contraseña, sin sudo). null: el usuario saltó el
+   * servidor (o se abortó con `signal`).
+   */
+  sudoPassword?(
+    sessionId: string,
+    profileId: string,
+    serverName: string,
+    signal: AbortSignal,
+  ): Promise<{ password: string } | { need: false } | null>;
+  /** Ejecuta con la contraseña de sudo (envoltorio del motor). */
+  execSudo?(sessionId: string, command: string, password: string, timeoutSecs: number, execId: string): Promise<SudoExecResult>;
+  /** sudo rechazó la contraseña: se olvida y, si era la guardada, queda marcada como rechazada. */
+  sudoRejected?(sessionId: string): void;
+}
+
+/** Mensaje de un fallo de sudo antes de ejecutar el comando. */
+export function sudoFailureText(f: SudoWrapFailure): string {
+  switch (f) {
+    case "bad-password":
+      return "Contraseña de sudo incorrecta: sudo la rechazó y no se ejecutó el comando. Vuelve a intentarlo para escribir otra.";
+    case "denied":
+      return "Tu usuario no tiene permiso para usar sudo en este servidor: no se ejecutó el comando.";
+    case "tty-required":
+      return "sudo exige una terminal en este servidor (opción «requiretty»): no se puede usar desde aquí.";
+    case "no-temp":
+      return "No se pudo preparar sudo: no hay ninguna carpeta temporal donde se puedan ejecutar archivos.";
+    case "no-sudo":
+      return "sudo no está instalado en este servidor.";
+  }
 }
 
 /** Ejecución en curso de un servidor (para poder detenerla al cancelar). */
@@ -104,6 +136,8 @@ export class RunEngine {
   private readonly owned = new Map<string, string>();
   /** Comandos ejecutándose ahora (profileId → ejecución). */
   private readonly inFlight = new Map<string, InFlight>();
+  /** Esperas de la contraseña de sudo (profileId → para quitar su diálogo de la cola al cancelar). */
+  private readonly sudoWaits = new Map<string, AbortController>();
   private active = 0;
   private readonly waiting: (() => void)[] = [];
   private disposed = false;
@@ -157,6 +191,8 @@ export class RunEngine {
     const t = this.find(profileId);
     if (!t || isFinal(t.status)) return;
     this.bump(profileId);
+    this.sudoWaits.get(profileId)?.abort();
+    this.sudoWaits.delete(profileId);
     const ex = this.inFlight.get(profileId);
     this.patch(profileId, {
       status: "canceled",
@@ -264,6 +300,24 @@ export class RunEngine {
     this.waiting.shift()?.();
   }
 
+  /**
+   * Contraseña de sudo para este servidor si el comando la necesita: undefined = ejecutar tal cual (no se
+   * usa sudo con contraseña, root, sudo sin contraseña…); null = el usuario saltó el servidor.
+   */
+  private async sudoPasswordFor(profileId: string, sessionId: string, name: string): Promise<string | null | undefined> {
+    if (!this.spec.sudoPassword || !this.deps.sudoPassword || !this.deps.execSudo) return undefined;
+    this.patch(profileId, { detail: "Buscando la contraseña de sudo…" });
+    const ac = new AbortController();
+    this.sudoWaits.set(profileId, ac);
+    try {
+      const got = await this.deps.sudoPassword(sessionId, profileId, name, ac.signal).catch(() => null);
+      if (got === null) return null;
+      return "password" in got ? got.password : undefined;
+    } finally {
+      if (this.sudoWaits.get(profileId) === ac) this.sudoWaits.delete(profileId);
+    }
+  }
+
   private async runOne(profileId: string, interactive: boolean, onConnectDone?: () => void): Promise<void> {
     const g = this.bump(profileId);
     const stale = () => this.disposed || this.gen.get(profileId) !== g;
@@ -328,9 +382,22 @@ export class RunEngine {
           this.patch(profileId, { privilege: p });
         }
         if (stale()) return;
-        this.patch(profileId, { status: "running", execStartedAt: Date.now() });
+        const password = await this.sudoPasswordFor(profileId, sessionId, t.name);
+        if (stale()) return;
+        if (password === null) {
+          this.patch(profileId, {
+            status: "canceled",
+            detail: "Saltado: sin contraseña de sudo",
+            finishedAt: Date.now(),
+          });
+          return;
+        }
+        this.patch(profileId, { status: "running", execStartedAt: Date.now(), detail: null });
         const execId = this.deps.newExecId();
-        const pending = this.deps.exec(sessionId, this.spec.command, this.spec.timeoutSecs, execId);
+        const pending: Promise<ExecResult & { sudoFailure?: SudoWrapFailure | null }> =
+          password !== undefined && this.deps.execSudo
+            ? this.deps.execSudo(sessionId, this.spec.command, password, this.spec.timeoutSecs, execId)
+            : this.deps.exec(sessionId, this.spec.command, this.spec.timeoutSecs, execId);
         const ex: InFlight = {
           execId,
           sessionId,
@@ -341,13 +408,18 @@ export class RunEngine {
           ),
         };
         this.inFlight.set(profileId, ex);
-        let r: ExecResult;
+        let r: ExecResult & { sudoFailure?: SudoWrapFailure | null };
         try {
           r = await pending;
         } finally {
           if (this.inFlight.get(profileId) === ex) this.inFlight.delete(profileId);
         }
         if (stale()) return;
+        if (r.sudoFailure) {
+          if (r.sudoFailure === "bad-password") this.deps.sudoRejected?.(sessionId);
+          this.patch(profileId, { status: "error", result: r, detail: sudoFailureText(r.sudoFailure), finishedAt: Date.now() });
+          return;
+        }
         const status = r.timedOut ? "timeout" : r.exitCode === 0 ? "ok" : "error";
         const detail = r.timedOut
           ? `Sin terminar tras ${this.spec.timeoutSecs} s`

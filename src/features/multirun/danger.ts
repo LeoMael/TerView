@@ -63,6 +63,13 @@ export function usesSudoNonInteractive(command: string): boolean {
   return SUDO_NONINTERACTIVE_RE.test(command);
 }
 
+const SUDO_ONLY_RE = new RegExp(String.raw`${W}sudo(?:\s|$)`);
+
+/** ¿Hay que dar la contraseña de sudo? Usa sudo y no solo con -n (doas no la acepta sin terminal). */
+export function wantsSudoPassword(command: string): boolean {
+  return SUDO_ONLY_RE.test(command) && !SUDO_NONINTERACTIVE_RE.test(command);
+}
+
 /** ¿El comando no termina solo (top, tail -f, watch…)? En ejecución no interactiva se cortaría por tiempo. */
 export function looksInteractive(command: string): boolean {
   return new RegExp(

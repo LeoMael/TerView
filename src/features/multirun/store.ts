@@ -5,7 +5,17 @@ import { ssh } from "../../api/ssh";
 import { newExecId, snippets } from "../../api/snippets";
 import { useProfiles } from "../../stores/profiles";
 import { useTabs } from "../../stores/tabs";
-import { detectPrivilege, getPrivilege } from "../privileges";
+import {
+  detectPrivilege,
+  forgetSudo,
+  getPrivilege,
+  getSudoPassword,
+  obtainSudoPassword,
+  sudoPasswordNeeded,
+  sudoRejectedNotified,
+  type PrivilegeInfo,
+} from "../privileges";
+import { askSudoInDialog } from "../mcp/sudoAsk";
 import { connectInBackground } from "./connect";
 import { RunEngine, type EngineDeps } from "./engine";
 import type { RunSpec, TargetInput, TargetState } from "./types";
@@ -92,6 +102,19 @@ export const useMultiRun = create<MultiRunState>(() => ({
 let engine: RunEngine | null = null;
 let runSeq = 0;
 
+/** Privilegios ya consultados en esta ejecución (sessionId → detección), para no repetir la consulta. */
+const detected = new Map<string, PrivilegeInfo>();
+
+async function privilegeOf(sessionId: string, reused: boolean): Promise<PrivilegeInfo> {
+  const known = reused ? getPrivilege(sessionId) : null;
+  if (known && known.level !== "unknown") return known;
+  const cached = detected.get(sessionId);
+  if (cached) return cached;
+  const info = await detectPrivilege(sessionId);
+  detected.set(sessionId, info);
+  return info;
+}
+
 const realDeps: EngineDeps = {
   tabSession: (profileId) =>
     useTabs.getState().tabs.find((t) => t.profileId === profileId && t.status === "connected")?.sessionId ?? null,
@@ -104,13 +127,44 @@ const realDeps: EngineDeps = {
   exec: (sessionId, command, timeoutSecs, execId) => snippets.exec(sessionId, command, timeoutSecs, execId),
   newExecId,
   cancelExec: (execId) => snippets.cancelExec(execId),
-  disconnect: (sessionId) => ssh.disconnect(sessionId),
-  privilege: async (sessionId, reused) => {
-    // Solo lectura: en pestañas se usa lo ya detectado; si no, se consulta sin guardar nada.
-    const known = reused ? getPrivilege(sessionId) : null;
-    if (known && known.level !== "unknown") return known.level;
-    return (await detectPrivilege(sessionId)).level;
+  disconnect: (sessionId) => {
+    // Sesión propia de la ejecución (sin pestaña): su contraseña de sudo en memoria se olvida al cerrarla.
+    forgetSudo(sessionId);
+    detected.delete(sessionId);
+    return ssh.disconnect(sessionId);
   },
+  privilege: async (sessionId, reused) => {
+    // Solo lectura: en pestañas se usa lo ya detectado; si no, se consulta sin guardarlo en la pestaña.
+    return (await privilegeOf(sessionId, reused)).level;
+  },
+  // Igual que el resto de TerView (obtainSudoPassword); si hay que preguntar, el diálogo va a la cola de
+  // SudoAskHost: uno cada vez, con «Saltar este servidor».
+  sudoPassword: async (sessionId, profileId, serverName, signal) => {
+    const reused = useTabs.getState().tabs.some((t) => t.sessionId === sessionId);
+    const info = await privilegeOf(sessionId, reused);
+    if (!sudoPasswordNeeded(info)) return { need: false };
+    const found = await obtainSudoPassword(sessionId, profileId);
+    if (signal.aborted) return null;
+    if (!found.ok) {
+      const given = await askSudoInDialog(
+        {
+          sessionId,
+          profileId,
+          user: info.user,
+          serverName,
+          reason: `«Ejecutar en varios servidores» necesita la contraseña de sudo en «${serverName}». Si la saltas, este servidor no ejecuta el comando.`,
+          cancelLabel: "Saltar este servidor",
+        },
+        signal,
+      );
+      if (!given) return null;
+    }
+    const password = getSudoPassword(sessionId);
+    return password === undefined ? null : { password };
+  },
+  execSudo: (sessionId, command, password, timeoutSecs, execId) =>
+    snippets.execSudo(sessionId, command, password, timeoutSecs, execId),
+  sudoRejected: (sessionId) => sudoRejectedNotified(sessionId),
 };
 
 /** Para pruebas: sustituye las llamadas reales (motor simulado). */

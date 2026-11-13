@@ -1,8 +1,8 @@
 // Pide y valida la contraseña de sudo. Queda en memoria mientras dure la conexión y, si se marca
 // «Guardar para este servidor», también en la bóveda (o el llavero) como contraseña de sudo guardada.
 // Antes de preguntar busca la que ya hay (`obtainSudoPassword`: en memoria, guardada u otra pestaña del
-// mismo servidor): si sirve, se cierra solo. Lo usan Administración, Contenedores, el escáner y los comandos
-// con sudo del asistente de IA (features/mcp/SudoAskHost.tsx).
+// mismo servidor): si sirve, se cierra solo. Lo usan Administración, Contenedores, el escáner, los comandos
+// con sudo del asistente de IA y «Ejecutar en varios servidores» (cola de features/mcp/SudoAskHost.tsx).
 import { useEffect, useState } from "react";
 import { KeyRound } from "lucide-react";
 import {
@@ -42,6 +42,7 @@ export function SudoDialog({
   user,
   change = false,
   reason,
+  cancelLabel = "Cancelar",
   onClose,
 }: {
   sessionId: string;
@@ -51,6 +52,8 @@ export function SudoDialog({
   change?: boolean;
   /** Para qué se pide (p. ej. un comando del asistente). */
   reason?: string;
+  /** Texto del botón de cancelar. */
+  cancelLabel?: string;
   onClose: () => void;
 }) {
   const stored = useStoredSudoState(sessionId);
@@ -175,7 +178,7 @@ export function SudoDialog({
         </div>
         <div className="modal-footer">
           <button type="button" className="btn" onClick={onClose} disabled={busy}>
-            Cancelar
+            {cancelLabel}
           </button>
           <button type="submit" className="btn btn-primary" disabled={busy || looking || !password}>
             {busy ? <span className="spinner adm-spinner-btn" /> : <KeyRound size={13} />}

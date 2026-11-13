@@ -12,7 +12,9 @@ import type { PrivilegeInfo } from "./detect";
 import { otherSessionPasswords, storedFailed, storedStateAfterConfirm, sudoLookupPlan, type SudoSource } from "./lookup";
 import { confirmSudo, setStoredSudo, useSudo, without } from "./sudo";
 
-/** Modo de sudo efectivo de un servidor («login» solo si entra con contraseña). */
+/** Modo de sudo efectivo de un servidor («login» solo si entra con contraseña). Con «login» vale la
+ * contraseña guardada de la conexión o, si no se guardó, la que se escribió al conectar esa sesión (el
+ * motor la guarda en memoria mientras dure la sesión; se borra al cerrarla o al bloquear TerView). */
 export function sudoModeOf(profileId: string): SudoMode {
   const srv = useProfiles.getState().getServer(profileId);
   const mode = srv?.sudoMode ?? "ask";
@@ -50,7 +52,7 @@ async function readAndConfirm(sessionId: string, profileId: string): Promise<voi
   setStoredSudo(sessionId, "loading");
   let pw: string | null;
   try {
-    pw = await profiles.sudoPassword(profileId);
+    pw = await profiles.sudoPassword(profileId, sessionId);
   } catch {
     // Bloqueado o llavero no disponible: se pedirá a mano (y se reintenta al desbloquear).
     if (useSudo.getState().stored[sessionId] === "loading") setStoredSudo(sessionId, "none");

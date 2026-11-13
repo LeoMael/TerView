@@ -8,6 +8,7 @@ pub mod commands;
 pub mod connect;
 pub mod handler;
 pub mod known_hosts;
+pub mod login_secret;
 pub mod reconnect;
 
 pub use commands::*;
@@ -90,6 +91,7 @@ impl SessionStore {
     pub async fn remove(&self, id: &str) -> Option<Arc<SshSession>> {
         let slot = self.sessions.write().await.remove(id)?;
         slot.cancel.cancel();
+        login_secret::forget(id);
         Some(slot.session)
     }
 

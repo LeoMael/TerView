@@ -17,7 +17,7 @@ export function SudoAskHost() {
   }, [locked]);
 
   useEffect(() => {
-    if (!first) return;
+    if (!first || first.expiresAt === undefined) return;
     const t = window.setTimeout(() => finishSudoAsk(first.id), Math.max(0, first.expiresAt - Date.now()));
     return () => window.clearTimeout(t);
   }, [first]);
@@ -31,7 +31,8 @@ export function SudoAskHost() {
           sessionId={first.sessionId}
           profileId={first.profileId}
           user={first.user}
-          reason={`El asistente quiere ejecutar un comando con sudo en «${first.serverName}» (${first.auto ? "aceptado automáticamente" : "ya le diste permiso"}). TerView le pasa la contraseña a sudo: el asistente no la ve.`}
+          cancelLabel={first.cancelLabel}
+          reason={first.reason ?? `El asistente quiere ejecutar un comando con sudo en «${first.serverName}» (${first.auto ? "aceptado automáticamente" : "ya le diste permiso"}). TerView le pasa la contraseña a sudo: el asistente no la ve.`}
           onClose={() => finishSudoAsk(first.id)}
         />
       </Suspense>

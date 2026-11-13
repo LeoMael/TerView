@@ -503,3 +503,16 @@ async fn live_exec_uses_login_shell_and_hides_mark() {
     let r = exec::run_cancellable(&s, "echo nunca", None, 10, &token).await;
     assert!(matches!(r, Err(crate::error::AppError::Canceled)));
 }
+
+#[test]
+fn sudo_failure_keys_match_ui() {
+    use super::sudo::{failure, SudoFailure};
+    // Mismos nombres que `SudoWrapFailure` (src/api/snippets.ts).
+    assert_eq!(failure(Some(97), "x\n__TV_SUDO_BAD__\n").map(SudoFailure::key), Some("bad-password"));
+    assert_eq!(failure(Some(96), "__TV_SUDO_DENIED__").map(SudoFailure::key), Some("denied"));
+    assert_eq!(failure(Some(95), "__TV_SUDO_TTY__").map(SudoFailure::key), Some("tty-required"));
+    assert_eq!(failure(Some(94), "__TV_SUDO_NOTMP__").map(SudoFailure::key), Some("no-temp"));
+    assert_eq!(failure(Some(93), "__TV_NO_SUDO__").map(SudoFailure::key), Some("no-sudo"));
+    // El código solo no basta: el comando del usuario puede salir con 97.
+    assert_eq!(failure(Some(97), "otra cosa"), None);
+}

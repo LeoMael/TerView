@@ -35,6 +35,7 @@ import {
   type Phase,
 } from "../../features/vulnscan";
 import { useLock } from "../../features/lock/lockStore";
+import { storedFailed, sudoModeOf, useStoredSudoState } from "../../features/privileges";
 import { useSettings } from "../../stores/settings";
 import { toast } from "../../stores/toasts";
 import { useAdmin } from "./context";
@@ -92,6 +93,9 @@ export function VulnsTab() {
   const aiSettings = useSettings((s) => s.settings.ai);
   const locked = useLock((s) => !!s.status?.locked);
   const running = !!run?.running;
+  // La contraseña de sudo (guardada, de la conexión o en memoria) no funcionó: mismo aviso que Administración.
+  const storedSudo = useStoredSudoState(sessionId);
+  const sudoBad = !elevation && (!!run?.sudoRejected || storedFailed(storedSudo));
 
   const [severity, setSeverity] = useState<Severity | "all">("all");
   const [origin, setOrigin] = useState("all");
@@ -341,7 +345,25 @@ export function VulnsTab() {
 
   return (
     <div className="adm-pane vs-root">
-      {!elevation && !disabled && (
+      {sudoBad && !disabled && (
+        <div className="adm-banner adm-banner-warn" role="alert">
+          <ShieldAlert size={14} />
+          <span className="adm-banner-text">
+            {storedFailed(storedSudo)
+              ? sudoModeOf(profileId) === "login"
+                ? "La contraseña de la conexión no sirve para sudo."
+                : "La contraseña de sudo guardada no funcionó."
+              : "sudo rechazó la contraseña."}{" "}
+            {run?.sudoRejected ? "El análisis siguió sin sudo: no se ven los contenedores de otros usuarios ni los de root." : ""}
+          </span>
+          {elev.canAskSudo && (
+            <button className="btn btn-sm" onClick={askSudo}>
+              <KeyRound size={13} /> Escribir otra contraseña
+            </button>
+          )}
+        </div>
+      )}
+      {!elevation && !disabled && !sudoBad && (
         <div className="adm-banner adm-banner-warn" role="status">
           <ShieldAlert size={14} />
           <span className="adm-banner-text">

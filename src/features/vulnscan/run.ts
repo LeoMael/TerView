@@ -48,6 +48,8 @@ export interface ScanRun {
   error: string | null;
   canceled: boolean;
   startedAt: number;
+  /** sudo rechazó la contraseña (en memoria o guardada): se siguió sin sudo y no se volvió a probar. */
+  sudoRejected?: boolean;
 }
 
 interface VulnState {
@@ -76,7 +78,15 @@ export const useVulnScan = create<VulnState>((set) => ({
 }));
 
 /** Lo necesario para cancelar el análisis en curso de cada sesión. */
-const live = new Map<string, { scanId: string; execId: string | null; canceled: boolean }>();
+const live = new Map<string, { scanId: string; execId: string | null; canceled: boolean; sudoBad?: boolean }>();
+
+/** sudo rechazó la contraseña durante el análisis. `runScript` ya la olvidó y, si era la guardada (o la de
+ * la conexión), la dejó «failed»: Administración muestra el mismo aviso y ofrece escribir otra. */
+function markSudoRejected(sessionId: string) {
+  const l = live.get(sessionId);
+  if (l) l.sudoBad = true;
+  patchRun(sessionId, (r) => ({ ...r, sudoRejected: true }));
+}
 
 const PHASES: { id: PhaseId; label: string }[] = [
   { id: "detect", label: "Detectar el sistema" },
@@ -148,6 +158,8 @@ export async function loadStoreUsers(sessionId: string, el: Elevation): Promise<
 async function exec(sessionId: string, req: ScriptRequest, el: Elevation, timeout: number): Promise<ExecResult> {
   const l = live.get(sessionId);
   if (l?.canceled) throw new Canceled();
+  // Un solo intento fallido por análisis: cada contraseña rechazada cuenta para sudo (y puede bloquear la cuenta).
+  if (l?.sudoBad && el.kind === "password") throw new ElevationError("bad-password");
   const script = await vulnscan.script(req);
   const execId = newExecId();
   if (l) l.execId = execId;
@@ -155,6 +167,7 @@ async function exec(sessionId: string, req: ScriptRequest, el: Elevation, timeou
     return await runScript(sessionId, script, el, "", timeout, execId);
   } catch (e) {
     if (isApiError(e, "Canceled") || live.get(sessionId)?.canceled) throw new Canceled();
+    if (e instanceof ElevationError && e.failure === "bad-password") markSudoRejected(sessionId);
     throw e;
   } finally {
     if (l) l.execId = null;
@@ -326,6 +339,7 @@ async function imageContexts(o: ScanOptions, plan: ScanPlan, notes: ScanNote[]):
     users = await loadStoreUsers(o.sessionId, el);
   } catch (e) {
     if (live.get(o.sessionId)?.canceled) throw new Canceled();
+    if (e instanceof ElevationError && e.failure === "bad-password") markSudoRejected(o.sessionId);
     const msg = e instanceof ElevationError ? e.message : errorMessage(e);
     notes.push({ phase: "images", level: "warn", text: `No se pudo usar sudo para ver los contenedores de todos (${msg}); solo los tuyos` });
     return own();

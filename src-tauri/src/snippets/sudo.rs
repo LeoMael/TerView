@@ -1,4 +1,5 @@
-//! sudo con contraseña para los comandos del asistente (`run_command` y `run_catalog_command`).
+//! sudo con contraseña para comandos que escribe otro (el asistente por MCP: `run_command` y
+//! `run_catalog_command`; el usuario en «Ejecutar en varios servidores»: `exec_capture_sudo`).
 //!
 //! El canal exec no tiene terminal: sudo no puede preguntar la contraseña. Si el usuario aprueba un
 //! comando con sudo, TerView consigue la contraseña igual que la interfaz (en memoria → guardada → otra
@@ -163,6 +164,19 @@ pub enum SudoFailure {
     TtyRequired,
     NoTemp,
     NoSudo,
+}
+
+impl SudoFailure {
+    /// Nombre para la interfaz (igual que `ElevationFailure` de `elevate.ts`, más "no-temp" y "no-sudo").
+    pub fn key(self) -> &'static str {
+        match self {
+            SudoFailure::BadPassword => "bad-password",
+            SudoFailure::Denied => "denied",
+            SudoFailure::TtyRequired => "tty-required",
+            SudoFailure::NoTemp => "no-temp",
+            SudoFailure::NoSudo => "no-sudo",
+        }
+    }
 }
 
 /// Reconoce los fallos del envoltorio (por código y marca en stderr, como `elevationFailure`).

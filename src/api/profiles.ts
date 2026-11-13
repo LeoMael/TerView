@@ -20,8 +20,12 @@ export const profiles = {
   /** Muestra un secreto guardado. Con bóveda hace falta el PIN (cuenta como intento). */
   revealSecret: (id: string, kind: SecretKind, pin?: string) =>
     call<string | null>("profiles_reveal_secret", { id, kind, pin: pin ?? null }),
-  /** Contraseña de sudo según el ajuste del servidor (null = «Pedir cada vez» o no hay guardada). */
-  sudoPassword: (id: string) => call<string | null>("profiles_sudo_password", { id }),
+  /**
+   * Contraseña de sudo según el ajuste del servidor (null = «Pedir cada vez» o no hay guardada). Con «La de
+   * la conexión» y `sessionId`, primero la que se escribió al conectar esa sesión (aunque no se guardara).
+   */
+  sudoPassword: (id: string, sessionId?: string) =>
+    call<string | null>("profiles_sudo_password", { id, sessionId: sessionId ?? null }),
   /** Copia el servidor (y su secreto guardado). Devuelve la copia. */
   duplicateServer: (id: string) => call<ServerProfile>("profiles_duplicate_server", { id }),
   /** Escribe el bloque de TerView en ~/.ssh/config. */

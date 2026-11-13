@@ -71,6 +71,8 @@ fn touch(app: &AppHandle) {
 /// Bloquea ya (si estaba desbloqueada) y avisa a las ventanas.
 pub fn lock_now(app: &AppHandle, why: &str) {
     if vault().lock() {
+        // Las contraseñas de conexión que se recordaban para sudo («La de la conexión») se olvidan.
+        crate::ssh::login_secret::forget_all();
         log::info!("TerView bloqueado ({why})");
         notify(app);
     }

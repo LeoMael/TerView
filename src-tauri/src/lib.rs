@@ -155,6 +155,7 @@ pub fn run() {
             snippets::snippets_delete,
             snippets::exec_capture,
             snippets::exec_capture_stdin,
+            snippets::exec_capture_sudo,
             snippets::exec_cancel,
             // cuenta de GitHub
             github::gh_status,

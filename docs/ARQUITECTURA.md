@@ -320,8 +320,22 @@ y ver resultado"), la detección de privilegios y GitHub (clonar y desplegar).
   conexión» o «Guardar», se lee del motor (`profiles_sudo_password`) cuando un panel la necesita, se
   comprueba con `sudo -v` y, si falla, se pide otra y se ofrece guardarla. El motor nunca registra el stdin y lo
   sobrescribe con ceros al terminar.
-- **Comandos con sudo del asistente (MCP):** usan la misma contraseña en memoria (ver sección 16,
-  «sudo en los comandos del asistente»).
+- **«La de la conexión» sin guardarla** (`ssh/login_secret.rs`): si el servidor entra con contraseña y la
+  escribiste al conectar sin guardarla, el motor la conserva en memoria (`Zeroizing`) solo mientras viva esa
+  sesión: se borra al cerrarla o perderla (`SessionStore::remove`) y al bloquear con el PIN (`lock_now`).
+  Solo sale por `profiles_sudo_password(id, sessionId)` con el modo `login` (primero la de esa sesión, luego la
+  guardada); nunca a registros ni al servidor MCP. Si la contraseña venía de la bóveda no se copia (ya se lee
+  de allí).
+- **Contraseña rechazada:** `runScript` (`features/admin/run.ts`) llama a `sudoRejected`: olvida la de memoria
+  y, si era la guardada (o la de la conexión), queda «failed». Administración abre el diálogo con el aviso
+  («La contraseña guardada no funcionó») y pasa a «rejected»; el escáner muestra el mismo aviso con **Escribir
+  otra contraseña**, sigue sin sudo y no la vuelve a probar en ese análisis (cada intento fallido cuenta para sudo).
+- **Comandos con sudo del asistente (MCP) y «Ejecutar en varios servidores»:** usan la misma contraseña en
+  memoria y el mismo envoltorio del motor (`snippets/sudo.rs`; ver sección 16, «sudo en los comandos del
+  asistente»). En varios servidores (`exec_capture_sudo`), cada servidor la busca con `obtainSudoPassword`
+  y, si hay que preguntar, el diálogo va a la cola de `SudoAskHost` (uno cada vez, con «Saltar este
+  servidor»). Root, sudo sin contraseña y `sudo -n` se ejecutan tal cual; si sudo la rechaza, ese servidor
+  termina con error «Contraseña de sudo incorrecta» y queda rechazada (`sudoRejectedNotified`).
 - **Cancelación real:** `exec_cancel(id)` → el motor pide TERM por el mismo canal y espera 1,5 s →
   si no se cierra, abre **otro** canal y ejecuta `kill -TERM -PID` (a todo el grupo de procesos) →
   si sigue vivo, KILL. Lo mismo pasa al vencer el tiempo límite. Cerrar el canal no basta: sin
@@ -585,7 +599,7 @@ interfaz la marca «automático» en la actividad y avisa con un toast si era pe
 indicador «Automático» de la barra de pestañas (un clic lo apaga en todos los servidores). El diálogo de
 permiso también ofrece activarlo y, si el modo cubre la petición, la permite en ese momento.
 
-**sudo en los comandos del asistente** (`mcp/sudo.rs`, `features/mcp/sudoAsk.ts`)
+**sudo en los comandos del asistente** (`snippets/sudo.rs`, que `mcp::sudo` reexporta; `features/mcp/sudoAsk.ts`)
 
 Sin terminal, sudo no puede preguntar la contraseña. Si `run_command` lleva `sudo` (la misma regla que lo
 marca como peligroso, `policy::uses_sudo`) o `run_catalog_command` ejecuta un comando marcado «sudo»,

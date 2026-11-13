@@ -61,7 +61,7 @@ Este manual también está dentro de TerView: pulsa el botón **?** de la barra 
 1. En la barra lateral pulsa **+ Nuevo → Servidor**.
 2. Escribe **Nombre**, **Host**, **Puerto** y **Usuario**. Al escribir el host verás tus servidores guardados; elige uno para copiar su host y puerto.
 3. En **Autenticación** elige **Contraseña**, **Llave SSH** o **Agente SSH**.
-4. En **Contraseña de sudo** elige **Pedir cada vez**, **La de la conexión** o **Guardar**.
+4. En **Contraseña de sudo** elige **Pedir cada vez**, **La de la conexión** o **Guardar**. Con **La de la conexión** vale también la contraseña que escribes al conectar aunque no la guardes: TerView la recuerda mientras dure la conexión y la olvida al cerrarla o al bloquear.
 5. Pulsa **Guardar**. Antes de guardar, TerView prueba la conexión (máx. 10 s) y desconecta.
 6. La primera vez verás la huella del servidor: si es el tuyo, pulsa **Confiar y conectar**.
 7. Haz **doble clic** en el servidor para conectarte.
@@ -239,7 +239,8 @@ Este manual también está dentro de TerView: pulsa el botón **?** de la barra 
 
 - No hace falta tenerlos abiertos: se conectan en segundo plano y se desconectan al terminar.
 - **Cancelar todo** detiene el comando en todos. **Repetir** lo vuelve a lanzar.
-- Los comandos con `sudo` solo funcionan donde tienes sudo sin contraseña.
+- Los comandos con `sudo` funcionan igual que en Administración: TerView usa la contraseña de sudo que ya tiene (en memoria, guardada u otra pestaña). Si falta, te la pide **de un servidor en uno**; pulsa **Saltar este servidor** para no ejecutarlo ahí.
+- Como root o con sudo sin contraseña se ejecuta tal cual. Si la contraseña es incorrecta, ese servidor sale con error y la próxima vez se pide otra.
 
 ## Contenedores
 
@@ -350,6 +351,7 @@ Este manual también está dentro de TerView: pulsa el botón **?** de la barra 
 **Con y sin sudo:**
 
 - Sin sudo se analizan el sistema y tus contenedores, no los de otros usuarios ni los de root. Pulsa **Analizar con sudo** si lo tienes.
+- Si la contraseña de sudo (guardada o la de la conexión) no funciona, verás el aviso y el análisis sigue sin sudo. Pulsa **Escribir otra contraseña** y vuelve a analizar.
 - Con sudo, el botón **Usuarios** elige de qué usuarios se miran los contenedores.
 
 **Notas:**

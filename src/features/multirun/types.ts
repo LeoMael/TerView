@@ -50,6 +50,11 @@ export interface RunSpec {
   concurrency: number;
   /** El comando usa sudo/doas: se consulta el nivel de privilegios por servidor. */
   usesSudo: boolean;
+  /**
+   * El comando usa sudo (sin -n): en cada servidor donde sudo pida contraseña se consigue como en el resto de
+   * TerView (en memoria → guardada → otra pestaña → diálogo en cola) y se ejecuta con ella.
+   */
+  sudoPassword?: boolean;
 }
 
 export interface TargetInput {

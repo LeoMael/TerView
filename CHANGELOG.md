@@ -65,6 +65,10 @@ siguen [Versionado Semántico](https://semver.org/lang/es/).
   tooltips muestran el atajo actual.
 
 ### Corregido
+- **sudo con contraseña en más sitios.** «Ejecutar en varios servidores» usa la contraseña de sudo de cada
+  servidor (un diálogo a la vez, con «Saltar este servidor»). El escáner avisa si la contraseña guardada no
+  funciona y deja escribir otra (un solo intento fallido por análisis). En el modo «La de la conexión» se usa
+  también la contraseña escrita al conectar sin guardarla (solo en memoria; se borra al cerrar o bloquear).
 - **Editor: la barra de estado se veía cortada** (el selector de lenguaje, p. ej. «Markdown», salía por
   la mitad en Linux por el aspecto nativo de GTK). Ahora tiene su propio estilo y la barra un poco más alta.
 - **Asistentes de IA (MCP): los comandos con sudo funcionan.** `run_command` (p. ej. `sudo whoami`) y

@@ -446,12 +446,28 @@ pub async fn profiles_reveal_secret(id: String, kind: SecretKind, pin: Option<St
 
 /// Contraseña de sudo de un servidor según su ajuste: la de conexión, la guardada aparte o
 /// ninguna («Pedir cada vez»). Solo con TerView desbloqueado; nunca va a disco ni a logs.
+/// Con «La de la conexión» y `session_id`, primero la que se escribió al conectar esa sesión (aunque no
+/// se guardara; ver `ssh::login_secret`) y si no, la guardada.
 #[tauri::command]
-pub async fn profiles_sudo_password(store: State<'_, ProfileStore>, id: String) -> AppResult<Option<String>> {
+pub async fn profiles_sudo_password(
+    store: State<'_, ProfileStore>,
+    sessions: State<'_, crate::ssh::SessionStore>,
+    id: String,
+    session_id: Option<String>,
+) -> AppResult<Option<String>> {
     let server = store.get_server(&id)?;
     let secret_id = match server.sudo_mode {
         SudoMode::Ask => return Ok(None),
-        SudoMode::Login if server.auth == AuthMethod::Password => SecretKind::Login.id(&id),
+        SudoMode::Login if server.auth == AuthMethod::Password => {
+            if let Some(sid) = session_id.as_deref() {
+                // Solo si la sesión sigue abierta y es de este servidor.
+                let same = sessions.get(sid).await.is_ok_and(|s| s.info.profile_id == id);
+                if let Some(p) = same.then(|| crate::ssh::login_secret::get(sid)).flatten() {
+                    return Ok(Some(p.to_string()));
+                }
+            }
+            SecretKind::Login.id(&id)
+        }
         SudoMode::Login => return Ok(None),
         SudoMode::Saved => SecretKind::Sudo.id(&id),
     };

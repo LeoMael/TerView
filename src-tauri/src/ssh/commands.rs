@@ -148,6 +148,12 @@ pub async fn ssh_connect(
     // Con la bóveda activa, el secreto guardado no se queda en memoria con la sesión: al
     // reconectar se vuelve a leer (y si TerView está bloqueado, se espera al desbloqueo).
     let stored_secret = (from_keyring || saved) && Vault::global().is_enabled();
+    // Para sudo «La de la conexión»: la contraseña escrita al conectar (sin guardarla en la bóveda) queda
+    // en memoria mientras viva la sesión (ver `login_secret`).
+    let login_password = match (&profile.auth, &creds.password) {
+        (AuthMethod::Password, Some(p)) if !stored_secret => Some(zeroize::Zeroizing::new(p.clone())),
+        _ => None,
+    };
     if stored_secret {
         match profile.auth {
             AuthMethod::Password => creds.password = None,
@@ -159,6 +165,9 @@ pub async fn ssh_connect(
     let session = Arc::new(session);
     let info = session.info.clone();
     sessions.insert(session.clone()).await;
+    if let Some(p) = login_password {
+        super::login_secret::remember(&info.id, &p);
+    }
     // El código OTP es de un solo uso: no sirve para reconectar.
     creds.otp = None;
     let sup = Supervised {

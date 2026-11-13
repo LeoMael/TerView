@@ -4,7 +4,13 @@ import { createElement } from "react";
 import { AlertTriangle, BookOpen, Info, Play, ShieldAlert, X } from "lucide-react";
 import { CATALOG, varHint, type CatalogVar } from "../Commands/catalog";
 import { missingVars, parseVars, renderTemplate, varLabel } from "../Commands/template";
-import { dangerReasons, looksInteractive, usesSudo, usesSudoNonInteractive } from "../../features/multirun/danger";
+import {
+  dangerReasons,
+  looksInteractive,
+  usesSudo,
+  usesSudoNonInteractive,
+  wantsSudoPassword,
+} from "../../features/multirun/danger";
 import { startMultiRun, updateDraft, useMultiRun } from "../../features/multirun/store";
 import { useProfiles } from "../../stores/profiles";
 import { promptDialog } from "../ui/dialogs";
@@ -94,6 +100,7 @@ export function SetupView({ onCancel }: { onCancel: () => void }) {
         timeoutSecs: draft.timeoutSecs,
         concurrency: draft.concurrency,
         usesSudo: sudo,
+        sudoPassword: wantsSudoPassword(finalCommand),
       },
       chosen.map((s) => ({ profileId: s.id, name: s.name, address: userHost(s), auth: s.auth })),
     );
@@ -254,9 +261,10 @@ export function SetupView({ onCancel }: { onCancel: () => void }) {
                     </>
                   ) : (
                     <>
-                      Usa <strong>sudo</strong>: la ejecución no es interactiva y no puede escribir la contraseña. Solo
-                      funcionará donde sudo no pida contraseña (o como root); en el resto fallará. En los resultados verás
-                      el tipo de acceso de cada servidor.
+                      Usa <strong>sudo</strong>: donde pida contraseña, TerView usa la que ya tiene (en memoria,
+                      guardada u otra pestaña) o te la pide, de un servidor en uno, con la opción de saltarlo. Se le da a
+                      sudo por la entrada estándar, nunca en la línea de comandos. Como root o con sudo sin contraseña se
+                      ejecuta tal cual.
                     </>
                   )}
                 </div>

@@ -1,4 +1,6 @@
-// Contraseña de sudo para los comandos del asistente (petición `sudo` del motor, ver uiBridge.ts).
+// Contraseña de sudo para los comandos del asistente (petición `sudo` del motor, ver uiBridge.ts) y cola
+// de diálogos de sudo que no son de un panel (también «Ejecutar en varios servidores»: `askSudoInDialog`).
+// Los diálogos se muestran de uno en uno (SudoAskHost enseña el primero de la cola).
 //
 // Con «Aceptar automáticamente: todo» no se muestra nada si la contraseña ya está en memoria o guardada: el
 // diálogo solo aparece (una vez) si no hay ninguna.
@@ -28,9 +30,13 @@ export interface SudoAsk {
   user: string | null;
   serverName: string;
   /** El comando se aceptó con «Aceptar automáticamente» (no hubo diálogo de permiso). */
-  auto: boolean;
-  /** Unix ms: después se cierra solo (el motor ya no espera). */
-  expiresAt: number;
+  auto?: boolean;
+  /** Unix ms: después se cierra solo (el motor ya no espera). Sin él, espera al usuario. */
+  expiresAt?: number;
+  /** Texto de para qué se pide (por defecto, el del asistente). */
+  reason?: string;
+  /** Texto del botón de cancelar (p. ej. «Saltar este servidor»). */
+  cancelLabel?: string;
 }
 
 interface SudoAskState {
@@ -42,18 +48,26 @@ export const useSudoAsks = create<SudoAskState>(() => ({ asks: [] }));
 const waiting = new Map<string, (given: boolean) => void>();
 let seq = 0;
 
-/** Muestra el diálogo de la contraseña y espera a que se cierre. true = quedó en memoria. */
-function askInDialog(a: Omit<SudoAsk, "id">): Promise<boolean> {
+/**
+ * Pone en la cola el diálogo de la contraseña y espera a que se cierre. true = quedó en memoria de esa
+ * sesión. Con `signal`, al abortar se quita de la cola (o se cierra si ya se veía) y da false.
+ */
+export function askSudoInDialog(a: Omit<SudoAsk, "id">, signal?: AbortSignal): Promise<boolean> {
+  if (signal?.aborted) return Promise.resolve(false);
   const id = `sudo-${++seq}`;
   return new Promise((resolve) => {
     waiting.set(id, resolve);
     useSudoAsks.setState((s) => ({ asks: [...s.asks, { ...a, id }] }));
+    signal?.addEventListener("abort", () => finishSudoAsk(id), { once: true });
   });
 }
+
+const askInDialog = askSudoInDialog;
 
 /** El diálogo se cerró (confirmada, cancelada, tiempo agotado o bloqueo). */
 export function finishSudoAsk(id: string): void {
   const ask = useSudoAsks.getState().asks.find((a) => a.id === id);
+  if (!ask && !waiting.has(id)) return;
   useSudoAsks.setState((s) => ({ asks: s.asks.filter((a) => a.id !== id) }));
   const resolve = waiting.get(id);
   waiting.delete(id);

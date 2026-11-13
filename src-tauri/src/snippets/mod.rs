@@ -3,10 +3,13 @@
 
 pub(crate) mod exec;
 mod store;
+pub mod sudo;
 #[cfg(test)]
 mod tests;
 
+use serde::Serialize;
 use tauri::State;
+use zeroize::Zeroizing;
 
 use crate::error::AppResult;
 use crate::ssh::SessionStore;
@@ -67,6 +70,51 @@ pub async fn exec_capture_stdin(
             .await;
     wipe(&mut stdin);
     result
+}
+
+/// Resultado de `exec_capture_sudo`: el del comando y, si sudo falló antes de ejecutarlo, por qué.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SudoExecResult {
+    #[serde(flatten)]
+    pub result: ExecResult,
+    /// "bad-password", "denied", "tty-required", "no-temp" o "no-sudo" (None = sudo aceptó la contraseña).
+    pub sudo_failure: Option<&'static str>,
+}
+
+/// Como `exec_capture`, pero el comando (escrito por el usuario, con uno o varios `sudo`, tuberías…)
+/// corre dentro del envoltorio de `sudo.rs`, que da `password` a cada sudo sin ponerla en la línea de
+/// comandos ni en el entorno. Lo usa «Ejecutar en varios servidores». La contraseña se comprueba una sola
+/// vez (`sudo -k -S -v`): si es incorrecta no se ejecuta nada y vuelve `sudoFailure: "bad-password"`.
+/// Se quita de la salida por si el comando la mostrara y se borra de memoria al terminar.
+#[tauri::command]
+pub async fn exec_capture_sudo(
+    sessions: State<'_, SessionStore>,
+    registry: State<'_, ExecRegistry>,
+    session_id: String,
+    command: String,
+    password: String,
+    timeout_secs: u32,
+    exec_id: Option<String>,
+) -> AppResult<SudoExecResult> {
+    let password = Zeroizing::new(password);
+    let wrapped = sudo::wrap(&command, &password).map_err(crate::error::AppError::Invalid)?;
+    let result = run_registered(
+        &sessions,
+        &registry,
+        &session_id,
+        &wrapped.command,
+        Some(&wrapped.stdin),
+        timeout_secs,
+        exec_id.as_deref(),
+    )
+    .await;
+    drop(wrapped); // borra el script y la contraseña del stdin
+    let mut r = result?;
+    sudo::redact(&mut r.stdout, &password);
+    sudo::redact(&mut r.stderr, &password);
+    let sudo_failure = sudo::failure(r.exit_code, &r.stderr).map(sudo::SudoFailure::key);
+    Ok(SudoExecResult { result: r, sudo_failure })
 }
 
 /// Cancela una ejecución en curso (`exec_capture` / `exec_capture_stdin` con `exec_id`):

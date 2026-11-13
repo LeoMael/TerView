@@ -6,6 +6,7 @@ import {
   elevationFailure,
   elevationFailureMessage,
   forgetSudo,
+  sudoRejected,
   type Elevation,
   type ElevationFailure,
 } from "../privileges";
@@ -24,7 +25,7 @@ export class ElevationError extends Error {
 
 /**
  * Ejecuta `inner` con la elevación indicada. `secret` va al stdin del script interior.
- * Si la contraseña de sudo resulta incorrecta, se olvida y se lanza `ElevationError`.
+ * Si la contraseña de sudo resulta incorrecta, se olvida (`sudoRejected`) y se lanza `ElevationError`.
  * `execId` (opcional, `newExecId()`) permite cancelarlo con `snippets.cancelExec`: se detiene también
  * en el servidor y la promesa falla con el error `Canceled`.
  */
@@ -40,7 +41,10 @@ export async function runScript(
   const r = await snippets.execStdin(sessionId, req.command, req.stdin, timeoutSecs, execId);
   const f = elevationFailure(r.exitCode, r.stderr);
   if (f) {
-    if (f === "bad-password" || f === "denied") forgetSudo(sessionId);
+    // Contraseña incorrecta: se olvida la de memoria y, si era la guardada (o la de la conexión), queda
+    // «failed» para que el panel muestre el aviso y no se vuelva a probar sola (cada intento cuenta para sudo).
+    if (f === "bad-password") sudoRejected(sessionId);
+    else if (f === "denied") forgetSudo(sessionId);
     throw new ElevationError(f);
   }
   return r;
