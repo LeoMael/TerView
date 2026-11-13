@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <title>SSHorus (fondo oscuro)</title>
+  <!-- ceja -->
+  <path d="M34 58 Q126 18 224 46" fill="none" stroke="#F5C542" stroke-width="18" stroke-linecap="round"/>
+  <!-- ojo (almendra) con la linea que se alarga hacia atras -->
+  <path d="M26 120 Q116 40 206 112 Q116 196 26 120 Z" fill="none" stroke="#F5C542" stroke-width="16" stroke-linejoin="round"/>
+  <path d="M200 112 H236" stroke="#F5C542" stroke-width="16" stroke-linecap="round"/>
+  <!-- iris con la terminal -->
+  <circle cx="114" cy="116" r="36" fill="#3B6FF0"/>
+  <path d="M100 100 L118 116 L100 132" fill="none" stroke="#FFFFFF" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M124 132 H136" stroke="#FFFFFF" stroke-width="11" stroke-linecap="round"/>
+  <!-- lagrima vertical -->
+  <path d="M84 162 L74 222" stroke="#F5C542" stroke-width="16" stroke-linecap="round"/>
+  <!-- espiral -->
+  <path d="M138 164 C148 214 196 230 214 204 C228 184 210 164 194 176" fill="none" stroke="#F5C542" stroke-width="16" stroke-linecap="round"/>
+</svg>

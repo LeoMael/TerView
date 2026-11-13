@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <title>SSHorus - icono de la app</title>
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="#1D3FA6"/>
+  <rect x="104" y="104" width="816" height="816" rx="181" fill="none" stroke="#3B6FF0" stroke-width="8"/>
+  <g transform="translate(176.6 204.8) scale(2.56)">
+    <path d="M34 54 Q126 14 224 42" fill="none" stroke="#F5C542" stroke-width="22.0" stroke-linecap="round"/>
+    <path d="M24 120 Q116 34 206 112 Q116 202 24 120 Z" fill="none" stroke="#F5C542" stroke-width="20.0" stroke-linejoin="round"/>
+    <path d="M200 112 H238" stroke="#F5C542" stroke-width="20.0" stroke-linecap="round"/>
+    <circle cx="114" cy="115" r="47" fill="#FFFFFF"/>
+    <path d="M94 94 L117 115 L94 136" fill="none" stroke="#1D3FA6" stroke-width="18.0" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M127 136 H143" stroke="#1D3FA6" stroke-width="18.0" stroke-linecap="round"/>
+    <path d="M84 168 L76 226" stroke="#F5C542" stroke-width="20.0" stroke-linecap="round"/>
+    <path d="M140 168 C150 216 196 232 214 206 C228 186 210 166 194 178" fill="none" stroke="#F5C542" stroke-width="20.0" stroke-linecap="round"/>
+  </g>
+</svg>

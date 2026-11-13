@@ -1,75 +1,84 @@
-# Marca: propuestas de nombre y logo
+# Marca: SSHorus
 
-Para la versión que sigue a la 0.5.0 se busca un **nombre y un logo nuevos**. Aquí están las pruebas.
+A partir de la versión que sigue a la 0.5.0, TerView pasa a llamarse **SSHorus** (SSH + Horus, el dios
+halcón egipcio cuyo ojo todo lo ve y protege). El logo elegido es el **ojo de Horus con la terminal `>_` en
+el iris** (propuesta `sshorus/ojo/`). Todo lo listo para usar está en [`sshorus/final/`](sshorus/final/).
 
-- [NOMBRES.md](NOMBRES.md): qué nombres están libres y cuáles chocan con otras marcas.
-- [comparacion.png](comparacion.png): todos los logos lado a lado, a 16, 32, 64 y 256 px, en fondo claro y
-  oscuro, y con el nombre al lado.
-- `isotipo.svg` e `isotipo-1024.png` en esta carpeta son el **logo actual** de TerView (no se tocan hasta
-  decidir).
+![Logo final a tamaño real](sshorus/final/hoja.png)
 
-![Comparación de logos](comparacion.png)
+`isotipo.svg` e `isotipo-1024.png` en esta carpeta son el **logo viejo** de TerView. Se quitan cuando se
+haga el cambio de nombre en la app.
 
-## Qué hay en cada carpeta
+## Qué archivo usar para cada cosa
 
-```
-docs/marca/<nombre>/<propuesta>/
-  isotipo.svg            el símbolo solo (fondo claro)
-  isotipo-oscuro.svg     el símbolo para fondo oscuro
-  imagotipo.svg          símbolo + nombre (fondo claro)
-  imagotipo-oscuro.svg   símbolo + nombre (fondo oscuro)
-  isotipo-16/32/64/256/1024.png, isotipo-oscuro-*.png, imagotipo*.png
-```
+Todos están en `docs/marca/sshorus/final/`.
 
-Los SVG están hechos a mano, sin degradados. En el imagotipo las letras ya están pasadas a curvas, así que
-se ven igual en cualquier PC aunque no tenga la fuente.
-
-## Propuestas
-
-### Argos · pluma (`argos/pluma/`)
-Una pluma de pavo real vista de frente. El «ojo» de la pluma tiene tres anillos y en el centro una terminal
-`>_`. Los cortes en los bordes son las barbas de la pluma.
-Colores: verde `#16A34A`, oro `#F0A500`, turquesa `#0E9F9A`, azul `#1D3FA6` (en oscuro `#2350C8`).
-
-### Argos · anillo (`argos/anillo/`)
-Ocho ojos alrededor de una terminal: «muchos ojos vigilando tus servidores». Es la más simple de dibujar,
-pero a 16 px los ojos se vuelven puntos y puede recordar a un engranaje o un virus.
-Colores: turquesa `#0E9F9A`, oro `#F0A500`, azul `#1D3FA6` (en oscuro `#2350C8`).
-
-### SSHorus · ojo (`sshorus/ojo/`)
-El ojo de Horus clásico (ceja, ojo, lágrima y espiral) con el iris convertido en `>_`. Se reconoce
-enseguida a 64 px o más; a 16 px queda solo la silueta.
-Colores (claro): azul lapislázuli `#1D3FA6`, oro `#F0A500`, tinta `#14213D`.
-Colores (oscuro): oro `#F5C542`, azul `#3B6FF0`, blanco.
-
-### SSHorus · halcón (`sshorus/halcon/`)
-La cabeza del halcón Horus de perfil. La mancha oscura de la mejilla del halcón peregrino es justo el
-origen del dibujo del ojo de Horus; aquí el ojo es la terminal `>_`. A 32 px se reconoce; a 16 px queda una cabeza azul con el ojo dorado.
-Colores: azul `#1D3FA6` (en oscuro `#2B5BD8`), oro `#F0A500`, mejilla `#DCE6FB` (en oscuro `#E2E8F0`),
-tinta `#14213D`.
-
-### Ocelo · ocelo (`ocelo/ocelo/`)
-Una mancha-ojo como las de las mariposas: anillo violeta, iris ámbar y la pupila es el **cursor** de la
-terminal (un bloque), con un brillo blanco. La más clara a 16 px.
-Colores: violeta `#6D28D9` (en oscuro `#8B5CF6`), ámbar `#F5A00B`, pupila `#1E1B4B`, blanco.
-
-### Ocelo · ala (`ocelo/ala/`)
-Los signos `<` y `>` hacen de alas y en el centro va la mancha-ojo: parece una polilla y a la vez un
-símbolo de código. Se lee bien en pequeño.
-Colores: violeta `#6D28D9` (en oscuro `#9F7AEA`), ámbar `#F5A00B`, pupila `#1E1B4B`, blanco.
-
-## Tipografía sugerida (gratis, de Google Fonts)
-
-| Nombre | Fuente del imagotipo | Por qué |
+| Para qué | Archivo | Notas |
 |---|---|---|
-| Argos | **Red Hat Display** ExtraBold, en minúsculas | Redonda y firme, combina con la pluma |
-| SSHorus | **Montserrat** Bold, «SSH» en oro y «orus» en tinta | Separa «SSH» y se lee el juego de palabras |
-| Ocelo | **Comfortaa** Bold, en minúsculas | Letras redondas como el ojo |
+| Iconos de la app (Windows, macOS, Linux) | `icono-app-1024.png` | Fuente de `npx tauri icon`. PNG 1024 con transparencia; el cuadrado ocupa 824 × 824 (80 %), como pide macOS |
+| Icono de la app editable | `icono-app.svg` | El mismo dibujo en vectores |
+| Icono de la app a 24 y 32 px | `icono-app-24.png`, `icono-app-32.png` (y sus `.svg`) | Ajustados a los píxeles. Después de `tauri icon`, conviene poner `icono-app-32.png` en lugar de `32x32.png` y meter el de 24 en el `.ico` |
+| Logo suelto a 16, 24 y 32 px | `isotipo-pequeno-16/24/32.png` (fondo claro), `isotipo-pequeno-oscuro-16/24/32.png` (fondo oscuro) | Fuentes: `isotipo-pequeno.svg` (16), `isotipo-pequeno-24.svg`, `isotipo-pequeno-32.svg` y sus `-oscuro` |
+| Logo suelto a 48 px o más | `isotipo.svg` / `isotipo-oscuro.svg` (`isotipo-1024.png`, `isotipo-oscuro-1024.png`) | El dibujo con todos los detalles |
+| Icono de bandeja en macOS (plantilla) | `monocromo-16.png` y `monocromo-32.png` (@2x) | Negro con transparencia; macOS lo tiñe solo (`iconAsTemplate`) |
+| Icono de bandeja en Linux | `monocromo-16.png`, o `isotipo-pequeno-oscuro-16.png` si la barra es oscura | |
+| Icono de bandeja en Windows | `isotipo-pequeno-16.png` / `isotipo-pequeno-oscuro-16.png` | Windows no tiñe los iconos de la bandeja: usar el de colores |
+| Favicon (web) | `favicon.svg` | Cambia solo a los colores oscuros si el navegador está en modo oscuro |
+| Logo con el nombre | `imagotipo.svg` / `imagotipo-oscuro.svg` (PNG de 256 px de alto) | Letras ya pasadas a curvas |
+| Revisión | `hoja.png` | Todo a 16, 24, 32, 48, 64, 128 y 256 px en claro y oscuro, y simulado en barras de tareas |
 
-Para el texto de la app y la web basta con la fuente del sistema o **Inter**; para la terminal,
-**JetBrains Mono**.
+Regla corta: **a 32 px o menos, siempre el «pequeño»**; a 48 px o más, el grande.
+
+## Colores
+
+| Nombre | Hex | Dónde va |
+|---|---|---|
+| Azul lapislázuli | `#1D3FA6` | Trazos del ojo en fondo claro, fondo del icono de la app, `>_` del icono de la app |
+| Oro | `#F0A500` | Iris en fondo claro, «SSH» del imagotipo claro |
+| Oro claro | `#F5C542` | Trazos del ojo en fondo oscuro y en el icono de la app, «SSH» del imagotipo oscuro |
+| Tinta | `#14213D` | `>_` en fondo claro, «orus» del imagotipo claro |
+| Azul claro | `#3B6FF0` | Iris en fondo oscuro, borde fino del icono de la app |
+| Blanco | `#FFFFFF` | `>_` en fondo oscuro, iris del icono de la app |
+| Texto en oscuro | `#F1F5F9` | «orus» del imagotipo oscuro |
+
+Sin degradados ni sombras: todos los colores son planos.
+
+## Tipografía
+
+- Imagotipo: **Montserrat Bold**, «SSH» en oro y «orus» en tinta (o `#F1F5F9` en oscuro). En los SVG ya
+  está en curvas.
+- Textos de la app y la web: la fuente del sistema o **Inter**.
+- Terminal: **JetBrains Mono**.
+
+Todas son gratis (Google Fonts).
+
+## Qué cambia en el isotipo pequeño
+
+A 16 px el dibujo grande se queda en una mancha y el `>_` desaparece. El pequeño está redibujado para los
+píxeles:
+
+- El iris es más grande (casi todo el alto del ojo) y el `>_` está pintado píxel a píxel: un `>` de 5 píxeles
+  de alto y un `_` de 2 (a 24 px, un `>` de 7 píxeles y 2 de grueso; a 32 px, de 9).
+- Menos detalle y trazos más gruesos (1,3–1,4 px a 16 px), con las líneas rectas sobre filas y columnas
+  enteras para que no se vean borrosas.
+- La ceja es casi recta, la lágrima vertical y la espiral más corta, para que entre todo en 16 × 16.
+- Cada tamaño (16, 24 y 32) tiene su propio SVG, ajustado a su cuadrícula.
+
+## Cómo se eligió
+
+Las pruebas de nombres están en [NOMBRES.md](NOMBRES.md) y la comparación de todas las propuestas de logo en
+[comparacion.png](comparacion.png). En `sshorus/ojo/` queda la propuesta original de la que sale el logo
+final (isotipo e imagotipo en claro y oscuro, y PNG de 16 a 1024 px).
+
+Propuestas que no se eligieron: Argos (pluma y anillo), SSHorus halcón (cabeza del halcón de perfil) y
+Ocelo (mancha-ojo y ala).
 
 ## Siguiente paso
 
-Elegir nombre y propuesta. Después: generar los iconos de la app con `npm run tauri icon <isotipo-1024.png>`
-y seguir el punto 4 de `docs/PENDIENTES.md` (renombrar migrando los datos).
+Cambiar el nombre en la app (migrando los datos, ver `docs/PENDIENTES.md`) y generar los iconos con:
+
+```
+npm run tauri icon docs/marca/sshorus/final/icono-app-1024.png
+```
+
+Después, cambiar `src-tauri/icons/32x32.png` por `icono-app-32.png`.
