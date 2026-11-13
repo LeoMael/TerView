@@ -4,6 +4,8 @@
 #   Interfaz: tsc (tipos) + vite build
 #   Motor:    cargo clippy + cargo test --lib (las pruebas que necesitan servidor SSH son
 #             #[ignore] y no se ejecutan aquí)
+#   macOS:    empaqueta la .app universal (Intel + Apple Silicon) en modo debug, como hace el
+#             Release, y comprueba que los dos programas (`terview` y `terview-mcp`) son universales.
 
 name: CI
 
@@ -100,3 +102,60 @@ jobs:
       - name: Pruebas del motor
         working-directory: src-tauri
         run: cargo test --lib
+
+  # El Release de macOS compila con --target universal-apple-darwin; aquí se repite en modo debug
+  # (sin LTO, más rápido) para ver los fallos de empaquetado antes de etiquetar una versión.
+  macos-universal:
+    name: Empaquetar (macOS universal)
+    runs-on: macos-latest
+    env:
+      CARGO_TERM_COLOR: always
+
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v7
+
+      - name: Node.js (LTS)
+        uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - name: Rust (estable)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+
+      - name: Caché de Rust
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+          key: ci-macos-universal
+
+      - name: Dependencias de npm
+        run: npm ci
+
+      # Igual que release.yml, pero en debug y solo la .app (sin .dmg ni firma de actualizaciones).
+      - name: Compilar y empaquetar (.app universal)
+        run: >-
+          npm run tauri build --
+          --debug --target universal-apple-darwin --bundles app
+          --config '{"bundle":{"createUpdaterArtifacts":false}}'
+
+      - name: Comprobar que los programas son universales
+        run: |
+          app=$(ls -d src-tauri/target/universal-apple-darwin/debug/bundle/macos/*.app)
+          ls -l "$app/Contents/MacOS"
+          test -x "$app/Contents/MacOS/terview-mcp" || { echo "::error::Falta terview-mcp en $app"; exit 1; }
+          for b in "$app"/Contents/MacOS/*; do
+            archs=$(lipo -archs "$b")
+            echo "$b: $archs"
+            case " $archs " in
+              *" x86_64 "*) ;;
+              *) echo "::error::$b no tiene x86_64"; exit 1 ;;
+            esac
+            case " $archs " in
+              *" arm64 "*) ;;
+              *) echo "::error::$b no tiene arm64"; exit 1 ;;
+            esac
+          done

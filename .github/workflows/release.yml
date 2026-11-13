@@ -48,6 +48,8 @@ jobs:
           - nombre: Windows
             platform: windows-latest
             args: ""
+          # tauri-cli solo une con lipo el binario principal; el puente `terview-mcp` lo une
+          # src-tauri/scripts/terview-mcp-universal.sh (beforeBundleCommand de tauri.macos.conf.json).
           - nombre: macOS
             platform: macos-latest
             args: "--target universal-apple-darwin"

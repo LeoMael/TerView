@@ -231,26 +231,49 @@ fn registry_register_cancel_and_cleanup() {
     assert!(reg.register("a").is_ok());
 }
 
+/// Busca un programa en el PATH (como `command -v`).
+#[cfg(unix)]
+fn find_in_path(name: &str) -> Option<PathBuf> {
+    std::env::split_paths(&std::env::var_os("PATH")?)
+        .map(|dir| dir.join(name))
+        .find(|p| p.is_file())
+}
+
 /// El arranque, probado en local con cada shell disponible como "shell de login" (sin SSH):
 /// el comando real llega por stdin, lo que sigue en stdin queda para el comando y se usa `$SHELL`.
+/// `/bin/sh` se prueba siempre; bash, dash, zsh y busybox solo si están en el PATH (si falta alguno
+/// se avisa y se sigue: los runners de la CI no traen zsh, por ejemplo).
 #[cfg(unix)]
 #[test]
 fn bootstrap_runs_with_local_shells() {
     use std::io::Write;
     use std::process::{Command, Stdio};
 
-    let user_cmd = "printf '%s|' \"$1x\" 'comillas \"dobles\" y $HOME literal'; echo \"${0##*/}\"; read -r l; echo \"stdin:$l\"";
-    for shell in ["/bin/sh", "/bin/bash", "/bin/dash", "/usr/bin/zsh", "/bin/busybox"] {
-        if !std::path::Path::new(shell).exists() {
-            continue;
+    let tmp = TempDir::new();
+    let mut shells = vec![PathBuf::from("/bin/sh")];
+    let mut missing = Vec::new();
+    for name in ["bash", "dash", "zsh", "busybox"] {
+        match find_in_path(name) {
+            // Con busybox el applet sale del nombre del programa: en Alpine el shell de login es
+            // /bin/sh -> /bin/busybox. Se imita con un enlace `ash` (como `$SHELL`, `busybox -c` falla).
+            Some(bb) if name == "busybox" => {
+                let ash = tmp.file("ash");
+                std::os::unix::fs::symlink(&bb, &ash).unwrap();
+                shells.push(ash);
+            }
+            Some(p) => shells.push(p),
+            None => missing.push(name),
         }
-        let (login, args): (&str, Vec<String>) = if shell.ends_with("busybox") {
-            (shell, vec!["sh".into(), "-c".into(), exec::bootstrap(user_cmd.len())])
-        } else {
-            (shell, vec!["-c".into(), exec::bootstrap(user_cmd.len())])
-        };
-        let mut child = Command::new(login)
-            .args(&args)
+    }
+    if !missing.is_empty() {
+        eprintln!("aviso: sin probar (no están en el PATH): {}", missing.join(", "));
+    }
+
+    let user_cmd = "printf '%s|' \"$1x\" 'comillas \"dobles\" y $HOME literal'; echo \"${0##*/}\"; read -r l; echo \"stdin:$l\"";
+    for shell in &shells {
+        let shell = shell.to_str().unwrap();
+        let mut child = Command::new(shell)
+            .args(["-c", &exec::bootstrap(user_cmd.len())])
             .env("SHELL", shell)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
