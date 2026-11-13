@@ -24,6 +24,7 @@ export {
   forgetAllSudo,
   forgetSudo,
   forgetSudoByUser,
+  setStoredSudo,
   sudoRejected,
   useStoredSudoState,
   type StoredSudoState,
@@ -43,4 +44,12 @@ export {
   type ElevationFailure,
   type ExecRequest,
 } from "./elevate";
-export { sudoModeOf, useStoredSudo } from "./stored";
+export { loadStoredSudo, obtainSudoPassword, sudoModeOf, useStoredSudo, type SudoObtainResult } from "./stored";
+export {
+  defaultSaveChecked,
+  otherSessionPasswords,
+  storedFailed,
+  storedStateAfterConfirm,
+  sudoLookupPlan,
+  type SudoSource,
+} from "./lookup";

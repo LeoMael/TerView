@@ -35,9 +35,16 @@ El usuario lo publica a mano («Publish release»).
 - **Contenedores con sudo no ve todo.** Con root/sudo debe mostrar los contenedores de root **y** los de
   cada usuario (Podman rootless), con selector de usuarios como el escáner. Reutilizar lo del escáner:
   `runuser -u U -- env HOME=…` o `sudo -u U -H podman …` (ver sección 10.4).
-- **Pide contraseñas que ya están guardadas** «en varios casos». Revisar dónde: sudo en Administración y
-  Contenedores, reconexión, editor, transferencias, ventanas aparte, tras desbloquear el PIN. Reproducir
-  y unificar con `src/features/privileges/stored.ts` y `secrets.rs`.
+- ✅ **Pide contraseñas que ya están guardadas** «en varios casos» — **arreglado** (sin publicar).
+  Todo pasa por `obtainSudoPassword` (`src/features/privileges/stored.ts`, orden en `lookup.ts`): en
+  memoria → guardada → otra pestaña del mismo servidor → preguntar. `SudoDialog` la llama antes de mostrar
+  el formulario, así que Administración, Contenedores, el escáner y «Actualizar imagen» la usan sin
+  cambios. Causas: el diálogo salía mientras la guardada aún se comprobaba; con la guardada mala volvía a
+  abrirse cada vez que se entraba en la pestaña (nuevo estado `rejected`); tras desbloquear no se
+  releía si la lectura había fallado por estar bloqueado. Revisado y sin problema: reconexión SSH (lee
+  la bóveda en cada intento y espera al desbloqueo), ventanas aparte (solo el editor, que no usa sudo),
+  MCP y «ejecutar en varios servidores» (no usan la contraseña de sudo). **Falta probarlo con un
+  servidor real** (sudo con contraseña, guardada buena y mala, PIN bloqueado/desbloqueado, dos pestañas).
 
 **2. Pregunta del usuario: ¿es normal que un usuario sin sudo vea nginx, Caddy y todos los procesos?**
 Sí, en un Linux por defecto: `/proc` deja a cualquiera ver los procesos de todos, y los archivos de

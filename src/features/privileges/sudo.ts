@@ -4,20 +4,18 @@
 //
 // Cada servidor elige de dónde sale (editor de servidor → «Contraseña de sudo»): pedirla cada vez, la
 // de la conexión o una guardada aparte (bóveda o llavero). Las dos últimas se leen del motor cuando
-// un panel la necesita (`useStoredSudo`, en stored.ts), se comprueban con `sudo -v` y quedan en memoria igual que si
-// se hubieran escrito. Si no sirven, se marca «failed» y el diálogo ofrece guardar la nueva.
+// un panel la necesita (`useStoredSudo` y `obtainSudoPassword`, en stored.ts), se comprueban con
+// `sudo -v` y quedan en memoria igual que si se hubieran escrito. Si no sirven, se marca «failed» y el
+// diálogo ofrece guardar la nueva. El orden de búsqueda está en lookup.ts.
 import { useMemo } from "react";
 import { create } from "zustand";
 import { snippets } from "../../api/snippets";
 import { errorMessage } from "../../api/core";
 import type { PrivilegeInfo } from "./detect";
 import { buildExec, elevationFailure, elevationFailureMessage, type Elevation } from "./elevate";
+import type { StoredSudoState } from "./lookup";
 
-/**
- * Contraseña guardada de la sesión: "loading" leyendo/comprobando, "ok" en memoria, "none" no hay o
- * el servidor dice «Pedir cada vez», "failed" sudo la rechazó, "off" el usuario la olvidó a mano.
- */
-export type StoredSudoState = "loading" | "ok" | "none" | "failed" | "off";
+export type { StoredSudoState } from "./lookup";
 
 interface SudoState {
   bySession: Record<string, string>;

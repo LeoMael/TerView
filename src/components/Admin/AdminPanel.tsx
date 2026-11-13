@@ -434,7 +434,13 @@ export function AdminPanel({
             <Unplug size={14} /> Sin conexión: lo que ves puede estar desactualizado y no se pueden hacer cambios.
           </div>
         )}
-        {!disabled && !elevation && elev.readOnlyReason && (
+        {!disabled && !elevation && storedSudo === "loading" && (
+          <div className="adm-banner" role="status">
+            <span className="spinner adm-spinner-btn" />
+            <span className="adm-banner-text">Comprobando la contraseña de sudo guardada…</span>
+          </div>
+        )}
+        {!disabled && !elevation && elev.readOnlyReason && storedSudo !== "loading" && (
           <div className="adm-banner" role="status">
             <ShieldAlert size={14} />
             <span className="adm-banner-text">{elev.readOnlyReason}</span>

@@ -1,8 +1,18 @@
 // Pide y valida la contraseña de sudo. Queda en memoria mientras dure la conexión y, si se marca
 // «Guardar para este servidor», también en la bóveda (o el llavero) como contraseña de sudo guardada.
-import { useState } from "react";
+// Antes de preguntar busca la que ya hay (`obtainSudoPassword`: en memoria, guardada u otra pestaña del
+// mismo servidor): si sirve, se cierra solo. Lo usan Administración, Contenedores y el escáner.
+import { useEffect, useState } from "react";
 import { KeyRound } from "lucide-react";
-import { confirmSudo, sudoModeOf, useStoredSudoState, useSudo } from "../../features/privileges";
+import {
+  confirmSudo,
+  defaultSaveChecked,
+  obtainSudoPassword,
+  storedFailed,
+  sudoModeOf,
+  setStoredSudo,
+  useStoredSudoState,
+} from "../../features/privileges";
 import { profiles as profilesApi } from "../../api/profiles";
 import { useProfiles } from "../../stores/profiles";
 import { toast } from "../../stores/toasts";
@@ -40,12 +50,46 @@ export function SudoDialog({
   onClose: () => void;
 }) {
   const stored = useStoredSudoState(sessionId);
-  const failed = stored === "failed";
+  const failed = storedFailed(stored);
   const mode = sudoModeOf(profileId);
   const [password, setPassword] = useState("");
-  const [save, setSave] = useState(change || failed || mode === "saved");
+  const [save, setSave] = useState(() => defaultSaveChecked({ change, failed, mode }));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Primero se busca la que ya hay; el formulario solo aparece si no sirve ninguna.
+  const [looking, setLooking] = useState(!change);
+
+  useEffect(() => {
+    if (change) return;
+    let alive = true;
+    void obtainSudoPassword(sessionId, profileId).then((r) => {
+      if (!alive) return;
+      if (r.ok) {
+        if (r.source !== "memory") {
+          toast.success(
+            "sudo confirmado",
+            r.source === "stored"
+              ? "Se usó la contraseña guardada de este servidor."
+              : "Se usó la de otra pestaña de este servidor.",
+          );
+        }
+        onClose();
+        return;
+      }
+      setSave(defaultSaveChecked({ change, failed: r.storedFailed, mode: sudoModeOf(profileId) }));
+      setLooking(false);
+    });
+    return () => {
+      alive = false;
+    };
+    // Solo al abrir.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // El aviso «la guardada no funcionó» ya se ve: que los paneles no vuelvan a abrir el diálogo solos.
+  useEffect(() => {
+    if (stored === "failed" && !looking) setStoredSudo(sessionId, "rejected");
+  }, [stored, looking, sessionId]);
 
   const submit = async () => {
     if (busy) return;
@@ -59,7 +103,7 @@ export function SudoDialog({
       return;
     }
     const kept = save && (await saveForServer(profileId, password));
-    if (kept) useSudo.setState((s) => ({ stored: { ...s.stored, [sessionId]: "ok" } }));
+    if (kept) setStoredSudo(sessionId, "ok");
     setBusy(false);
     setPassword("");
     toast.success("sudo confirmado", kept ? "Contraseña guardada para este servidor." : undefined);
@@ -81,46 +125,54 @@ export function SudoDialog({
         }}
       >
         <div className="modal-body">
-          {note && (
-            <div className="field-error" role="status">
-              {note}
+          {looking ? (
+            <div className="faint" role="status">
+              <span className="spinner adm-spinner-btn" /> Buscando la contraseña de sudo guardada…
             </div>
-          )}
-          <label
-            className="field"
-            title="Se comprueba con sudo -v y se envía por la entrada estándar, nunca en la línea de comandos."
-          >
-            <span>
-              Contraseña de <strong>{user ?? "tu usuario"}</strong> en el servidor
-            </span>
-            <input
-              className="input"
-              type="password"
-              value={password}
-              autoFocus
-              autoComplete="off"
-              onChange={(e) => {
-                setPassword(e.target.value);
-                setError(null);
-              }}
-              aria-invalid={!!error}
-            />
-          </label>
-          <label className="checkbox" title="Se guarda cifrada con tu PIN (o en el llavero si no tienes PIN).">
-            <input type="checkbox" checked={save} onChange={(e) => setSave(e.target.checked)} />
-            Guardar para este servidor
-          </label>
-          {error && (
-            <div className="field-error" role="alert">
-              {error}
-            </div>
+          ) : (
+            <>
+              {note && (
+                <div className="field-error" role="status">
+                  {note}
+                </div>
+              )}
+              <label
+                className="field"
+                title="Se comprueba con sudo -v y se envía por la entrada estándar, nunca en la línea de comandos."
+              >
+                <span>
+                  Contraseña de <strong>{user ?? "tu usuario"}</strong> en el servidor
+                </span>
+                <input
+                  className="input"
+                  type="password"
+                  value={password}
+                  autoFocus
+                  autoComplete="off"
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setError(null);
+                  }}
+                  aria-invalid={!!error}
+                />
+              </label>
+              <label className="checkbox" title="Se guarda cifrada con tu PIN (o en el llavero si no tienes PIN).">
+                <input type="checkbox" checked={save} onChange={(e) => setSave(e.target.checked)} />
+                Guardar para este servidor
+              </label>
+              {error && (
+                <div className="field-error" role="alert">
+                  {error}
+                </div>
+              )}
+            </>
           )}
         </div>
         <div className="modal-footer">
           <button type="button" className="btn" onClick={onClose} disabled={busy}>
             Cancelar
           </button>
-          <button type="submit" className="btn btn-primary" disabled={busy || !password}>
+          <button type="submit" className="btn btn-primary" disabled={busy || looking || !password}>
             {busy ? <span className="spinner adm-spinner-btn" /> : <KeyRound size={13} />}
             Confirmar
           </button>

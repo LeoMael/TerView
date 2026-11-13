@@ -24,6 +24,20 @@ siguen [Versionado Semántico](https://semver.org/lang/es/).
   servidor no quedaba en el proyecto.
 - Los menús de la barra lateral con muchas entradas (p. ej. la lista de servidores) se desplazan en vez de
   salirse de la ventana.
+- **sudo ya no pide otra vez una contraseña que está guardada.** Administración, Contenedores y el escáner
+  buscan la contraseña siempre en el mismo orden antes de preguntar: la de esta conexión en memoria → la
+  guardada del servidor (o la de la conexión) → la de otra pestaña abierta al mismo servidor → preguntar.
+  - Si el diálogo se abría mientras la guardada aún se estaba comprobando (al entrar en el panel o al
+    pulsar una acción enseguida), salía pidiéndola; ahora espera a esa comprobación y, si sirve, se cierra
+    solo («Se usó la contraseña guardada de este servidor»).
+  - Si la guardada no funciona, se pide **una vez** con el aviso «La contraseña guardada no funcionó» y
+    «Guardar para este servidor» marcado, y al confirmarla se actualiza. Antes el diálogo volvía a
+    aparecer cada vez que se entraba en la pestaña.
+  - Tras desbloquear el PIN se vuelve a leer la guardada si la lectura había fallado por estar bloqueado.
+  - «Guardar para este servidor» viene marcado si el servidor ya usa una contraseña guardada o la de la
+    conexión.
+  - Una segunda pestaña al mismo servidor reutiliza la contraseña ya escrita en la primera (comprobada con
+    sudo antes de usarla). «Olvidar contraseña de sudo» lo sigue respetando hasta reconectar.
 
 ## [0.5.0] - 2026-11-12
 
