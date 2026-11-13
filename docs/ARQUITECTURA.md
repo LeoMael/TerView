@@ -246,6 +246,7 @@ Ventaja: te autenticas una vez, y navegar, subir archivos, medir el servidor y u
 | `github/` | Cuenta, API, llaves públicas locales, cifrado del Gist, compartir comandos |
 | `storage/` | Perfiles, ajustes, llavero (`secrets`), bóveda con PIN (`vault`, `cipher`), bloqueo e inactividad (`lock`), `~/.ssh/config` |
 | `localfs.rs`, `diagnostics.rs` | Archivos de texto que eliges (exportar/importar) y datos del sistema para el diagnóstico |
+| `localkeys.rs` | Llaves SSH de `~/.ssh` del equipo: listar las `.pub` y generar una ed25519 (privada 0600, nunca sale del equipo) |
 
 Librerías clave del motor: `tauri`, `tokio`, `russh`, `russh-sftp`, `keyring`, `serde`, `reqwest`
 (con rustls), `aes-gcm` + `argon2` (bóveda y Gist cifrado), `zeroize` (borrar secretos de la memoria), `gtk` (arrastre en Linux), `windows` (arrastre en
@@ -352,6 +353,12 @@ y ver resultado"), la detección de privilegios y GitHub (clonar y desplegar).
 
 - **Sub-pestañas:** Usuarios, Grupos, Conectados ahora, Puertos, Sitios web e Historial. Interfaz en
   `components/Admin/`, lógica en `features/admin/`. Todo pasa por el canal exec de la sección 8.
+- **Nuevo usuario con clave** (`KeyUserWizard.tsx`, `features/admin/keyUser.ts`): valida la llave (tipo +
+  base64 + tipo interno), lee `AllowUsers/AllowGroups` con `sshd -T` (o `sshd_config`), arma el plan
+  (`useradd` + `usermod -p '*'` + `authorized_keys` 700/600 + linger) y después prueba la conexión con
+  `ssh_test_connection`. `AllowUsers` va en un plan aparte (archivo en `sshd_config.d`, `sshd -t`, recarga).
+  El catálogo tiene el mismo cambio como `usuarios.crear-usuario-clave` (script entre comillas simples y
+  valores como `$1…$5`), que también usa el MCP.
 - **Lecturas:**
   - Usuarios, grupos y sesiones: `READ_SCRIPT` como tu usuario (`getent passwd/group`, `who`,
     `lastlog`). Como root se añade `/etc/shadow`, del que solo se saca el estado de cada cuenta.

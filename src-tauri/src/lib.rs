@@ -7,6 +7,7 @@ mod dragout;
 mod error;
 mod github;
 mod localfs;
+mod localkeys;
 mod localterm;
 mod mcp;
 mod platform;
@@ -149,6 +150,9 @@ pub fn run() {
             // archivos locales (exportar/importar)
             localfs::local_write_text,
             localfs::local_read_text,
+            // llaves SSH locales (asistente «Nuevo usuario con clave»)
+            localkeys::local_ssh_public_keys,
+            localkeys::local_ssh_generate_key,
             // biblioteca de comandos
             snippets::snippets_load,
             snippets::snippets_save,

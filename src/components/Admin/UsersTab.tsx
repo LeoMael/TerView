@@ -1,6 +1,6 @@
 // Sub-pestaña «Usuarios»: tabla, filtros y acciones (crear, editar, llaves, bloquear, eliminar).
 import { useCallback, useMemo, useState, type MouseEvent } from "react";
-import { KeySquare, Lock, LockOpen, Pencil, Search, Trash2, UserPlus } from "lucide-react";
+import { KeyRound, KeySquare, Lock, LockOpen, Pencil, Search, Trash2, UserPlus } from "lucide-react";
 import { daysToDate, deleteUserPlan, lockUserPlan, type UserRow } from "../../features/admin";
 import { protectedReason, useAdmin } from "./context";
 import { VirtualTable, type Column } from "./VirtualTable";
@@ -8,9 +8,11 @@ import { ContextMenu, type MenuItem } from "./ContextMenu";
 import { PlanModal } from "./PlanReview";
 import { UserDialog } from "./UserDialog";
 import { KeysDialog } from "./KeysDialog";
+import { KeyUserWizard } from "./KeyUserWizard";
 
 type Dialog =
   | { kind: "create" }
+  | { kind: "create-key" }
   | { kind: "edit"; user: UserRow }
   | { kind: "keys"; user: UserRow }
   | { kind: "lock"; user: UserRow; lock: boolean }
@@ -176,6 +178,14 @@ export function UsersTab() {
             <Trash2 size={13} /> Eliminar
           </button>
         </div>
+        <button
+          className="btn btn-sm"
+          disabled={readOnly || !env}
+          title="Usuario sin contraseña que solo entra con su llave SSH"
+          onClick={() => setDialog({ kind: "create-key" })}
+        >
+          <KeyRound size={13} /> Nuevo usuario con clave…
+        </button>
         <button className="btn btn-sm btn-primary" disabled={readOnly || !env} onClick={() => setDialog({ kind: "create" })}>
           <UserPlus size={13} /> Crear usuario
         </button>
@@ -212,6 +222,7 @@ export function UsersTab() {
       {menu && <ContextMenu x={menu.x} y={menu.y} items={actions(menu.user)} onClose={() => setMenu(null)} />}
 
       {dialog?.kind === "create" && <UserDialog mode="create" onClose={() => setDialog(null)} onCreated={(n) => setSelected(n)} />}
+      {dialog?.kind === "create-key" && <KeyUserWizard onClose={() => setDialog(null)} onCreated={(n) => setSelected(n)} />}
       {dialog?.kind === "edit" && <UserDialog mode="edit" user={dialog.user} onClose={() => setDialog(null)} />}
       {dialog?.kind === "keys" && <KeysDialog user={dialog.user} onClose={() => setDialog(null)} />}
       {dialog?.kind === "lock" && env && (

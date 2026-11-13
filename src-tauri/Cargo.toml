@@ -46,7 +46,7 @@ reqwest = { version = "0.13", default-features = false, features = ["rustls"] }
 # Sincronización cifrada (ya en el árbol por russh/ssh-key): AES-256-GCM + Argon2id.
 aes-gcm = "0.11"
 argon2 = { version = "0.6", default-features = false, features = ["alloc"] }
-getrandom = "0.4"
+getrandom = { version = "0.4", features = ["sys_rng"] }
 base64ct = { version = "1.8", features = ["alloc"] }
 chrono = "0.4"
 # Bóveda de contraseñas (`storage::vault`): pisa con ceros la llave y los secretos al bloquear.

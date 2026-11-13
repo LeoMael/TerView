@@ -1,6 +1,7 @@
 // Catálogo base de la Biblioteca de comandos (fuente: docs/comandos/CATALOGO.md).
 // La categoría Docker se genera a partir de las entradas de Podman.
 import { parseVars } from "./template";
+import { KEY_USER_CATALOG_COMMAND } from "../../features/admin/keyUser";
 
 export type Distro = "rpm" | "deb" | "apk";
 
@@ -64,6 +65,9 @@ const VAR_HINTS: Record<string, CatalogVar> = {
     suggest: "systemctl list-units --type=service --all --no-legend --plain --no-pager | awk '{print $1}'",
   },
   usuario: { suggest: "awk -F: '$3>=1000 || $3==0 {print $1}' /etc/passwd" },
+  clave_publica: { label: "clave pública" },
+  admin: { label: "dar sudo", options: ["no", "si"] },
+  linger: { options: ["no", "si"] },
   grupo: { suggest: "cut -d: -f1 /etc/group" },
   rama: { suggest: "git branch -a --format='%(refname:short)'" },
   pid: { suggest: "ps -eo pid=,comm= --sort=-pcpu 2>/dev/null | head -40 | awk '{print $1\"\\t\"$2}'" },
@@ -78,8 +82,8 @@ const VAR_HINTS: Record<string, CatalogVar> = {
 
 // ───────── Definición compacta ─────────
 // [nombre, comando, descripción, banderas] — banderas: r=solo lectura (📊), d=peligroso, s=sudo,
-// i=interactivo; distro en `opts`.
-type Row = [name: string, command: string, description?: string, flags?: string, distro?: Distro];
+// i=interactivo; distro en `opts`. `id`: identificador fijo (si no, sale del nombre).
+type Row = [name: string, command: string, description?: string, flags?: string, distro?: Distro, id?: string];
 
 interface Section {
   category: string;
@@ -429,6 +433,16 @@ const OTHERS: Section[] = [
     rows: [
       ["Quién soy", "whoami && id", "Tu usuario, grupos e identificadores.", "r"],
       ["Crear usuario", "sudo useradd -m {{usuario}}", "Crea un usuario con carpeta personal.", "s"],
+      [
+        "Crear usuario con acceso solo por clave SSH",
+        KEY_USER_CATALOG_COMMAND,
+        "Usuario sin contraseña que solo entra con su llave pública (se escribe en ~/.ssh/authorized_keys, 700/600). " +
+          "Opcional: grupo extra (p. ej. el de AllowGroups de sshd, varios separados por comas), admin=si (wheel o sudo) y linger=si. " +
+          "No cambia sshd_config ni PasswordAuthentication.",
+        "s",
+        undefined,
+        "crear-usuario-clave",
+      ],
       ["Cambiar contraseña", "sudo passwd {{usuario}}", "Pide la contraseña nueva del usuario.", "si"],
       ["Dar sudo", "sudo usermod -aG wheel {{usuario}}", "Añade el usuario al grupo wheel.", "sd", "rpm"],
       ["Dar sudo", "sudo usermod -aG sudo {{usuario}}", "Añade el usuario al grupo sudo.", "sd", "deb"],
@@ -537,8 +551,8 @@ function build(sections: Section[], docker = false): CatalogEntry[] {
   const out: CatalogEntry[] = [];
   const ids = new Set<string>();
   for (const sec of sections) {
-    for (const [name, command, description, flags = "", distro] of sec.rows) {
-      let id = `${slug(sec.category)}.${slug(name)}${distro ? `-${distro}` : ""}`;
+    for (const [name, command, description, flags = "", distro, fixedId] of sec.rows) {
+      let id = `${slug(sec.category)}.${fixedId ?? slug(name)}${distro ? `-${distro}` : ""}`;
       for (let n = 2; ids.has(id); n++) id = `${slug(sec.category)}.${slug(name)}-${n}`;
       ids.add(id);
       out.push({

@@ -63,6 +63,11 @@ siguen [Versionado Semántico](https://semver.org/lang/es/).
   explorador y guardar en el editor). Clic en un atajo y pulsa la combinación nueva; avisa si choca con
   otra acción o con teclas de la terminal (Ctrl+C, Ctrl+D…); restablecer uno o todos. Los menús y
   tooltips muestran el atajo actual.
+- **Crear usuario con acceso solo por clave SSH** (Administración → Usuarios → «Nuevo usuario con
+  clave…»): la clave se pega, se elige de `~/.ssh` o se genera (ed25519, en tu equipo; la privada nunca
+  sale de él). Detecta AllowGroups/AllowUsers de sshd, ofrece sudo y linger, muestra los comandos antes,
+  prueba el acceso con la clave y ofrece guardar el servidor. No toca PasswordAuthentication. También como
+  comando de la Biblioteca (`usuarios.crear-usuario-clave`), usable por el asistente.
 
 ### Corregido
 - **sudo con contraseña en más sitios.** «Ejecutar en varios servidores» usa la contraseña de sudo de cada

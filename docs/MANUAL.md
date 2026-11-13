@@ -313,6 +313,12 @@ Este manual también está dentro de TerView: pulsa el botón **?** de la barra 
 
 1. Abre la pestaña **Administración**. Arriba ves si tienes permisos (**root**, **sudo**) o **Solo lectura**.
 2. En **Usuarios** pulsa **Crear usuario**, o selecciona uno y usa **Editar**, **Llaves SSH**, **Bloquear** o **Eliminar**.
+   - **Nuevo usuario con clave…** crea un usuario **sin contraseña** que solo entra con su llave SSH. Pega la
+     llave pública, elige una de `~/.ssh` de tu equipo o **genera una nueva** (ed25519; la privada se queda en
+     tu equipo, con frase opcional). Si sshd limita el acceso con `AllowGroups`, te ofrece añadir el grupo; si
+     usa `AllowUsers`, te avisa y, al terminar, puedes añadirlo con un cambio aparte. También puedes darle sudo
+     y activar *linger*. No cambia `PasswordAuthentication`. Al acabar prueba la conexión con esa llave y te
+     ofrece **guardar el servidor** en TerView con ese usuario.
 3. En **Grupos** pulsa **Crear grupo**, o usa **Miembros**, **Renombrar** o **Eliminar**.
 4. Antes de cada cambio verás el comando exacto. Pulsa **Ejecutar** para aplicarlo.
 5. En **Conectados ahora** ves quién está dentro y puedes **Cerrar sesión**.
