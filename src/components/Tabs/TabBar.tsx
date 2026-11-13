@@ -1,6 +1,21 @@
-// Barra de pestañas de conexión (una por sesión SSH).
+// Barra de pestañas: las de conexión (una por sesión SSH) y, detrás, las de terminal local («Este equipo»).
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type PointerEvent as RPointerEvent } from "react";
-import { CircleHelp, Copy, PanelLeftClose, PanelLeftOpen, Plus, RotateCw, Server, Settings, Unplug, X, XCircle } from "lucide-react";
+import {
+  Bot,
+  CircleHelp,
+  Copy,
+  Laptop,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Plus,
+  RotateCw,
+  Server,
+  Settings,
+  SquareTerminal,
+  Unplug,
+  X,
+  XCircle,
+} from "lucide-react";
 import { useTabs, type SessionTab } from "../../stores/tabs";
 import { useUi } from "../../stores/ui";
 import { useProfiles } from "../../stores/profiles";
@@ -12,6 +27,9 @@ import { PrivilegeBadge } from "./PrivilegeBadge";
 import { LockButton } from "./LockButton";
 import { McpButton } from "../../features/mcp/McpButton";
 import { openManual } from "../Settings/settingsNav";
+import { closeLocalTab, moveLocalTab, openLocalTab, useLocalTabs, type LocalTab } from "../../features/localterm/store";
+import { LocalMenu } from "../../features/localterm/LocalMenu";
+import { launchAssistant, openLocalTerminal } from "../../features/localterm/launch";
 import "./TabBar.css";
 import { shortcutLabel } from "../../lib/platform";
 
@@ -30,10 +48,20 @@ function tabTooltip(t: SessionTab): string {
   return t.title;
 }
 
-type Menu = { kind: "tab"; tabId: string; x: number; y: number } | { kind: "new"; x: number; y: number };
+type Menu =
+  | { kind: "tab"; tabId: string; x: number; y: number }
+  | { kind: "local"; tabId: string; x: number; y: number }
+  | { kind: "new"; x: number; y: number }
+  | { kind: "localMenu"; x: number; y: number };
+
+function localTooltip(t: LocalTab): string {
+  const what = t.kind === "shell" ? "Terminal de este equipo" : `${t.title} (en este equipo)`;
+  return `${what}${t.cwd ? ` — ${t.cwd}` : ""}${t.status === "exited" ? " — terminado" : ""}`;
+}
 
 export function TabBar() {
   const tabs = useTabs((s) => s.tabs);
+  const localTabs = useLocalTabs((s) => s.tabs);
   const activeId = useTabs((s) => s.activeTabId);
   const setActive = useTabs((s) => s.setActive);
   const dirty = useEditorDirty((s) => s.dirty);
@@ -74,7 +102,12 @@ export function TabBar() {
       const r = el.getBoundingClientRect();
       return e.clientX >= r.left && e.clientX < r.right;
     });
-    if (target >= 0 && els[target].dataset.tabId !== d.id) moveTab(d.id, target);
+    if (target < 0 || els[target].dataset.tabId === d.id) return;
+    // Las de servidor y las locales se reordenan cada una en su grupo.
+    const sshCount = useTabs.getState().tabs.length;
+    const isLocal = useLocalTabs.getState().tabs.some((t) => t.id === d.id);
+    if (isLocal && target >= sshCount) moveLocalTab(d.id, target - sshCount);
+    else if (!isLocal && target < sshCount) moveTab(d.id, target);
   };
   const endDrag = () => {
     drag.current = null;
@@ -84,12 +117,16 @@ export function TabBar() {
   const profiles = useProfiles((s) => s.servers);
   const menuTab = menu?.kind === "tab" ? tabs.find((t) => t.id === menu.tabId) : undefined;
 
-  const closeOthers = async (keep: SessionTab) => {
+  const localMenuTab = menu?.kind === "local" ? localTabs.find((t) => t.id === menu.tabId) : undefined;
+
+  const closeOthers = async (keepId: string) => {
     for (const t of useTabs.getState().tabs) {
-      if (t.id === keep.id) continue;
+      if (t.id === keepId) continue;
       const ok = await requestCloseTab(t.id);
-      if (!ok) break;
+      if (!ok) return;
     }
+    for (const t of useLocalTabs.getState().tabs) if (t.id !== keepId) closeLocalTab(t.id);
+    useTabs.getState().setActive(keepId);
   };
 
   return (
@@ -167,6 +204,61 @@ export function TabBar() {
             </div>
           );
         })}
+        {localTabs.map((t) => {
+          const active = t.id === activeId;
+          const cls = ["tabs-tab", "local", active && "active", t.status === "exited" && "exited", dragId === t.id && "dragging"]
+            .filter(Boolean)
+            .join(" ");
+          return (
+            <div
+              key={t.id}
+              data-tab-id={t.id}
+              role="tab"
+              aria-selected={active}
+              tabIndex={active ? 0 : -1}
+              className={cls}
+              title={localTooltip(t)}
+              onPointerDown={(e) => onPointerDown(e, t.id)}
+              onPointerMove={onPointerMove}
+              onPointerUp={endDrag}
+              onPointerCancel={endDrag}
+              onMouseDown={(e) => e.button === 1 && e.preventDefault()}
+              onAuxClick={(e) => {
+                if (e.button === 1) {
+                  e.preventDefault();
+                  closeLocalTab(t.id);
+                }
+              }}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                setMenu({ kind: "local", tabId: t.id, x: e.clientX, y: e.clientY });
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Delete") closeLocalTab(t.id);
+              }}
+            >
+              {t.kind === "shell" ? (
+                <Laptop size={13} className="tabs-local-icon" aria-label="Este equipo" />
+              ) : (
+                <Bot size={13} className="tabs-local-icon" aria-label="Asistente de IA en este equipo" />
+              )}
+              <span className="tabs-title">{t.title}</span>
+              <button
+                className="tabs-close"
+                title="Cerrar (termina lo que corre en ella)"
+                aria-label={`Cerrar ${t.title}`}
+                tabIndex={-1}
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  closeLocalTab(t.id);
+                }}
+              >
+                <X size={13} />
+              </button>
+            </div>
+          );
+        })}
         <button
           className="icon-btn tabs-new"
           title="Nueva conexión"
@@ -177,6 +269,17 @@ export function TabBar() {
           }}
         >
           <Plus size={16} />
+        </button>
+        <button
+          className="icon-btn tabs-local-btn"
+          title="Este equipo: terminal local, Claude Code y Codex"
+          aria-label="Terminal local"
+          onClick={(e) => {
+            const r = e.currentTarget.getBoundingClientRect();
+            setMenu(menu?.kind === "localMenu" ? null : { kind: "localMenu", x: r.left, y: r.bottom + 4 });
+          }}
+        >
+          <Laptop size={15} />
         </button>
       </div>
       <McpButton />
@@ -218,6 +321,71 @@ export function TabBar() {
             }}
           >
             <Server size={14} /> Nuevo servidor…
+          </button>
+          <hr />
+          <div className="tabs-menu-label">Este equipo</div>
+          <button
+            role="menuitem"
+            onClick={() => {
+              closeMenu();
+              openLocalTerminal();
+            }}
+          >
+            <SquareTerminal size={14} /> Terminal local
+          </button>
+          <button
+            role="menuitem"
+            onClick={() => {
+              closeMenu();
+              void launchAssistant("claude");
+            }}
+          >
+            <Bot size={14} /> Claude Code
+          </button>
+          <button
+            role="menuitem"
+            onClick={() => {
+              closeMenu();
+              void launchAssistant("codex");
+            }}
+          >
+            <Bot size={14} /> Codex
+          </button>
+        </PopupMenu>
+      )}
+
+      {menu?.kind === "localMenu" && <LocalMenu x={menu.x} y={menu.y} onClose={closeMenu} />}
+
+      {menu?.kind === "local" && localMenuTab && (
+        <PopupMenu x={menu.x} y={menu.y} onClose={closeMenu}>
+          <button
+            role="menuitem"
+            onClick={() => {
+              closeMenu();
+              openLocalTab({ kind: "shell", cwd: localMenuTab.cwd });
+            }}
+          >
+            <SquareTerminal size={14} /> Otra terminal en esta carpeta
+          </button>
+          <hr />
+          <button
+            role="menuitem"
+            onClick={() => {
+              closeMenu();
+              closeLocalTab(localMenuTab.id);
+            }}
+          >
+            <X size={14} /> Cerrar
+          </button>
+          <button
+            role="menuitem"
+            disabled={tabs.length + localTabs.length < 2}
+            onClick={() => {
+              closeMenu();
+              void closeOthers(localMenuTab.id);
+            }}
+          >
+            <XCircle size={14} /> Cerrar las demás
           </button>
         </PopupMenu>
       )}
@@ -269,10 +437,10 @@ export function TabBar() {
           </button>
           <button
             role="menuitem"
-            disabled={tabs.length < 2}
+            disabled={tabs.length + localTabs.length < 2}
             onClick={() => {
               closeMenu();
-              void closeOthers(menuTab);
+              void closeOthers(menuTab.id);
             }}
           >
             <XCircle size={14} /> Cerrar las demás

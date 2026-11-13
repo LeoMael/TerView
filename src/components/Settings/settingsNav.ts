@@ -12,6 +12,7 @@ export type SectionId =
   | "servers"
   | "security"
   | "assistants"
+  | "localAi"
   | "ai"
   | "advanced"
   | "manual"

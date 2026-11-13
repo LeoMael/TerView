@@ -340,6 +340,7 @@ fn sanitize_settings(mut s: Settings) -> Settings {
     }
     s.vulnscan = s.vulnscan.sanitized();
     s.ai = s.ai.sanitized();
+    s.local_ai = s.local_ai.sanitized();
     s
 }
 

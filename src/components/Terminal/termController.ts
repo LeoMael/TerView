@@ -1,4 +1,5 @@
-// Controlador de una terminal: une una instancia de xterm.js con una shell remota.
+// Controlador de una terminal: une una instancia de xterm.js con una shell remota (SSH) o, con un
+// `backend` propio, con una shell de este equipo (terminal local).
 // Independiente de React: el componente solo lo crea, le pasa cambios y lo destruye.
 import { Terminal } from "@xterm/xterm";
 import "@xterm/xterm/css/xterm.css";
@@ -28,8 +29,27 @@ export interface TmuxState {
   problem: string | null;
 }
 
+/** Resultado de abrir la shell. */
+export interface TermOpenResult {
+  termId: string;
+  /** Sesión tmux en la que quedó (solo SSH). */
+  tmux?: string | null;
+  tmuxMissing?: boolean;
+  tmuxProblem?: string | null;
+}
+
+/** De dónde sale la shell cuando no es la de un servidor (p. ej. la terminal local). */
+export interface TermBackend {
+  open: (cols: number, rows: number, onData: (bytes: Uint8Array) => void) => Promise<TermOpenResult>;
+  write: (termId: string, data: string) => Promise<void>;
+  resize: (termId: string, cols: number, rows: number) => Promise<void>;
+  close: (termId: string) => Promise<void>;
+}
+
 export interface TermControllerOptions {
   sessionId: string;
+  /** Otra fuente de shell (terminal local). Sin esto: shell SSH de `sessionId`. */
+  backend?: TermBackend | null;
   /** Sesión tmux de esta terminal (null = shell normal). */
   tmuxName: string | null;
   /** Volcar el historial de la sesión tmux al abrirla por primera vez (se reabre una que ya existía). */
@@ -66,6 +86,7 @@ export class TermController {
   private readonly search = new SearchAddon({ highlightLimit: 2000 });
   private readonly host: HTMLElement;
   private readonly sessionId: string;
+  private readonly backend: TermBackend | null;
   private readonly onStatus: (s: TermStatus) => void;
   private readonly onSearchRequest: () => void;
   private readonly tmuxName: string | null;
@@ -103,6 +124,7 @@ export class TermController {
   constructor(host: HTMLElement, opts: TermControllerOptions) {
     this.host = host;
     this.sessionId = opts.sessionId;
+    this.backend = opts.backend ?? null;
     this.onStatus = opts.onStatus;
     this.onSearchRequest = opts.onSearchRequest;
     this.tmuxName = opts.tmuxName;
@@ -155,6 +177,11 @@ export class TermController {
 
     this.fitNow();
     void this.start();
+  }
+
+  /** Escribir, redimensionar y cerrar: por SSH o por el `backend` propio. */
+  private get api(): Pick<TermBackend, "write" | "resize" | "close"> {
+    return this.backend ?? terminal;
   }
 
   // ───────── Dibujado por GPU (WebGL) ─────────
@@ -215,27 +242,30 @@ export class TermController {
     this.fitNow();
     const { cols, rows } = this.term;
     const tmux = this.tmuxName ? { name: this.tmuxName, replay: this.tmuxReplay } : null;
+    const onData = (bytes: Uint8Array) => {
+      if (!this.disposed && gen === this.gen) this.term.write(bytes);
+    };
     try {
-      const opened = await terminal.open(
-        this.sessionId,
-        cols,
-        rows,
-        (bytes) => {
-          if (!this.disposed && gen === this.gen) this.term.write(bytes);
-        },
-        tmux,
-      );
+      const opened: TermOpenResult = this.backend
+        ? await this.backend.open(cols, rows, onData)
+        : await terminal.open(this.sessionId, cols, rows, onData, tmux);
       const id = opened.termId;
       if (this.disposed || gen !== this.gen) {
-        terminal.close(id).catch(() => {});
+        this.api.close(id).catch(() => {});
         return;
       }
       this.termId = id;
       this.lost = false;
       // El historial ya está en xterm.js: al reabrir (reconexión) no se vuelve a volcar.
       this.tmuxReplay = false;
-      this.persistent = opened.tmux !== null;
-      this.onTmux?.({ persistent: this.persistent, missing: opened.tmuxMissing, problem: opened.tmuxProblem });
+      this.persistent = (opened.tmux ?? null) !== null;
+      if (!this.backend) {
+        this.onTmux?.({
+          persistent: this.persistent,
+          missing: opened.tmuxMissing ?? false,
+          problem: opened.tmuxProblem ?? null,
+        });
+      }
       this.setStatus("running");
       this.unExit = onTerminalExit(id, (code) => this.handleExit(id, code));
       if (this.term.cols !== cols || this.term.rows !== rows) this.sendResize();
@@ -299,7 +329,7 @@ export class TermController {
     this.cancelExitMessage();
     this.unExit?.();
     this.unExit = null;
-    if (this.termId) terminal.close(this.termId).catch(() => {});
+    if (this.termId) this.api.close(this.termId).catch(() => {});
     this.termId = null;
     this.pending = "";
     // Con tmux se vuelve a la misma sesión: lo que corría sigue ahí.
@@ -346,7 +376,7 @@ export class TermController {
         const data = this.pending;
         this.pending = "";
         try {
-          await terminal.write(id, data);
+          await this.api.write(id, data);
         } catch {
           /* la shell terminó: el evento de salida lo indicará */
         }
@@ -387,6 +417,29 @@ export class TermController {
     }
     return true;
   };
+
+  /** Pega texto como si lo pegara el usuario (con «pegado entre corchetes» si el programa lo pidió:
+   *  así un texto de varias líneas no se ejecuta línea a línea). */
+  pasteText(text: string) {
+    if (this.disposed || !text) return;
+    this.term.paste(text);
+  }
+
+  /** El programa activó el «pegado entre corchetes» (lo hacen las shells modernas, Claude Code y Codex). */
+  acceptsBracketedPaste(): boolean {
+    return !this.disposed && this.term.modes.bracketedPasteMode;
+  }
+
+  /** La shell está abierta y lista para recibir texto. */
+  isRunning(): boolean {
+    return this.status === "running" && this.termId !== null;
+  }
+
+  /** Línea informativa (gris) en la terminal; no llega al programa. */
+  note(text: string) {
+    if (this.disposed) return;
+    this.term.write(`${DIM(text.replace(/\r?\n/g, "\r\n"))}\r\n`);
+  }
 
   copy() {
     const sel = this.term.getSelection();
@@ -473,7 +526,7 @@ export class TermController {
 
   private sendResize() {
     if (!this.termId || this.disposed) return;
-    terminal.resize(this.termId, this.term.cols, this.term.rows).catch(() => {});
+    this.api.resize(this.termId, this.term.cols, this.term.rows).catch(() => {});
   }
 
   // ───────── Cambios desde React ─────────
@@ -515,7 +568,7 @@ export class TermController {
     this.unGpu();
     this.disableWebgl();
     this.unExit?.();
-    if (this.termId) terminal.close(this.termId).catch(() => {});
+    if (this.termId) this.api.close(this.termId).catch(() => {});
     this.termId = null;
     this.term.dispose();
   }

@@ -1,13 +1,23 @@
 // Ajustes de la app. BASE compartida.
 import { create } from "zustand";
 import { settingsApi } from "../api/profiles";
-import type { Settings } from "../api/types";
+import type { LocalAiSettings, Settings } from "../api/types";
 import { DEFAULT_AI_SETTINGS, DEFAULT_VULNSCAN_SETTINGS } from "../api/vulnscan";
 
 /** Fuente monoespaciada por defecto: Linux (JetBrains/Fira/Noto), Windows (Cascadia Mono, Consolas), macOS (Menlo). */
 export const DEFAULT_MONO_FONT = "'JetBrains Mono', 'Fira Code', 'Noto Sans Mono', 'Cascadia Mono', Consolas, Menlo, monospace";
 /** Valor por defecto de versiones anteriores (sin fuentes de Windows/macOS): se actualiza al cargar. */
 const OLD_DEFAULT_MONO_FONT = "'JetBrains Mono', 'Fira Code', 'Noto Sans Mono', monospace";
+
+export const DEFAULT_LOCAL_AI: LocalAiSettings = {
+  mode: "both",
+  includeServers: true,
+  includeHosts: true,
+  includeProjects: true,
+  includeActive: true,
+  includeDate: true,
+  lastCwd: null,
+};
 
 export const DEFAULT_SETTINGS: Settings = {
   theme: "dark",
@@ -30,6 +40,7 @@ export const DEFAULT_SETTINGS: Settings = {
   vaultPromptDismissed: false,
   vulnscan: DEFAULT_VULNSCAN_SETTINGS,
   ai: DEFAULT_AI_SETTINGS,
+  localAi: DEFAULT_LOCAL_AI,
 };
 
 interface SettingsState {

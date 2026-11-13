@@ -1,0 +1,111 @@
+/* Terminal local («Este equipo») y asistentes de IA. */
+.lt-root {
+  background: var(--bg-terminal);
+}
+.lt-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  flex: none;
+  padding: 0 10px;
+  background: var(--bg-sunken);
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 12px;
+  min-width: 0;
+}
+.lt-bar > svg {
+  flex: none;
+  color: var(--accent);
+}
+.lt-where {
+  color: var(--text);
+  font-weight: 600;
+  flex: none;
+}
+.lt-kind {
+  flex: none;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--mix-accent-16);
+  color: var(--text);
+}
+.lt-cwd {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  direction: rtl; /* si no cabe, se ve el final de la ruta */
+  text-align: left;
+}
+.lt-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex: none;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--mix-green-15);
+  color: var(--text);
+  font-size: 11px;
+}
+
+/* Pestaña local en la barra de pestañas */
+.tabs-tab.local .tabs-local-icon {
+  flex: none;
+  color: var(--accent);
+}
+.tabs-tab.local.exited .tabs-local-icon {
+  color: var(--text-faint);
+}
+
+/* Botón «Este equipo» junto a «+» */
+.tabs-local-btn {
+  align-self: center;
+  flex: none;
+}
+
+/* Menú de terminal local */
+.lt-menu-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 10px 4px;
+  font-size: 11px;
+  color: var(--text-faint);
+}
+.lt-menu-cwd {
+  color: var(--text-muted);
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  direction: rtl;
+  text-align: left;
+}
+.lt-menu-hint {
+  margin-left: auto;
+  padding-left: 12px;
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+/* Comando exacto en los diálogos */
+.lt-cmd {
+  margin: 8px 0;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  user-select: text;
+}
+.lt-preview {
+  max-height: 320px;
+  overflow: auto;
+  word-break: normal;
+}

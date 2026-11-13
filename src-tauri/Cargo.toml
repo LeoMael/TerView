@@ -64,12 +64,18 @@ tower-service = "0.3"
 regex = "1"
 # Escáner de vulnerabilidades (`vulnscan`): puntuación CVSS v2/v3/v4 (solo cálculo, sin red).
 cvss = "3"
+# Terminal local (pestañas «Este equipo»): PTY del sistema en Linux, macOS y Windows (ConPTY).
+portable-pty = "0.9"
 
 [dev-dependencies]
 # Pruebas de punta a punta del servidor MCP con el cliente oficial.
 rmcp = { version = "3.9", default-features = false, features = ["client", "transport-streamable-http-client-reqwest"] }
 # Relojes simulados (tiempo límite de las aprobaciones sin esperar de verdad).
 tokio = { version = "1.54.1", features = ["full", "test-util"] }
+
+# Terminal local: terminar el grupo de procesos (la shell y lo que lanzó) al cerrar la pestaña.
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
 
 # Windows: aws-lc-sys (cripto de russh) necesita NASM para x86_64; con `prebuilt-nasm` usa los
 # objetos ya ensamblados que trae el crate, así el build de CI no depende de tener NASM instalado.

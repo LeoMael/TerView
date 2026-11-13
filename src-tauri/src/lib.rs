@@ -7,6 +7,7 @@ mod dragout;
 mod error;
 mod github;
 mod localfs;
+mod localterm;
 mod mcp;
 mod platform;
 mod sftp;
@@ -38,6 +39,7 @@ pub fn run() {
         .plugin(tauri_plugin_process::init())
         .manage(ssh::SessionStore::default())
         .manage(terminal::TerminalStore::default())
+        .manage(localterm::LocalTermStore::default())
         .manage(sftp::SftpStore::default())
         .manage(transfer::TransferManager::default())
         .manage(snippets::ExecRegistry::default())
@@ -45,6 +47,8 @@ pub fn run() {
         // Al cerrar la principal se cierra la app entera (si no, seguirían vivas las ventanas de editor aparte).
         .on_window_event(|window, event| {
             if window.label() == "main" && matches!(event, tauri::WindowEvent::Destroyed) {
+                // Las terminales locales terminan con sus procesos (no quedan programas sueltos).
+                window.app_handle().state::<localterm::LocalTermStore>().close_all();
                 window.app_handle().exit(0);
             }
         })
@@ -77,6 +81,14 @@ pub fn run() {
             terminal::term_close,
             terminal::term_tmux_list,
             terminal::term_tmux_kill,
+            // terminal local y asistentes de IA (Claude Code, Codex)
+            localterm::local_term_info,
+            localterm::local_term_open,
+            localterm::local_term_write,
+            localterm::local_term_resize,
+            localterm::local_term_close,
+            localterm::local_ai_detect,
+            localterm::local_ai_ssh_aliases,
             // sftp
             sftp::sftp_home,
             sftp::sftp_list_dir,

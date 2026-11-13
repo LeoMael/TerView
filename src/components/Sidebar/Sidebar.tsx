@@ -24,7 +24,10 @@ import {
   Zap,
   Bookmark as BookmarkIcon,
   MinusCircle,
+  Bot,
+  Laptop,
 } from "lucide-react";
+import { launchAssistant, openLocalTerminal } from "../../features/localterm/launch";
 import type { Bookmark, Project, ServerProfile } from "../../api/types";
 import { useProfiles } from "../../stores/profiles";
 import { useTabs } from "../../stores/tabs";
@@ -410,6 +413,10 @@ export function Sidebar() {
         "separator",
         { label: `Importar de ${SSH_CONFIG_LABEL}…`, icon: <Download size={14} />, onClick: () => setImportOpen(true) },
         { label: `Exportar a ${SSH_CONFIG_LABEL}`, icon: <Upload size={14} />, onClick: () => void exportSshConfig() },
+        "separator",
+        { label: "Terminal local (este equipo)", icon: <Laptop size={14} />, onClick: () => openLocalTerminal() },
+        { label: "Claude Code", icon: <Bot size={14} />, onClick: () => void launchAssistant("claude") },
+        { label: "Codex", icon: <Bot size={14} />, onClick: () => void launchAssistant("codex") },
       ],
     });
   };

@@ -52,10 +52,23 @@ Sí, en un Linux por defecto: `/proc` deja a cualquiera ver los procesos de todo
 Idea: añadir al escáner o a Administración un aviso de **endurecimiento**, por ejemplo: montar `/proc` con
 `hidepid=2`, dejar la configuración web con permisos 640, y revisar puertos expuestos y `PermitRootLogin`.
 
-**3. Función nueva: terminal local (del PC).** Pestañas de terminal **del propio PC**, no del servidor,
-para lanzar Claude Code, Codex, etc. junto a los servidores. Idea: un PTY local en Rust (`portable-pty`)
-con la misma vista de xterm.js; botones rápidos «Claude Code», «Codex»; abrir en la carpeta que se elija; y
-opción de que el asistente use el MCP de TerView ya configurado.
+**3. ✅ Hecho: terminal local (del PC) y asistentes de IA con contexto.** Pestañas «Este equipo» con un PTY
+local (`portable-pty`, módulo `src-tauri/src/localterm/`) y la misma vista xterm.js; botones «Claude Code» y
+«Codex» que detectan si están instalados (y ofrecen instalarlos mostrando el comando); contexto de TerView
+(servidores con alias de ssh, usuario, host, proyecto, pestaña que se miraba, fecha) y el MCP ya configurado,
+sin escribir nada en la carpeta del usuario; Ajustes → Terminal local e IA; «Enviar a la IA» en el menú de la
+terminal de servidor. Detalle en el README («Terminal local y asistentes de IA») y en el CHANGELOG.
+Quedó fuera o sin probar:
+- **Sin probar en la app real** (solo pruebas automáticas: PTY real en Linux, `claude`/`codex` reales
+  aceptando los argumentos). Falta probar a mano en Linux, y compilar y probar en **Windows** (ConPTY,
+  PowerShell, `taskkill /T`, Codex instalado con npm lanzado con node) y **macOS** (shell de login, PATH).
+- En macOS no hay `/proc`: al cerrar se termina el grupo de procesos y el sistema avisa (SIGHUP) al resto
+  de la sesión; un proceso que se cambie de grupo e ignore SIGHUP podría quedar vivo.
+- El contexto no dice qué **contenedores o sitios** tiene cada servidor (TerView no los guarda); el asistente
+  puede pedirlos con el MCP (`list_containers`, `list_sites`) o por ssh.
+- Las pestañas locales no se recuerdan al reiniciar la app (las de servidor tampoco).
+- Si el usuario ya tiene `developer_instructions` en `~/.codex/config.toml`, en esa sesión gana el de
+  TerView (Codex no permite sumar los dos con `-c`).
 
 **4. Nombre y logo nuevos.** Al usuario no le gustan ni «TerView» ni el logo actual. Le gustan
 **Argos** (el gigante de cien ojos que todo lo vigila; logo: pluma de pavo real cuyo ojo es una terminal) y
@@ -89,6 +102,7 @@ Este documento guarda lo que falta, **con suficiente detalle para retomarlo más
 | 3 | [Servidor MCP (conectar asistentes de IA)](#3-servidor-mcp-conectar-asistentes-de-ia) | Opcional | ✅ Hecho (v0.5.0) |
 | 5 | [Exportar servidores a `~/.ssh/config`](#5-exportar-servidores-a-sshconfig) | Alta (corta) | ✅ Hecho (v0.2.0) |
 | 4 | [Otros pendientes detectados](#4-otros-pendientes-detectados) | Media/Baja | Mayoría hecha; ver tabla |
+| 11 | Terminal local y asistentes de IA (Claude Code, Codex) con el contexto de TerView | Alta | ✅ Hecho (sin publicar) |
 | 10 | [Escáner de vulnerabilidades](#10-escáner-de-vulnerabilidades--hecho-v050) (OSV.dev, herramientas de la distro, Trivy; IA opcional solo para explicar) | Alta (v0.5.0) | ✅ Hecho (v0.5.0) |
 
 **Orden sugerido:** 2 (reconexión) → 5 (exportar a `~/.ssh/config`) → 1 (biblioteca de comandos)

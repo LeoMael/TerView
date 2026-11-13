@@ -9,6 +9,7 @@ import { registerTerminalWriter } from "../../stores/terminalBus";
 import { toast } from "../../stores/toasts";
 import { terminal } from "../../api/terminal";
 import { clipboard } from "../../lib/clipboard";
+import { sendToAi } from "../../features/localterm/launch";
 import { ContextMenu, type MenuItem } from "../FileExplorer/ContextMenu";
 import {
   allOpenTmuxNames,
@@ -147,6 +148,9 @@ export const TerminalArea = memo(function TerminalArea({ sessionId, active, disa
     nameRef.current = serverName;
   });
 
+  /** «Enviar a la IA»: la selección va a la pestaña del asistente (o abre uno). */
+  const onSendToAi = useCallback((text: string) => void sendToAi(text, nameRef.current || null), []);
+
   const onTmux = useCallback(
     (key: number, st: TmuxState) => {
       setTabs((prev) => prev.map((t) => (t.key === key && t.persistent !== st.persistent ? { ...t, persistent: st.persistent } : t)));
@@ -281,6 +285,7 @@ export const TerminalArea = memo(function TerminalArea({ sessionId, active, disa
           <TerminalView
             key={t.key}
             sessionId={sessionId}
+            onSendToAi={onSendToAi}
             visible={active && t.key === activeKey}
             disabled={disabled}
             connState={connState}

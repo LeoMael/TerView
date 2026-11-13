@@ -289,7 +289,8 @@ pub fn on_vault_change(app: &AppHandle) {
 }
 
 /// Lee el token o crea uno si no hay (o se perdió con «Olvidé mi PIN»).
-async fn ensure_token(state: &McpState) -> AppResult<Zeroizing<String>> {
+/// También lo usa la terminal local para pasárselo (por entorno) al asistente que lanza.
+pub(crate) async fn ensure_token(state: &McpState) -> AppResult<Zeroizing<String>> {
     let existing = blocking(|| secrets::get_secret(TOKEN_ID)).await?;
     if let Some(t) = existing.filter(|t| !t.is_empty()) {
         return Ok(Zeroizing::new(t));

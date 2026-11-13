@@ -24,9 +24,10 @@ Este manual también está dentro de TerView: pulsa el botón **?** de la barra 
 16. [GitHub](#github)
 17. [PIN y bloqueo](#pin-y-bloqueo)
 18. [Asistentes de IA (MCP)](#asistentes-de-ia-mcp)
-19. [Ajustes](#ajustes)
-20. [Atajos de teclado](#atajos-de-teclado)
-21. [Solución de problemas](#solución-de-problemas)
+19. [Terminal local, Claude Code y Codex](#terminal-local-claude-code-y-codex)
+20. [Ajustes](#ajustes)
+21. [Atajos de teclado](#atajos-de-teclado)
+22. [Solución de problemas](#solución-de-problemas)
 
 ---
 
@@ -446,6 +447,29 @@ claude mcp add --env TERVIEW_MCP_TOKEN=<token> --transport stdio terview -- /rut
 - Lo que solo lee pasa solo. Lo peligroso (`rm -rf`, `sudo`, `reboot`…) se pregunta siempre. Si no respondes a tiempo, se deniega.
 - El botón del **robot** en la barra de pestañas abre **Actividad del asistente**, con todo lo que ha hecho.
 
+## Terminal local, Claude Code y Codex
+
+**Para qué sirve:** tener en TerView una terminal de **tu propio PC** y abrir **Claude Code** o **Codex** que ya saben qué servidores tienes.
+
+**Cómo se usa:**
+
+1. Pulsa el botón del **portátil** en la barra de pestañas (junto a **+**).
+2. Elige **Terminal local**, **Claude Code** o **Codex**. Se abre una pestaña con el icono del portátil (o del robot).
+3. Para trabajar en otra carpeta, pulsa **Cambiar carpeta…** en el mismo menú. TerView recuerda la última.
+4. Si el asistente no está instalado, TerView te muestra el comando oficial y, si aceptas, lo ejecuta en una pestaña para que veas la instalación. Al terminar, vuelve a pulsar **Claude Code** o **Codex**.
+5. La primera vez, el asistente te pide iniciar sesión (con tu suscripción o una clave de API): `/login` en Claude Code, o lo que indique Codex.
+
+**Qué sabe el asistente:** la lista de tus servidores con su alias de `~/.ssh/config` (puede usar `ssh <alias> '<comando>'`), su usuario, host y proyecto, cuáles están conectados, qué servidor estabas mirando y la fecha. Si el **MCP** está activo, también lo tiene configurado, con tus permisos de siempre. Nunca recibe contraseñas, llaves, tokens ni el PIN.
+
+**Enviar a la IA:** en la terminal de un servidor, selecciona un texto, haz clic derecho y elige **Enviar a la IA**. Se pega en el asistente abierto (sin `Enter`) para que añadas tu pregunta.
+
+**Notas:**
+
+- Cerrar la pestaña termina lo que corre en ella y todo lo que lanzó.
+- En **Ajustes → Terminal local e IA** eliges qué contexto recibe (y lo puedes ver), y si usa ssh directo, el MCP o las dos cosas.
+- Para el ssh directo, exporta los servidores a `~/.ssh/config` (barra lateral → **Nuevo → Exportar**). Los servidores con contraseña solo funcionan por el MCP.
+- TerView no escribe nada en tu carpeta ni lee la configuración de Claude Code o Codex.
+
 ## Ajustes
 
 ![Ventana de Ajustes en la sección Apariencia](manual/19-ajustes.png)
@@ -478,9 +502,9 @@ En macOS, donde la tabla dice ⌘, usa ⌘ en lugar de Ctrl. Los demás atajos u
 | Atajo | Qué hace | En macOS |
 |-------|----------|----------|
 | `Ctrl+Shift+P` | Paleta de comandos | ⌘⇧P |
-| `Ctrl+Tab` / `Ctrl+Shift+Tab` | Siguiente / anterior conexión | Ctrl |
+| `Ctrl+Tab` / `Ctrl+Shift+Tab` | Siguiente / anterior pestaña | Ctrl |
 | `Ctrl+AvPág` / `Ctrl+RePág` | Siguiente / anterior conexión | Ctrl |
-| `Ctrl+W` | Cerrar la conexión actual | ⌘W |
+| `Ctrl+W` | Cerrar la pestaña actual | ⌘W |
 | `Ctrl+B` | Mostrar u ocultar la barra lateral | ⌘B |
 | `` Ctrl+` `` | Mostrar u ocultar la terminal | Ctrl |
 | `Ctrl+Shift+M` | Dividir (vista y editor) o quitar la división | Ctrl |

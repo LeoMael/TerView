@@ -62,6 +62,8 @@
 - **Proteger tus contraseñas con un PIN**: quedan cifradas y TerView se bloquea al abrirlo y tras un rato sin uso.
 - **Dejar que un asistente de IA te ayude** (Claude Code, Claude Desktop…) con tus servidores, sin darle
   tus contraseñas y con tu permiso para cada cambio. Ver [más abajo](#usar-terview-con-un-asistente-de-ia-mcp).
+- **Abrir una terminal de tu propio PC** y lanzar **Claude Code** o **Codex** que ya saben qué servidores
+  tienes. Ver [Terminal local y asistentes de IA](#terminal-local-y-asistentes-de-ia).
 - **Actualizarse sola** cuando sale una versión nueva.
 - Tema oscuro o claro y paneles ajustables.
 
@@ -142,8 +144,8 @@ En Windows ese archivo está en `C:\Users\<tu usuario>\.ssh\config`.
 | Atajo | Acción |
 |-------|--------|
 | `Ctrl+Shift+P` | Paleta de comandos |
-| `Ctrl+Tab` / `Ctrl+Shift+Tab` | Siguiente / anterior conexión |
-| `Ctrl+W` | Cerrar la conexión actual |
+| `Ctrl+Tab` / `Ctrl+Shift+Tab` | Siguiente / anterior pestaña (servidores y terminales locales) |
+| `Ctrl+W` | Cerrar la pestaña actual |
 | `Ctrl+B` | Mostrar u ocultar la barra lateral |
 | ``Ctrl+` `` | Mostrar u ocultar la terminal |
 | `Ctrl+,` | Ajustes |
@@ -244,6 +246,56 @@ Qué esperar:
 
 El servidor solo escucha en tu propio equipo (`127.0.0.1`) y pide un token, que puedes regenerar en
 Ajustes. Con la AppImage, usa la opción por HTTP que también muestra Ajustes.
+
+## Terminal local y asistentes de IA
+
+Además de las terminales de los servidores, TerView abre **terminales de tu propio PC** («Este equipo»).
+Son pestañas como las demás, con la misma terminal, y se distinguen por el icono del portátil.
+
+- **Abrir una**: botón del portátil en la barra de pestañas (o «+» → Este equipo, o «Nuevo» en la barra
+  lateral). Se abre en la carpeta que elijas («Cambiar carpeta…»; TerView recuerda la última) con la shell
+  del sistema (`$SHELL` en Linux y macOS, PowerShell en Windows).
+- **Cerrar** la pestaña termina lo que corre en ella y todo lo que lanzó. El PIN también tapa estas pestañas.
+
+### Claude Code y Codex
+
+En el mismo menú están **Claude Code** y **Codex**. TerView los abre en la carpeta elegida y **les da
+contexto** de lo que tienes, para que trabajen como mejor sepan:
+
+- **La lista de tus servidores**: nombre, alias de `~/.ssh/config`, usuario, host, puerto, proyecto, si
+  están conectados y qué servidor estabas mirando. Con eso pueden usar directamente
+  `ssh <alias> '<comando>'`. Los servidores que entran con **contraseña** no funcionan así (el asistente
+  lo sabe): para esos usa el MCP.
+- **El MCP de TerView**, ya configurado, si está activo (Ajustes → Asistentes de IA). Usa tus conexiones
+  (también las de contraseña) y te pide permiso antes de cada cambio, como siempre. Si está apagado,
+  TerView te pregunta si activarlo o abrir solo con el contexto.
+
+El contexto **nunca** lleva contraseñas, llaves, tokens ni el PIN. Puedes verlo y elegir qué incluir en
+**Ajustes → Terminal local e IA**. Para que el ssh directo funcione, exporta los servidores a
+`~/.ssh/config` (barra lateral → Nuevo → Exportar, o «Mantener sincronizado» en Ajustes → Servidores).
+
+**No se escribe nada en tu carpeta** (ni `CLAUDE.md` ni `AGENTS.md`):
+
+| Asistente | Contexto | MCP |
+|-----------|----------|-----|
+| Claude Code | `--append-system-prompt "<contexto>"` | `--mcp-config '{"mcpServers":{"terview":{…}}}'` |
+| Codex | `-c developer_instructions="<contexto>"` | `-c mcp_servers.terview.command=…` y `env_vars=["TERVIEW_MCP_TOKEN", …]` |
+
+El token del MCP va en una variable de entorno del proceso del asistente, no en archivos ni en los argumentos.
+
+**Si no están instalados**, TerView lo dice y te ofrece instalarlos. Antes de nada te muestra el comando
+exacto, y la instalación corre en una pestaña para que veas lo que hace:
+
+- Claude Code: `curl -fsSL https://claude.ai/install.sh | bash` (en Windows, `irm https://claude.ai/install.ps1 | iex`).
+- Codex: `npm install -g @openai/codex` (hace falta Node.js; TerView avisa si falta).
+
+**Iniciar sesión**: cada programa lo hace a su manera, con tu suscripción o con una clave de API. Si no has
+iniciado sesión, el propio programa te lo pide (`/login` en Claude Code, `codex login` en Codex). TerView
+no lee ni copia `~/.claude` ni `~/.codex`.
+
+**Enviar a la IA**: en la terminal de un servidor, selecciona un texto (un error, un log…) y con clic
+derecho elige **Enviar a la IA**. Se pega en la pestaña del asistente abierto, sin pulsar Enter, para que
+añadas tu pregunta. Si no hay ninguno abierto, abre uno.
 
 ## Solución de problemas
 
@@ -346,6 +398,13 @@ cargo test --lib -- --include-ignored --test-threads=1
 cd .. && npx tsc --noEmit
 ```
 
+Pruebas de funciones puras de la interfaz (sin la app):
+
+```bash
+npx rolldown src/features/localterm/localterm.test.ts -p node -f esm -o /tmp/lt.mjs && node /tmp/lt.mjs
+npx rolldown src/features/vulnscan/vulnscan.test.ts -p node -f esm -o /tmp/vt.mjs && node /tmp/vt.mjs
+```
+
 ### Estructura
 
 ```
@@ -356,6 +415,7 @@ src/              Interfaz (React + TypeScript)
 src-tauri/src/    Motor (Rust)
   ssh/            Conexión, autenticación, huellas, reconexión
   terminal/       Shells remotas
+  localterm/      Terminal local (PTY del PC) y lanzar Claude Code / Codex con contexto
   sftp/           Explorador y edición remota
   transfer/       Cola de transferencias en paralelo
   storage/        Servidores, ajustes, llavero, ~/.ssh/config
@@ -372,6 +432,7 @@ docs/             Arquitectura, diagramas, pendientes y catálogo de comandos
 Lo que queda (detalle en [`docs/PENDIENTES.md`](docs/PENDIENTES.md)):
 
 - Probar el MCP con Claude Code y Claude Desktop, y el escáner de vulnerabilidades en servidores reales.
+- Probar la terminal local y los asistentes en la app, en Windows y en macOS.
 - Firmar el instalador de Windows (para que SmartScreen no avise).
 - Pruebas reales en Windows, con servidores con 2FA y con un agente SSH.
 - Medir el rendimiento y probar el arrastre de archivos al escritorio.

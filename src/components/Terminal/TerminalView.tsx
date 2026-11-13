@@ -1,10 +1,11 @@
 // Una terminal (xterm.js + shell remota). Se mantiene montada aunque esté oculta.
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { ChevronDown, ChevronUp, ClipboardPaste, Copy, Eraser, Search, TextSelect, X } from "lucide-react";
+import { Bot, ChevronDown, ChevronUp, ClipboardPaste, Copy, Eraser, Search, TextSelect, X } from "lucide-react";
 import { useSettings } from "../../stores/settings";
 import {
   TermController,
+  type TermBackend,
   type ConnState,
   type SearchResults,
   type TermStatus,
@@ -13,6 +14,10 @@ import {
 
 interface TerminalViewProps {
   sessionId: string;
+  /** Otra fuente de shell (terminal local). Fija durante la vida de la vista. */
+  backend?: TermBackend | null;
+  /** «Enviar a la IA» en el menú contextual (con texto seleccionado). */
+  onSendToAi?: (text: string) => void;
   /** Sesión tmux de esta terminal (null = shell normal). Fija durante la vida de la vista. */
   tmuxName: string | null;
   /** Volcar el historial de la sesión tmux al abrirla (se reabre una que ya existía). */
@@ -38,6 +43,8 @@ interface MenuState {
 
 export function TerminalView({
   sessionId,
+  backend = null,
+  onSendToAi,
   tmuxName,
   tmuxReplay,
   onTmux,
@@ -81,6 +88,7 @@ export function TerminalView({
     const s = useSettings.getState().settings;
     const ctrl = new TermController(host, {
       sessionId,
+      backend,
       tmuxName,
       tmuxReplay,
       onTmux: (st) => onTmuxRef.current?.(st),
@@ -157,6 +165,14 @@ export function TerminalView({
           onSelectAll={() => ctrlRef.current?.selectAll()}
           onClear={() => ctrlRef.current?.clear()}
           onSearch={openSearch}
+          onSendToAi={
+            onSendToAi
+              ? () => {
+                  const text = ctrlRef.current?.term.getSelection() ?? "";
+                  if (text.trim()) onSendToAi(text);
+                }
+              : undefined
+          }
         />
       )}
     </div>
@@ -284,9 +300,11 @@ interface TermMenuProps extends MenuState {
   onSelectAll: () => void;
   onClear: () => void;
   onSearch: () => void;
+  /** Solo en las terminales de servidor: manda la selección al asistente de IA. */
+  onSendToAi?: () => void;
 }
 
-function TermMenu({ x, y, hasSelection, onClose, onCopy, onPaste, onSelectAll, onClear, onSearch }: TermMenuProps) {
+function TermMenu({ x, y, hasSelection, onClose, onCopy, onPaste, onSelectAll, onClear, onSearch, onSendToAi }: TermMenuProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState({ left: x, top: y });
 
@@ -354,6 +372,16 @@ function TermMenu({ x, y, hasSelection, onClose, onCopy, onPaste, onSelectAll, o
       <button role="menuitem" onClick={run(onPaste)}>
         <ClipboardPaste size={14} /> Pegar <kbd>Ctrl+Mayús+V</kbd>
       </button>
+      {onSendToAi && (
+        <button
+          role="menuitem"
+          disabled={!hasSelection}
+          title="Pega el texto seleccionado en la pestaña del asistente (Claude Code o Codex); si no hay ninguna, abre una"
+          onClick={run(onSendToAi)}
+        >
+          <Bot size={14} /> Enviar a la IA
+        </button>
+      )}
       <hr />
       <button role="menuitem" onClick={run(onSelectAll)}>
         <TextSelect size={14} /> Seleccionar todo

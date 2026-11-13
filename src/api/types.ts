@@ -86,6 +86,24 @@ export interface Settings {
   vulnscan: import("./vulnscan").VulnScanSettings;
   /** IA opcional para explicar informes del escáner (el token no va aquí). */
   ai: import("./vulnscan").AiSettings;
+  /** Terminal local y asistentes (Claude Code, Codex): qué contexto se les da y cómo. */
+  localAi: LocalAiSettings;
+}
+
+/** Cómo trabaja el asistente con los servidores: ssh directo, el MCP de TerView o las dos. */
+export type LocalAiMode = "both" | "direct" | "mcp";
+
+export interface LocalAiSettings {
+  mode: LocalAiMode;
+  includeServers: boolean;
+  /** Host y puerto de cada servidor. */
+  includeHosts: boolean;
+  includeProjects: boolean;
+  /** La pestaña que se estaba mirando al abrir el asistente. */
+  includeActive: boolean;
+  includeDate: boolean;
+  /** Última carpeta elegida para las terminales locales (null = carpeta personal). */
+  lastCwd: string | null;
 }
 
 // ───────── SSH ─────────

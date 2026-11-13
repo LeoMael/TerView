@@ -148,6 +148,8 @@ pub struct Settings {
     pub vulnscan: crate::vulnscan::VulnScanSettings,
     /// Asistente de IA opcional (URL base y modelo; el token va en la bóveda o el llavero).
     pub ai: crate::ai::AiSettings,
+    /// Terminal local y asistentes (Claude Code, Codex): qué contexto se les da y cómo.
+    pub local_ai: crate::localterm::LocalAiSettings,
 }
 
 impl Default for Settings {
@@ -173,6 +175,7 @@ impl Default for Settings {
             vault_prompt_dismissed: false,
             vulnscan: Default::default(),
             ai: Default::default(),
+            local_ai: Default::default(),
         }
     }
 }

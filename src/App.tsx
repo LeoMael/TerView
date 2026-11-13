@@ -24,6 +24,8 @@ import { initMcp } from "./features/mcp/store";
 import { ApprovalDialogHost } from "./features/mcp/ApprovalDialog";
 import { McpActivity } from "./components/McpActivity/McpActivity";
 import { useUi } from "./stores/ui";
+import { allTabIds, closeLocalTab, initLocalTabs, isLocalTabId, useLocalTabs } from "./features/localterm/store";
+import { ChoiceDialogHost } from "./features/localterm/ChoiceDialog";
 import { idleQueue, preloadable } from "./lib/lazy";
 import { isMac, isModKey } from "./lib/platform";
 import "./App.css";
@@ -32,11 +34,15 @@ import "./App.css";
 // Se precargan en segundo plano cuando la ventana queda ociosa, así abrirlos no espera.
 const SessionView = preloadable(() => import("./components/Session/SessionView").then((m) => m.SessionView));
 const SettingsDialog = preloadable(() => import("./components/Settings/SettingsDialog").then((m) => m.SettingsDialog));
+const LocalTerminalView = preloadable(() =>
+  import("./features/localterm/LocalTerminalView").then((m) => m.LocalTerminalView),
+);
 
 function preloadInBackground() {
   idleQueue([
     () => SessionView.preload(),
     () => SettingsDialog.preload(),
+    () => LocalTerminalView.preload(),
     () => PaletteView.preload(),
     async () => {
       const m = await import("./components/Session/SessionView");
@@ -62,6 +68,7 @@ function initApp() {
   void initTransfersStore();
   initPrivileges(); // root / sudo / usuario normal de cada conexión (en segundo plano)
   initMcp(); // asistentes de IA: permisos, actividad y peticiones del motor
+  initLocalTabs(); // pestañas de terminal local («Este equipo»)
 
   // Recordar servidores usados (para la pantalla de bienvenida).
   useTabs.subscribe((s, prev) => {
@@ -102,7 +109,9 @@ function useGlobalShortcuts() {
       if (!switchTab && !isModKey(e)) return;
       if (document.querySelector(".modal-backdrop")) return; // hay un diálogo abierto
       const tabsState = useTabs.getState();
-      const { tabs, activeTabId } = tabsState;
+      const { activeTabId } = tabsState;
+      // Pestañas de servidor y locales, en el orden de la barra.
+      const ids = allTabIds();
       // En macOS ⌘W/⌘B no chocan con la shell; Ctrl+W/Ctrl+B en la terminal sí.
       const shellOwnsKey = !isMac && isInTerminal(e);
 
@@ -110,10 +119,10 @@ function useGlobalShortcuts() {
       if (switchTab) {
         e.preventDefault();
         e.stopPropagation();
-        if (tabs.length < 2) return;
+        if (ids.length < 2) return;
         const back = key === "PageUp" || (key === "Tab" && e.shiftKey);
-        const i = Math.max(0, tabs.findIndex((t) => t.id === activeTabId));
-        tabsState.setActive(tabs[(i + (back ? -1 : 1) + tabs.length) % tabs.length].id);
+        const i = Math.max(0, ids.indexOf(activeTabId ?? ""));
+        tabsState.setActive(ids[(i + (back ? -1 : 1) + ids.length) % ids.length]);
         return;
       }
       if (e.shiftKey) return;
@@ -129,7 +138,8 @@ function useGlobalShortcuts() {
       if (k === "w" && !shellOwnsKey) {
         e.preventDefault();
         e.stopPropagation();
-        if (activeTabId) void requestCloseTab(activeTabId);
+        if (activeTabId && isLocalTabId(activeTabId)) closeLocalTab(activeTabId);
+        else if (activeTabId) void requestCloseTab(activeTabId);
         return;
       }
       if (k === "b" && !shellOwnsKey) {
@@ -145,7 +155,10 @@ function useGlobalShortcuts() {
 
 /** Título de la ventana: "TerView — <pestaña>". */
 function useWindowTitle() {
-  const title = useTabs((s) => s.tabs.find((t) => t.id === s.activeTabId)?.title ?? null);
+  const activeId = useTabs((s) => s.activeTabId);
+  const sshTitle = useTabs((s) => s.tabs.find((t) => t.id === s.activeTabId)?.title ?? null);
+  const localTitle = useLocalTabs((s) => s.tabs.find((t) => t.id === activeId)?.title ?? null);
+  const title = sshTitle ?? (localTitle ? `${localTitle} (este equipo)` : null);
   useEffect(() => {
     const t = title ? `TerView — ${title}` : "TerView";
     document.title = t;
@@ -166,6 +179,7 @@ function mainLayout(saved: number[] | undefined): Layout {
 
 function Shell() {
   const tabs = useTabs((s) => s.tabs);
+  const localTabs = useLocalTabs((s) => s.tabs);
   const activeId = useTabs((s) => s.activeTabId);
   const collapsed = useUi((s) => s.sidebarCollapsed);
   const setLayout = useSettings((s) => s.setLayout);
@@ -234,7 +248,20 @@ function Shell() {
                 ))}
               </Suspense>
             )}
-            {tabs.length === 0 && <Welcome />}
+            {localTabs.length > 0 && (
+              <Suspense
+                fallback={
+                  <div className="app-loading">
+                    <div className="spinner" />
+                  </div>
+                }
+              >
+                {localTabs.map((t) => (
+                  <LocalTerminalView key={t.id} tab={t} active={t.id === activeId} />
+                ))}
+              </Suspense>
+            )}
+            {tabs.length === 0 && localTabs.length === 0 && <Welcome />}
           </div>
           <TransferPanel />
         </Panel>
@@ -282,6 +309,7 @@ export default function App() {
       <PinDialogHost />
       <McpActivity />
       <ApprovalDialogHost />
+      <ChoiceDialogHost />
     </>
   );
 }

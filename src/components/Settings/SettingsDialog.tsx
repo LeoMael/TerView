@@ -22,6 +22,7 @@ import {
   RotateCcw,
   Server,
   ShieldCheck,
+  Laptop,
   Sun,
   TerminalSquare,
 } from "lucide-react";
@@ -45,6 +46,7 @@ import { checkSshAliasesBeforeExport } from "../../features/sshAliases";
 import { SecuritySection } from "./SecuritySection";
 import { McpSection } from "./McpSection";
 import { AiSection } from "./AiSection";
+import { LocalAiSection } from "./LocalAiSection";
 
 // El manual (texto e imágenes) va en un trozo aparte: solo se carga al abrir su sección.
 const ManualView = lazy(() => import("../About/Manual"));
@@ -59,6 +61,7 @@ const SECTIONS: { id: SectionId; label: string; icon: ReactNode }[] = [
   { id: "servers", label: "Servidores", icon: <Server size={15} /> },
   { id: "security", label: "Seguridad", icon: <ShieldCheck size={15} /> },
   { id: "assistants", label: "Asistentes de IA (MCP)", icon: <Bot size={15} /> },
+  { id: "localAi", label: "Terminal local e IA", icon: <Laptop size={15} /> },
   { id: "ai", label: "IA para explicar informes", icon: <MessageSquareText size={15} /> },
   { id: "advanced", label: "Avanzado", icon: <SlidersHorizontal size={15} /> },
   { id: "manual", label: "Manual de uso", icon: <BookOpen size={15} /> },
@@ -128,6 +131,7 @@ export function SettingsDialog() {
           {section === "servers" && <ServersSection />}
           {section === "security" && <SecuritySection />}
           {section === "assistants" && <McpSection />}
+          {section === "localAi" && <LocalAiSection />}
           {section === "ai" && <AiSection />}
           {section === "advanced" && <AdvancedSection />}
           {section === "manual" && (

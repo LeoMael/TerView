@@ -15,6 +15,30 @@ siguen [Versionado Semántico](https://semver.org/lang/es/).
   viejo). Antes muestra los comandos exactos y pide confirmación; se ejecuta como el dueño de la imagen,
   con su salida y «Cancelar». Al terminar vuelve a analizar esa imagen y avisa si todavía tiene
   vulnerabilidades.
+- **Terminal local** («Este equipo»): pestañas con una terminal **de tu propio PC**, junto a las de los
+  servidores. Misma terminal que las de SSH (tema, búsqueda, copiar/pegar, tamaño). Se abren con el botón
+  del portátil en la barra de pestañas, desde «+» o desde «Nuevo» en la barra lateral, en la carpeta que
+  elijas (TerView recuerda la última). Usa la shell del sistema (`$SHELL`; PowerShell en Windows). Al
+  cerrar la pestaña se termina lo que corre en ella **y sus procesos hijos**. El PIN también las tapa.
+- **Claude Code y Codex con el contexto de TerView**: botones rápidos que los abren en una pestaña local.
+  - Si no están instalados, TerView lo dice y ofrece instalarlos **mostrando antes el comando exacto**
+    (el instalador oficial de Claude Code; `npm install -g @openai/codex` para Codex, avisando si falta
+    Node.js). La instalación corre en la pestaña, a la vista.
+  - Cada programa inicia sesión a su manera (suscripción o clave de API). TerView **no lee ni copia**
+    `~/.claude` ni `~/.codex`.
+  - El asistente recibe un **contexto**: tus servidores con su alias de `~/.ssh/config`, usuario, host,
+    puerto, proyecto, si están conectados, qué servidor estabas mirando y la fecha. Sabe que puede usar
+    `ssh <alias> '<comando>'` y qué servidores van con contraseña (para esos, el MCP). Nunca lleva
+    contraseñas, llaves, tokens ni el PIN.
+  - Y, si está activo, el **MCP de TerView** ya configurado (con tus permisos y aprobaciones). Si está
+    apagado, TerView pregunta si activarlo o abrir solo con el contexto.
+  - Nada se escribe en la carpeta del proyecto: a Claude Code se le pasa con `--append-system-prompt` y
+    `--mcp-config`; a Codex con `-c developer_instructions=…` y `-c mcp_servers.terview.…`. El token del
+    MCP va por una variable de entorno del proceso, no en archivos ni en los argumentos.
+  - Ajustes → **Terminal local e IA**: vía (ssh directo, MCP o las dos), qué contexto se incluye, la
+    carpeta de trabajo, ver el contexto exacto y si cada asistente está instalado.
+- **Enviar a la IA**: en una terminal de servidor, selecciona texto y, con clic derecho, «Enviar a la IA».
+  Se pega en la pestaña del asistente abierto (sin pulsar Enter, para que añadas tu pregunta) o abre uno.
 
 ### Corregido
 - **Añadir un servidor desde un proyecto**: cada proyecto de la barra lateral tiene ahora un botón **+**
