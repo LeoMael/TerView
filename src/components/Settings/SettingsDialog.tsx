@@ -13,6 +13,7 @@ import {
   FileOutput,
   FolderTree,
   Info,
+  Keyboard,
   SlidersHorizontal,
   Monitor,
   PanelTop,
@@ -49,6 +50,8 @@ import { SecuritySection } from "./SecuritySection";
 import { McpSection } from "./McpSection";
 import { AiSection } from "./AiSection";
 import { LocalAiSection } from "./LocalAiSection";
+import { ShortcutsSection } from "./ShortcutsSection";
+import { useShortcutText } from "../../features/shortcuts/shortcuts";
 import { useAppTheme } from "./theme";
 import { ACCENTS, PALETTES, type AccentId, type PaletteInfo, type ThemeId } from "../../styles/themes";
 
@@ -73,6 +76,7 @@ const NAV: { group: string; items: SectionInfo[] }[] = [
       { id: "terminal", label: "Terminal", icon: <TerminalSquare size={15} />, desc: "Letra, aceleración gráfica y sesiones persistentes.", keys: "letra fuente tamaño gpu webgl tmux persistentes" },
       { id: "editor", label: "Editor", icon: <FileCode2 size={15} />, desc: "Cómo se abren los archivos y con qué letra.", keys: "letra fuente tamaño dividido ventana pestaña máximo mb" },
       { id: "explorer", label: "Explorador", icon: <FolderTree size={15} />, desc: "Lista de archivos del servidor.", keys: "ocultos borrar confirmar" },
+      { id: "shortcuts", label: "Atajos de teclado", icon: <Keyboard size={15} />, desc: "Haz clic en un atajo para cambiarlo.", keys: "teclas teclado combinación ctrl paleta pestaña copiar pegar buscar" },
     ],
   },
   {
@@ -249,6 +253,7 @@ function SettingsBody() {
           {section === "connection" && <ConnectionSection />}
           {section === "transfers" && <Transfers />}
           {section === "explorer" && <Explorer />}
+          {section === "shortcuts" && <ShortcutsSection />}
           {section === "editor" && <EditorSection />}
           {section === "servers" && <ServersSection />}
           {section === "security" && <SecuritySection />}
@@ -554,7 +559,8 @@ function EditorSection() {
   const [maxBytes, setMaxBytes] = useSetting("editorMaxBytes");
   const [size, setSize] = useSetting("editorFontSize");
   const [family, setFamily] = useSetting("editorFontFamily");
-  const mb = Math.max(1, Math.round(maxBytes / MB));
+  const splitKeys = useShortcutText("session.split");
+  const mb =Math.max(1, Math.round(maxBytes / MB));
   const [openMode, setOpenModeState] = useState<EditorOpenMode>(getEditorOpenMode);
   const setOpenMode = (m: EditorOpenMode) => {
     setEditorOpenMode(m);
@@ -563,7 +569,7 @@ function EditorSection() {
   return (
     <>
       <SettingGroup title="Archivos">
-        <Row label="Al abrir un archivo" hint="Ctrl+Shift+M divide o quita la división.">
+        <Row label="Al abrir un archivo" hint={splitKeys ? `${splitKeys} divide o quita la división.` : undefined}>
           <Segmented
             value={openMode}
             label="Al abrir un archivo"

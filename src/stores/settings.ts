@@ -4,6 +4,8 @@ import { settingsApi } from "../api/profiles";
 import type { LocalAiSettings, Settings } from "../api/types";
 import { DEFAULT_AI_SETTINGS, DEFAULT_VULNSCAN_SETTINGS } from "../api/vulnscan";
 import { ACCENTS, normalizeTheme } from "../styles/themes";
+import { cleanOverrides } from "../features/shortcuts/keys";
+import { isMac } from "../lib/platform";
 
 /** Fuente monoespaciada por defecto: Linux (JetBrains/Fira/Noto), Windows (Cascadia Mono, Consolas), macOS (Menlo). */
 export const DEFAULT_MONO_FONT = "'JetBrains Mono', 'Fira Code', 'Noto Sans Mono', 'Cascadia Mono', Consolas, Menlo, monospace";
@@ -44,6 +46,7 @@ export const DEFAULT_SETTINGS: Settings = {
   vulnscan: DEFAULT_VULNSCAN_SETTINGS,
   ai: DEFAULT_AI_SETTINGS,
   localAi: DEFAULT_LOCAL_AI,
+  shortcuts: {},
 };
 
 interface SettingsState {
@@ -71,6 +74,8 @@ export const useSettings = create<SettingsState>((set, get) => ({
       s.theme = normalizeTheme(s.theme);
       if (s.accent && !ACCENTS.some((a) => a.id === s.accent)) s.accent = "";
       if (!(s.uiFontSize >= 12 && s.uiFontSize <= 16)) s.uiFontSize = 13;
+      // Atajos: sin acciones desconocidas ni combinaciones inválidas (ajustes viejos: {} = los de por defecto).
+      s.shortcuts = cleanOverrides(s.shortcuts, isMac);
       set({ settings: s, loaded: true });
     } catch {
       set({ loaded: true });

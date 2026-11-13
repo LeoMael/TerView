@@ -1,6 +1,7 @@
 // Ruta en migas de pan; clic en el espacio vacío (o Ctrl+L) la vuelve editable.
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { pathSegments } from "../../lib/paths";
+import { shortcutText, withShortcut } from "../../features/shortcuts/shortcuts";
 
 interface Props {
   path: string;
@@ -58,7 +59,7 @@ export function Breadcrumb({ path, editing, onEditingChange, onNavigate }: Props
     <div
       ref={crumbsRef}
       className="fx-crumbs"
-      title="Clic para escribir una ruta (Ctrl+L)"
+      title={withShortcut("Clic para escribir una ruta", shortcutText("explorer.path"))}
       onClick={(e) => {
         if (!(e.target as HTMLElement).closest(".fx-crumb")) onEditingChange(true);
       }}

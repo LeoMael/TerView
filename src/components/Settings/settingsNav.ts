@@ -8,6 +8,7 @@ export type SectionId =
   | "connection"
   | "transfers"
   | "explorer"
+  | "shortcuts"
   | "editor"
   | "servers"
   | "security"

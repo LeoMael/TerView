@@ -1,0 +1,147 @@
+/* Ajustes → Atajos de teclado (ShortcutsSection.tsx). */
+
+.sc-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.sc-search {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+.sc-search > svg {
+  position: absolute;
+  left: 9px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+.sc-search > .input {
+  width: 100%;
+  padding-left: 30px;
+  padding-right: 30px;
+}
+.sc-search > .icon-btn {
+  position: absolute;
+  right: 3px;
+}
+
+.st-card > .sc-item {
+  padding: 3px 10px 3px 16px;
+}
+.sc-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 30px;
+}
+.sc-label {
+  flex: 1;
+  min-width: 0;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.sc-keys {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  min-width: 150px;
+  min-height: 28px;
+  padding: 2px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: none;
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+}
+.sc-keys:hover {
+  border-color: var(--border);
+  background: var(--surface);
+}
+.sc-keys:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.sc-keys.capturing {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}
+.sc-keys kbd {
+  display: inline-block;
+  min-width: 20px;
+  padding: 0 6px;
+  border: 1px solid var(--border-strong);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  background: var(--surface);
+  font-family: var(--font);
+  font-size: var(--fs-sm);
+  line-height: 18px;
+  text-align: center;
+  color: var(--text);
+}
+.sc-wait {
+  color: var(--accent);
+  font-size: var(--fs-sm);
+}
+.sc-none {
+  color: var(--text-faint);
+  font-size: var(--fs-sm);
+}
+.sc-reset:disabled {
+  visibility: hidden;
+}
+
+.sc-warn {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 6px 0 4px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--yellow);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-size: var(--fs-sm);
+}
+.sc-warn > svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--yellow);
+}
+.sc-warn-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.45;
+}
+.sc-warn-actions {
+  flex: none;
+  display: flex;
+  gap: 6px;
+}
+
+.sc-empty,
+.sc-note {
+  margin: 4px 2px 0;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  line-height: 1.45;
+}
+
+@media (max-width: 560px) {
+  .sc-keys {
+    min-width: 0;
+  }
+  .sc-warn {
+    flex-wrap: wrap;
+  }
+}

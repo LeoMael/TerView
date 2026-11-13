@@ -62,6 +62,7 @@ import {
 import { cancelReconnect, reconnectTab, requestCloseTab, setSessionPath, useEditorDirty } from "./sessionState";
 import "./SessionView.css";
 import { useVulnNav } from "../../features/vulnscan/nav";
+import { matchesShortcut, useShortcutText, withShortcut } from "../../features/shortcuts/shortcuts";
 
 const RemoteEditor = lazy(() => import("../Editor/RemoteEditor"));
 /** Biblioteca de comandos (catálogo grande): se carga la primera vez que se abre la pestaña «Comandos». */
@@ -90,7 +91,7 @@ const FIXED: { id: FixedTab; label: string; title?: string; icon: ReactNode }[] 
   {
     id: "commands",
     label: "Comandos",
-    title: "Biblioteca de comandos (Ctrl+Shift+P para la paleta)",
+    title: "Biblioteca de comandos",
     icon: <SquareTerminal size={14} />,
   },
   { id: "containers", label: "Contenedores", title: "Contenedores (Podman / Docker)", icon: <Container size={14} /> },
@@ -420,17 +421,17 @@ export const SessionView = memo(function SessionView({ tab, active }: SessionVie
     else p.collapse();
   }, [termPanel]);
 
-  // Ctrl+` muestra/oculta la terminal y Ctrl+Shift+M divide o quita la división (en la pestaña activa).
+  // Ctrl+` muestra/oculta la terminal y Ctrl+Shift+M divide o quita la división (en la pestaña activa;
+  // atajos configurables en Ajustes).
   const hasEditors = attached.length > 0;
   useEffect(() => {
     if (!active) return;
     const onKey = (e: KeyboardEvent) => {
-      if (!e.ctrlKey || e.altKey || e.metaKey) return;
-      if (!e.shiftKey && (e.code === "Backquote" || e.key === "`")) {
+      if (matchesShortcut("session.terminal", e)) {
         e.preventDefault();
         e.stopPropagation();
         toggleTerminal();
-      } else if (e.shiftKey && (e.code === "KeyM" || e.key.toLowerCase() === "m") && hasEditors) {
+      } else if (hasEditors && matchesShortcut("session.split", e)) {
         if (document.querySelector(".modal-backdrop")) return;
         e.preventDefault();
         e.stopPropagation();
@@ -622,11 +623,15 @@ export const SessionView = memo(function SessionView({ tab, active }: SessionVie
   const dirtySet = useMemo(() => new Set(dirtyPaths), [dirtyPaths]);
   const closeTabMenu = useCallback(() => setTabMenu(null), []);
 
+  const termKeys = useShortcutText("session.terminal");
+  const splitKeys = useShortcutText("session.split");
+  const paletteKeys = useShortcutText("app.palette");
+  const splitHint = splitKeys || undefined;
   const termToggle = (
     <button
       className={termCollapsed ? "icon-btn sv-bar-btn" : "icon-btn sv-bar-btn on"}
       onClick={toggleTerminal}
-      title={termCollapsed ? "Mostrar terminal (Ctrl+`)" : "Ocultar terminal (Ctrl+`)"}
+      title={withShortcut(termCollapsed ? "Mostrar terminal" : "Ocultar terminal", termKeys)}
       aria-label="Mostrar u ocultar terminal"
     >
       {termCollapsed ? <PanelBottomOpen size={15} /> : <PanelBottomClose size={15} />}
@@ -643,18 +648,18 @@ export const SessionView = memo(function SessionView({ tab, active }: SessionVie
     },
     { sep: true },
     ...(split
-      ? [{ label: "Quitar división", icon: <PanelTop size={14} />, hint: "Ctrl+Shift+M", onSelect: unsplit }]
+      ? [{ label: "Quitar división", icon: <PanelTop size={14} />, hint: splitHint, onSelect: unsplit }]
       : [
           {
             label: "Dividir con Archivos",
             icon: <Columns2 size={14} />,
-            hint: side === "files" ? "Ctrl+Shift+M" : undefined,
+            hint: side === "files" ? splitHint : undefined,
             onSelect: () => splitWith("files", path),
           },
           {
             label: "Dividir con Comandos",
             icon: <Columns2 size={14} />,
-            hint: side === "commands" ? "Ctrl+Shift+M" : undefined,
+            hint: side === "commands" ? splitHint : undefined,
             onSelect: () => splitWith("commands", path),
           },
         ]),
@@ -684,7 +689,7 @@ export const SessionView = memo(function SessionView({ tab, active }: SessionVie
           aria-selected={on}
           className={on ? "sv-tab sv-tab-fixed active" : "sv-tab sv-tab-fixed"}
           onClick={() => onPick(f.id)}
-          title={f.title}
+          title={f.id === "commands" && paletteKeys ? `${f.title} (${paletteKeys} para la paleta)` : f.title}
         >
           {f.icon}
           <span>{f.label}</span>
@@ -796,7 +801,7 @@ export const SessionView = memo(function SessionView({ tab, active }: SessionVie
                   <button
                     className="icon-btn sv-bar-btn"
                     onClick={() => splitWith(side)}
-                    title={`Dividir con ${fixedLabel(side)} (Ctrl+Shift+M)`}
+                    title={withShortcut(`Dividir con ${fixedLabel(side)}`, splitKeys)}
                     aria-label={`Dividir con ${fixedLabel(side)}`}
                   >
                     <Columns2 size={15} />
@@ -909,7 +914,7 @@ export const SessionView = memo(function SessionView({ tab, active }: SessionVie
                   <button
                     className="icon-btn sv-bar-btn on"
                     onClick={unsplit}
-                    title="Quitar división (Ctrl+Shift+M)"
+                    title={withShortcut("Quitar división", splitKeys)}
                     aria-label="Quitar división"
                     aria-pressed
                   >

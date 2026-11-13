@@ -93,6 +93,9 @@ export interface Settings {
   ai: import("./vulnscan").AiSettings;
   /** Terminal local y asistentes (Claude Code, Codex): qué contexto se les da y cómo. */
   localAi: LocalAiSettings;
+  /** Atajos de teclado cambiados por el usuario: id de acción → combinación ("" = sin atajo).
+   *  Solo se guardan los distintos de los de por defecto (lista en src/features/shortcuts/keys.ts). */
+  shortcuts: Record<string, string>;
 }
 
 /** Cómo trabaja el asistente con los servidores: ssh directo, el MCP de TerView o las dos. */

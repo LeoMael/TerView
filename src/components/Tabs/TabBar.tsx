@@ -31,7 +31,7 @@ import { closeLocalTab, moveLocalTab, openLocalTab, useLocalTabs, type LocalTab 
 import { LocalMenu } from "../../features/localterm/LocalMenu";
 import { launchAssistant, openLocalTerminal } from "../../features/localterm/launch";
 import "./TabBar.css";
-import { shortcutLabel } from "../../lib/platform";
+import { useShortcutText, withShortcut } from "../../features/shortcuts/shortcuts";
 
 const STATUS_LABEL: Record<SessionTab["status"], string> = {
   connected: "Conectado",
@@ -60,6 +60,9 @@ function localTooltip(t: LocalTab): string {
 }
 
 export function TabBar() {
+  const sidebarKeys = useShortcutText("app.sidebar");
+  const closeKeys = useShortcutText("tabs.close");
+  const settingsKeys = useShortcutText("app.settings");
   const tabs = useTabs((s) => s.tabs);
   const localTabs = useLocalTabs((s) => s.tabs);
   const activeId = useTabs((s) => s.activeTabId);
@@ -134,7 +137,7 @@ export function TabBar() {
       <button
         className="icon-btn tabs-side-btn"
         onClick={toggleSidebar}
-        title={`${sidebarCollapsed ? "Mostrar" : "Ocultar"} barra lateral (${shortcutLabel("B")})`}
+        title={withShortcut(`${sidebarCollapsed ? "Mostrar" : "Ocultar"} barra lateral`, sidebarKeys)}
         aria-label="Mostrar u ocultar barra lateral"
       >
         {sidebarCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
@@ -189,7 +192,7 @@ export function TabBar() {
               <PrivilegeBadge sessionId={t.sessionId} />
               <button
                 className={unsaved ? "tabs-close unsaved" : "tabs-close"}
-                title={unsaved ? "Cerrar (hay archivos sin guardar)" : `Cerrar (${shortcutLabel("W")})`}
+                title={unsaved ? "Cerrar (hay archivos sin guardar)" : withShortcut("Cerrar", closeKeys)}
                 aria-label={`Cerrar ${t.title}`}
                 tabIndex={-1}
                 onPointerDown={(e) => e.stopPropagation()}
@@ -287,7 +290,7 @@ export function TabBar() {
       <button className="icon-btn tabs-side-btn" onClick={openManual} title="Manual de uso" aria-label="Manual de uso">
         <CircleHelp size={16} />
       </button>
-      <button className="icon-btn tabs-side-btn" onClick={openSettings} title={`Ajustes (${shortcutLabel(",")})`} aria-label="Ajustes">
+      <button className="icon-btn tabs-side-btn" onClick={openSettings} title={withShortcut("Ajustes", settingsKeys)} aria-label="Ajustes">
         <Settings size={16} />
       </button>
 

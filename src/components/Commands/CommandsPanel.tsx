@@ -47,6 +47,7 @@ import {
 } from "./state";
 import { exportSnippets, exportSnippetsToFile, pickImportFile, planImport, type ImportPlan } from "./transfer";
 import "./Commands.css";
+import { useShortcutText } from "../../features/shortcuts/shortcuts";
 
 export interface CommandsPanelProps {
   sessionId: string;
@@ -61,6 +62,7 @@ export interface CommandsPanelProps {
 const ALL_CATEGORIES = [...CATEGORIES, MY_CATEGORY];
 
 export function CommandsPanel({ sessionId, profileId, active, disabled }: CommandsPanelProps) {
+  const paletteKeys = useShortcutText("app.palette");
   const mine = useSnippets((s) => s.list);
   const mineLoaded = useSnippets((s) => s.loaded);
   const loadMine = useSnippets((s) => s.load);
@@ -306,7 +308,7 @@ export function CommandsPanel({ sessionId, profileId, active, disabled }: Comman
             </button>
           ) : (
             <kbd className="cmd-kbd" title="Abrir la paleta rápida" onClick={() => openPalette()}>
-              Ctrl+Shift+P
+              {paletteKeys || "Paleta"}
             </kbd>
           )}
         </div>

@@ -15,6 +15,7 @@ import { buildSearchDecorations, buildTermTheme, onAppThemeChange } from "./term
 import { ensureExitListener, onTerminalExit } from "./exitEvents";
 import { clipboard } from "../../lib/clipboard";
 import { getTerminalGpu, isWebglUnsupported, markWebglUnsupported, onTerminalGpuChange } from "./gpuPref";
+import { matchesShortcut } from "../../features/shortcuts/shortcuts";
 
 export type TermStatus = "opening" | "running" | "exited";
 /** Estado de la conexión SSH de la pestaña (de `useTabs`). */
@@ -400,17 +401,18 @@ export class TermController {
   }
 
   private handleKey = (ev: KeyboardEvent): boolean => {
-    if (ev.ctrlKey && ev.shiftKey && !ev.altKey && !ev.metaKey && ev.code === "KeyF") {
+    if (matchesShortcut("term.find", ev)) {
       if (ev.type === "keydown") {
         ev.preventDefault();
         this.onSearchRequest();
       }
       return false;
     }
-    if (ev.ctrlKey && ev.shiftKey && !ev.altKey && !ev.metaKey && (ev.code === "KeyC" || ev.code === "KeyV")) {
+    const copy = matchesShortcut("term.copy", ev);
+    if (copy || matchesShortcut("term.paste", ev)) {
       if (ev.type === "keydown") {
         ev.preventDefault();
-        if (ev.code === "KeyC") this.copy();
+        if (copy) this.copy();
         else this.paste();
       }
       return false;

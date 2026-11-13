@@ -154,6 +154,9 @@ pub struct Settings {
     pub ai: crate::ai::AiSettings,
     /// Terminal local y asistentes (Claude Code, Codex): qué contexto se les da y cómo.
     pub local_ai: crate::localterm::LocalAiSettings,
+    /// Atajos de teclado cambiados por el usuario: id de acción → combinación ("" = sin atajo).
+    /// Solo los distintos de los de por defecto; la lista y la validación están en la interfaz.
+    pub shortcuts: std::collections::HashMap<String, String>,
 }
 
 impl Default for Settings {
@@ -182,6 +185,7 @@ impl Default for Settings {
             vulnscan: Default::default(),
             ai: Default::default(),
             local_ai: Default::default(),
+            shortcuts: Default::default(),
         }
     }
 }

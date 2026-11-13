@@ -12,6 +12,7 @@ import { useAppTheme } from "../Settings/theme";
 import { applyMonacoTheme, monaco } from "./monacoSetup";
 import { detectLanguage, languageLabel, LANGUAGE_CHOICES } from "./languages";
 import "./RemoteEditor.css";
+import { matchesShortcut, useShortcutText, withShortcut } from "../../features/shortcuts/shortcuts";
 
 export interface RemoteEditorProps {
   sessionId: string;
@@ -238,7 +239,7 @@ export function RemoteEditor({ sessionId, path, active, onDirtyChange, offline =
     editor.addAction({
       id: "terview.save",
       label: "Guardar en el servidor",
-      keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS],
+      // Sin atajo de Monaco: lo maneja el listener de abajo con el atajo configurable.
       contextMenuGroupId: "navigation",
       contextMenuOrder: 0,
       run: () => {
@@ -273,7 +274,7 @@ export function RemoteEditor({ sessionId, path, active, onDirtyChange, offline =
     if (m) monaco.editor.setModelLanguage(m, language);
   }, [language]);
 
-  // Foco y Ctrl+S cuando el editor es visible pero el foco no está dentro de Monaco.
+  // Foco y Guardar (Ctrl+S por defecto, configurable) cuando el editor es visible, también dentro de Monaco.
   useEffect(() => {
     if (!active) return;
     const id = requestAnimationFrame(() => {
@@ -281,21 +282,22 @@ export function RemoteEditor({ sessionId, path, active, onDirtyChange, offline =
       editorRef.current?.focus();
     });
     const onKey = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === "s") {
-        const t = e.target as HTMLElement | null;
-        if (t?.closest?.(".monaco-editor")) return; // lo maneja la acción de Monaco
-        if (t?.closest?.(".xterm")) return;
-        e.preventDefault();
-        void saveRef.current();
-      }
+      if (!matchesShortcut("editor.save", e)) return;
+      const t = e.target as HTMLElement | null;
+      if (t?.closest?.(".xterm")) return;
+      // Fase de captura: antes de que Monaco lo tome para otra cosa.
+      e.preventDefault();
+      e.stopPropagation();
+      void saveRef.current();
     };
-    window.addEventListener("keydown", onKey);
+    window.addEventListener("keydown", onKey, true);
     return () => {
       cancelAnimationFrame(id);
-      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("keydown", onKey, true);
     };
   }, [active]);
 
+  const saveKeys = useShortcutText("editor.save");
   const openMainSettings = useUi((s) => s.openSettings);
   const openSettings = onOpenSettings ?? openMainSettings;
 
@@ -375,7 +377,7 @@ export function RemoteEditor({ sessionId, path, active, onDirtyChange, offline =
         <button
           className="icon-btn ed-btn"
           onClick={() => void save()}
-          title={offline ? "Sin conexión: no se puede guardar" : "Guardar (Ctrl+S)"}
+          title={offline ? "Sin conexión: no se puede guardar" : withShortcut("Guardar", saveKeys)}
           disabled={state.kind !== "ready" || saving || offline}
         >
           <Save size={14} />

@@ -503,10 +503,16 @@ claude mcp add --env TERVIEW_MCP_TOKEN=<token> --transport stdio terview -- /rut
 - **Conexión**: **Reconectar automáticamente** e **Intentos**.
 - **Transferencias**: **Transferencias simultáneas** y **Si el archivo ya existe**.
 - **Explorador**: **Mostrar archivos ocultos** y **Confirmar antes de borrar**.
+- **Atajos de teclado**: cambia cualquier atajo de la app (ver [Atajos de teclado](#atajos-de-teclado)).
 - **Avanzado → Diagnóstico**: **Copiar informe**, útil para reportar un problema.
 - **Restablecer** vuelve a los valores de fábrica.
 
 ## Atajos de teclado
+
+Puedes cambiarlos en **Ajustes → Atajos de teclado**: haz clic en un atajo y pulsa la combinación nueva
+(`Esc` cancela; `Retroceso` lo deja sin atajo). Si la combinación ya la usa otra acción, o choca con algo de la
+terminal (como `Ctrl+C`) o del sistema, TerView te avisa antes. Cada fila tiene su botón para volver al de por defecto.
+Las tablas muestran los atajos **por defecto**; `Esc`, `Enter`, `Supr` en una pestaña y los del ratón no se cambian.
 
 En macOS, donde la tabla dice ⌘, usa ⌘ en lugar de Ctrl. Los demás atajos usan Ctrl también en macOS.
 

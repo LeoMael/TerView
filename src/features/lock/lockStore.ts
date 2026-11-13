@@ -8,7 +8,7 @@
 import { create } from "zustand";
 import { listen } from "@tauri-apps/api/event";
 import { EV_VAULT_STATE, vault, type VaultStatus } from "../../api/vault";
-import { isMac, isModKey } from "../../lib/platform";
+import { matchesShortcut } from "../shortcuts/shortcuts";
 import { useSettings } from "../../stores/settings";
 import { toast } from "../../stores/toasts";
 
@@ -32,8 +32,6 @@ export function openPinDialog(d: PinDialog) {
 
 /** Clase de la pantalla de bloqueo: lo único que recibe teclas mientras está bloqueado. */
 export const LOCK_SCREEN_CLASS = "lock-screen";
-/** Atajo de «Bloquear ahora» (no choca con la terminal: Ctrl+L sin Mayús sigue siendo de la shell). */
-export const LOCK_SHORTCUT_LABEL = isMac ? "⌘⇧L" : "Ctrl+Shift+L";
 
 /** Cada cuánto, como mucho, se avisa al motor de que el usuario hace algo. */
 const ACTIVITY_EVERY_MS = 15_000;
@@ -42,7 +40,8 @@ const ACTIVITY_EVERY_MS = 15_000;
 const EDIT_KEYS = new Set(["a", "c", "v", "x", "z", "y"]);
 
 function isLockShortcut(e: KeyboardEvent): boolean {
-  return isModKey(e) && e.shiftKey && !e.altKey && (e.code === "KeyL" || e.key.toLowerCase() === "l");
+  // Ctrl+Shift+L por defecto (no choca con la terminal: Ctrl+L sin Mayús sigue siendo de la shell).
+  return matchesShortcut("app.lock", e);
 }
 
 /** Aplica un estado recibido del motor. */

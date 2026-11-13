@@ -2,13 +2,15 @@
 // Sin PIN: «Proteger con PIN».
 import { useCallback, useState } from "react";
 import { KeyRound, Lock, LockOpen, Settings, ShieldCheck } from "lucide-react";
-import { LOCK_SHORTCUT_LABEL, lockNow, openPinDialog, useLock } from "../../features/lock/lockStore";
+import { lockNow, openPinDialog, useLock } from "../../features/lock/lockStore";
+import { useShortcutText } from "../../features/shortcuts/shortcuts";
 import { openSettingsAt } from "../Settings/settingsNav";
 import { PopupMenu } from "./PopupMenu";
 
 export function LockButton() {
   const enabled = useLock((s) => !!s.status?.enabled);
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
+  const lockKeys = useShortcutText("app.lock");
   const close = useCallback(() => setMenu(null), []);
   const run = (f: () => void) => () => {
     close();
@@ -36,7 +38,7 @@ export function LockButton() {
             <>
               <button role="menuitem" onClick={run(() => void lockNow())}>
                 <Lock size={14} /> <span className="tabs-menu-name">Bloquear ahora</span>
-                <span className="tabs-menu-host">{LOCK_SHORTCUT_LABEL}</span>
+                <span className="tabs-menu-host">{lockKeys}</span>
               </button>
               <button role="menuitem" onClick={run(() => openPinDialog("change"))}>
                 <KeyRound size={14} /> Cambiar PIN

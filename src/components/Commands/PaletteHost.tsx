@@ -1,9 +1,9 @@
-// Escucha Ctrl+Shift+P (y openPalette()) y carga la paleta de comandos solo cuando se abre.
+// Escucha su atajo (Ctrl+Shift+P por defecto) (y openPalette()) y carga la paleta de comandos solo cuando se abre.
 // La paleta y el catálogo de comandos van en un trozo aparte: no pesan en el arranque.
 import { Suspense, useEffect, useState } from "react";
 import { preloadable } from "../../lib/lazy";
 import { OPEN_PALETTE_EVENT } from "./actions";
-import { isModKey } from "../../lib/platform";
+import { matchesShortcut } from "../../features/shortcuts/shortcuts";
 
 export const PaletteView = preloadable(() => import("./CommandPalette").then((m) => m.PaletteView));
 
@@ -12,8 +12,8 @@ export function PaletteHost() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      // Ctrl+Mayús+P (⌘⇧P en macOS).
-      if (isModKey(e) && e.shiftKey && !e.altKey && (e.key === "P" || e.key === "p" || e.code === "KeyP")) {
+      // Ctrl+Mayús+P (⌘⇧P en macOS) o el que se elija en Ajustes.
+      if (matchesShortcut("app.palette", e)) {
         // Fase de captura: antes de que la terminal lo convierta en ^P.
         e.preventDefault();
         e.stopPropagation();

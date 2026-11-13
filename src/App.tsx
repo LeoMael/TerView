@@ -28,7 +28,7 @@ import { useUi } from "./stores/ui";
 import { allTabIds, closeLocalTab, initLocalTabs, isLocalTabId, useLocalTabs } from "./features/localterm/store";
 import { ChoiceDialogHost } from "./features/localterm/ChoiceDialog";
 import { idleQueue, preloadable } from "./lib/lazy";
-import { isMac, isModKey } from "./lib/platform";
+import { matchesShortcut } from "./features/shortcuts/shortcuts";
 import "./App.css";
 
 // Lo que no hace falta para la primera pantalla va en trozos aparte (arranque más rápido).
@@ -95,64 +95,48 @@ function initApp() {
   });
 }
 
-function isInTerminal(e: KeyboardEvent) {
-  return !!(e.target as HTMLElement | null)?.closest?.(".xterm");
-}
-
-/** Atajos globales de la ventana. */
+/** Atajos globales de la ventana (configurables en Ajustes → Atajos de teclado). */
 function useGlobalShortcuts() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.altKey) return;
-      const key = e.key;
-      const switchTab = e.ctrlKey && !e.metaKey && (key === "Tab" || key === "PageDown" || key === "PageUp");
-      // Ctrl en Linux/Windows; ⌘ en macOS (cambiar de pestaña usa Ctrl en todos).
-      if (!switchTab && !isModKey(e)) return;
       if (document.querySelector(".modal-backdrop")) return; // hay un diálogo abierto
+      const id = WINDOW_SHORTCUTS.find((a) => matchesShortcut(a, e));
+      if (!id) return;
+      e.preventDefault();
+      e.stopPropagation();
       const tabsState = useTabs.getState();
       const { activeTabId } = tabsState;
-      // Pestañas de servidor y locales, en el orden de la barra.
-      const ids = allTabIds();
-      // En macOS ⌘W/⌘B no chocan con la shell; Ctrl+W/Ctrl+B en la terminal sí.
-      const shellOwnsKey = !isMac && isInTerminal(e);
-
-      // Ctrl+Tab / Ctrl+Shift+Tab y Ctrl+RePág / Ctrl+AvPág: cambiar de pestaña.
-      if (switchTab) {
-        e.preventDefault();
-        e.stopPropagation();
-        if (ids.length < 2) return;
-        const back = key === "PageUp" || (key === "Tab" && e.shiftKey);
-        const i = Math.max(0, ids.indexOf(activeTabId ?? ""));
-        tabsState.setActive(ids[(i + (back ? -1 : 1) + ids.length) % ids.length]);
-        return;
-      }
-      if (e.shiftKey) return;
-      const k = key.toLowerCase();
-      // Ctrl+, : ajustes
-      if (key === "," || e.code === "Comma") {
-        e.preventDefault();
-        e.stopPropagation();
-        useUi.getState().openSettings();
-        return;
-      }
-      // En la terminal, Ctrl+W y Ctrl+B pertenecen a la shell (borrar palabra, tmux…).
-      if (k === "w" && !shellOwnsKey) {
-        e.preventDefault();
-        e.stopPropagation();
-        if (activeTabId && isLocalTabId(activeTabId)) closeLocalTab(activeTabId);
-        else if (activeTabId) void requestCloseTab(activeTabId);
-        return;
-      }
-      if (k === "b" && !shellOwnsKey) {
-        e.preventDefault();
-        e.stopPropagation();
-        useUi.getState().toggleSidebar();
+      switch (id) {
+        case "tabs.next":
+        case "tabs.prev":
+        case "tabs.nextConn":
+        case "tabs.prevConn": {
+          // Pestañas de servidor y locales, en el orden de la barra.
+          const ids = allTabIds();
+          if (ids.length < 2) return;
+          const back = id === "tabs.prev" || id === "tabs.prevConn";
+          const i = Math.max(0, ids.indexOf(activeTabId ?? ""));
+          tabsState.setActive(ids[(i + (back ? -1 : 1) + ids.length) % ids.length]);
+          return;
+        }
+        case "app.settings":
+          useUi.getState().openSettings();
+          return;
+        case "tabs.close":
+          if (activeTabId && isLocalTabId(activeTabId)) closeLocalTab(activeTabId);
+          else if (activeTabId) void requestCloseTab(activeTabId);
+          return;
+        case "app.sidebar":
+          useUi.getState().toggleSidebar();
       }
     };
     window.addEventListener("keydown", onKey, true);
     return () => window.removeEventListener("keydown", onKey, true);
   }, []);
 }
+
+/** Acciones que maneja la ventana principal (la paleta, el bloqueo y la división tienen el suyo). */
+const WINDOW_SHORTCUTS = ["tabs.next", "tabs.prev", "tabs.nextConn", "tabs.prevConn", "app.settings", "tabs.close", "app.sidebar"];
 
 /** Título de la ventana: "TerView — <pestaña>". */
 function useWindowTitle() {

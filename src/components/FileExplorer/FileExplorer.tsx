@@ -67,6 +67,7 @@ import {
 } from "./dragOut";
 import { PermissionsDialog } from "./PermissionsDialog";
 import { revealWhenDone, systemDownloadDir } from "./revealDownload";
+import { matchesShortcut } from "../../features/shortcuts/shortcuts";
 import "./FileExplorer.css";
 
 export interface FileExplorerProps {
@@ -797,19 +798,21 @@ export const FileExplorer = memo(function FileExplorer({
     const inInput = t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable;
     const mod = e.ctrlKey || e.metaKey;
     const key = e.key;
+    const ev = e.nativeEvent;
 
-    if (mod && key.toLowerCase() === "l") {
+    // Atajos configurables (Ajustes → Atajos de teclado). Estos tres valen también en el filtro.
+    if (matchesShortcut("explorer.path", ev)) {
       e.preventDefault();
       setEditingPath(true);
       return;
     }
-    if (mod && key.toLowerCase() === "f") {
+    if (matchesShortcut("explorer.filter", ev)) {
       e.preventDefault();
       filterRef.current?.focus();
       filterRef.current?.select();
       return;
     }
-    if (key === "F5") {
+    if (matchesShortcut("explorer.refresh", ev)) {
       e.preventDefault();
       refresh();
       return;
@@ -833,14 +836,22 @@ export const FileExplorer = memo(function FileExplorer({
     const page = Math.max(1, Math.floor(((listRef.current?.clientHeight ?? 300) - HEADER_H) / ROW_H) - 1);
     const curEntry = cur >= 0 ? rows[cur] : selectedEntries.length === 1 ? selectedEntries[0] : undefined;
 
-    if (e.altKey) {
-      if (key === "ArrowUp") goUp();
-      else if (key === "ArrowLeft") goBack();
-      else if (key === "ArrowRight") goForward();
-      else return;
+    const action = (
+      [
+        ["explorer.up", goUp],
+        ["explorer.back", goBack],
+        ["explorer.forward", goForward],
+        ["explorer.selectAll", () => setSelected(new Set(rows.map((r) => r.path)))],
+        ["explorer.delete", () => remove(selectedEntries)],
+        ["explorer.rename", () => curEntry && rename(curEntry)],
+      ] as [string, () => void][]
+    ).find(([id]) => matchesShortcut(id, ev));
+    if (action) {
       e.preventDefault();
+      action[1]();
       return;
     }
+    if (e.altKey) return;
 
     switch (key) {
       case "ArrowDown":
@@ -877,22 +888,11 @@ export const FileExplorer = memo(function FileExplorer({
       case "Backspace":
         goUp();
         break;
-      case "Delete":
-        remove(selectedEntries);
-        break;
-      case "F2":
-        if (!curEntry) return;
-        rename(curEntry);
-        break;
       case "Escape":
         if (!selected.size) return;
         setSelected(new Set());
         break;
       default:
-        if (mod && key.toLowerCase() === "a") {
-          setSelected(new Set(rows.map((r) => r.path)));
-          break;
-        }
         // Búsqueda rápida escribiendo el nombre.
         if (key.length === 1 && !mod && key !== " ") {
           const now = Date.now();

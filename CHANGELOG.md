@@ -59,6 +59,10 @@ siguen [Versionado Semántico](https://semver.org/lang/es/).
   con 7 temas (Sistema, Oscuro, Claro, Medianoche, Arena, Fiordo y Alto contraste) que cambian también la
   terminal y el editor, al momento; color de acento elegible y tamaño de letra de la interfaz.
   Textos más cortos: una línea de ayuda como máximo y los detalles en tooltips.
+- **Atajos de teclado configurables** (Ajustes → Atajos de teclado): 24 atajos (generales, terminal,
+  explorador y guardar en el editor). Clic en un atajo y pulsa la combinación nueva; avisa si choca con
+  otra acción o con teclas de la terminal (Ctrl+C, Ctrl+D…); restablecer uno o todos. Los menús y
+  tooltips muestran el atajo actual.
 
 ### Corregido
 - **Editor: la barra de estado se veía cortada** (el selector de lenguaje, p. ej. «Markdown», salía por

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { createPortal } from "react-dom";
 import { Bot, ChevronDown, ChevronUp, ClipboardPaste, Copy, Eraser, Search, TextSelect, X } from "lucide-react";
 import { useSettings } from "../../stores/settings";
+import { useShortcutText } from "../../features/shortcuts/shortcuts";
 import {
   TermController,
   type TermBackend,
@@ -307,6 +308,9 @@ interface TermMenuProps extends MenuState {
 function TermMenu({ x, y, hasSelection, onClose, onCopy, onPaste, onSelectAll, onClear, onSearch, onSendToAi }: TermMenuProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState({ left: x, top: y });
+  const copyKeys = useShortcutText("term.copy");
+  const pasteKeys = useShortcutText("term.paste");
+  const findKeys = useShortcutText("term.find");
 
   // Mantener el menú dentro de la ventana.
   useLayoutEffect(() => {
@@ -367,10 +371,10 @@ function TermMenu({ x, y, hasSelection, onClose, onCopy, onPaste, onSelectAll, o
       onContextMenu={(e) => e.preventDefault()}
     >
       <button role="menuitem" disabled={!hasSelection} onClick={run(onCopy)}>
-        <Copy size={14} /> Copiar <kbd>Ctrl+Mayús+C</kbd>
+        <Copy size={14} /> Copiar {copyKeys && <kbd>{copyKeys}</kbd>}
       </button>
       <button role="menuitem" onClick={run(onPaste)}>
-        <ClipboardPaste size={14} /> Pegar <kbd>Ctrl+Mayús+V</kbd>
+        <ClipboardPaste size={14} /> Pegar {pasteKeys && <kbd>{pasteKeys}</kbd>}
       </button>
       {onSendToAi && (
         <button
@@ -387,7 +391,7 @@ function TermMenu({ x, y, hasSelection, onClose, onCopy, onPaste, onSelectAll, o
         <TextSelect size={14} /> Seleccionar todo
       </button>
       <button role="menuitem" onClick={run(onSearch)}>
-        <Search size={14} /> Buscar… <kbd>Ctrl+Mayús+F</kbd>
+        <Search size={14} /> Buscar… {findKeys && <kbd>{findKeys}</kbd>}
       </button>
       <button role="menuitem" onClick={run(onClear)}>
         <Eraser size={14} /> Limpiar

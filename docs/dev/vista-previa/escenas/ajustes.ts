@@ -4,7 +4,7 @@ import { app, crop, el, sleep } from "../ayuda";
 
 type Section = Parameters<typeof openSettingsAt>[0];
 const SECTIONS: Section[] = [
-  "appearance", "terminal", "editor", "explorer", "connection", "transfers", "servers", "security",
+  "appearance", "terminal", "editor", "explorer", "shortcuts", "connection", "transfers", "servers", "security",
   "assistants", "localAi", "ai", "advanced", "about",
 ];
 

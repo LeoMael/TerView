@@ -2,7 +2,8 @@
 import { useState } from "react";
 import { Lock } from "lucide-react";
 import { useSettings } from "../../stores/settings";
-import { LOCK_SHORTCUT_LABEL, lockNow, useLock } from "../../features/lock/lockStore";
+import { lockNow, useLock } from "../../features/lock/lockStore";
+import { useShortcutText } from "../../features/shortcuts/shortcuts";
 import { ChangePinForm, DisablePinForm, SetupPinForm, WhatItProtects } from "../../features/lock/PinForms";
 import "../../features/lock/Lock.css";
 import { SettingGroup, SettingRow as Row } from "../ui/SettingsKit";
@@ -21,6 +22,7 @@ type Form = null | "enable" | "disable" | "change";
 export function SecuritySection() {
   const status = useLock((s) => s.status);
   const minutes = useSettings((s) => s.settings.lockMinutes);
+  const lockKeys = useShortcutText("app.lock");
   const update = useSettings((s) => s.update);
   const [form, setForm] = useState<Form>(null);
   const enabled = !!status?.enabled;
@@ -84,7 +86,7 @@ export function SecuritySection() {
           </div>
         </Row>
 
-        <Row label="Bloquear ahora" hint={LOCK_SHORTCUT_LABEL}>
+        <Row label="Bloquear ahora" hint={lockKeys || undefined}>
           <button className="btn" onClick={() => void lockNow()} disabled={!enabled}>
             <Lock size={14} /> Bloquear
           </button>
