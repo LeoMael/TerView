@@ -60,6 +60,8 @@ export interface Plan {
   secretLabel?: string;
   /** Cambios destructivos: el diálogo lo resalta. */
   danger?: boolean;
+  /** Tiempo límite en segundos (por defecto 60; las actualizaciones tardan más). */
+  timeoutSecs?: number;
 }
 
 const q = shQuote;

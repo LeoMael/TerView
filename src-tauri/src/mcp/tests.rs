@@ -54,6 +54,7 @@ struct Mock {
     /// Escáner: ajustes, último informe guardado, cuánto tarda un análisis y lo que se pidió.
     vuln_settings: Mutex<VulnScanSettings>,
     vuln_saved: Mutex<HashMap<String, Report>>,
+    audit_saved: Mutex<HashMap<String, crate::audit::model::AuditReport>>,
     scan_takes: Mutex<Duration>,
     scans: Mutex<Vec<(String, ScanOptions)>>,
     /// Análisis en curso por exec_id (para `cancel_exec`, el «Detener» del panel).
@@ -123,6 +124,7 @@ impl Mock {
             ui_calls: Mutex::new(Vec::new()),
             vuln_settings: Mutex::new(VulnScanSettings::default()),
             vuln_saved: Mutex::new(HashMap::new()),
+            audit_saved: Mutex::new(HashMap::new()),
             scan_takes: Mutex::new(Duration::from_secs(5)),
             scans: Mutex::new(Vec::new()),
             scan_stops: Mutex::new(HashMap::new()),
@@ -225,6 +227,9 @@ impl Backend for Mock {
     async fn vuln_latest(&self, server_id: &str) -> AppResult<Option<Report>> {
         Ok(self.vuln_saved.lock().unwrap().get(server_id).cloned())
     }
+    async fn audit_latest(&self, server_id: &str) -> AppResult<Option<crate::audit::model::AuditReport>> {
+        Ok(self.audit_saved.lock().unwrap().get(server_id).cloned())
+    }
     async fn vuln_scan(&self, sid: &str, opts: ScanOptions, exec_id: &str, cancel: &CancellationToken) -> AppResult<Report> {
         self.scans.lock().unwrap().push((sid.to_string(), opts.clone()));
         self.scan_stops.lock().unwrap().insert(exec_id.to_string(), cancel.clone());
@@ -262,6 +267,7 @@ impl Backend for Mock {
             }
             "sudo-rejected" => Ok(Value::Null),
             "ports" => Ok(json!({ "tool": "ss", "ports": [{ "port": 22 }] })),
+            "audit" => Ok(serde_json::to_value(audit_fixture()).unwrap()),
             _ => Err(AppError::Invalid("no disponible".into())),
         }
     }
@@ -1133,7 +1139,69 @@ fn vuln_tools_are_announced_as_reads() {
         let t = tools.iter().find(|t| t.name == name).unwrap_or_else(|| panic!("falta {name}"));
         assert_eq!(t.annotations.as_ref().and_then(|a| a.read_only_hint), Some(true), "{name}");
     }
-    assert_eq!(tools.len(), 19);
+    assert_eq!(tools.len(), 21);
+}
+
+// ───────────────────────── Auditoría del servidor ─────────────────────────
+
+fn audit_fixture() -> crate::audit::model::AuditReport {
+    use crate::audit::model::*;
+    let check = |id: &str, status: CheckStatus, weight: u8, items: usize| Check {
+        id: id.into(),
+        category: "ssh".into(),
+        title: format!("título {id}"),
+        status,
+        detail: "detalle".into(),
+        items: (0..items).map(|i| format!("elemento {i}")).collect(),
+        fix: (status == CheckStatus::Bad).then(|| Fix { command: "echo arreglo".into(), danger: true, manual: false, note: None }),
+        weight,
+    };
+    AuditReport {
+        id: "a1".into(),
+        server_id: "s-read".into(),
+        created_at: "2026-11-13T10:00:00Z".into(),
+        duration_ms: 1000,
+        elevated: false,
+        os: "Debian 12".into(),
+        score: Some(64),
+        grade: Some("D".into()),
+        summary: "1 grave, 1 aviso".into(),
+        categories: vec![CategoryScore { id: "ssh".into(), label: "SSH".into(), score: Some(40), grade: Some("F".into()), summary: "1 grave".into() }],
+        checks: vec![
+            check("ssh.keys", CheckStatus::Ok, 1, 0),
+            check("ssh.password", CheckStatus::Warn, 2, 0),
+            check("ssh.root", CheckStatus::Bad, 3, 25),
+            check("hard.cron", CheckStatus::Skip, 1, 0),
+        ],
+        ai: None,
+    }
+}
+
+#[tokio::test]
+async fn audit_report_is_a_read_and_run_audit_asks() {
+    let core = core();
+    let out = call(&core, "get_audit_report", json!({ "server": "db-server" })).await;
+    assert!(!out.is_error && out.text.contains("run_audit"), "{}", out.text);
+    core.backend.audit_saved.lock().unwrap().insert("s-read".into(), audit_fixture());
+    let out = call(&core, "get_audit_report", json!({ "server": "db-server" })).await;
+    let v: Value = serde_json::from_str(&out.text).unwrap();
+    assert_eq!(v["score"], 64);
+    assert_eq!(v["problems"].as_array().unwrap().len(), 2);
+    // Lo grave primero, con su arreglo y lo afectado recortado.
+    assert_eq!(v["problems"][0]["id"], "ssh.root");
+    assert_eq!(v["problems"][0]["fix"]["command"], "echo arreglo");
+    assert_eq!(v["problems"][0]["affected"].as_array().unwrap().len(), 10);
+    assert_eq!(v["problems"][0]["moreAffected"], 15);
+    assert_eq!(v["unchecked"].as_array().unwrap().len(), 1);
+    assert_eq!(asked(&core), 0, "leer el informe no pide permiso");
+
+    // run_audit pide permiso y lo hace la interfaz.
+    let out = call(&core, "run_audit", json!({ "server": "db-server" })).await;
+    assert!(!out.is_error, "{}", out.text);
+    assert_eq!(asked(&core), 1);
+    assert!(core.backend.ui_calls.lock().unwrap().iter().any(|k| k == "audit"));
+    let v: Value = serde_json::from_str(&out.text).unwrap();
+    assert_eq!(v["grade"], "D");
 }
 
 // ───────────────────────── sudo con contraseña ─────────────────────────

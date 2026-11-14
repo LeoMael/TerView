@@ -97,6 +97,7 @@ La app tiene dos mitades dentro del mismo programa:
 | **Memoria de la interfaz** | Contraseña de sudo por conexión (`useSudo`), privilegios detectados, pestañas abiertas. La contraseña de sudo se olvida al cerrar la pestaña, al perder la conexión o al bloquear TerView. | Stores de zustand sin persistencia | RAM | — | Interfaz: `features/privileges/`, `features/lock/` y `stores/` |
 | **Sesiones tmux** (en el servidor) | Terminales persistentes `terview-<id>` con su historial (50.000 líneas). | Servidor tmux propio `-L terview` | Tu servidor | — | Motor: `terminal/tmux.rs` por SSH |
 | **Gist secreto** (GitHub) | `terview-sync.json`: copia de servidores, proyectos y comandos, sin contraseñas. | JSON cifrado | Tu cuenta de GitHub | Sí: AES-256-GCM con clave derivada por Argon2id de una frase que nunca se guarda | Motor: `github/crypto.rs`, `github/mod.rs` |
+| **`audit/<idServidor>.json`** | Historial de «Auditar servidor»: las 30 últimas auditorías (notas, comprobaciones, arreglos y la explicación de IA si la hubo). | JSON | `<config>/terview/audit/` | No (0600) | Motor: `audit/store.rs` |
 | **`vulnscan/<idServidor>.json`** *(v0.5.0)* | Historial del escáner de vulnerabilidades: los últimos 20 análisis del servidor (inventario resumido, hallazgos, fuentes y la explicación de IA si la hubo). | JSON | `<config>/terview/vulnscan/` | No (0600) | Motor: `vulnscan/store.rs` |
 | **Caché de OSV** *(v0.5.0)* | Detalle de cada aviso de OSV por id y fecha de modificación; se puede borrar sin perder nada. | Un JSON por aviso | Linux `~/.cache/com.terview.app/osv/` (caché del sistema en Windows y macOS) | No | Motor: `vulnscan/cache.rs` |
 | **Token de IA** *(v0.5.0)* | Token del endpoint de IA compatible con OpenAI, id `ai-token`. URL base y modelo van en `settings.json`, nunca el token. | Secreto | Bóveda (`vault.json`) si hay PIN; si no, llavero del sistema | Sí | Motor: `ai/mod.rs` con `storage/secrets.rs` (`get_secret`/`set_secret`); `enable_vault` lo mueve a la bóveda |
@@ -640,8 +641,8 @@ después de que lo apruebes (se pregunta siempre, salvo con «Aceptar automátic
 |--------------|---------|
 | `list_servers`, `list_projects`, `list_sessions`, `list_catalog`, `transfer_status` | Lectura (pasa sola) |
 | `list_dir`, `stat`, `read_file`, `list_ports`, `list_sites`, `list_containers` | Lectura (pasa sola) |
-| `get_vuln_report` (último informe del escáner, resumido) | Lectura (pasa sola, también en Solo lectura) |
-| `connect`, `download`, `scan_vulnerabilities` (análisis sin sudo, 600 s por defecto, cancelable) | Pregunta, con «Permitir siempre»; también en Solo lectura |
+| `get_vuln_report` (último informe del escáner, resumido), `get_audit_report` (última auditoría) | Lectura (pasa sola, también en Solo lectura) |
+| `connect`, `download`, `scan_vulnerabilities` (análisis sin sudo, 600 s por defecto, cancelable), `run_audit` (auditoría sin sudo) | Pregunta, con «Permitir siempre»; también en Solo lectura |
 | `run_command`, `run_catalog_command` (los 📊 pasan solos; con sudo, TerView pone la contraseña), `write_file`, `upload` | Pregunta; en Solo lectura, rechazado |
 
 Lo peligroso pregunta siempre, sin «Permitir siempre». Detalle y límites de cada una en
@@ -700,6 +701,32 @@ un servidor) y `scan_vulnerabilities` usa `vulnscan::scan::scan_session(sesión,
 completo sin sudo desde el motor, con los mismos scripts y los ajustes del escáner). Al asistente le llega
 un resumen (`mcp/vuln.rs`): recuento por gravedad, fuentes, avisos y los hallazgos más graves (20 por
 defecto, máximo 100). El análisis pide permiso la primera vez, tiene tiempo límite y se puede detener.
+
+## 16c. Auditar servidor
+
+Sub-pestaña **«Auditoría»** en Administración (`components/Admin/AuditTab.tsx`). Un botón revisa todo, sin
+instalar nada, y da una nota.
+
+1. `src/features/audit/run.ts` ejecuta con la elevación de Administración (`readElevated`; si sudo falla,
+   sigue sin elevar): `AUDIT_SCRIPT` (`script.ts`, POSIX sh, una sección `@@` por tema), `PORTS_SCRIPT` y
+   `WEB_SCRIPT` (los de Puertos y Sitios web), y lee el último informe del escáner (`vulnscan_latest`).
+2. `checks.ts` convierte las salidas en comprobaciones `ok · warn · bad · info · skip`, cada una con una
+   línea (`detail`, sin usuarios, IP ni rutas: es lo único que va a la IA), lo afectado (`items`) y el
+   arreglo (`fix`: comando, si es peligroso, si es solo para copiar). Lo que necesita root y no se pudo
+   leer queda en `skip`.
+3. `score.ts`: cada comprobación tiene su nota («mal» 75 − 10·peso, «aviso» 90 − 3·peso); la categoría toma
+   la peor y resta 4 por cada otro problema (mínimo 25: un solo grave la deja en ~45). La general es la
+   media ponderada (con un «mal» de peso 3 no pasa de 75, C). `compare` marca qué mejoró o empeoró.
+4. El motor solo guarda (`src-tauri/src/audit/`): `<config>/terview/audit/<idServidor>.json`, las 30
+   últimas, 0600, se borra con el servidor. `export.ts` hace Markdown y HTML; `aiPayload.ts` el texto
+   para «Explicar con IA».
+5. **Arreglar** usa `PlanModal` (comando exacto, `runPlan` como root, historial de Administración); lo
+   peligroso pide escribir «ARREGLAR». Nunca se arregla nada solo.
+6. **MCP:** `get_audit_report` (lectura, sin conexión) y `run_audit` (pide permiso; la interfaz audita sin
+   sudo por `ui_request("audit")` y lo guarda). Resumen en `mcp/server_audit.rs`.
+
+Pruebas: `src/features/audit/audit.test.ts` (salidas reales de Rocky, Debian y Alpine en contenedores, y
+un servidor con problemas) y `src-tauri/src/audit/tests.rs`.
 
 ---
 

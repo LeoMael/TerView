@@ -2,6 +2,7 @@
 //! Archivo de BASE: los agentes no lo editan; los comandos ya están todos registrados.
 
 mod ai;
+mod audit;
 mod diagnostics;
 mod dragout;
 mod error;
@@ -231,6 +232,13 @@ pub fn run() {
             vulnscan::vulnscan_export,
             vulnscan::vulnscan_vuln_detail,
             vulnscan::vulnscan_rescan_image,
+            // auditoría del servidor (Administración → Auditoría)
+            audit::audit_save,
+            audit::audit_history_list,
+            audit::audit_history_get,
+            audit::audit_latest,
+            audit::audit_history_delete,
+            audit::audit_set_ai,
             // asistente de IA opcional (solo explica informes)
             ai::ai_status,
             ai::ai_set_token,

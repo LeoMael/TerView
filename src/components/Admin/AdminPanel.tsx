@@ -3,7 +3,7 @@
 // Lee como usuario normal; los cambios se ejecutan como root (directo, sudo -n/doas -n o sudo -S con la
 // contraseña por stdin, guardada solo en memoria). Antes de cada cambio se muestra el comando exacto.
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
-import { Bug, Globe, History, KeyRound, LogOut, MonitorDot, Network, RefreshCw, ShieldAlert, ShieldCheck, Unplug, Users, UsersRound } from "lucide-react";
+import { Bug, ClipboardCheck, Globe, History, KeyRound, LogOut, MonitorDot, Network, RefreshCw, ShieldAlert, ShieldCheck, Unplug, Users, UsersRound } from "lucide-react";
 import { errorMessage } from "../../api/core";
 import { toast } from "../../stores/toasts";
 import { useTabs } from "../../stores/tabs";
@@ -48,10 +48,11 @@ import { HistoryTab } from "./HistoryTab";
 import { PortsTab } from "./PortsTab";
 import { WebTab } from "./WebTab";
 import { VulnsTab } from "./VulnsTab";
+import { AuditTab } from "./AuditTab";
 import { useVulnNav } from "../../features/vulnscan/nav";
 import "./Admin.css";
 
-type SubTab = "users" | "groups" | "sessions" | "ports" | "web" | "vulns" | "history";
+type SubTab = "users" | "groups" | "sessions" | "ports" | "web" | "vulns" | "audit" | "history";
 
 const TABS: { id: SubTab; label: string; icon: ReactNode }[] = [
   { id: "users", label: "Usuarios", icon: <Users size={14} /> },
@@ -60,6 +61,7 @@ const TABS: { id: SubTab; label: string; icon: ReactNode }[] = [
   { id: "ports", label: "Puertos", icon: <Network size={14} /> },
   { id: "web", label: "Sitios web", icon: <Globe size={14} /> },
   { id: "vulns", label: "Vulnerabilidades", icon: <Bug size={14} /> },
+  { id: "audit", label: "Auditoría", icon: <ClipboardCheck size={14} /> },
   { id: "history", label: "Historial", icon: <History size={14} /> },
 ];
 
@@ -466,6 +468,8 @@ export function AdminPanel({
         <div className="adm-body" id={`adm-panel-${sessionId}`} role="tabpanel" aria-labelledby={`adm-tab-${sessionId}-${tab}`}>
           {tab === "vulns" ? (
             <VulnsTab />
+          ) : tab === "audit" ? (
+            <AuditTab onOpenVulns={() => setTab("vulns")} />
           ) : tab === "ports" ? (
             <PortsTab />
           ) : tab === "web" ? (

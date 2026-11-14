@@ -19,6 +19,7 @@ use crate::storage::vault::Vault;
 use crate::storage::{ProfileStore, SettingsStore};
 use crate::transfer::TransferManager;
 use crate::types::{ExecResult, FileEntry, ProfilesData, SessionInfo, Snippet, TransferJob};
+use crate::audit::model::AuditReport;
 use crate::vulnscan::model::Report;
 use crate::vulnscan::scan::{scan_session, ScanOptions};
 use crate::vulnscan::{store as vuln_store, VulnScanSettings};
@@ -65,6 +66,8 @@ pub trait Backend: Send + Sync + 'static {
     fn vuln_settings(&self) -> VulnScanSettings;
     /// Último informe de vulnerabilidades guardado de un servidor (None si nunca se analizó).
     fn vuln_latest(&self, server_id: &str) -> impl Future<Output = AppResult<Option<Report>>> + Send;
+    /// Última auditoría guardada de un servidor (None si nunca se auditó).
+    fn audit_latest(&self, server_id: &str) -> impl Future<Output = AppResult<Option<AuditReport>>> + Send;
     /// Análisis de vulnerabilidades SIN sudo por la conexión `session_id` (lo guarda en el historial
     /// si `opts.save`). Se detiene, también en el servidor, al cancelar `cancel` o con
     /// `cancel_exec(exec_id)` (botón «Detener» del panel de actividad).
@@ -210,6 +213,13 @@ impl Backend for TauriBackend {
     async fn vuln_latest(&self, server_id: &str) -> AppResult<Option<Report>> {
         let id = server_id.to_string();
         tokio::task::spawn_blocking(move || vuln_store::latest_report(&id))
+            .await
+            .map_err(|e| AppError::Io(format!("no se pudo leer el historial: {e}")))?
+    }
+
+    async fn audit_latest(&self, server_id: &str) -> AppResult<Option<AuditReport>> {
+        let id = server_id.to_string();
+        tokio::task::spawn_blocking(move || crate::audit::store::latest_report(&id))
             .await
             .map_err(|e| AppError::Io(format!("no se pudo leer el historial: {e}")))?
     }

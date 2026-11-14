@@ -38,6 +38,7 @@ const CAPTURAS = [
   { file: "13b-puertos.png", escena: "puertos", query: { sesion: "70,30" } },
   { file: "13c-sitios.png", escena: "sitios", query: { sesion: "84,16" } },
   { file: "14-vulnerabilidades.png", escena: "vulnerabilidades", query: { sesion: "84,16" } },
+  { file: "14b-auditoria.png", escena: "auditoria", query: { sesion: "88,12" }, size: [1280, 1000] },
   { file: "15-ia.png", escena: "ia" },
   { file: "16-github.png", escena: "github" },
   { file: "17-pin.png", escena: "pin", query: { bloqueado: "1" }, pad: 48 },

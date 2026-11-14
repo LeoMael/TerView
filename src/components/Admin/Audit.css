@@ -1,0 +1,245 @@
+/* Sub-pestaña «Auditoría» de Administración (AuditTab.tsx). */
+.au-root .au-spacer {
+  flex: 1;
+}
+.au-history {
+  height: 26px;
+  width: auto;
+  max-width: 260px;
+  font-size: var(--fs-sm);
+}
+.au-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 10px 12px 16px;
+}
+
+.au-summary {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 10px;
+}
+.au-grade {
+  width: 56px;
+  height: 56px;
+  flex: none;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 26px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--text-faint);
+}
+.au-summary-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.au-score {
+  font-size: 20px;
+  font-weight: 600;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.au-score .faint {
+  font-size: var(--fs);
+  font-weight: 400;
+}
+.au-delta {
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.au-better {
+  color: var(--green);
+}
+.au-worse {
+  color: var(--red);
+}
+
+/* Colores por letra: fondo en el círculo y en la barra, texto en la nota de cada categoría. */
+.au-grade.au-grade-a,
+.au-bar .au-grade-a {
+  background: var(--green);
+}
+.au-grade.au-grade-b,
+.au-bar .au-grade-b {
+  background: color-mix(in srgb, var(--green) 70%, var(--yellow));
+}
+.au-grade.au-grade-c,
+.au-bar .au-grade-c {
+  background: var(--yellow);
+}
+.au-grade.au-grade-d,
+.au-bar .au-grade-d {
+  background: var(--orange);
+}
+.au-grade.au-grade-f,
+.au-bar .au-grade-f {
+  background: var(--red);
+}
+.au-cat-grade.au-grade-a,
+.au-cat-grade.au-grade-b {
+  color: var(--green);
+}
+.au-cat-grade.au-grade-c {
+  color: var(--yellow);
+}
+.au-cat-grade.au-grade-d {
+  color: var(--orange);
+}
+.au-cat-grade.au-grade-f {
+  color: var(--red);
+}
+.au-cat-grade.au-grade-none {
+  color: var(--text-faint);
+}
+
+.au-cats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.au-cat {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 3px 8px;
+  padding: 7px 9px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  text-decoration: none;
+}
+.au-cat:hover {
+  border-color: var(--border-strong);
+}
+.au-cat-name {
+  font-weight: 600;
+}
+.au-cat-grade {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.au-bar {
+  grid-column: 1 / -1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--bg-sunken);
+  overflow: hidden;
+}
+.au-bar > span {
+  display: block;
+  height: 100%;
+  background: var(--text-faint);
+}
+.au-cat-sum {
+  grid-column: 1 / -1;
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.au-ai {
+  margin-bottom: 12px;
+}
+.au-section {
+  margin-bottom: 10px;
+  scroll-margin-top: 6px;
+}
+.au-check {
+  border-bottom: 1px solid var(--border);
+}
+.au-check-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 2px 0;
+}
+.au-toggle {
+  border: 0;
+  background: none;
+  color: var(--text-faint);
+  padding: 0;
+  width: 16px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.au-toggle:disabled {
+  cursor: default;
+}
+.au-toggle-sp {
+  width: 13px;
+}
+.au-icon {
+  flex: none;
+}
+.au-ok .au-icon {
+  color: var(--green);
+}
+.au-warn .au-icon {
+  color: var(--orange);
+}
+.au-bad .au-icon {
+  color: var(--red);
+}
+.au-info .au-icon {
+  color: var(--accent);
+}
+.au-skip .au-icon,
+.au-skip .au-detail {
+  color: var(--text-faint);
+}
+.au-title {
+  font-weight: 600;
+  white-space: nowrap;
+}
+.au-detail {
+  flex: 1;
+  min-width: 0;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.au-chip {
+  font-size: 11px;
+  padding: 0 6px;
+  border-radius: 9px;
+  white-space: nowrap;
+}
+.au-chip-better {
+  color: var(--green);
+  background: color-mix(in srgb, var(--green) 14%, transparent);
+}
+.au-chip-worse,
+.au-chip-new {
+  color: var(--red);
+  background: color-mix(in srgb, var(--red) 14%, transparent);
+}
+.au-body {
+  padding: 0 0 8px 38px;
+}
+.au-items {
+  margin: 0 0 6px;
+  padding-left: 16px;
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+.au-fix .adm-cmd {
+  margin: 4px 0;
+}
+.au-fix-actions {
+  display: flex;
+  gap: 6px;
+}

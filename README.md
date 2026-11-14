@@ -234,6 +234,8 @@ Qué puede hacer el asistente (siempre dentro del acceso que le diste):
 | `list_ports`, `list_sites`, `list_containers` | Puertos, sitios web y contenedores | Pasa solo |
 | `get_vuln_report` | Último análisis de vulnerabilidades guardado, resumido | Pasa solo |
 | `scan_vulnerabilities` | Analizar ahora, sin sudo (tarda minutos; consulta OSV.dev desde tu PC) | Te pregunta la primera vez; puedes elegir «Permitir siempre» |
+| `get_audit_report` | Última auditoría del servidor (notas y problemas con su arreglo) | Pasa solo |
+| `run_audit` | Auditar ahora, sin sudo y sin instalar nada | Te pregunta la primera vez; puedes elegir «Permitir siempre» |
 
 Qué esperar:
 - Lo que solo **lee** (listar, leer archivos, ver logs) pasa solo.

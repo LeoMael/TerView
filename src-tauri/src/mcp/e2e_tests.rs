@@ -99,6 +99,9 @@ impl Backend for Real {
     async fn vuln_latest(&self, _: &str) -> AppResult<Option<Report>> {
         Ok(self.vuln_saved.lock().unwrap().clone())
     }
+    async fn audit_latest(&self, _: &str) -> AppResult<Option<crate::audit::model::AuditReport>> {
+        Ok(None)
+    }
     async fn vuln_scan(&self, sid: &str, mut opts: ScanOptions, exec_id: &str, cancel: &CancellationToken) -> AppResult<Report> {
         let ticket = self.registry.register(exec_id)?;
         let s = self.sessions.get(sid).await?;

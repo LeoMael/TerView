@@ -4,6 +4,7 @@
 // - connect: el flujo normal de conexión (contraseña, huella, 2FA) y su pestaña.
 // - catalog: el catálogo base de la Biblioteca (components/Commands/catalog.ts).
 // - ports / sites: los scripts y analizadores de Administración (features/admin/ports.ts y web.ts).
+// - audit: «Auditar servidor» (features/audit), sin sudo; se guarda en el historial como desde el botón.
 // - containers: la detección de Podman/Docker y la lista de contenedores (features/containers).
 // - sudo / sudo-rejected: la contraseña de sudo de un comando del asistente ya aprobado (sudoAsk.ts) y el
 //   aviso de que sudo la rechazó. La contraseña va al motor (que la pasa por stdin), nunca al asistente.
@@ -95,6 +96,14 @@ async function containers(sessionId: string) {
   return { engines };
 }
 
+async function auditServer(payload: Record<string, unknown>) {
+  const sessionId = sessionOf(payload);
+  const profileId = payload.profileId;
+  if (typeof profileId !== "string" || !profileId) throw new Error("Falta el servidor");
+  const { runAudit } = await import("../audit");
+  return runAudit({ sessionId, profileId, elevation: null });
+}
+
 async function run(req: McpUiRequest): Promise<unknown> {
   switch (req.kind) {
     case "connect": {
@@ -110,6 +119,8 @@ async function run(req: McpUiRequest): Promise<unknown> {
       return sites(sessionOf(req.payload));
     case "containers":
       return containers(sessionOf(req.payload));
+    case "audit":
+      return auditServer(req.payload);
     case "sudo":
       return sudoForAssistant(req.payload);
     case "sudo-rejected": {

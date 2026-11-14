@@ -68,6 +68,12 @@ siguen [Versionado Semántico](https://semver.org/lang/es/).
   sale de él). Detecta AllowGroups/AllowUsers de sshd, ofrece sudo y linger, muestra los comandos antes,
   prueba el acceso con la clave y ofrece guardar el servidor. No toca PasswordAuthentication. También como
   comando de la Biblioteca (`usuarios.crear-usuario-clave`), usable por el asistente.
+- **Auditar servidor** (Administración → Auditoría): un botón que revisa SSH, usuarios con sudo, puertos y
+  cortafuegos, actualizaciones y reinicio pendiente, certificados, contenedores, servicios caídos, intentos
+  de entrada, disco y memoria, y endurecimiento (`hidepid`, permisos de archivos sensibles…), sin instalar
+  nada. Nota por categoría y general (A–F), comparación con la auditoría anterior, historial, exportar a
+  Markdown o HTML y «Explicar con IA». Cada problema trae su comando para arreglarlo, que se muestra antes y
+  se confirma (lo peligroso, escribiendo «ARREGLAR»). Para el asistente: `get_audit_report` y `run_audit`.
 
 ### Corregido
 - **sudo con contraseña en más sitios.** «Ejecutar en varios servidores» usa la contraseña de sudo de cada

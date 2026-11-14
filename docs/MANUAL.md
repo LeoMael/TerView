@@ -20,6 +20,7 @@ Este manual también está dentro de TerView: pulsa el botón **?** de la barra 
 12. [Túneles](#túneles)
 13. [Administración](#administración)
 14. [Vulnerabilidades](#vulnerabilidades)
+    - [Auditar servidor](#auditar-servidor)
 15. [IA para explicar informes](#ia-para-explicar-informes)
 16. [GitHub](#github)
 17. [PIN y bloqueo](#pin-y-bloqueo)
@@ -366,6 +367,35 @@ Este manual también está dentro de TerView: pulsa el botón **?** de la barra 
 - A OSV.dev solo se envían nombres y versiones de paquetes. **ver qué se envía** te lo enseña.
 - **Cancelar** detiene el análisis también en el servidor. TerView nunca ejecuta arreglos solo.
 
+## Auditar servidor
+
+![Pestaña Auditoría con la nota general, la nota por categoría y las comprobaciones](manual/14b-auditoria.png)
+
+**Para qué sirve:** revisar la seguridad del servidor de una vez y saber qué arreglar primero.
+
+**Cómo se usa:**
+
+1. Ve a **Administración → Auditoría** y pulsa **Auditar servidor**. Tarda unos segundos y no instala nada.
+2. Arriba ves la **nota general** (0–100 y de A a F) y la nota de cada categoría. Pulsa una para ir a ella.
+3. Cada comprobación sale como bien, aviso, mal o sin comprobar. Pulsa la flecha para ver a qué afecta y el comando.
+4. **Arreglar** enseña el comando exacto y lo ejecuta como root al confirmar. Lo que puede cortar el acceso
+   (SSH, cortafuegos, reiniciar) pide escribir **ARREGLAR**. Después pulsa otra vez **Auditar servidor**.
+5. La lista de arriba guarda las auditorías anteriores. Cada una se compara con la anterior: **mejoró**,
+   **empeoró** o **nuevo**.
+6. **Markdown** y **HTML** la exportan. **Explicar con IA** te enseña antes el texto que se envía.
+
+**Qué revisa:** SSH (root, contraseña, claves), usuarios (sudo, sudo sin contraseña, cuentas sin
+contraseña, UID 0), puertos abiertos y cortafuegos, actualizaciones y reinicio pendiente, el último análisis
+de vulnerabilidades, certificados que caducan en menos de 30 días, contenedores (`--privileged`, root,
+puertos), servicios caídos, disco, memoria, intentos de entrada y fail2ban, y permisos (`/proc` con
+`hidepid`, `/etc/shadow`, `/etc` escribible por todos, configuración web, `cron`).
+
+**Notas:**
+
+- Sin sudo se revisa lo que se puede; lo demás sale **sin comprobar**. Pulsa **Con sudo…** para verlo todo.
+- No lanza el escáner de vulnerabilidades: usa el último análisis (o pulsa **Analizar**).
+- TerView nunca arregla nada solo. Con un problema grave, la nota general no pasa de C (75).
+
 ## IA para explicar informes
 
 ![Ajustes → IA para explicar informes con URL, modelo y token](manual/15-ia.png)
@@ -378,7 +408,7 @@ Este manual también está dentro de TerView: pulsa el botón **?** de la barra 
 2. Escribe la **URL base** (por ejemplo `https://api.openai.com/v1`, o `http://localhost:11434/v1` para Ollama).
 3. Escribe el **Modelo** y pega el **Token** (Ollama local no lo necesita). Pulsa **Guardar**.
 4. Pulsa **Probar conexión** para comprobarlo.
-5. En **Vulnerabilidades**, pulsa **Explicar con IA**, revisa el texto exacto que se enviará y pulsa **Enviar**.
+5. En **Vulnerabilidades** o **Auditoría**, pulsa **Explicar con IA**, revisa el texto exacto que se enviará y pulsa **Enviar**.
 
 **Notas:**
 

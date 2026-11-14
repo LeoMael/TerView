@@ -54,6 +54,8 @@ pub const MAX_SCAN_BYTES: usize = 200 * 1024;
 /// Tiempo de espera de la interfaz al abrir una pestaña (puede pedir contraseña o huella).
 const UI_CONNECT_TIMEOUT: Duration = Duration::from_secs(180);
 const UI_SCAN_TIMEOUT: Duration = Duration::from_secs(90);
+/// Tiempo límite de `run_audit` (la interfaz lee SSH, usuarios, puertos, sitios, contenedores…).
+const UI_AUDIT_TIMEOUT: Duration = Duration::from_secs(240);
 /// Tiempo límite de `scan_vulnerabilities` (s): por defecto, mínimo y máximo.
 pub const DEFAULT_VULN_SCAN_SECS: u32 = 600;
 pub const MIN_VULN_SCAN_SECS: u32 = 60;
@@ -87,6 +89,12 @@ pub struct VulnReportParams {
     /// Hallazgos a mostrar, de más a menos grave (1-100, por defecto 20).
     #[serde(default)]
     pub limit: Option<u32>,
+}
+
+#[derive(Debug, Deserialize, JsonSchema)]
+pub struct AuditReportParams {
+    /// Nombre o id del servidor (ver list_servers).
+    pub server: String,
 }
 
 #[derive(Debug, Deserialize, JsonSchema)]
@@ -517,6 +525,8 @@ impl<B: Backend> McpCore<B> {
             "list_containers" => self.scan("containers", parse(args)?, rec).await,
             "get_vuln_report" => self.vuln_report(parse(args)?, rec).await,
             "scan_vulnerabilities" => self.vuln_scan(parse(args)?, rec, cancel).await,
+            "get_audit_report" => self.audit_report(parse(args)?, rec).await,
+            "run_audit" => self.run_audit(parse(args)?, rec).await,
             other => Err(Fail::Error(format!("Herramienta desconocida: {other}"))),
         }
     }
@@ -1313,6 +1323,57 @@ impl<B: Backend> McpCore<B> {
             Err(AppError::Canceled) => Err(Fail::Error("Se canceló el análisis (y se detuvo en el servidor).".into())),
             Err(e) => Err(e.into()),
         }
+    }
+}
+
+impl<B: Backend> McpCore<B> {
+    // ───────────── Auditoría del servidor ─────────────
+
+    /// Última auditoría guardada (de TerView o de `run_audit`), resumida. No hace falta conexión.
+    async fn audit_report(&self, p: AuditReportParams, rec: &mut Rec) -> Res<String> {
+        rec.entry.detail = "última auditoría".into();
+        let t = self.target(&p.server, None, rec).await?;
+        self.authorize(rec, &t, Action::read("get_audit_report"), "", "", None).await?;
+        match self.backend.audit_latest(&t.server.id).await? {
+            Some(r) => {
+                rec.entry.message = Some(format!("auditoría del {}", r.created_at));
+                Ok(pretty(&super::server_audit::summarize(&t.server.name, &r)))
+            }
+            None => Ok(format!(
+                "«{}» no tiene ninguna auditoría guardada. Usa run_audit (o pide al usuario que pulse \
+                 «Auditar servidor» en TerView → Administración → Auditoría).",
+                t.server.name
+            )),
+        }
+    }
+
+    /// Auditoría nueva SIN sudo (la hace la interfaz, igual que el botón). Solo lee, pero pide permiso
+    /// la primera vez porque revisa muchas cosas del servidor. Se guarda en el historial.
+    async fn run_audit(&self, p: ServerParams, rec: &mut Rec) -> Res<String> {
+        let t = self.target(&p.server, p.session_id.as_deref(), rec).await?;
+        let sid = t.session_id()?.to_string();
+        rec.entry.detail = "auditoría sin sudo".into();
+        let shown = format!(
+            "Auditoría SIN sudo como «{}». No cambia nada ni instala nada en el servidor:\n\
+             • lee la configuración de SSH, usuarios, puertos, cortafuegos, actualizaciones, sitios web,\n  \
+             contenedores, servicios, intentos de entrada, disco, memoria y permisos\n\
+             • usa el último informe de vulnerabilidades guardado (no lanza el escáner)\n\
+             El informe se guarda en el historial de TerView.",
+            t.server.username
+        );
+        let title = "quiere auditar el servidor (sin sudo; solo lectura)";
+        self.authorize(rec, &t, Action::change_on_read("run_audit"), title, &shown, None).await?;
+        let v = self
+            .backend
+            .ui_request("audit", json!({ "sessionId": sid, "profileId": t.server.id }), UI_AUDIT_TIMEOUT)
+            .await?;
+        let r: crate::audit::model::AuditReport =
+            serde_json::from_value(v).map_err(|e| Fail::Error(format!("auditoría no válida: {e}")))?;
+        rec.entry.message = Some(match (r.score, r.grade.as_deref()) {
+            (Some(s), Some(g)) => format!("nota {s}/100 ({g})"),
+            _ => "auditoría hecha".into(),
+        });
+        Ok(pretty(&super::server_audit::summarize(&t.server.name, &r)))
     }
 }
 

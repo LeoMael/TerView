@@ -7,6 +7,7 @@
 //! - `core`: permisos, aprobación, ejecución con límites y registro (sin Tauri: se prueba aparte).
 //! - `policy`: reglas de acceso y comandos peligrosos. `config`: `mcp.json`. `audit`: registro.
 //! - `approval` y `ui`: diálogos y peticiones a la interfaz. `backend`: el motor de la app.
+//! - `server_audit`: resumen de las auditorías del servidor (`get_audit_report`, `run_audit`).
 //! - `vuln`: resumen de los informes del escáner de vulnerabilidades para el asistente.
 //! - `sudo`: envoltorio que da la contraseña de sudo (la de la interfaz) sin que el asistente la vea
 //!   (vive en `snippets::sudo`: también lo usa «Ejecutar en varios servidores»).
@@ -26,6 +27,7 @@ pub mod diff;
 pub mod http;
 pub mod policy;
 pub mod server;
+pub mod server_audit;
 pub use crate::snippets::sudo;
 pub mod template;
 pub mod ui;

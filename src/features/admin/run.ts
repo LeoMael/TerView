@@ -51,7 +51,7 @@ export async function runScript(
 }
 
 export async function runPlan(sessionId: string, plan: Plan, el: Elevation): Promise<ExecResult> {
-  return runScript(sessionId, innerScript(plan), el, plan.secret ?? "");
+  return runScript(sessionId, innerScript(plan), el, plan.secret ?? "", plan.timeoutSecs ?? 60);
 }
 
 /** true si el comando salió bien. */

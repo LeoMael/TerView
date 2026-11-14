@@ -1,4 +1,4 @@
-// Escenas de la pestaña «Administración» de web-prod: usuarios, puertos, sitios web y vulnerabilidades.
+// Escenas de la pestaña «Administración» de web-prod: usuarios, puertos, sitios web, vulnerabilidades y auditoría.
 import { byText, click, connect, el, sessionTab, sleep } from "../ayuda";
 
 async function admin(sub?: string, sinBarra = false) {
@@ -34,6 +34,12 @@ export const escenas: Record<string, () => Promise<void>> = {
     await admin("Vulnerabilidades", true);
     await el(".vs-summary");
     await byText(/nuevas/, ".vs-summary span");
+    await sleep(500);
+  },
+  auditoria: async () => {
+    await admin("Auditoría", true);
+    await el(".au-summary");
+    await el(".au-check");
     await sleep(500);
   },
 };
