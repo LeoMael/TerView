@@ -2,14 +2,14 @@
 //!
 //! La parte común (sobre JSON, cabecera autenticada como AAD, límites) vive en
 //! `storage::cipher` y la comparte la bóveda de contraseñas. Aquí solo queda lo propio de la
-//! copia sincronizada: formato "terview-sync", frase mínima y mensajes.
+//! copia sincronizada: formato "sshorus-sync", frase mínima y mensajes.
 
 use crate::error::{AppError, AppResult};
 use crate::storage::cipher::{self, EnvError};
 
 pub use crate::storage::cipher::{Envelope, KdfParams};
 
-pub const FORMAT: &str = "terview-sync";
+pub const FORMAT: &str = "sshorus-sync";
 pub const VERSION: u32 = 1;
 /// Frase mínima aceptada al cifrar.
 pub const MIN_PASSPHRASE: usize = 8;
@@ -39,10 +39,10 @@ pub fn encrypt_with(plaintext: &[u8], passphrase: &str, params: KdfParams) -> Ap
 fn env_error(e: EnvError) -> AppError {
     match e {
         EnvError::WrongFormat => {
-            AppError::Invalid("el archivo no es una copia de configuración de TerView".into())
+            AppError::Invalid("el archivo no es una copia de configuración de SSHorus".into())
         }
         EnvError::Unsupported => AppError::Invalid(
-            "la copia se hizo con una versión de TerView más nueva; actualiza la app".into(),
+            "la copia se hizo con una versión de SSHorus más nueva; actualiza la app".into(),
         ),
         EnvError::OutOfRange => AppError::Invalid("parámetros de cifrado fuera de rango".into()),
         EnvError::Damaged => AppError::Invalid("la copia cifrada está dañada".into()),

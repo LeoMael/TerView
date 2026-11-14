@@ -102,7 +102,7 @@ fn pseudo_bytes(len: usize, seed: u64) -> Vec<u8> {
 }
 
 fn tmp_dir(tag: &str) -> PathBuf {
-    let d = std::env::temp_dir().join(format!("terview-{tag}-{}", uuid::Uuid::new_v4()));
+    let d = std::env::temp_dir().join(format!("sshorus-{tag}-{}", uuid::Uuid::new_v4()));
     std::fs::create_dir_all(&d).unwrap();
     d
 }

@@ -8,7 +8,7 @@ struct TempDir(PathBuf);
 
 impl TempDir {
     fn new() -> Self {
-        let p = std::env::temp_dir().join(format!("terview-storage-test-{}", uuid::Uuid::new_v4()));
+        let p = std::env::temp_dir().join(format!("sshorus-storage-test-{}", uuid::Uuid::new_v4()));
         fs::create_dir_all(&p).unwrap();
         TempDir(p)
     }

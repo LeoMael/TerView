@@ -1,10 +1,10 @@
 //! Terminal local: pestañas con una shell **del propio equipo** (no de un servidor), y lanzar
-//! Claude Code o Codex con el contexto de TerView y su MCP ya configurado.
+//! Claude Code o Codex con el contexto de SSHorus y su MCP ya configurado.
 //!
 //! Igual que las terminales SSH: la salida llega por el `Channel` de `local_term_open` (bytes
 //! crudos) y, al terminar, se emite `EV_TERMINAL_EXIT` con el id. Así la interfaz usa la misma vista.
 //!
-//! Lo que TerView NUNCA hace aquí: leer o copiar `~/.claude` ni `~/.codex`, escribir archivos en la
+//! Lo que SSHorus NUNCA hace aquí: leer o copiar `~/.claude` ni `~/.codex`, escribir archivos en la
 //! carpeta del usuario, ni poner el token del MCP en un archivo o en los argumentos (va por
 //! variable de entorno al proceso hijo).
 
@@ -188,14 +188,14 @@ fn base_command(program: &Path, env: &SearchEnv, extra_path: &[PathBuf], cwd: &P
             cmd.env_remove(k);
         }
     }
-    // Lo que puso TerView para su propia ventana (Linux + NVIDIA).
+    // Lo que puso SSHorus para su propia ventana (Linux + NVIDIA).
     cmd.env_remove("WEBKIT_DISABLE_DMABUF_RENDERER");
     let joined: OsString =
         std::env::join_paths(&path).map_err(|e| AppError::Invalid(format!("PATH no válido: {e}")))?;
     cmd.env("PATH", joined);
     cmd.env("TERM", "xterm-256color");
     cmd.env("COLORTERM", "truecolor");
-    cmd.env("TERM_PROGRAM", "TerView");
+    cmd.env("TERM_PROGRAM", "SSHorus");
     cmd.env("TERM_PROGRAM_VERSION", env!("CARGO_PKG_VERSION"));
     // El token solo lo recibe un asistente lanzado con el MCP.
     cmd.env_remove(aicli::TOKEN_ENV);
@@ -246,9 +246,9 @@ pub struct AiToolInfo {
 #[serde(rename_all = "camelCase")]
 pub struct AiLaunch {
     pub tool: AiTool,
-    /// Contexto de TerView (lo arma la interfaz; nunca lleva secretos).
+    /// Contexto de SSHorus (lo arma la interfaz; nunca lleva secretos).
     pub context: Option<String>,
-    /// Configurar el MCP de TerView.
+    /// Configurar el MCP de SSHorus.
     pub mcp: bool,
 }
 
@@ -269,7 +269,7 @@ pub struct LocalOpened {
     pub cwd: String,
     /// Programa que corre (ruta).
     pub program: String,
-    /// El asistente se abrió con el MCP de TerView.
+    /// El asistente se abrió con el MCP de SSHorus.
     pub mcp: bool,
     /// Algo no salió como se pidió (p. ej. el MCP está apagado y se abrió solo con el contexto).
     pub warning: Option<String>,
@@ -319,7 +319,7 @@ pub async fn local_ai_detect() -> AppResult<Vec<AiToolInfo>> {
     .map_err(|e| AppError::Io(format!("tarea interna interrumpida: {e}")))
 }
 
-/// Alias de `~/.ssh/config` exportados por TerView que de verdad llevan a cada servidor.
+/// Alias de `~/.ssh/config` exportados por SSHorus que de verdad llevan a cada servidor.
 #[tauri::command]
 pub async fn local_ai_ssh_aliases(store: State<'_, ProfileStore>) -> AppResult<Vec<aliases::ExportedAlias>> {
     let servers = store.data().servers;
@@ -340,15 +340,15 @@ async fn prepare_mcp(app: &AppHandle) -> Result<(McpLaunch, String, u16), String
     let state = app.state::<McpState>();
     let st = state.status();
     if !st.enabled {
-        return Err("El MCP de TerView está apagado: el asistente se abrió solo con el contexto.".into());
+        return Err("El MCP de SSHorus está apagado: el asistente se abrió solo con el contexto.".into());
     }
     if !st.running {
         let why = st.error.unwrap_or_else(|| "no está en marcha".into());
-        return Err(format!("El MCP de TerView no está disponible ({why}): el asistente se abrió solo con el contexto."));
+        return Err(format!("El MCP de SSHorus no está disponible ({why}): el asistente se abrió solo con el contexto."));
     }
     if !st.bridge_found {
         return Err(format!(
-            "No se encontró el puente {} junto a TerView: el asistente se abrió solo con el contexto.",
+            "No se encontró el puente {} junto a SSHorus: el asistente se abrió solo con el contexto.",
             crate::mcp::bridge_file_name()
         ));
     }
@@ -482,7 +482,7 @@ mod tests {
         assert_eq!(st.local_ai, LocalAiSettings::default());
     }
 
-    /// Ejecuta el programa real con los argumentos que usaría TerView (solo si está instalado).
+    /// Ejecuta el programa real con los argumentos que usaría SSHorus (solo si está instalado).
     /// `cargo test --lib localterm::tests::asistentes_reales -- --ignored --nocapture`
     #[test]
     #[ignore]
@@ -493,7 +493,7 @@ mod tests {
             let home = dirs::home_dir().unwrap();
             let mut cmd = base_command(&r.program, &env, &[], &home).unwrap();
             cmd.args(&r.prefix);
-            let m = McpLaunch { bridge: "/opt/terview/terview-mcp".into() };
+            let m = McpLaunch { bridge: "/opt/sshorus/sshorus-mcp".into() };
             cmd.args(aicli::tool_args(tool, Some("Contexto \"de\" prueba\ncon dos líneas"), Some(&m)));
             cmd.args(extra);
             let (tx, rx) = mpsc::channel::<Vec<u8>>();
@@ -511,9 +511,9 @@ mod tests {
             Some(out)
         };
         // Codex: los -c se aplican y el servidor MCP queda con env_vars (sin token en la configuración).
-        if let Some(out) = run(AiTool::Codex, &["mcp", "get", "terview", "--json"]) {
-            assert!(out.contains("TERVIEW_MCP_TOKEN"), "codex no recibió env_vars");
-            assert!(out.contains("/opt/terview/terview-mcp"));
+        if let Some(out) = run(AiTool::Codex, &["mcp", "get", "sshorus", "--json"]) {
+            assert!(out.contains("SSHORUS_MCP_TOKEN"), "codex no recibió env_vars");
+            assert!(out.contains("/opt/sshorus/sshorus-mcp"));
             assert!(out.contains("900"));
         }
         if let Some(out) = run(AiTool::Claude, &["--version"]) {

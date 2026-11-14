@@ -52,7 +52,7 @@
 
   <!-- Zonas -->
   <rect x="40" y="112" width="380" height="748" rx="24" fill="none" stroke="#475569" stroke-width="2" stroke-dasharray="10 8"/>
-  <text x="62" y="142" class="z" style="fill:#94a3b8">TU PC · TERVIEW</text>
+  <text x="62" y="142" class="z" style="fill:#94a3b8">TU PC · SSHORUS</text>
   <use href="#i-window" x="62" y="160" width="36" height="36" style="color:#38bdf8"/>
   <text x="110" y="185" class="b" style="fill:#38bdf8">pestaña «web-prod»</text>
   <rect x="440" y="112" width="720" height="748" rx="24" fill="none" stroke="#64748b" stroke-width="2" stroke-dasharray="10 8"/>

@@ -102,7 +102,7 @@ export function parseAddResult(stdout: string): { added: number; skipped: number
 /** Nombre de archivo seguro para la llave de despliegue de un repo. */
 export function deployKeyName(owner: string, repo: string): string {
   const safe = `${owner}-${repo}`.replace(/[^A-Za-z0-9._-]/g, "_").slice(0, 80);
-  return `terview_deploy_${safe}`;
+  return `sshorus_deploy_${safe}`;
 }
 
 /** Ruta (con ~) de la llave de despliegue en el servidor. */
@@ -113,7 +113,7 @@ export function deployKeyPath(owner: string, repo: string): string {
 /** Crea (si no existe) la llave de despliegue ed25519 sin frase y muestra la pública. */
 export function deployKeyGenScript(owner: string, repo: string): string {
   const name = deployKeyName(owner, repo);
-  const comment = `terview-deploy ${owner}/${repo}`;
+  const comment = `sshorus-deploy ${owner}/${repo}`;
   return wrapSh(
     [
       "set -e",
@@ -175,7 +175,7 @@ export interface DeployOpts {
   path: string;
   branch: string;
   commands: string;
-  /** Llave de despliegue (si el repo no se clonó con TerView y necesita una). */
+  /** Llave de despliegue (si el repo no se clonó con SSHorus y necesita una). */
   keyPath?: string | null;
 }
 

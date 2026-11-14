@@ -10,7 +10,7 @@ import type { CommandItem } from "./state";
 
 export const CAPTURE_TIMEOUT_SECS = 30;
 
-export const OPEN_PALETTE_EVENT = "terview:open-command-palette";
+export const OPEN_PALETTE_EVENT = "sshorus:open-command-palette";
 
 /** Abre la paleta de comandos desde cualquier parte. */
 export function openPalette() {

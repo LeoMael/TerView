@@ -1,8 +1,8 @@
 // «Aceptar automáticamente» por servidor: el asistente deja de pedir permiso durante un tiempo.
 // - Cambios normales: lo que hoy pide permiso y no es peligroso.
 // - Todo: también lo peligroso y sudo (advertencia en rojo y confirmación).
-// Duración: 15 min, 1 h o hasta cerrar TerView (solo en memoria) o «siempre» (en mcp.json).
-// Nunca vale con TerView bloqueado ni en servidores sin acceso Completo (lo comprueba el motor).
+// Duración: 15 min, 1 h o hasta cerrar SSHorus (solo en memoria) o «siempre» (en mcp.json).
+// Nunca vale con SSHorus bloqueado ni en servidores sin acceso Completo (lo comprueba el motor).
 import { useEffect, useState } from "react";
 import { AlertTriangle, Zap } from "lucide-react";
 import { mcp, type McpAutoDuration, type McpAutoLevel, type McpAutoState } from "../../api/mcp";
@@ -20,7 +20,7 @@ export const AUTO_LEVELS: { v: McpAutoLevel; label: string }[] = [
 export const AUTO_DURATIONS: { v: McpAutoDuration; label: string }[] = [
   { v: "15m", label: "15 min" },
   { v: "1h", label: "1 hora" },
-  { v: "session", label: "Hasta cerrar TerView" },
+  { v: "session", label: "Hasta cerrar SSHorus" },
   { v: "always", label: "Siempre" },
 ];
 
@@ -28,7 +28,7 @@ export const AUTO_DURATIONS: { v: McpAutoDuration; label: string }[] = [
 export function autoText(a: McpAutoState, now = Date.now()): string {
   const lvl = a.level === "all" ? "Todo, incluido sudo" : "Cambios normales";
   if (a.saved) return `${lvl} · siempre`;
-  if (a.until === null) return `${lvl} · hasta cerrar TerView`;
+  if (a.until === null) return `${lvl} · hasta cerrar SSHorus`;
   const min = Math.max(1, Math.ceil((a.until - now) / 60000));
   return `${lvl} · ${min} min más`;
 }
@@ -50,7 +50,7 @@ export async function setAutoAccept(
           <AlertTriangle size={16} />
           <div>
             El asistente podrá ejecutar <strong>sin preguntarte</strong> comandos peligrosos (rm -rf, prune, reboot…) y
-            con <strong>sudo</strong> en «{serverName}». TerView pondrá la contraseña de sudo si la tiene. Úsalo solo si
+            con <strong>sudo</strong> en «{serverName}». SSHorus pondrá la contraseña de sudo si la tiene. Úsalo solo si
             confías en lo que está haciendo.
           </div>
         </div>

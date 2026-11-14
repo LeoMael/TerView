@@ -3,7 +3,7 @@
 //!
 //! Para tirar la conexión sin molestar a otras sesiones del servidor, se mata solo el proceso
 //! `sshd-session` de NUESTRA conexión (`kill -9 $PPID` desde un canal exec).
-//! El test que detiene/reinicia el contenedor solo corre con `TERVIEW_PODMAN_TESTS=1`
+//! El test que detiene/reinicia el contenedor solo corre con `SSHORUS_PODMAN_TESTS=1`
 //! (corta a cualquier otro que esté usando el servidor) y siempre lo vuelve a arrancar.
 
 use std::process::Command;
@@ -344,7 +344,7 @@ async fn auto_reconnect_off_closes() {
 #[tokio::test]
 #[ignore]
 async fn changed_host_key_stops_retrying() {
-    let dir = std::env::temp_dir().join(format!("terview-reconnect-{}", uuid::Uuid::new_v4()));
+    let dir = std::env::temp_dir().join(format!("sshorus-reconnect-{}", uuid::Uuid::new_v4()));
     std::fs::create_dir_all(&dir).unwrap();
     let kh = dir.join("known_hosts");
     // Llave que NO es la del servidor.
@@ -366,7 +366,7 @@ async fn changed_host_key_stops_retrying() {
     assert!(reason.contains("huella") || reason.contains("known_hosts"), "{reason}");
 }
 
-// ───────────── Con el contenedor (solo con TERVIEW_PODMAN_TESTS=1) ─────────────
+// ───────────── Con el contenedor (solo con SSHORUS_PODMAN_TESTS=1) ─────────────
 
 fn podman(args: &[&str]) -> bool {
     Command::new("podman")
@@ -400,8 +400,8 @@ async fn wait_server_up() {
 #[tokio::test]
 #[ignore]
 async fn container_restart_and_stop() {
-    if std::env::var("TERVIEW_PODMAN_TESTS").ok().as_deref() != Some("1") {
-        eprintln!("omitido: define TERVIEW_PODMAN_TESTS=1 (reinicia el contenedor de pruebas)");
+    if std::env::var("SSHORUS_PODMAN_TESTS").ok().as_deref() != Some("1") {
+        eprintln!("omitido: define SSHORUS_PODMAN_TESTS=1 (reinicia el contenedor de pruebas)");
         return;
     }
     let _guard = StartOnDrop;

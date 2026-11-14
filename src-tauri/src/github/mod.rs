@@ -1,7 +1,7 @@
-//! Cuenta de GitHub dentro de TerView.
+//! Cuenta de GitHub dentro de SSHorus.
 //!
 //! - Autenticación con token personal (clásico o de grano fino) guardado SOLO en el llavero
-//!   (servicio "terview", usuario "github-token"). Device flow preparado en `device.rs`.
+//!   (servicio "sshorus", usuario "github-token"). Device flow preparado en `device.rs`.
 //! - Todas las peticiones salen del motor (la CSP de la interfaz no deja conectarse a internet),
 //!   con comandos concretos: no hay un proxy genérico de URLs.
 //! - Lo que toca servidores (authorized_keys, clonar, desplegar) lo hace la interfaz con
@@ -31,8 +31,8 @@ use config::{DeployRecipe, GhConfig};
 use localkey::LocalPubKey;
 
 /// Nombre del archivo cifrado dentro del gist de sincronización.
-pub const SYNC_FILE: &str = "terview-sync.json";
-const SYNC_DESCRIPTION: &str = "TerView: configuración cifrada (servidores, proyectos y comandos)";
+pub const SYNC_FILE: &str = "sshorus-sync.json";
+const SYNC_DESCRIPTION: &str = "SSHorus: configuración cifrada (servidores, proyectos y comandos)";
 const MAX_SYNC_PAYLOAD: usize = 4 * 1024 * 1024;
 
 // ───────── Token (llavero + caché en memoria) ─────────
@@ -52,7 +52,7 @@ fn cache_set(v: Option<String>) {
     *TOKEN.lock().unwrap_or_else(|e| e.into_inner()) = Some(v);
 }
 
-/// Olvida el token guardado en memoria (al bloquear TerView o cambiar la bóveda).
+/// Olvida el token guardado en memoria (al bloquear SSHorus o cambiar la bóveda).
 /// La próxima vez se vuelve a leer de la bóveda o del llavero.
 pub fn forget_token_cache() {
     *TOKEN.lock().unwrap_or_else(|e| e.into_inner()) = None;
@@ -195,7 +195,7 @@ pub async fn gh_user_keys(login: String) -> AppResult<Vec<GhSshKey>> {
 pub async fn gh_add_key(title: String, key: String) -> AppResult<GhSshKey> {
     let (line, _, _) = localkey::parse_public_key_line(&key)?;
     let title = title.trim();
-    let title = if title.is_empty() { "TerView" } else { title };
+    let title = if title.is_empty() { "SSHorus" } else { title };
     api::add_key(&token().await?, title, &line).await
 }
 
@@ -238,7 +238,7 @@ pub async fn gh_add_deploy_key(
 ) -> AppResult<GhDeployKey> {
     let (line, _, _) = localkey::parse_public_key_line(&key)?;
     let title = title.trim();
-    let title = if title.is_empty() { "TerView" } else { title };
+    let title = if title.is_empty() { "SSHorus" } else { title };
     api::add_deploy_key(&token().await?, &owner, &repo, title, &line, true).await
 }
 
@@ -339,7 +339,7 @@ async fn find_sync_gists(token: &str) -> AppResult<Vec<GhGistInfo>> {
         .collect())
 }
 
-/// Gists de la cuenta que contienen una copia de TerView.
+/// Gists de la cuenta que contienen una copia de SSHorus.
 #[tauri::command]
 pub async fn gh_sync_find() -> AppResult<Vec<GhGistInfo>> {
     find_sync_gists(&token().await?).await
@@ -423,14 +423,14 @@ pub async fn gh_sync_pull(passphrase: String, gist_id: Option<String>) -> AppRes
         id = find_sync_gists(&t).await?.into_iter().next().map(|g| g.id);
     }
     let id = id
-        .ok_or_else(|| AppError::NotFound("no hay ninguna copia de TerView en tus gists".into()))?;
+        .ok_or_else(|| AppError::NotFound("no hay ninguna copia de SSHorus en tus gists".into()))?;
     let g = api::gist(Some(&t), id.trim()).await?;
     let f = g
         .file(SYNC_FILE)
         .ok_or_else(|| AppError::NotFound(format!("el gist no contiene {SYNC_FILE}")))?;
     let text = api::gist_file_content(Some(&t), &f).await?;
     let env: crypto::Envelope = serde_json::from_str(&text)
-        .map_err(|_| AppError::Invalid("el gist no contiene una copia de TerView válida".into()))?;
+        .map_err(|_| AppError::Invalid("el gist no contiene una copia de SSHorus válida".into()))?;
     let plain = blocking(move || crypto::decrypt(&env, &passphrase)).await?;
     let payload: Value = serde_json::from_slice(&plain)?;
     let info = g.info();
@@ -488,7 +488,7 @@ pub async fn gh_share_snippets(
     let content = share::to_collection(&snippets)?;
     let desc = description.trim();
     let desc = if desc.is_empty() {
-        "Comandos de TerView"
+        "Comandos de SSHorus"
     } else {
         desc
     };
@@ -497,7 +497,7 @@ pub async fn gh_share_snippets(
         None,
         desc,
         public,
-        &[("terview-comandos.json", content)],
+        &[("sshorus-comandos.json", content)],
     )
     .await?;
     Ok(g.info())

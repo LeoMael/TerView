@@ -1,5 +1,5 @@
 //! Tests de la bóveda de contraseñas y de mover secretos entre ella y el llavero.
-//! Los que usan el llavero real (servicio "terview-test") van con `#[ignore]`:
+//! Los que usan el llavero real (servicio "sshorus-test") van con `#[ignore]`:
 //! `cargo test --lib storage::vault -- --ignored --test-threads=1`
 
 use std::cell::RefCell;
@@ -51,7 +51,7 @@ struct TempDir(PathBuf, FakeDevice);
 
 impl TempDir {
     fn new() -> Self {
-        let p = std::env::temp_dir().join(format!("terview-vault-test-{}", uuid::Uuid::new_v4()));
+        let p = std::env::temp_dir().join(format!("sshorus-vault-test-{}", uuid::Uuid::new_v4()));
         fs::create_dir_all(&p).unwrap();
         TempDir(p, FakeDevice::default())
     }
@@ -332,7 +332,7 @@ fn tampered_header_or_data_fails() {
         ("pasadas", |v| v["kdf"]["t"] = 2.into()),
         ("memoria", |v| v["kdf"]["mKib"] = 512.into()),
         ("sal", |v| v["kdf"]["salt"] = "AAAAAAAAAAAAAAAAAAAAAA==".into()),
-        ("formato", |v| v["format"] = "terview-sync".into()),
+        ("formato", |v| v["format"] = "sshorus-sync".into()),
         ("versión", |v| v["version"] = 2.into()),
         ("memoria enorme", |v| v["kdf"]["mKib"] = (10u64 * 1024 * 1024).into()),
         ("nonce", |v| v["nonce"] = "AAAA".into()),
@@ -732,13 +732,13 @@ fn delete_and_copy_server_secrets_in_vault() {
     assert!(matches!(secrets::delete_server_secrets_with(&v2, &kr, "s2"), Err(AppError::Locked)));
 }
 
-// ───────── Mover secretos: llavero real ("terview-test") ─────────
+// ───────── Mover secretos: llavero real ("sshorus-test") ─────────
 
 /// `cargo test --lib storage::vault -- --ignored --test-threads=1`
 #[test]
 #[ignore]
 fn migration_with_real_keyring() {
-    let kr = SystemKeyring("terview-test");
+    let kr = SystemKeyring("sshorus-test");
     let a = format!("test-{}", uuid::Uuid::new_v4());
     let b = format!("test-{}", uuid::Uuid::new_v4());
     if let Err(e) = kr.set(&a, "pa ñ") {
@@ -751,7 +751,7 @@ fn migration_with_real_keyring() {
 
     let dir = TempDir::new();
     // También la llave del equipo en el llavero real.
-    let v = Vault::new(Some(dir.vault_path()), Box::new(secrets::KeyringDeviceKey("terview-test")));
+    let v = Vault::new(Some(dir.vault_path()), Box::new(secrets::KeyringDeviceKey("sshorus-test")));
     let r = secrets::enable_vault(&v, &kr, &[a.clone(), b.clone()], PIN, FAST).unwrap();
     assert!(kr.get(DEVICE_KEY_USER).unwrap().is_some(), "llave del equipo en el llavero");
     v.lock();

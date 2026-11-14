@@ -1,7 +1,7 @@
 //! Cliente HTTPS para GitHub (reqwest + rustls, sin OpenSSL).
 //!
 //! - Solo habla con hosts de GitHub conocidos (ver `ALLOWED_HOSTS`): no es un proxy genérico.
-//! - Cabeceras fijas: `User-Agent: TerView`, `X-GitHub-Api-Version`, `Accept`.
+//! - Cabeceras fijas: `User-Agent: SSHorus`, `X-GitHub-Api-Version`, `Accept`.
 //! - El token va en `Authorization` marcado como sensible y nunca se registra ni aparece en errores.
 //! - Errores traducidos al español (401, 403 con límite de peticiones, 404, 422, 5xx, red).
 
@@ -16,7 +16,7 @@ use crate::error::{AppError, AppResult};
 
 pub const API: &str = "https://api.github.com";
 pub const API_VERSION: &str = "2022-11-28";
-const USER_AGENT: &str = "TerView";
+const USER_AGENT: &str = "SSHorus";
 const TIMEOUT: Duration = Duration::from_secs(25);
 const CONNECT_TIMEOUT: Duration = Duration::from_secs(10);
 /// Límite de tamaño de cualquier respuesta (las de la API son pequeñas).

@@ -94,8 +94,8 @@ export async function startInstall() {
       title: "Actualizar y reiniciar",
       message:
         open === 1
-          ? "Hay 1 conexión abierta. Se cerrará al reiniciar TerView."
-          : `Hay ${open} conexiones abiertas. Se cerrarán al reiniciar TerView.`,
+          ? "Hay 1 conexión abierta. Se cerrará al reiniciar SSHorus."
+          : `Hay ${open} conexiones abiertas. Se cerrarán al reiniciar SSHorus.`,
       confirmText: "Actualizar y reiniciar",
     });
     if (!ok) return;

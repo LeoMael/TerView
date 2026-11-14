@@ -9,7 +9,7 @@ import { Logo } from "../ui/Logo";
 import { openManual } from "../Settings/settingsNav";
 import "./Welcome.css";
 
-const RECENT_KEY = "terview.recentServers";
+const RECENT_KEY = "sshorus.recentServers";
 
 function readRecent(): string[] {
   try {

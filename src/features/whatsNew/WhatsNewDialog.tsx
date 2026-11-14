@@ -15,7 +15,7 @@ export function WhatsNewDialog() {
   if (!notes || !status || status.locked || setup) return null;
 
   const unreleased = /sin publicar|unreleased/i.test(notes.version);
-  const title = unreleased ? "Novedades (versión en desarrollo)" : `Novedades de TerView ${notes.version}`;
+  const title = unreleased ? "Novedades (versión en desarrollo)" : `Novedades de SSHorus ${notes.version}`;
   const thenOpen = (fn: () => void) => () => {
     dismissWhatsNew();
     fn();
@@ -42,7 +42,7 @@ export function WhatsNewDialog() {
         <p className="wn-intro">
           <Sparkles size={15} className="wn-intro-icon" />
           <span>
-            {unreleased ? "Esto es lo nuevo de la próxima versión:" : "TerView se ha actualizado. Esto es lo nuevo:"}
+            {unreleased ? "Esto es lo nuevo de la próxima versión:" : "SSHorus se ha actualizado. Esto es lo nuevo:"}
           </span>
         </p>
         {notes.groups.map((g, i) => (

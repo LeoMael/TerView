@@ -28,7 +28,7 @@ export const profiles = {
     call<string | null>("profiles_sudo_password", { id, sessionId: sessionId ?? null }),
   /** Copia el servidor (y su secreto guardado). Devuelve la copia. */
   duplicateServer: (id: string) => call<ServerProfile>("profiles_duplicate_server", { id }),
-  /** Escribe el bloque de TerView en ~/.ssh/config. */
+  /** Escribe el bloque de SSHorus en ~/.ssh/config. */
   exportSshConfig: () => call<SshConfigExport>("profiles_export_ssh_config"),
   /** Lee ~/.ssh/config y devuelve candidatos (sin guardar; id ""). Omite los que ya existen. */
   importSshConfig: () => call<ServerProfile[]>("profiles_import_ssh_config"),
@@ -41,7 +41,7 @@ export const settingsApi = {
 
 // ───────── Alias de ~/.ssh/config y choques con `Host` escritos a mano ─────────
 
-/** Un `Host`/`Match` escrito a mano (fuera del bloque de TerView o en un `Include`) que captura un alias. */
+/** Un `Host`/`Match` escrito a mano (fuera del bloque de SSHorus o en un `Include`) que captura un alias. */
 export interface SshHostMatch {
   /** Archivo (con `~/` si está en la carpeta personal). */
   file: string;
@@ -53,8 +53,8 @@ export interface SshHostMatch {
   kind: "exact" | "pattern" | "match";
   /** `Match` con más condiciones (`exec`, `user`…): puede que no aplique siempre. */
   conditional: boolean;
-  /** Está antes del bloque de TerView: ssh usará SUS valores para ese alias. */
-  beforeTerview: boolean;
+  /** Está antes del bloque de SSHorus: ssh usará SUS valores para ese alias. */
+  beforeSshorus: boolean;
 }
 
 export interface SshAliasConflict {
@@ -77,10 +77,10 @@ export interface SshAliasInfo {
 
 export interface SshImportCandidate {
   server: ServerProfile;
-  /** Servidor de TerView con el mismo host, puerto y usuario. */
+  /** Servidor de SSHorus con el mismo host, puerto y usuario. */
   existingId: string | null;
   existingName: string | null;
-  /** Servidor de TerView que se exporta con este mismo alias. */
+  /** Servidor de SSHorus que se exporta con este mismo alias. */
   aliasUsedBy: string | null;
 }
 

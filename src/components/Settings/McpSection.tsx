@@ -175,7 +175,7 @@ export function McpSection() {
   const stateText = !status
     ? "…"
     : !enabled
-      ? "Ningún asistente puede usar TerView."
+      ? "Ningún asistente puede usar SSHorus."
       : status.running
         ? undefined
         : status.error ?? "Encendido, pero el servidor no está en marcha.";
@@ -278,7 +278,7 @@ export function McpSection() {
                     <button
                       className="btn btn-sm"
                       onClick={() => setOpenAuto(openAuto === s.id ? null : s.id)}
-                      title="Deja de pedir permiso durante un tiempo (nunca con TerView bloqueado). Cada acción queda marcada como «automático»."
+                      title="Deja de pedir permiso durante un tiempo (nunca con SSHorus bloqueado). Cada acción queda marcada como «automático»."
                     >
                       {auto ? "Automático (activo)" : "Automático…"}
                     </button>
@@ -328,10 +328,10 @@ export function McpSection() {
       </SettingGroup>
 
       {enabled && client && status && (
-        <SettingGroup title="Conectar tu asistente" hint="TerView debe estar abierto. Lleva el token: no lo compartas.">
+        <SettingGroup title="Conectar tu asistente" hint="SSHorus debe estar abierto. Lleva el token: no lo compartas.">
           {!status.bridgeFound && (
             <p className="st-block mcp-warn">
-              No se encontró el programa puente en {status.bridgePath}. Usa la opción por HTTP o instala TerView con su
+              No se encontró el programa puente en {status.bridgePath}. Usa la opción por HTTP o instala SSHorus con su
               instalador.
             </p>
           )}

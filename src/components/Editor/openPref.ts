@@ -4,9 +4,9 @@
 
 export type EditorOpenMode = "tab" | "split" | "window";
 
-const KEY = "terview.editor.openMode";
+const KEY = "sshorus.editor.openMode";
 /** Versión del valor guardado: sin ella, el valor viene de la versión de prueba en la que «dividido» era lo normal. */
-const VERSION_KEY = "terview.editor.openMode.v";
+const VERSION_KEY = "sshorus.editor.openMode.v";
 const VERSION = "2";
 const MODES: EditorOpenMode[] = ["tab", "split", "window"];
 /** Copia en memoria por si localStorage no está disponible. */

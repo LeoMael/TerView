@@ -183,13 +183,13 @@ export function createKeyUserPlan(env: AdminEnv, u: KeyUser): Plan {
  * comprueba la configuración con `sshd -t` (si falla, lo deshace) y recarga sshd. Cambio global: va aparte.
  */
 export function allowUsersPlan(user: string): Plan {
-  const file = `/etc/ssh/sshd_config.d/60-terview-${user}.conf`;
+  const file = `/etc/ssh/sshd_config.d/60-sshorus-${user}.conf`;
   return {
     action: `Añadir «${user}» a AllowUsers de sshd`,
     danger: true,
     steps: [
       `if [ ! -d /etc/ssh/sshd_config.d ]; then echo ${q("Este servidor no tiene /etc/ssh/sshd_config.d: añade «AllowUsers " + user + "» a mano")} >&2; exit 1; fi`,
-      `printf '%s\\n' ${q(`# Añadido por TerView: deja entrar a ${user} por SSH`)} ${q(`AllowUsers ${user}`)} > ${q(file)}`,
+      `printf '%s\\n' ${q(`# Añadido por SSHorus: deja entrar a ${user} por SSH`)} ${q(`AllowUsers ${user}`)} > ${q(file)}`,
       `chmod 600 ${q(file)}`,
       `PATH=$PATH:/usr/sbin:/sbin`,
       `if ! sshd -t; then rm -f ${q(file)}; echo ${q("sshd -t falló: se deshizo el cambio")} >&2; exit 1; fi`,

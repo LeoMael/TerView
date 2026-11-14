@@ -1,4 +1,4 @@
-# TerView — Arquitectura
+# SSHorus — Arquitectura
 
 Cliente SSH/SFTP de escritorio. Te conectas a tus servidores y desde una sola ventana tienes:
 explorador de archivos, editor, terminales (persistentes con tmux), transferencias masivas,
@@ -75,33 +75,33 @@ La app tiene dos mitades dentro del mismo programa:
 
 | Almacén | Qué guarda | Formato | Dónde | ¿Cifrado? | Quién lo lee y escribe |
 |---------|------------|---------|-------|-----------|------------------------|
-| **Llavero del sistema** | Servicio `terview`. **Con bóveda:** solo la llave del equipo (usuario `vault-device-key`, 32 bytes al azar). **Sin bóveda:** además la contraseña o frase de cada servidor (usuario = id del servidor), su contraseña de sudo guardada (usuario `<id>:sudo`), el token de GitHub (usuario `github-token`), el de los asistentes de IA (usuario `mcp-token`) y el de la IA que explica informes (usuario `ai-token`). | Entradas del llavero | Linux: Secret Service (GNOME Keyring / KWallet) · Windows: Administrador de credenciales · macOS: Llavero | Sí, lo cifra el sistema | Motor: `storage/secrets.rs` (crate `keyring`), `storage/vault.rs` |
-| **Bóveda `vault.json`** (opcional) | Con PIN activo: contraseñas y frases de los servidores, sus contraseñas de sudo guardadas y los tokens de GitHub (`github-token`), del servidor MCP (`mcp-token`) y de la IA que explica informes (`ai-token`). | Sobre JSON `terview-vault`: parámetros de Argon2id, sal, tipo de PIN (`kind`), nonce y texto cifrado (base64) | `<config>/terview/vault.json` | Sí: AES-256-GCM; llave = Argon2id(PIN, llave del equipo) | Motor: `storage/vault.rs`, `storage/cipher.rs`, `storage/lock.rs` |
-| **`vault-attempts.json`** | Fallos de PIN y hora del próximo intento permitido (5 libres; luego 30 s, el doble cada vez, hasta 15 min). | JSON | `<config>/terview/vault-attempts.json` | No (no lleva secretos) | Motor: `storage/vault.rs` |
-| **`profiles.json`** | Servidores y proyectos (host, usuario, puerto, tipo de autenticación, ruta de la llave, marcadores). Nunca contraseñas. | JSON | `<config>/terview/profiles.json` | No (archivo 0600, carpeta 0700 en Unix) | Motor: `storage/` (`ProfileStore`) |
-| **`settings.json`** | Ajustes: tema, fuentes, transferencias simultáneas, política de conflictos, señal de vida, reconexión, tamaños de paneles (`layout`), sincronizar `~/.ssh/config`. | JSON | `<config>/terview/settings.json` | No | Motor: `storage/` (`SettingsStore`) |
-| **`mcp.json`** | Servidor MCP: encendido, puerto, tiempo para responder, acceso por servidor, reglas «Permitir siempre» y «Aceptar automáticamente» guardado («siempre»; lo temporal solo vive en memoria). Nunca el token. | JSON | `<config>/terview/mcp.json` | No | Motor: `mcp/config.rs` (el puente `terview-mcp` lee de aquí el puerto) |
-| **`mcp-audit.jsonl`** | Registro de lo que hace el asistente: herramienta, servidor, comando o ruta, resultado y quién lo aprobó. Rota a `mcp-audit.1.jsonl` al pasar de 1 MiB. | JSON por línea | `<config>/terview/mcp-audit.jsonl` | No (sin contraseñas ni contenidos) | Motor: `mcp/audit.rs` |
-| **`commands.json`** | "Mis comandos" (biblioteca propia). | JSON | `<config>/terview/commands.json` | No | Motor: `snippets/store.rs` |
-| **`tunnels.json`** | Túneles guardados por servidor (tipo, puertos, destino, `autoStart`). | JSON | `<config>/terview/tunnels.json` | No | Motor: `tunnels/store.rs` |
-| **`github.json`** | Recetas de despliegue y el id del Gist de sincronización. Nunca el token. | JSON | `<config>/terview/github.json` | No | Motor: `github/config.rs` |
-| **`ssh-aliases.json`** | Alias elegidos a mano para los `Host` que TerView escribe en `~/.ssh/config`. | JSON | `<config>/terview/ssh-aliases.json` | No | Motor: `storage/ssh_config.rs` |
-| **Estado de la ventana** | Tamaño, posición y si estaba maximizada (solo la ventana principal). | JSON | Linux `~/.config/com.terview.app/.window-state.json` · Windows `%APPDATA%\com.terview.app\` · macOS `~/Library/Application Support/com.terview.app/` | No | Plugin `tauri-plugin-window-state` |
+| **Llavero del sistema** | Servicio `sshorus`. **Con bóveda:** solo la llave del equipo (usuario `vault-device-key`, 32 bytes al azar). **Sin bóveda:** además la contraseña o frase de cada servidor (usuario = id del servidor), su contraseña de sudo guardada (usuario `<id>:sudo`), el token de GitHub (usuario `github-token`), el de los asistentes de IA (usuario `mcp-token`) y el de la IA que explica informes (usuario `ai-token`). | Entradas del llavero | Linux: Secret Service (GNOME Keyring / KWallet) · Windows: Administrador de credenciales · macOS: Llavero | Sí, lo cifra el sistema | Motor: `storage/secrets.rs` (crate `keyring`), `storage/vault.rs` |
+| **Bóveda `vault.json`** (opcional) | Con PIN activo: contraseñas y frases de los servidores, sus contraseñas de sudo guardadas y los tokens de GitHub (`github-token`), del servidor MCP (`mcp-token`) y de la IA que explica informes (`ai-token`). | Sobre JSON `sshorus-vault`: parámetros de Argon2id, sal, tipo de PIN (`kind`), nonce y texto cifrado (base64) | `<config>/sshorus/vault.json` | Sí: AES-256-GCM; llave = Argon2id(PIN, llave del equipo) | Motor: `storage/vault.rs`, `storage/cipher.rs`, `storage/lock.rs` |
+| **`vault-attempts.json`** | Fallos de PIN y hora del próximo intento permitido (5 libres; luego 30 s, el doble cada vez, hasta 15 min). | JSON | `<config>/sshorus/vault-attempts.json` | No (no lleva secretos) | Motor: `storage/vault.rs` |
+| **`profiles.json`** | Servidores y proyectos (host, usuario, puerto, tipo de autenticación, ruta de la llave, marcadores). Nunca contraseñas. | JSON | `<config>/sshorus/profiles.json` | No (archivo 0600, carpeta 0700 en Unix) | Motor: `storage/` (`ProfileStore`) |
+| **`settings.json`** | Ajustes: tema, fuentes, transferencias simultáneas, política de conflictos, señal de vida, reconexión, tamaños de paneles (`layout`), sincronizar `~/.ssh/config`. | JSON | `<config>/sshorus/settings.json` | No | Motor: `storage/` (`SettingsStore`) |
+| **`mcp.json`** | Servidor MCP: encendido, puerto, tiempo para responder, acceso por servidor, reglas «Permitir siempre» y «Aceptar automáticamente» guardado («siempre»; lo temporal solo vive en memoria). Nunca el token. | JSON | `<config>/sshorus/mcp.json` | No | Motor: `mcp/config.rs` (el puente `sshorus-mcp` lee de aquí el puerto) |
+| **`mcp-audit.jsonl`** | Registro de lo que hace el asistente: herramienta, servidor, comando o ruta, resultado y quién lo aprobó. Rota a `mcp-audit.1.jsonl` al pasar de 1 MiB. | JSON por línea | `<config>/sshorus/mcp-audit.jsonl` | No (sin contraseñas ni contenidos) | Motor: `mcp/audit.rs` |
+| **`commands.json`** | "Mis comandos" (biblioteca propia). | JSON | `<config>/sshorus/commands.json` | No | Motor: `snippets/store.rs` |
+| **`tunnels.json`** | Túneles guardados por servidor (tipo, puertos, destino, `autoStart`). | JSON | `<config>/sshorus/tunnels.json` | No | Motor: `tunnels/store.rs` |
+| **`github.json`** | Recetas de despliegue y el id del Gist de sincronización. Nunca el token. | JSON | `<config>/sshorus/github.json` | No | Motor: `github/config.rs` |
+| **`ssh-aliases.json`** | Alias elegidos a mano para los `Host` que SSHorus escribe en `~/.ssh/config`. | JSON | `<config>/sshorus/ssh-aliases.json` | No | Motor: `storage/ssh_config.rs` |
+| **Estado de la ventana** | Tamaño, posición y si estaba maximizada (solo la ventana principal). | JSON | Linux `~/.config/com.sshorus.app/.window-state.json` · Windows `%APPDATA%\com.sshorus.app\` · macOS `~/Library/Application Support/com.sshorus.app/` | No | Plugin `tauri-plugin-window-state` |
 | **`~/.ssh/known_hosts`** | Huellas de los servidores en los que confías (el mismo archivo que usa `ssh`). | Texto OpenSSH | `~/.ssh/known_hosts` (Windows: `C:\Users\<tú>\.ssh\known_hosts`) | No | Motor: `ssh/known_hosts.rs` (lee, añade o reemplaza; escritura atómica) |
-| **`~/.ssh/config`** | Opcional: bloque marcado con tus servidores, para usar `ssh <alias>` en la terminal. La primera vez se guarda `config.bak-terview`. También se puede importar desde ahí. | Texto OpenSSH | `~/.ssh/config` | No | Motor: `storage/ssh_config.rs` |
+| **`~/.ssh/config`** | Opcional: bloque marcado con tus servidores, para usar `ssh <alias>` en la terminal. La primera vez se guarda `config.bak-sshorus`. También se puede importar desde ahí. | Texto OpenSSH | `~/.ssh/config` | No | Motor: `storage/ssh_config.rs` |
 | **Tus llaves SSH** | Llaves privadas para conectar (las de siempre) y públicas (`*.pub`) para GitHub. | OpenSSH | `~/.ssh/` | La frase, si la tiene | Motor: `ssh/connect.rs` (privadas, solo lectura) · `github/localkey.rs` (solo `*.pub`) |
-| **`localStorage`** | Historial de Administración (`terview.admin.history.v1.<perfil>`, 300 entradas), alertas del Monitor (`terview.monitor.alerts.<perfil>`), preferencias del Monitor, de Contenedores, de Ejecutar en varios servidores, servidores recientes, búsqueda de actualizaciones, editor en pestaña o ventana, GPU de la terminal, proyectos plegados. | Clave → texto (JSON) | Lo gestiona el motor web. Linux: `~/.local/share/com.terview.app/localstorage/` · Windows: `%LOCALAPPDATA%\com.terview.app\EBWebView\` | No | Interfaz (con try/catch: si falla, todo funciona igual y solo se pierde la preferencia) |
-| **Caché de arrastre** | Copias descargadas para arrastrar al escritorio. Se borran al abrir la app si tienen más de un día. | Archivos | Linux `~/.cache/com.terview.app/arrastre/` · Windows `%LOCALAPPDATA%\com.terview.app\arrastre\` · macOS `~/Library/Caches/com.terview.app/arrastre/` | No | Motor: `dragout/` y `transfer/` |
+| **`localStorage`** | Historial de Administración (`sshorus.admin.history.v1.<perfil>`, 300 entradas), alertas del Monitor (`sshorus.monitor.alerts.<perfil>`), preferencias del Monitor, de Contenedores, de Ejecutar en varios servidores, servidores recientes, búsqueda de actualizaciones, editor en pestaña o ventana, GPU de la terminal, proyectos plegados. | Clave → texto (JSON) | Lo gestiona el motor web. Linux: `~/.local/share/com.sshorus.app/localstorage/` · Windows: `%LOCALAPPDATA%\com.sshorus.app\EBWebView\` | No | Interfaz (con try/catch: si falla, todo funciona igual y solo se pierde la preferencia) |
+| **Caché de arrastre** | Copias descargadas para arrastrar al escritorio. Se borran al abrir la app si tienen más de un día. | Archivos | Linux `~/.cache/com.sshorus.app/arrastre/` · Windows `%LOCALAPPDATA%\com.sshorus.app\arrastre\` · macOS `~/Library/Caches/com.sshorus.app/arrastre/` | No | Motor: `dragout/` y `transfer/` |
 | **Tus carpetas** | Lo que subes y bajas, y los archivos de exportar o importar comandos. Tú eliges dónde. | Archivos | Donde elijas | No | Motor: `transfer/`, `localfs.rs` |
 | **Memoria del motor** | Sesiones SSH abiertas, terminales, canales SFTP, cola de transferencias, ejecuciones en curso, túneles en marcha y el token de GitHub ya leído. Con la bóveda abierta, también su llave y los secretos descifrados; al bloquear se pisan con ceros (`Zeroizing`) y se olvida el token. El stdin con contraseñas se sobrescribe con ceros al terminar. | Estructuras Rust | RAM | — | Motor (`SessionStore`, `TerminalStore`, `SftpStore`, `TransferManager`, `ExecRegistry`, `TunnelManager`, `Vault`) |
-| **Memoria de la interfaz** | Contraseña de sudo por conexión (`useSudo`), privilegios detectados, pestañas abiertas. La contraseña de sudo se olvida al cerrar la pestaña, al perder la conexión o al bloquear TerView. | Stores de zustand sin persistencia | RAM | — | Interfaz: `features/privileges/`, `features/lock/` y `stores/` |
-| **Sesiones tmux** (en el servidor) | Terminales persistentes `terview-<id>` con su historial (50.000 líneas). | Servidor tmux propio `-L terview` | Tu servidor | — | Motor: `terminal/tmux.rs` por SSH |
-| **Gist secreto** (GitHub) | `terview-sync.json`: copia de servidores, proyectos y comandos, sin contraseñas. | JSON cifrado | Tu cuenta de GitHub | Sí: AES-256-GCM con clave derivada por Argon2id de una frase que nunca se guarda | Motor: `github/crypto.rs`, `github/mod.rs` |
-| **`audit/<idServidor>.json`** | Historial de «Auditar servidor»: las 30 últimas auditorías (notas, comprobaciones, arreglos y la explicación de IA si la hubo). | JSON | `<config>/terview/audit/` | No (0600) | Motor: `audit/store.rs` |
-| **`vulnscan/<idServidor>.json`** *(v0.5.0)* | Historial del escáner de vulnerabilidades: los últimos 20 análisis del servidor (inventario resumido, hallazgos, fuentes y la explicación de IA si la hubo). | JSON | `<config>/terview/vulnscan/` | No (0600) | Motor: `vulnscan/store.rs` |
-| **Caché de OSV** *(v0.5.0)* | Detalle de cada aviso de OSV por id y fecha de modificación; se puede borrar sin perder nada. | Un JSON por aviso | Linux `~/.cache/com.terview.app/osv/` (caché del sistema en Windows y macOS) | No | Motor: `vulnscan/cache.rs` |
+| **Memoria de la interfaz** | Contraseña de sudo por conexión (`useSudo`), privilegios detectados, pestañas abiertas. La contraseña de sudo se olvida al cerrar la pestaña, al perder la conexión o al bloquear SSHorus. | Stores de zustand sin persistencia | RAM | — | Interfaz: `features/privileges/`, `features/lock/` y `stores/` |
+| **Sesiones tmux** (en el servidor) | Terminales persistentes `sshorus-<id>` con su historial (50.000 líneas). | Servidor tmux propio `-L sshorus` | Tu servidor | — | Motor: `terminal/tmux.rs` por SSH |
+| **Gist secreto** (GitHub) | `sshorus-sync.json`: copia de servidores, proyectos y comandos, sin contraseñas. | JSON cifrado | Tu cuenta de GitHub | Sí: AES-256-GCM con clave derivada por Argon2id de una frase que nunca se guarda | Motor: `github/crypto.rs`, `github/mod.rs` |
+| **`audit/<idServidor>.json`** | Historial de «Auditar servidor»: las 30 últimas auditorías (notas, comprobaciones, arreglos y la explicación de IA si la hubo). | JSON | `<config>/sshorus/audit/` | No (0600) | Motor: `audit/store.rs` |
+| **`vulnscan/<idServidor>.json`** *(v0.5.0)* | Historial del escáner de vulnerabilidades: los últimos 20 análisis del servidor (inventario resumido, hallazgos, fuentes y la explicación de IA si la hubo). | JSON | `<config>/sshorus/vulnscan/` | No (0600) | Motor: `vulnscan/store.rs` |
+| **Caché de OSV** *(v0.5.0)* | Detalle de cada aviso de OSV por id y fecha de modificación; se puede borrar sin perder nada. | Un JSON por aviso | Linux `~/.cache/com.sshorus.app/osv/` (caché del sistema en Windows y macOS) | No | Motor: `vulnscan/cache.rs` |
 | **Token de IA** *(v0.5.0)* | Token del endpoint de IA compatible con OpenAI, id `ai-token`. URL base y modelo van en `settings.json`, nunca el token. | Secreto | Bóveda (`vault.json`) si hay PIN; si no, llavero del sistema | Sí | Motor: `ai/mod.rs` con `storage/secrets.rs` (`get_secret`/`set_secret`); `enable_vault` lo mueve a la bóveda |
-| **Releases** (GitHub) | Instaladores, sus firmas `.sig` y `latest.json`. | Archivos | `github.com/LeoMael/TerView/releases` | Firmados (minisign), no cifrados | GitHub Actions los sube; el actualizador de la app los lee |
+| **Releases** (GitHub) | Instaladores, sus firmas `.sig` y `latest.json`. | Archivos | `github.com/LeoMael/SSHorus/releases` | Firmados (minisign), no cifrados | GitHub Actions los sube; el actualizador de la app los lee |
 
 ### Qué significa cada flecha del mapa
 
@@ -111,7 +111,7 @@ La app tiene dos mitades dentro del mismo programa:
 | Motor ↔ Servidor (**SSH :22**) | SSH 2 (russh), cifrado, una conexión por pestaña | Canales: `session` + PTY (terminal), subsistema `sftp` (explorador y transferencias), `exec` (comandos aparte), `direct-tcpip` y `forwarded-tcpip` (túneles) | `ssh/`, `terminal/`, `sftp/`, `transfer/`, `snippets/exec.rs`, `tunnels/` |
 | Motor → GitHub (**HTTPS, API**) | HTTPS con reqwest + rustls (sin OpenSSL) | API REST de GitHub; solo hosts de GitHub (`ALLOWED_HOSTS`); token en la cabecera `Authorization`, nunca en registros | `github/http.rs`, `github/api.rs` |
 | Motor → GitHub (**¿versión nueva?**) | HTTPS | `releases/latest/download/latest.json`, descarga del instalador y verificación de la firma | `tauri-plugin-updater` (lo usa `src/features/updater/`) |
-| Servidor → GitHub (**git clone**) | git por SSH | El servidor clona con su propia llave de despliegue de solo lectura (`GIT_SSH_COMMAND`); TerView solo le envía los comandos por `exec` | `src/features/github/shell.ts` |
+| Servidor → GitHub (**git clone**) | git por SSH | El servidor clona con su propia llave de despliegue de solo lectura (`GIT_SSH_COMMAND`); SSHorus solo le envía los comandos por `exec` | `src/features/github/shell.ts` |
 | Motor → **OSV.dev** *(v0.5.0)* | HTTPS con reqwest + rustls | `POST api.osv.dev/v1/querybatch` (≤ 1000 paquetes por lote) y `GET /v1/vulns/{id}`. Solo ecosistema, nombre y versión de paquetes; nunca IP, nombre del servidor ni usuarios. Sin token ni redirecciones | `vulnscan/osv.rs` |
 | Motor → **endpoint de IA** *(v0.5.0, opcional)* | HTTPS (HTTP solo a `localhost`) | `POST <URL base>/chat/completions`, compatible con OpenAI; token en `Authorization`. Solo tras mostrar el texto exacto y confirmar; solo a la URL guardada en Ajustes | `ai/mod.rs` |
 | Servidor → repos de su distro *(v0.5.0)* | Lo que use cada herramienta | `dnf advisory`, `debsecan`, `pro`, `zypper` y Trivy bajan sus propios datos desde el servidor, como al actualizar | Scripts de `vulnscan/scripts.rs`, ejecutados por `features/vulnscan/run.ts` |
@@ -195,7 +195,7 @@ Ventaja: te autenticas una vez, y navegar, subir archivos, medir el servidor y u
 
 ## 4. Cómo se ve la ventana (diagrama 4)
 
-![Ventana de TerView](arquitectura/04-ventana.png)
+![Ventana de SSHorus](arquitectura/04-ventana.png)
 
 - **Barra lateral:** proyectos y servidores, conexión rápida `usuario@host:puerto`, buscar,
   "Ejecutar en varios servidores" y GitHub. Doble clic en un servidor va a su pestaña abierta.
@@ -264,7 +264,7 @@ Librerías clave de la interfaz: `react`, `@xterm/xterm` (con WebGL), `@monaco-e
 ![Flujo de conexión](arquitectura/06-flujo-conexion.png)
 
 - La interfaz (`features/connect.ts`) llama a `ssh_connect`. Si no le diste la contraseña o la frase,
-  el motor la busca en la bóveda (si hay PIN) o en el llavero; solo vive en memoria. Si TerView está
+  el motor la busca en la bóveda (si hay PIN) o en el llavero; solo vive en memoria. Si SSHorus está
   bloqueado, responde `Locked`.
 - `ssh/connect.rs` abre TCP, negocia el cifrado y compara la huella con `~/.ssh/known_hosts`.
   - Huella **nueva**: la interfaz te la muestra y pregunta si confías.
@@ -308,7 +308,7 @@ y ver resultado"), la detección de privilegios y GitHub (clonar y desplegar).
 - **Canal exec sin terminal**, uno nuevo por comando (`exec_capture` / `exec_capture_stdin` en
   `snippets/`). Límites: 2 MB por flujo y de 1 a 600 segundos.
 - **El comando real no va en la línea de comandos.** El servidor solo recibe un arranque corto:
-  `sh -c 'echo __TERVIEW_PID__=$$ >&2; c=$(dd bs=1 count=N); exec "$SHELL" -c "$c"'`. `dd` lee
+  `sh -c 'echo __SSHORUS_PID__=$$ >&2; c=$(dd bs=1 count=N); exec "$SHELL" -c "$c"'`. `dd` lee
   exactamente N bytes de stdin y el shell de login del usuario los ejecuta con el mismo PID.
 - **Qué viaja por stdin, en orden:** 1) el comando real; 2) el script envuelto (`buildExec` en
   `features/privileges/elevate.ts`, que lo lee con `sh -c 'eval "$(dd …)"'`); 3) la contraseña de
@@ -429,7 +429,7 @@ y ver resultado"), la detección de privilegios y GitHub (clonar y desplegar).
 - **Por sistema:** Linux, GTK3 propio (`dragout/linux.rs`, X11 y Wayland, `text/uri-list` con URIs
   bien codificadas); Windows, `SHDoDragDrop` del Shell con `CF_HDROP` (`win.rs`, aún sin probar en
   un Windows real); macOS, crate `drag` (`macos.rs`).
-- Mientras dura el arrastre, la ventana de TerView también recibe el "soltar": el explorador lo
+- Mientras dura el arrastre, la ventana de SSHorus también recibe el "soltar": el explorador lo
   ignora con `ownDragActive()` / `isOwnDragPaths()` para **no volver a subir lo propio**.
 - Si lo preparado no cambió en el servidor (mismo tamaño y fecha), el siguiente arrastre es
   inmediato. Más de 1 GB pregunta antes. Al abrir la app se borra lo de más de un día.
@@ -465,7 +465,7 @@ y ver resultado"), la detección de privilegios y GitHub (clonar y desplegar).
 
 ![GitHub](arquitectura/14-github.png)
 
-- **Token** en el llavero (servicio `terview`, usuario `github-token`), o en la bóveda si hay PIN;
+- **Token** en el llavero (servicio `sshorus`, usuario `github-token`), o en la bóveda si hay PIN;
   nunca en `github.json` ni en la interfaz.
 - **Todas las peticiones salen del motor** (`github/`, reqwest + rustls). Solo puede hablar con hosts
   de GitHub: no es un proxy genérico. Los errores llegan en español.
@@ -476,7 +476,7 @@ y ver resultado"), la detección de privilegios y GitHub (clonar y desplegar).
   solo lectura y solo su `.pub` va a GitHub. Clonar y "Actualizar" (`git pull --ff-only` + los
   comandos de la receta) se ejecutan en el servidor por exec. Las recetas se guardan en `github.json`.
 - **Actions:** ver workflows y ejecuciones, y lanzar uno a mano (`workflow_dispatch`).
-- **Sincronización:** `terview-sync.json` en un Gist secreto, cifrado en el motor con AES-256-GCM y
+- **Sincronización:** `sshorus-sync.json` en un Gist secreto, cifrado en el motor con AES-256-GCM y
   una clave Argon2id de una frase que solo vive en memoria. Sin contraseñas.
 - **Compartir comandos** por un Gist o un archivo de un repositorio.
 
@@ -488,8 +488,8 @@ y ver resultado"), la detección de privilegios y GitHub (clonar y desplegar).
 
 - **Es opcional** (Ajustes → Seguridad). Sin bóveda todo sigue como antes: contraseñas, frases y
   tokens (GitHub, MCP e IA de informes) en el llavero del sistema (`storage/secrets.rs`).
-- **Con bóveda**, esos secretos salen del llavero y pasan a `<config>/terview/vault.json`: un sobre
-  AES-256-GCM (formato `terview-vault`) con la cabecera autenticada, escritura atómica, permisos 0600
+- **Con bóveda**, esos secretos salen del llavero y pasan a `<config>/sshorus/vault.json`: un sobre
+  AES-256-GCM (formato `sshorus-vault`) con la cabecera autenticada, escritura atómica, permisos 0600
   y un nonce nuevo en cada guardado. "Proteger con PIN" los mueve del llavero a la bóveda; "Quitar
   PIN" (pide el PIN) los devuelve.
 - **Qué guarda:** por servidor, la contraseña o frase de conexión (id = id del servidor) y, si eliges
@@ -528,7 +528,7 @@ y ver resultado"), la detección de privilegios y GitHub (clonar y desplegar).
   token de GitHub en caché y las contraseñas de sudo de todas las conexiones (`forgetAllSudo`). Las
   conexiones abiertas siguen vivas; las contraseñas de sudo guardadas se vuelven a leer (y comprobar con
   `sudo -v`) al desbloquear, cuando un panel las necesita (`features/privileges/stored.ts`); una reconexión que necesita contraseña espera al desbloqueo
-  ("esperando a que desbloquees TerView") y sigue sola después (`ssh/reconnect.rs`).
+  ("esperando a que desbloquees SSHorus") y sigue sola después (`ssh/reconnect.rs`).
 - **Qué protege:**
 
 | Quién ataca | ¿Protegido? | Por qué |
@@ -545,15 +545,15 @@ y ver resultado"), la detección de privilegios y GitHub (clonar y desplegar).
 
 ![Terminales con tmux](arquitectura/16-terminales-tmux.png)
 
-- **Nombre estable:** cada sub-pestaña de terminal tiene su sesión, `terview-` + 8 caracteres
+- **Nombre estable:** cada sub-pestaña de terminal tiene su sesión, `sshorus-` + 8 caracteres
   hexadecimales al azar. Según el modo, la interfaz pide tmux y `term_open` recibe `{ name, replay }`.
 - **Buscar tmux** (`terminal/tmux.rs`): el motor lo busca por exec, primero en el PATH y luego en
   rutas típicas (`/usr/local/bin`, `/opt/homebrew/bin`…), y exige la versión 1.8 o más nueva (por
   `new-session -A`). El resultado se recuerda por conexión; si falta, solo 20 s, por si lo instalas.
   Sin tmux se abre una shell normal y la respuesta (`TermOpened`) lo avisa.
-- **Servidor tmux propio:** el canal con PTY ejecuta `sh -c '… new-session -A -s terview-…'` sobre
-  `tmux -L terview -f /dev/null`. No toca tu `~/.tmux.conf` ni tus sesiones, y `list-sessions` solo
-  ve las de TerView. Si ese servidor no corre, lo arranca con sus ajustes: sin barra de estado, sin
+- **Servidor tmux propio:** el canal con PTY ejecuta `sh -c '… new-session -A -s sshorus-…'` sobre
+  `tmux -L sshorus -f /dev/null`. No toca tu `~/.tmux.conf` ni tus sesiones, y `list-sessions` solo
+  ve las de SSHorus. Si ese servidor no corre, lo arranca con sus ajustes: sin barra de estado, sin
   tecla prefijo (Ctrl+B llega a los programas), sin pantalla alternativa (la rueda, la búsqueda, la
   selección y los enlaces son los de xterm.js) e historial de 50.000 líneas.
 - **Si se corta la red:** la sesión sigue viva en el servidor y la reconexión automática (mismo
@@ -565,7 +565,7 @@ y ver resultado"), la detección de privilegios y GitHub (clonar y desplegar).
   sesiones; si la conexión se perdió o cerraste la app, quedan en el servidor.
 - **"Sesiones en el servidor":** `term_tmux_list` lista las sesiones sueltas (un contador en la barra
   avisa si hay alguna). Se pueden reabrir, cerrar (`term_tmux_kill`) o copiar
-  `tmux -L terview attach -t terview-…` para engancharse desde una shell normal.
+  `tmux -L sshorus attach -t sshorus-…` para engancharse desde una shell normal.
 - **Modos:** Automático (tmux si el servidor lo tiene), Siempre (si falta, terminal normal y un aviso
   con el comando para instalarlo según la distro) y Nunca. Hay un ajuste general (`terminalTmux`) y
   otro por servidor; manda el del servidor.
@@ -577,17 +577,17 @@ y ver resultado"), la detección de privilegios y GitHub (clonar y desplegar).
 ![Servidor MCP](arquitectura/08-servidor-mcp.png)
 
 Construido para la v0.5.0. Un asistente de IA (Claude Code, Claude Desktop u otro cliente MCP) trabaja con tus
-servidores a través de TerView: usa las conexiones abiertas en la app y **nunca ve contraseñas ni llaves**.
+servidores a través de SSHorus: usa las conexiones abiertas en la app y **nunca ve contraseñas ni llaves**.
 Apagado por defecto (Ajustes → Asistentes de IA (MCP)). Detalle, herramientas y límites en
 [PENDIENTES.md](PENDIENTES.md#3-servidor-mcp-conectar-asistentes-de-ia).
 
 **Camino de una petición**
 
 1. **Transporte.** El cliente habla HTTP «streamable» con `http://127.0.0.1:<puerto>/mcp` (47821 por defecto),
-   o por stdio con el puente `terview-mcp`, que reenvía cada mensaje a esa dirección. El puente no tiene lógica:
-   lleva el token en la variable `TERVIEW_MCP_TOKEN` y lee el puerto de `mcp.json`; si la app está cerrada,
-   contesta él mismo «Abre TerView para usar tus servidores» y avisa (`tools/list_changed`) cuando se abre.
-2. **Puerta** (`mcp/http.rs`): cabecera `Origin` → 403; TerView bloqueado → error «TerView está bloqueado:
+   o por stdio con el puente `sshorus-mcp`, que reenvía cada mensaje a esa dirección. El puente no tiene lógica:
+   lleva el token en la variable `SSHORUS_MCP_TOKEN` y lee el puerto de `mcp.json`; si la app está cerrada,
+   contesta él mismo «Abre SSHorus para usar tus servidores» y avisa (`tools/list_changed`) cuando se abre.
+2. **Puerta** (`mcp/http.rs`): cabecera `Origin` → 403; SSHorus bloqueado → error «SSHorus está bloqueado:
    desbloquéalo para continuar»; token `Bearer` distinto → 401. El token se lee de la bóveda o el llavero
    (`mcp-token`) y se olvida al bloquear.
 3. **SDK** (`mcp/server.rs`, crate `rmcp` 3.9): sin sesiones y con respuestas JSON; anuncia 19 herramientas
@@ -609,9 +609,9 @@ Apagado por defecto (Ajustes → Asistentes de IA (MCP)). Detalle, herramientas 
 
 Por servidor y solo con acceso Completo. Niveles (`AutoLevel`): `off` (como siempre), `changes` (los cambios
 no peligrosos pasan solos) y `all` (también lo peligroso y sudo; la interfaz lo advierte en rojo y pide
-confirmación). Duración: 15 min, 1 h o hasta cerrar TerView viven solo en memoria (`McpCore.auto_temp`, con
+confirmación). Duración: 15 min, 1 h o hasta cerrar SSHorus viven solo en memoria (`McpCore.auto_temp`, con
 `until` en Unix ms); «siempre» se guarda en `mcp.json` (`autoAccept`). El temporal manda sobre el guardado.
-Seguridad: con TerView bloqueado no vale (`effective_auto` devuelve `off`, y la puerta ya rechaza todo); en
+Seguridad: con SSHorus bloqueado no vale (`effective_auto` devuelve `off`, y la puerta ya rechaza todo); en
 Solo lectura y Sin acceso no se puede activar y las reglas no cambian (los cambios se siguen rechazando);
 `sanitize` borra el guardado si el servidor deja de tener acceso Completo, y `mcp_set_access` borra también el
 temporal. Una regla «Permitir siempre» sigue anotándose como regla. Cada acción aceptada así lleva en el
@@ -657,7 +657,7 @@ después de que lo apruebes (se pregunta siempre, salvo con «Aceptar automátic
 | `list_dir`, `stat`, `read_file`, `list_ports`, `list_sites`, `list_containers`, `get_infra_map` | Lectura (pasa sola) |
 | `get_vuln_report` (último informe del escáner, resumido), `get_audit_report` (última auditoría) | Lectura (pasa sola, también en Solo lectura) |
 | `connect`, `download`, `scan_vulnerabilities` (análisis sin sudo, 600 s por defecto, cancelable), `run_audit` (auditoría sin sudo) | Pregunta, con «Permitir siempre»; también en Solo lectura |
-| `run_command`, `run_catalog_command` (los 📊 pasan solos; con sudo, TerView pone la contraseña), `write_file`, `upload` | Pregunta; en Solo lectura, rechazado |
+| `run_command`, `run_catalog_command` (los 📊 pasan solos; con sudo, SSHorus pone la contraseña), `write_file`, `upload` | Pregunta; en Solo lectura, rechazado |
 
 Lo peligroso pregunta siempre, sin «Permitir siempre». Detalle y límites de cada una en
 [PENDIENTES.md](PENDIENTES.md#herramientas).
@@ -704,7 +704,7 @@ Docker `docker create` + `docker cp`. Con sudo se entra como cada usuario con `r
 / `su`. Cada hallazgo dice su imagen y qué contenedores la usan.
 
 **IA opcional (`src-tauri/src/ai/`), solo para explicar** (Ajustes → IA para explicar informes; no es el
-MCP: aquí TerView le pregunta a la IA): endpoint compatible con OpenAI. URL base y modelo en
+MCP: aquí SSHorus le pregunta a la IA): endpoint compatible con OpenAI. URL base y modelo en
 `settings.json` (`ai`), token `ai-token` en la bóveda o el llavero (bloqueado = sin IA). HTTPS
 obligatorio salvo `localhost`; sin redirecciones; el token solo va a la URL guardada. Antes de enviar se
 muestra el texto exacto (el servidor se llama «servidor-1»; sin IP, usuarios, rutas, contenedores ni
@@ -731,7 +731,7 @@ instalar nada, y da una nota.
 3. `score.ts`: cada comprobación tiene su nota («mal» 75 − 10·peso, «aviso» 90 − 3·peso); la categoría toma
    la peor y resta 4 por cada otro problema (mínimo 25: un solo grave la deja en ~45). La general es la
    media ponderada (con un «mal» de peso 3 no pasa de 75, C). `compare` marca qué mejoró o empeoró.
-4. El motor solo guarda (`src-tauri/src/audit/`): `<config>/terview/audit/<idServidor>.json`, las 30
+4. El motor solo guarda (`src-tauri/src/audit/`): `<config>/sshorus/audit/<idServidor>.json`, las 30
    últimas, 0600, se borra con el servidor. `export.ts` hace Markdown y HTML; `aiPayload.ts` el texto
    para «Explicar con IA».
 5. **Arreglar** usa `PlanModal` (comando exacto, `runPlan` como root, historial de Administración); lo
@@ -757,7 +757,7 @@ un servidor con problemas) y `src-tauri/src/audit/tests.rs`.
   del servidor, `<id>:sudo`); viaja siempre por stdin, nunca en la línea
   de comandos ni en el historial. El motor borra el búfer al terminar.
 - **Asistentes de IA (MCP)** apagados por defecto; solo `127.0.0.1` con token; permiso por servidor; los cambios
-  piden tu aprobación y lo peligroso siempre; con TerView bloqueado no hacen nada; nunca reciben contraseñas.
+  piden tu aprobación y lo peligroso siempre; con SSHorus bloqueado no hacen nada; nunca reciben contraseñas.
   Un comando con sudo que apruebas se eleva con la contraseña de sudo de la conexión (la de la interfaz, o el
   diálogo), pero el asistente no la ve: va por stdin a un envoltorio que se la da a sudo por un askpass
   temporal (FIFO, sin archivos con la contraseña), no aparece en la respuesta (se tapa si un comando la

@@ -139,14 +139,14 @@ function useGlobalShortcuts() {
 /** Acciones que maneja la ventana principal (la paleta, el bloqueo y la división tienen el suyo). */
 const WINDOW_SHORTCUTS = ["tabs.next", "tabs.prev", "tabs.nextConn", "tabs.prevConn", "app.settings", "tabs.close", "app.sidebar"];
 
-/** Título de la ventana: "TerView — <pestaña>". */
+/** Título de la ventana: "SSHorus — <pestaña>". */
 function useWindowTitle() {
   const activeId = useTabs((s) => s.activeTabId);
   const sshTitle = useTabs((s) => s.tabs.find((t) => t.id === s.activeTabId)?.title ?? null);
   const localTitle = useLocalTabs((s) => s.tabs.find((t) => t.id === activeId)?.title ?? null);
   const title = sshTitle ?? (localTitle ? `${localTitle} (este equipo)` : null);
   useEffect(() => {
-    const t = title ? `TerView — ${title}` : "TerView";
+    const t = title ? `SSHorus — ${title}` : "SSHorus";
     document.title = t;
     getCurrentWindow()
       .setTitle(t)

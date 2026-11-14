@@ -7,7 +7,7 @@
 //    Si el botón sigue apretado se arrastra en ese momento; si no, queda "listo" y el siguiente
 //    arrastre de lo mismo es inmediato (mientras no cambie en el servidor).
 //
-// Arrastre propio vs. externo: mientras dura el arrastre nativo, la ventana de TerView también
+// Arrastre propio vs. externo: mientras dura el arrastre nativo, la ventana de SSHorus también
 // recibe los eventos de "soltar archivos" (con las rutas de la caché). El explorador los ignora
 // con `ownDragActive()` / `isOwnDragPaths()` para no volver a subirlos al servidor.
 import { dragOut } from "../../api/dragout";
@@ -46,12 +46,12 @@ function normLocal(p: string): string {
   return isWindows ? s.toLowerCase() : s;
 }
 
-/** ¿Hay un arrastre nativo de TerView en marcha? */
+/** ¿Hay un arrastre nativo de SSHorus en marcha? */
 export function ownDragActive(): boolean {
   return nativeActive;
 }
 
-/** ¿Todas las rutas están en la caché de arrastre? (= el arrastre salió de TerView). */
+/** ¿Todas las rutas están en la caché de arrastre? (= el arrastre salió de SSHorus). */
 export function isOwnDragPaths(paths: string[]): boolean {
   if (!cacheRoot || !paths.length) return false;
   const root = `${normLocal(cacheRoot)}/`;

@@ -60,12 +60,12 @@ eq(usesDirect("direct", false), true, "solo directa");
       active: { serverName: "web", alias: "web", cwd: "/var/www" },
     }),
   );
-  ok(t.startsWith("# Contexto de TerView"), "título");
+  ok(t.startsWith("# Contexto de SSHorus"), "título");
   ok(t.includes("jueves 2026-11-12"), "fecha con día");
   ok(t.includes("Carpeta de trabajo: /home/ana/proyecto"), "carpeta local");
   ok(t.includes("ssh -o BatchMode=yes <alias>"), "explica la vía directa");
-  ok(t.includes("MCP de TerView"), "explica el MCP");
-  ok(t.includes("- web: usuario deploy@10.0.0.1 · alias ssh `web` · proyecto Tienda · llave · conectado ahora en TerView (sudo (pide contraseña), ubuntu) · MCP: completo (con permiso)"), "línea del servidor web");
+  ok(t.includes("MCP de SSHorus"), "explica el MCP");
+  ok(t.includes("- web: usuario deploy@10.0.0.1 · alias ssh `web` · proyecto Tienda · llave · conectado ahora en SSHorus (sudo (pide contraseña), ubuntu) · MCP: completo (con permiso)"), "línea del servidor web");
   ok(t.includes("- db: usuario root@db.lan:2222 · sin alias en ~/.ssh/config"), "puerto y sin alias");
   ok(t.includes("entra con contraseña: por ssh directo no entrará, usa el MCP"), "aviso de contraseña");
   ok(t.indexOf("- web:") < t.indexOf("- db:"), "conectados primero");

@@ -1,7 +1,7 @@
 // «Novedades»: tras actualizar, el primer arranque muestra una vez lo nuevo de esa versión (sacado del
 // CHANGELOG incluido en la app). Se carga aparte desde main.tsx cuando ajustes y servidores ya están
 // cargados, así no retrasa el arranque. El diálogo vive en su propia raíz de React (como el aviso de
-// actualización) y no se muestra mientras TerView está bloqueado.
+// actualización) y no se muestra mientras SSHorus está bloqueado.
 import { create } from "zustand";
 import { getVersion } from "@tauri-apps/api/app";
 import changelogSource from "../../../CHANGELOG.md?raw";
@@ -9,7 +9,7 @@ import { parseMarkdown, plainText, splitChangelog } from "../../components/About
 import { useProfiles } from "../../stores/profiles";
 
 /** Última versión cuyas novedades se vieron (o se dieron por vistas) en este equipo. */
-export const LAST_SEEN_KEY = "terview.lastSeenVersion";
+export const LAST_SEEN_KEY = "sshorus.lastSeenVersion";
 
 /** Como mucho tantos puntos en el aviso; el resto se cuenta y está en el historial completo. */
 const MAX_ITEMS = 8;
@@ -189,5 +189,5 @@ export async function showWhatsNew(version?: string): Promise<boolean> {
   return true;
 }
 
-// Solo en desarrollo: poder abrirlo desde la consola (`terviewShowWhatsNew("Sin publicar")`).
-if (import.meta.env.DEV) Object.assign(window, { terviewShowWhatsNew: showWhatsNew });
+// Solo en desarrollo: poder abrirlo desde la consola (`sshorusShowWhatsNew("Sin publicar")`).
+if (import.meta.env.DEV) Object.assign(window, { sshorusShowWhatsNew: showWhatsNew });

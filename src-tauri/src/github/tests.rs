@@ -328,7 +328,7 @@ fn synced_server_carries_sudo_mode_but_no_secret() {
     .unwrap();
     let v = serde_json::to_value(&srv).unwrap();
     assert_eq!(v["sudoMode"], "saved");
-    let payload = serde_json::json!({ "format": "terview-config", "servers": [v] });
+    let payload = serde_json::json!({ "format": "sshorus-config", "servers": [v] });
     assert!(super::find_forbidden(&payload).is_none());
     let text = payload.to_string();
     assert!(!text.contains(":sudo") && !text.to_lowercase().contains("password"), "{text}");

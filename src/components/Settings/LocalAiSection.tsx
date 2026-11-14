@@ -1,4 +1,4 @@
-// Ajustes → Terminal local e IA: qué contexto reciben Claude Code y Codex al abrirlos desde TerView,
+// Ajustes → Terminal local e IA: qué contexto reciben Claude Code y Codex al abrirlos desde SSHorus,
 // por qué vía trabajan (ssh directo, MCP o las dos), la carpeta de trabajo y si están instalados.
 import { useEffect, useState } from "react";
 import { Bot, Check, Eye, FolderOpen, Home } from "lucide-react";
@@ -18,7 +18,7 @@ const MODES: { v: LocalAiMode; label: string; title: string }[] = [
 ];
 
 const MODE_HINT: Record<LocalAiMode, string> = {
-  both: "Alias de ssh y, si está activo, el MCP de TerView.",
+  both: "Alias de ssh y, si está activo, el MCP de SSHorus.",
   direct: "Los servidores con contraseña no le servirán.",
   mcp: "Con tus permisos y aprobaciones.",
 };
@@ -74,7 +74,7 @@ export function LocalAiSection() {
           </div>
         </Row>
         {local.mode !== "direct" && (
-          <Row label="MCP de TerView" hint="Se configura en Asistentes de IA (MCP).">
+          <Row label="MCP de SSHorus" hint="Se configura en Asistentes de IA (MCP).">
             <button className="btn btn-sm" onClick={() => openSettingsAt("assistants")}>
               Abrir
             </button>

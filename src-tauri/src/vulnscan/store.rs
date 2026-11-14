@@ -1,4 +1,4 @@
-//! Historial de análisis por servidor: `<config>/terview/vulnscan/<idServidor>.json`.
+//! Historial de análisis por servidor: `<config>/sshorus/vulnscan/<idServidor>.json`.
 //!
 //! Los 20 últimos, el más nuevo primero. Escritura atómica y 0600 (`fsutil`), como el resto de `storage/`.
 //! Se borra al borrar el servidor.

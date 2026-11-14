@@ -98,7 +98,7 @@ export interface Settings {
   shortcuts: Record<string, string>;
 }
 
-/** Cómo trabaja el asistente con los servidores: ssh directo, el MCP de TerView o las dos. */
+/** Cómo trabaja el asistente con los servidores: ssh directo, el MCP de SSHorus o las dos. */
 export type LocalAiMode = "both" | "direct" | "mcp";
 
 export interface LocalAiSettings {
@@ -139,7 +139,7 @@ export interface SessionReconnecting {
   maxAttempts: number;
   nextRetrySecs: number;
   reason: string;
-  /** Espera a que se desbloquee TerView para usar la contraseña guardada. */
+  /** Espera a que se desbloquee SSHorus para usar la contraseña guardada. */
   waitingUnlock: boolean;
 }
 
@@ -156,7 +156,7 @@ export interface TerminalExit {
 
 /** Abrir la terminal dentro de una sesión tmux (parámetro de `term_open`). */
 export interface TmuxOpen {
-  /** Nombre estable (`terview-…`). Si ya existe, se engancha a ella. */
+  /** Nombre estable (`sshorus-…`). Si ya existe, se engancha a ella. */
   name: string;
   /** Volcar el historial de la sesión antes de engancharse (terminal recién creada). */
   replay: boolean;
@@ -172,7 +172,7 @@ export interface TermOpened {
   tmuxProblem: string | null;
 }
 
-/** Sesión tmux de TerView viva en el servidor. */
+/** Sesión tmux de SSHorus viva en el servidor. */
 export interface TmuxSession {
   name: string;
   /** Segundos desde epoch. */

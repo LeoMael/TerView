@@ -11,7 +11,7 @@ import { create } from "zustand";
 import type { DownloadEvent, Update } from "@tauri-apps/plugin-updater";
 import { errorMessage } from "../../api/core";
 
-export const REPO_URL = "https://github.com/LeoMael/TerView";
+export const REPO_URL = "https://github.com/LeoMael/SSHorus";
 export const RELEASES_URL = `${REPO_URL}/releases`;
 export const ISSUES_URL = `${REPO_URL}/issues/new`;
 
@@ -189,7 +189,7 @@ export async function installUpdate(): Promise<void> {
 
 // --- Preferencia "Buscar actualizaciones automáticamente" (en este equipo, no en los ajustes del motor) ---
 
-const AUTO_KEY = "terview.updater.autoCheck";
+const AUTO_KEY = "sshorus.updater.autoCheck";
 
 export function getAutoCheck(): boolean {
   try {

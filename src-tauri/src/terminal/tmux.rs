@@ -1,13 +1,13 @@
 //! Terminales persistentes con tmux.
 //!
-//! Cada terminal de TerView puede vivir dentro de una sesión tmux con nombre propio
-//! (`terview-<id>`). Si se corta la red o se cierra la app, la sesión sigue en el servidor y al
+//! Cada terminal de SSHorus puede vivir dentro de una sesión tmux con nombre propio
+//! (`sshorus-<id>`). Si se corta la red o se cierra la app, la sesión sigue en el servidor y al
 //! volver se engancha a ella (`new-session -A`).
 //!
 //! Decisiones:
-//! - Servidor tmux propio (`-L terview`) y sin leer configuraciones (`-f /dev/null`): no toca el
-//!   `~/.tmux.conf` del usuario ni sus sesiones, y `list-sessions` solo ve las de TerView.
-//!   Desde una shell normal se llega con `tmux -L terview attach -t terview-…`.
+//! - Servidor tmux propio (`-L sshorus`) y sin leer configuraciones (`-f /dev/null`): no toca el
+//!   `~/.tmux.conf` del usuario ni sus sesiones, y `list-sessions` solo ve las de SSHorus.
+//!   Desde una shell normal se llega con `tmux -L sshorus attach -t sshorus-…`.
 //! - La configuración va por línea de comandos, solo al arrancar ese servidor (así no se repiten
 //!   los valores que se añaden a listas como `terminal-overrides`).
 //! - Sin pantalla alternativa hacia fuera (`smcup@:rmcup@`): tmux dibuja en la pantalla normal de
@@ -25,10 +25,10 @@ use crate::snippets::exec;
 use crate::ssh::SshSession;
 use crate::types::{TmuxList, TmuxSession};
 
-/// Socket del servidor tmux propio de TerView (`tmux -L terview`).
-pub const SOCKET: &str = "terview";
-/// Prefijo de las sesiones de TerView.
-pub const PREFIX: &str = "terview-";
+/// Socket del servidor tmux propio de SSHorus (`tmux -L sshorus`).
+pub const SOCKET: &str = "sshorus";
+/// Prefijo de las sesiones de SSHorus.
+pub const PREFIX: &str = "sshorus-";
 /// Versión mínima: `new-session -A` llegó en tmux 1.8.
 pub const MIN_VERSION: TmuxVersion = TmuxVersion { major: 1, minor: 8 };
 /// Líneas de historial que se vuelcan al reabrir una sesión en una terminal nueva.
@@ -103,7 +103,7 @@ pub enum ProbeResult {
     NotInstalled,
 }
 
-/// Nombre válido para una sesión de TerView: `terview-` y luego letras, números, `-` o `_`.
+/// Nombre válido para una sesión de SSHorus: `sshorus-` y luego letras, números, `-` o `_`.
 /// Así nunca hace falta escaparlo dentro de los scripts.
 pub fn valid_name(name: &str) -> bool {
     let Some(rest) = name.strip_prefix(PREFIX) else { return false };
@@ -167,7 +167,7 @@ pub fn parse_probe(stdout: &str) -> Option<ProbeResult> {
     }
 }
 
-/// Opciones del servidor tmux de TerView (se aplican al arrancarlo, antes de crear la primera
+/// Opciones del servidor tmux de SSHorus (se aplican al arrancarlo, antes de crear la primera
 /// ventana, para que valgan `default-terminal` e `history-limit`).
 pub fn server_options(v: TmuxVersion) -> Vec<String> {
     let mut o: Vec<String> = vec![
@@ -200,7 +200,7 @@ pub fn server_options(v: TmuxVersion) -> Vec<String> {
 ///
 /// - Si la sesión existe y `replay`, primero escribe su historial (lo que ya no cabe en pantalla) y
 ///   `rows` saltos de línea: así pasa al historial de xterm.js y tmux redibuja la pantalla encima.
-/// - Si el servidor tmux de TerView ya corre, solo `new-session -A` (crear o engancharse).
+/// - Si el servidor tmux de SSHorus ya corre, solo `new-session -A` (crear o engancharse).
 /// - Si no, lo arranca con la configuración de [`server_options`].
 pub fn attach_command(probe: &TmuxProbe, name: &str, rows: u32, replay: bool) -> AppResult<String> {
     check_name(name)?;
@@ -231,7 +231,7 @@ pub fn attach_command(probe: &TmuxProbe, name: &str, rows: u32, replay: bool) ->
     Ok(format!("sh -c '{script}'"))
 }
 
-/// Script que lista las sesiones de TerView.
+/// Script que lista las sesiones de SSHorus.
 pub fn list_command() -> String {
     format!(
         "sh -c '{FIND_TMUX}; if [ -z \"$t\" ]; then echo tv_tmux=0; exit 0; fi; \
@@ -241,7 +241,7 @@ pub fn list_command() -> String {
     )
 }
 
-/// Interpreta la salida de [`list_command`]: solo sesiones con nombre de TerView, más recientes primero.
+/// Interpreta la salida de [`list_command`]: solo sesiones con nombre de SSHorus, más recientes primero.
 pub fn parse_list(stdout: &str) -> TmuxList {
     let installed = kv(stdout, "tv_tmux").as_deref() == Some("1");
     let version = kv(stdout, "tv_version").filter(|v| !v.is_empty());
@@ -295,11 +295,11 @@ pub async fn probe(session: &SshSession) -> AppResult<ProbeResult> {
     if r.timed_out {
         return Err(AppError::Network("el servidor tardó demasiado en responder".into()));
     }
-    // Sin el formato esperado (p. ej. un servidor Windows sin `sh`): para TerView no hay tmux.
+    // Sin el formato esperado (p. ej. un servidor Windows sin `sh`): para SSHorus no hay tmux.
     Ok(parse_probe(&r.stdout).unwrap_or(ProbeResult::NotInstalled))
 }
 
-/// Sesiones de TerView vivas en el servidor.
+/// Sesiones de SSHorus vivas en el servidor.
 pub async fn list(session: Arc<SshSession>) -> AppResult<TmuxList> {
     let r = exec::run(&session, &list_command(), PROBE_TIMEOUT_SECS).await?;
     if kv(&r.stdout, "tv_tmux").is_none() {
@@ -308,7 +308,7 @@ pub async fn list(session: Arc<SshSession>) -> AppResult<TmuxList> {
     Ok(parse_list(&r.stdout))
 }
 
-/// Termina sesiones de TerView.
+/// Termina sesiones de SSHorus.
 pub async fn kill(session: Arc<SshSession>, names: &[String]) -> AppResult<()> {
     let r = exec::run(&session, &kill_command(names)?, PROBE_TIMEOUT_SECS).await?;
     if r.timed_out {

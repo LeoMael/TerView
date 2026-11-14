@@ -2,12 +2,12 @@
 //!
 //! Para el ajuste de sudo «La de la conexión»: si el usuario escribió la contraseña al conectar SIN
 //! guardarla, sudo también la puede usar mientras viva la sesión. Solo en memoria (`Zeroizing`): se borra
-//! al cerrar o perder la sesión (`SessionStore::remove`) y al bloquear TerView con el PIN (`forget_all`).
+//! al cerrar o perder la sesión (`SessionStore::remove`) y al bloquear SSHorus con el PIN (`forget_all`).
 //! Nunca va a registros ni al servidor MCP; solo sale por `profiles_sudo_password` (interfaz, modo
 //! «La de la conexión»), igual que la contraseña de sudo en memoria de la interfaz.
 //!
 //! No se guarda si la contraseña venía de la bóveda o se acaba de guardar en ella: esa ya se lee de la
-//! bóveda (y así no queda en memoria con TerView bloqueado).
+//! bóveda (y así no queda en memoria con SSHorus bloqueado).
 
 use std::collections::HashMap;
 use std::sync::{LazyLock, Mutex};
@@ -39,7 +39,7 @@ pub fn forget(session_id: &str) {
     with(|m| m.remove(session_id));
 }
 
-/// Olvida todas (al bloquear TerView).
+/// Olvida todas (al bloquear SSHorus).
 pub fn forget_all() {
     with(|m| m.clear());
 }

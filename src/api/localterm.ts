@@ -25,9 +25,9 @@ export interface AiToolInfo {
 
 export interface AiLaunch {
   tool: AiTool;
-  /** Contexto de TerView (sin secretos). */
+  /** Contexto de SSHorus (sin secretos). */
   context: string | null;
-  /** Configurar el MCP de TerView. */
+  /** Configurar el MCP de SSHorus. */
   mcp: boolean;
 }
 
@@ -35,7 +35,7 @@ export interface LocalOpened {
   termId: string;
   cwd: string;
   program: string;
-  /** Se abrió con el MCP de TerView. */
+  /** Se abrió con el MCP de SSHorus. */
   mcp: boolean;
   /** Algo no salió como se pidió (p. ej. MCP apagado: solo contexto). */
   warning: string | null;
@@ -63,6 +63,6 @@ export const localTerm = {
   close: (termId: string) => call<void>("local_term_close", { termId }),
   /** ¿Están instalados Claude Code y Codex? */
   detect: () => call<AiToolInfo[]>("local_ai_detect"),
-  /** Alias de ~/.ssh/config exportados por TerView que llevan de verdad a cada servidor. */
+  /** Alias de ~/.ssh/config exportados por SSHorus que llevan de verdad a cada servidor. */
   sshAliases: () => call<ExportedAlias[]>("local_ai_ssh_aliases"),
 };

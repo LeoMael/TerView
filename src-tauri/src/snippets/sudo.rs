@@ -2,11 +2,11 @@
 //! `run_catalog_command`; el usuario en «Ejecutar en varios servidores»: `exec_capture_sudo`).
 //!
 //! El canal exec no tiene terminal: sudo no puede preguntar la contraseña. Si el usuario aprueba un
-//! comando con sudo, TerView consigue la contraseña igual que la interfaz (en memoria → guardada → otra
+//! comando con sudo, SSHorus consigue la contraseña igual que la interfaz (en memoria → guardada → otra
 //! pestaña → diálogo; ver `src/features/privileges/lookup.ts`) y el comando se ejecuta dentro de un
 //! envoltorio que se la da a sudo sin que el asistente la vea.
 //!
-//! Por qué un ayudante askpass y no `sudo -S` (como `elevate.ts` en la interfaz): allí TerView escribe
+//! Por qué un ayudante askpass y no `sudo -S` (como `elevate.ts` en la interfaz): allí SSHorus escribe
 //! el script entero; aquí el comando es del asistente y puede tener varios `sudo` (`sudo a && sudo b`),
 //! tuberías (`echo x | sudo tee /etc/y`, que usan el stdin del propio comando) o `sudo bash -c '…'`.
 //! Cada sudo de un canal sin terminal vuelve a pedir la contraseña, así que hace falta dársela a todos
@@ -92,7 +92,7 @@ fi
 e=
 for b in "${XDG_RUNTIME_DIR:-}" /dev/shm "${TMPDIR:-/tmp}" /tmp "${HOME:-}"; do
   [ -n "$b" ] && [ -d "$b" ] && [ -w "$b" ] || continue
-  d=$(mktemp -d "$b/.terview-sudo.XXXXXXXX" 2>/dev/null) || { d=; continue; }
+  d=$(mktemp -d "$b/.sshorus-sudo.XXXXXXXX" 2>/dev/null) || { d=; continue; }
   printf '#!/bin/sh\nexit 0\n' > "$d/a" 2>/dev/null && chmod 700 "$d/a" && "$d/a" 2>/dev/null && break
   rm -rf "$d"; d=
 done
@@ -196,7 +196,7 @@ pub fn failure_message(f: SudoFailure, server: &str) -> String {
     match f {
         SudoFailure::BadPassword => format!(
             "Contraseña de sudo incorrecta en «{server}»: sudo la rechazó y no se ejecutó el comando. \
-             TerView la olvidó y la pedirá al usuario la próxima vez."
+             SSHorus la olvidó y la pedirá al usuario la próxima vez."
         ),
         SudoFailure::Denied => format!("El usuario de «{server}» no tiene permiso para usar sudo: no se ejecutó el comando."),
         SudoFailure::TtyRequired => format!(

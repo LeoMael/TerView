@@ -29,7 +29,7 @@ export const SHORTCUT_ACTIONS: ShortcutAction[] = [
   { id: "session.terminal", label: "Mostrar u ocultar la terminal", group: "Generales", scope: "global", def: "Ctrl+`" },
   { id: "session.split", label: "Dividir o quitar la división", group: "Generales", scope: "global", def: "Ctrl+Shift+M" },
   { id: "app.settings", label: "Ajustes", group: "Generales", scope: "global", def: "Ctrl+,", mac: "Meta+," },
-  { id: "app.lock", label: "Bloquear TerView", group: "Generales", scope: "global", def: "Ctrl+Shift+L", mac: "Shift+Meta+L" },
+  { id: "app.lock", label: "Bloquear SSHorus", group: "Generales", scope: "global", def: "Ctrl+Shift+L", mac: "Shift+Meta+L" },
   { id: "term.copy", label: "Copiar", group: "Terminal", scope: "terminal", def: "Ctrl+Shift+C" },
   { id: "term.paste", label: "Pegar", group: "Terminal", scope: "terminal", def: "Ctrl+Shift+V" },
   { id: "term.find", label: "Buscar", group: "Terminal", scope: "terminal", def: "Ctrl+Shift+F" },

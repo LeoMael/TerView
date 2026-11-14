@@ -90,7 +90,7 @@ export function describeTestError(e: unknown, auth: AuthMethod): string {
     case "NeedsPassphrase":
       return "La llave está protegida con frase: escríbela arriba para probar.";
     case "Locked":
-      return "TerView está bloqueado: escribe tu PIN (o la contraseña aquí) para probar con la guardada.";
+      return "SSHorus está bloqueado: escribe tu PIN (o la contraseña aquí) para probar con la guardada.";
     case "HostKeyChanged":
       return "¡La huella del servidor cambió! Podría ser un ataque: no se probó la conexión.";
     default:

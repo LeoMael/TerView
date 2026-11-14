@@ -653,7 +653,7 @@ export const FileExplorer = memo(function FileExplorer({
         message: (
           <>
             <div>
-              Ocupa {formatBytes(bytes)}. Para poder arrastrarlo, TerView primero lo descarga a una carpeta temporal
+              Ocupa {formatBytes(bytes)}. Para poder arrastrarlo, SSHorus primero lo descarga a una carpeta temporal
               (se ve en Transferencias) y después lo copias a donde lo sueltes.
             </div>
             <div>Para archivos grandes es más rápido «Descargar en…» (clic derecho).</div>
@@ -933,7 +933,7 @@ export const FileExplorer = memo(function FileExplorer({
       getCurrentWebview()
         .onDragDropEvent((ev) => {
           const p = ev.payload;
-          // Arrastre que salió de TerView (archivos de la caché de arrastre) pasando por la
+          // Arrastre que salió de SSHorus (archivos de la caché de arrastre) pasando por la
           // ventana: no es para subir. Las rutas solo llegan en "enter" y "drop".
           if (p.type === "enter") ownOverRef.current = isOwnDragPaths(p.paths);
           const own = ownOverRef.current || ownDragActive() || (p.type === "drop" && isOwnDragPaths(p.paths));

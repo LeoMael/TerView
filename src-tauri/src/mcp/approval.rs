@@ -1,4 +1,4 @@
-//! Aprobaciones: el asistente quiere cambiar algo y TerView te lo pregunta.
+//! Aprobaciones: el asistente quiere cambiar algo y SSHorus te lo pregunta.
 //!
 //! El motor emite `mcp://approval` con la petición; la interfaz muestra el diálogo y responde con
 //! `mcp_approval_reply`. Si nadie responde en el tiempo límite, se deniega (y se emite
@@ -80,7 +80,7 @@ impl PendingApprovals {
         v
     }
 
-    /// Deniega todo lo pendiente (al bloquear TerView o apagar el MCP).
+    /// Deniega todo lo pendiente (al bloquear SSHorus o apagar el MCP).
     pub fn deny_all(&self) -> Vec<String> {
         let all: Vec<(String, (ApprovalRequest, oneshot::Sender<Decision>))> =
             self.map.lock().unwrap_or_else(|p| p.into_inner()).drain().collect();

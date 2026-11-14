@@ -183,7 +183,7 @@ function PcToGitHub() {
 
   const pick = (k: LocalPubKey) => {
     setChosen(k);
-    setTitle((t) => t || k.comment || "TerView");
+    setTitle((t) => t || k.comment || "SSHorus");
   };
 
   const browse = async () => {
@@ -215,7 +215,7 @@ function PcToGitHub() {
       title: "¿Subir la llave a GitHub?",
       message: (
         <>
-          Se añadirá a tu cuenta como «{title.trim() || "TerView"}». Con ella podrás usar git por SSH con GitHub.
+          Se añadirá a tu cuenta como «{title.trim() || "SSHorus"}». Con ella podrás usar git por SSH con GitHub.
           <div className="mono gh-keylist">{shortKey(chosen.line)}</div>
         </>
       ),

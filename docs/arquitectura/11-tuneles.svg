@@ -169,8 +169,8 @@
   <text x="112" y="834" class="b">tunnels.json</text>
   <text x="58" y="874" class="s">Definiciones guardadas por servidor:</text>
   <text x="58" y="896" class="s">tipo, puertos, destino, autoStart</text>
-  <text x="58" y="932" class="xs mono">Linux: ~/.config/terview/</text>
-  <text x="58" y="954" class="xs mono">Windows: %APPDATA%\terview\</text>
+  <text x="58" y="932" class="xs mono">Linux: ~/.config/sshorus/</text>
+  <text x="58" y="954" class="xs mono">Windows: %APPDATA%\sshorus\</text>
 
   <rect x="390" y="788" width="440" height="200" rx="16" fill="#2a1a10" stroke="#f97316" stroke-width="2"/>
   <use href="#i-history" x="408" y="806" width="40" height="40" style="color:#f97316"/>

@@ -25,7 +25,7 @@ const SAMPLE: &str = r#"{
 }"#;
 
 fn tmp() -> std::path::PathBuf {
-    std::env::temp_dir().join(format!("terview-audit-test-{}", uuid::Uuid::new_v4()))
+    std::env::temp_dir().join(format!("sshorus-audit-test-{}", uuid::Uuid::new_v4()))
 }
 
 fn sample() -> AuditReport {

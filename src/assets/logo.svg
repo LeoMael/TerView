@@ -1,21 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
-  <defs>
-    <linearGradient id="tv-bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#38bdf8"/>
-      <stop offset="1" stop-color="#4f46e5"/>
-    </linearGradient>
-    <linearGradient id="tv-shine" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#ffffff" stop-opacity="0.22"/>
-      <stop offset="0.5" stop-color="#ffffff" stop-opacity="0"/>
-    </linearGradient>
-  </defs>
-  <rect x="64" y="64" width="896" height="896" rx="220" fill="url(#tv-bg)"/>
-  <rect x="64" y="64" width="896" height="896" rx="220" fill="url(#tv-shine)"/>
-  <!-- barra de ventana -->
-  <circle cx="232" cy="230" r="30" fill="#ffffff" fill-opacity="0.55"/>
-  <circle cx="322" cy="230" r="30" fill="#ffffff" fill-opacity="0.35"/>
-  <circle cx="412" cy="230" r="30" fill="#ffffff" fill-opacity="0.2"/>
-  <!-- prompt -->
-  <path d="M268 392 L476 552 L268 712" fill="none" stroke="#ffffff" stroke-width="104" stroke-linecap="round" stroke-linejoin="round"/>
-  <rect x="540" y="640" width="236" height="96" rx="48" fill="#f97316"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="96 96 832 832">
+  <title>SSHorus</title>
+  <circle cx="512" cy="512" r="412" fill="#0B1733"/>
+  <g transform="translate(76.17 76.17) scale(3.4050)">
+  <path d="M235.49 151.37 A110 110 0 0 1 151.37 235.49 M104.63 235.49 A110 110 0 0 1 20.51 151.37 M20.51 104.63 A110 110 0 0 1 104.63 20.51 M151.37 20.51 A110 110 0 0 1 235.49 104.63" fill="none" stroke="#2F74F0" stroke-width="11"/>
+  <g fill="#2F74F0"><circle cx="238.00" cy="128.00" r="11"/><circle cx="128.00" cy="238.00" r="11"/><circle cx="18.00" cy="128.00" r="11"/><circle cx="128.00" cy="18.00" r="11"/></g>
+  <path d="M66 64 C100 40 158 34 198 50" fill="none" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M38 102 C84 64 168 58 220 94" fill="none" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M38 102 C76 132 150 136 198 100" fill="none" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M180 118 V172" fill="none" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M160 124 C142 160 112 178 86 172 C62 166 56 140 74 132 C90 126 102 142 90 152" fill="none" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="126" cy="90" r="22" fill="#FFFFFF"/>
+  <path d="M112 186 L132 201 L112 216" fill="none" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/><path d="M144 216 H166" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round"/>
+  </g>
 </svg>

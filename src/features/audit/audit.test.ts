@@ -91,7 +91,7 @@ function byId(checks: Check[]): Map<string, Check> {
   eq(c.get("ssh.root")?.status, "bad", "rocky: PermitRootLogin yes = mal");
   ok(c.get("ssh.root")?.fix?.danger, "rocky: arreglar root es peligroso");
   ok(c.get("ssh.root")?.fix?.note?.includes("root"), "rocky: conectado como root → aviso de perder acceso");
-  ok(c.get("ssh.root")?.fix?.command.includes("/etc/ssh/sshd_config.d/00-terview.conf"), "rocky: con Include usa un archivo aparte");
+  ok(c.get("ssh.root")?.fix?.command.includes("/etc/ssh/sshd_config.d/00-sshorus.conf"), "rocky: con Include usa un archivo aparte");
   eq(c.get("ssh.password")?.status, "warn", "rocky: contraseña por SSH = aviso");
   eq(c.get("ssh.keys")?.status, "bad", "rocky: authorized_keys 664 = mal");
   ok(c.get("ssh.keys")?.fix?.command === "chmod 600 '/home/ana/.ssh/authorized_keys'", `rocky: chmod de la clave: ${c.get("ssh.keys")?.fix?.command}`);

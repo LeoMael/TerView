@@ -81,7 +81,7 @@ export function parseEditorWindowParams(search: string): EditorWindowParams | nu
   return { sessionId, path, server: q.get("server") ?? "" };
 }
 
-/** Título de la ventana: «archivo — servidor — TerView». */
+/** Título de la ventana: «archivo — servidor — SSHorus». */
 export function editorWindowTitle(fileName: string, server: string): string {
-  return [fileName, server, "TerView"].filter(Boolean).join(" — ");
+  return [fileName, server, "SSHorus"].filter(Boolean).join(" — ");
 }

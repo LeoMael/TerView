@@ -1,4 +1,4 @@
-// Choques entre los alias que TerView escribe en ~/.ssh/config y los `Host` escritos a mano.
+// Choques entre los alias que SSHorus escribe en ~/.ssh/config y los `Host` escritos a mano.
 //   if (!(await checkSshAliasesBeforeExport())) return;   // antes de profiles.exportSshConfig()
 //   <SshAliasMatches matches={…} />                       // lista compacta de coincidencias
 import { useState } from "react";
@@ -17,9 +17,9 @@ export function describeMatch(m: SshHostMatch): string {
       : m.kind === "pattern"
         ? `lo captura el patrón «${m.pattern}»`
         : `lo captura un Match («${m.pattern}»)${m.conditional ? " según otras condiciones" : ""}`;
-  const effect = m.beforeTerview
-    ? "ssh usará esos valores en lugar de los de TerView"
-    : "sus opciones se mezclarán con las de TerView";
+  const effect = m.beforeSshorus
+    ? "ssh usará esos valores en lugar de los de SSHorus"
+    : "sus opciones se mezclarán con las de SSHorus";
   return `${where} ${what}: ${effect}.`;
 }
 
@@ -31,7 +31,7 @@ export function SshAliasMatches({ matches }: { matches: SshHostMatch[] }) {
           <span className="mono ssha-line">{m.text}</span>
           <span className="faint ssha-where">
             {m.file}:{m.line}
-            {m.beforeTerview ? " · gana sobre TerView" : ""}
+            {m.beforeSshorus ? " · gana sobre SSHorus" : ""}
             {m.conditional ? " · condicional" : ""}
           </span>
         </li>

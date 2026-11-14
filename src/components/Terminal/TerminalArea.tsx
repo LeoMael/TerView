@@ -15,7 +15,7 @@ import {
   allOpenTmuxNames,
   detachedLeftovers,
   getTmuxMode,
-  isTerviewName,
+  isSshorusName,
   killTmuxSessions,
   manualAttachCommand,
   newTmuxName,
@@ -60,7 +60,7 @@ function initialTabs(sessionId: string, disabled: boolean): SubTab[] {
   if (disabled) return [];
   const tab = useTabs.getState().tabs.find((t) => t.sessionId === sessionId);
   const mode = getTmuxMode(tab?.profileId ?? null);
-  const restore = mode === "never" ? [] : (tab?.restoreTerminals ?? []).filter(isTerviewName);
+  const restore = mode === "never" ? [] : (tab?.restoreTerminals ?? []).filter(isSshorusName);
   if (restore.length > 0) return restore.map((name, i) => newTab(i + 1, name, true));
   return [newTab(1, mode === "never" ? null : newTmuxName())];
 }

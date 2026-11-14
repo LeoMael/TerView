@@ -1,8 +1,8 @@
-# Manual de uso de TerView
+# Manual de uso de SSHorus
 
-TerView es un programa para trabajar con tus servidores Linux desde tu PC: terminal, archivos, comandos, contenedores y más, todo en una sola ventana.
+SSHorus es un programa para trabajar con tus servidores Linux desde tu PC: terminal, archivos, comandos, contenedores y más, todo en una sola ventana.
 
-Este manual también está dentro de TerView: pulsa el botón **?** de la barra de pestañas, o ve a **Ajustes → Manual de uso**.
+Este manual también está dentro de SSHorus: pulsa el botón **?** de la barra de pestañas, o ve a **Ajustes → Manual de uso**.
 
 ## Índice
 
@@ -36,20 +36,21 @@ Este manual también está dentro de TerView: pulsa el botón **?** de la barra 
 
 ![Ventana Acerca de con la versión y el botón «Buscar actualizaciones»](manual/01-instalar.png)
 
-**Para qué sirve:** tener TerView en tu PC y al día.
+**Para qué sirve:** tener SSHorus en tu PC y al día.
 
 **Cómo se usa:**
 
-1. Abre la página de [la última versión](https://github.com/LeoMael/TerView/releases/latest) y baja el archivo de tu sistema.
-2. Windows: ejecuta el `…-setup.exe`. Fedora: `sudo dnf install ./TerView-*.rpm`. Ubuntu: `sudo apt install ./TerView_*.deb`. Cualquier Linux: la `.AppImage` (dale permiso con `chmod +x`).
+1. Abre la página de [la última versión](https://github.com/LeoMael/SSHorus/releases/latest) y baja el archivo de tu sistema.
+2. Windows: ejecuta el `…-setup.exe`. Fedora: `sudo dnf install ./SSHorus-*.rpm`. Ubuntu: `sudo apt install ./SSHorus_*.deb`. Cualquier Linux: la `.AppImage` (dale permiso con `chmod +x`).
 3. Para actualizar, ve a **Ajustes → Acerca de** y pulsa **Buscar actualizaciones**.
 4. Si hay una versión nueva, pulsa **Actualizar y reiniciar**.
 
 **Notas:**
 
-- Con **Buscar actualizaciones automáticamente** activado, TerView mira al abrirse y te avisa con **Ver novedades** o **Más tarde**.
+- Con **Buscar actualizaciones automáticamente** activado, SSHorus mira al abrirse y te avisa con **Ver novedades** o **Más tarde**.
 - Con `.deb` o `.rpm` te pedirá tu contraseña de administrador al instalar.
 - Si sale «Esta instalación no se actualiza sola», pulsa **Ir a descargas** y baja el instalador nuevo.
+- Si venías de **TerView** (el nombre anterior), SSHorus empieza vacía: añade otra vez tus servidores o usa **Importar `~/.ssh/config`**, y vuelve a escribir las contraseñas. <!-- sin-renombrar -->
 
 ## Añadir un servidor
 
@@ -62,8 +63,8 @@ Este manual también está dentro de TerView: pulsa el botón **?** de la barra 
 1. En la barra lateral pulsa **+ Nuevo → Servidor**.
 2. Escribe **Nombre**, **Host**, **Puerto** y **Usuario**. Al escribir el host verás tus servidores guardados; elige uno para copiar su host y puerto.
 3. En **Autenticación** elige **Contraseña**, **Llave SSH** o **Agente SSH**.
-4. En **Contraseña de sudo** elige **Pedir cada vez**, **La de la conexión** o **Guardar**. Con **La de la conexión** vale también la contraseña que escribes al conectar aunque no la guardes: TerView la recuerda mientras dure la conexión y la olvida al cerrarla o al bloquear.
-5. Pulsa **Guardar**. Antes de guardar, TerView prueba la conexión (máx. 10 s) y desconecta.
+4. En **Contraseña de sudo** elige **Pedir cada vez**, **La de la conexión** o **Guardar**. Con **La de la conexión** vale también la contraseña que escribes al conectar aunque no la guardes: SSHorus la recuerda mientras dure la conexión y la olvida al cerrarla o al bloquear.
+5. Pulsa **Guardar**. Antes de guardar, SSHorus prueba la conexión (máx. 10 s) y desconecta.
 6. La primera vez verás la huella del servidor: si es el tuyo, pulsa **Confiar y conectar**.
 7. Haz **doble clic** en el servidor para conectarte.
 
@@ -120,8 +121,8 @@ Este manual también está dentro de TerView: pulsa el botón **?** de la barra 
 
 **Terminales persistentes (tmux):**
 
-- Si el servidor tiene tmux, cada terminal sigue viva aunque se corte la red o cierres TerView. Lo verás con el símbolo **∞** en su pestaña.
-- Al volver a conectar, TerView retoma la terminal sola.
+- Si el servidor tiene tmux, cada terminal sigue viva aunque se corte la red o cierres SSHorus. Lo verás con el símbolo **∞** en su pestaña.
+- Al volver a conectar, SSHorus retoma la terminal sola.
 - Clic derecho en la pestaña → **Desacoplar (sigue corriendo en el servidor)** para dejarla trabajando.
 
 **Sesiones sueltas:**
@@ -131,7 +132,7 @@ Este manual también está dentro de TerView: pulsa el botón **?** de la barra 
 
 **Notas:**
 
-- Con el foco en la terminal, `Ctrl+W` y `Ctrl+B` son de la shell (borrar palabra, prefijo de tmux), no de TerView.
+- Con el foco en la terminal, `Ctrl+W` y `Ctrl+B` son de la shell (borrar palabra, prefijo de tmux), no de SSHorus.
 - Cerrar una terminal persistente termina su sesión tmux.
 
 ## Explorador de archivos
@@ -146,14 +147,14 @@ Este manual también está dentro de TerView: pulsa el botón **?** de la barra 
 2. Para subir, pulsa **Subir** o **Subir carpeta**, o arrastra archivos desde tu PC a la lista.
 3. Para bajar, selecciona y pulsa **Descargar**, o clic derecho → **Descargar en…** y elige la carpeta.
 4. Clic derecho → **Descargar y abrir carpeta** baja a Descargas y luego abre la carpeta.
-5. Para llevarlo al escritorio, arrastra el archivo fuera de TerView y suéltalo donde quieras.
+5. Para llevarlo al escritorio, arrastra el archivo fuera de SSHorus y suéltalo donde quieras.
 6. Clic derecho → **Permisos…** para marcar lectura, escritura y ejecución (o escribir el número **Octal**).
 
 **Notas:**
 
 - También tienes **Nueva carpeta**, **Nuevo archivo**, **Renombrar**, **Copiar ruta** y **Eliminar**.
 - El botón del ojo muestra u oculta los archivos ocultos (los que empiezan por punto).
-- Al arrastrar al escritorio, TerView primero lo baja a una carpeta temporal. Lo verás en Transferencias.
+- Al arrastrar al escritorio, SSHorus primero lo baja a una carpeta temporal. Lo verás en Transferencias.
 
 ## Transferencias
 
@@ -240,7 +241,7 @@ Este manual también está dentro de TerView: pulsa el botón **?** de la barra 
 
 - No hace falta tenerlos abiertos: se conectan en segundo plano y se desconectan al terminar.
 - **Cancelar todo** detiene el comando en todos. **Repetir** lo vuelve a lanzar.
-- Los comandos con `sudo` funcionan igual que en Administración: TerView usa la contraseña de sudo que ya tiene (en memoria, guardada u otra pestaña). Si falta, te la pide **de un servidor en uno**; pulsa **Saltar este servidor** para no ejecutarlo ahí.
+- Los comandos con `sudo` funcionan igual que en Administración: SSHorus usa la contraseña de sudo que ya tiene (en memoria, guardada u otra pestaña). Si falta, te la pide **de un servidor en uno**; pulsa **Saltar este servidor** para no ejecutarlo ahí.
 - Como root o con sudo sin contraseña se ejecuta tal cual. Si la contraseña es incorrecta, ese servidor sale con error y la próxima vez se pide otra.
 
 ## Contenedores
@@ -251,7 +252,7 @@ Este manual también está dentro de TerView: pulsa el botón **?** de la barra 
 
 **Cómo se usa:**
 
-1. Abre la pestaña **Contenedores**. TerView detecta Podman o Docker solo.
+1. Abre la pestaña **Contenedores**. SSHorus detecta Podman o Docker solo.
 2. Selecciona contenedores y usa **Iniciar**, **Parar**, **Reiniciar** o **Eliminar**.
 3. En cada fila tienes **Logs** y **Terminal dentro del contenedor**.
 4. Pulsa **Nuevo contenedor**, elige una plantilla (Nginx, PostgreSQL, Redis…) y pulsa **Crear y arrancar**.
@@ -319,11 +320,11 @@ Este manual también está dentro de TerView: pulsa el botón **?** de la barra 
      tu equipo, con frase opcional). Si sshd limita el acceso con `AllowGroups`, te ofrece añadir el grupo; si
      usa `AllowUsers`, te avisa y, al terminar, puedes añadirlo con un cambio aparte. También puedes darle sudo
      y activar *linger*. No cambia `PasswordAuthentication`. Al acabar prueba la conexión con esa llave y te
-     ofrece **guardar el servidor** en TerView con ese usuario.
+     ofrece **guardar el servidor** en SSHorus con ese usuario.
 3. En **Grupos** pulsa **Crear grupo**, o usa **Miembros**, **Renombrar** o **Eliminar**.
 4. Antes de cada cambio verás el comando exacto. Pulsa **Ejecutar** para aplicarlo.
 5. En **Conectados ahora** ves quién está dentro y puedes **Cerrar sesión**.
-6. **Historial** guarda lo que has cambiado desde TerView.
+6. **Historial** guarda lo que has cambiado desde SSHorus.
 
 **Puertos y sitios web:**
 
@@ -341,6 +342,8 @@ Este manual también está dentro de TerView: pulsa el botón **?** de la barra 
 - En **Puertos**, **Ver todos con sudo** muestra también los procesos de otros usuarios.
 
 **Mapa (diagrama de la infraestructura):**
+
+![Mapa de un proyecto: Internet, cortafuegos, puertos, nginx, sitios, contenedores por usuario y la base de datos de otro servidor](manual/13d-mapa.png)
 
 - **Administración → Mapa** dibuja el servidor como un diagrama de arquitectura: Internet → cortafuegos →
   puertos abiertos → proxy web (nginx, Caddy…) → sitios (con su certificado) → apps, contenedores y
@@ -382,7 +385,7 @@ Este manual también está dentro de TerView: pulsa el botón **?** de la barra 
 
 - La lista sale de OSV.dev, de la herramienta de tu distro y de Trivy si está instalado. Nunca de una IA.
 - A OSV.dev solo se envían nombres y versiones de paquetes. **ver qué se envía** te lo enseña.
-- **Cancelar** detiene el análisis también en el servidor. TerView nunca ejecuta arreglos solo.
+- **Cancelar** detiene el análisis también en el servidor. SSHorus nunca ejecuta arreglos solo.
 
 ## Auditar servidor
 
@@ -411,7 +414,7 @@ puertos), servicios caídos, disco, memoria, intentos de entrada y fail2ban, y p
 
 - Sin sudo se revisa lo que se puede; lo demás sale **sin comprobar**. Pulsa **Con sudo…** para verlo todo.
 - No lanza el escáner de vulnerabilidades: usa el último análisis (o pulsa **Analizar**).
-- TerView nunca arregla nada solo. Con un problema grave, la nota general no pasa de C (75).
+- SSHorus nunca arregla nada solo. Con un problema grave, la nota general no pasa de C (75).
 
 ## IA para explicar informes
 
@@ -431,7 +434,7 @@ puertos), servicios caídos, disco, memoria, intentos de entrada y fail2ban, y p
 
 - No se envían el nombre del servidor, su IP, usuarios, rutas ni contraseñas.
 - La IA solo explica. Los comandos que proponga nunca se ejecutan solos.
-- No es lo mismo que el MCP: aquí TerView le pregunta a la IA, no al revés.
+- No es lo mismo que el MCP: aquí SSHorus le pregunta a la IA, no al revés.
 
 ## GitHub
 
@@ -457,11 +460,11 @@ puertos), servicios caídos, disco, memoria, intentos de entrada y fail2ban, y p
 
 ![Pantalla de bloqueo pidiendo el PIN, con el enlace «Olvidé mi PIN»](manual/17-pin.png)
 
-**Para qué sirve:** cifrar tus contraseñas guardadas y bloquear TerView cuando no lo usas.
+**Para qué sirve:** cifrar tus contraseñas guardadas y bloquear SSHorus cuando no lo usas.
 
 **Cómo se usa:**
 
-1. Pulsa el **candado** de la barra de pestañas → **Proteger con PIN** (o acepta la oferta al abrir TerView).
+1. Pulsa el **candado** de la barra de pestañas → **Proteger con PIN** (o acepta la oferta al abrir SSHorus).
 2. Escribe un PIN de 6 números dos veces y pulsa **Crear PIN**.
 3. Para bloquear al momento: candado → **Bloquear ahora**, o `Ctrl+Shift+L`.
 4. Para desbloquear, escribe tu PIN.
@@ -482,7 +485,7 @@ puertos), servicios caídos, disco, memoria, intentos de entrada y fail2ban, y p
 
 ![Ajustes → Asistentes de IA (MCP) con permisos por servidor y la configuración para copiar](manual/18-mcp.png)
 
-**Para qué sirve:** que un asistente como Claude Code o Claude Desktop te ayude con tus servidores a través de TerView, sin ver nunca tus contraseñas ni tus llaves.
+**Para qué sirve:** que un asistente como Claude Code o Claude Desktop te ayude con tus servidores a través de SSHorus, sin ver nunca tus contraseñas ni tus llaves.
 
 **Cómo se usa:**
 
@@ -492,15 +495,15 @@ puertos), servicios caídos, disco, memoria, intentos de entrada y fail2ban, y p
 4. Pégalo en una terminal de tu PC y pulsa `Enter`. Es un comando así:
 
 ```bash
-claude mcp add --env TERVIEW_MCP_TOKEN=<token> --transport stdio terview -- /ruta/a/terview-mcp
+claude mcp add --env SSHORUS_MCP_TOKEN=<token> --transport stdio sshorus -- /ruta/a/sshorus-mcp
 ```
 
-5. Deja TerView abierto y pídele algo al asistente.
-6. Cuando quiera cambiar algo, TerView te pregunta: **Permitir una vez**, **Permitir siempre…** o **Denegar**.
+5. Deja SSHorus abierto y pídele algo al asistente.
+6. Cuando quiera cambiar algo, SSHorus te pregunta: **Permitir una vez**, **Permitir siempre…** o **Denegar**.
 
 **Notas:**
 
-- `terview-mcp` es el puente que se instala con TerView. Añade `--scope user` al comando para usarlo en todos tus proyectos.
+- `sshorus-mcp` es el puente que se instala con SSHorus. Añade `--scope user` al comando para usarlo en todos tus proyectos.
 - Con la AppImage, usa **Claude Code (HTTP directo)**: la ruta del puente cambia en cada arranque.
 - Para Claude Desktop, copia el bloque **Claude Desktop** en `claude_desktop_config.json` y reinicia Claude Desktop.
 - Lo que solo lee pasa solo. Lo peligroso (`rm -rf`, `sudo`, `reboot`…) se pregunta siempre. Si no respondes a tiempo, se deniega.
@@ -509,21 +512,21 @@ claude mcp add --env TERVIEW_MCP_TOKEN=<token> --transport stdio terview -- /rut
 **Aceptar automáticamente:** si te cansa aprobar cada paso, en **Ajustes → Asistentes de IA (MCP)** pulsa **Automático…** junto a un servidor con acceso **Completo** (o, en el propio diálogo de permiso, **Aceptar automáticamente en este servidor…**).
 
 - **Cambios normales**: lo que no es peligroso pasa sin preguntar.
-- **Todo (incluido sudo)**: también lo peligroso y los comandos con sudo. Se marca en rojo y se pide confirmación. Si TerView tiene la contraseña de sudo (en memoria o guardada) la usa sin preguntar; si no, la pide una vez.
-- Duración: **15 min**, **1 hora**, **hasta cerrar TerView** o **siempre**.
+- **Todo (incluido sudo)**: también lo peligroso y los comandos con sudo. Se marca en rojo y se pide confirmación. Si SSHorus tiene la contraseña de sudo (en memoria o guardada) la usa sin preguntar; si no, la pide una vez.
+- Duración: **15 min**, **1 hora**, **hasta cerrar SSHorus** o **siempre**.
 - Mientras esté activo verás **Automático** en la barra de pestañas: un clic lo apaga en todos los servidores.
-- Nunca funciona con TerView bloqueado ni en servidores de solo lectura. Cada acción queda en **Actividad del asistente** marcada como «automático», y las peligrosas muestran un aviso.
+- Nunca funciona con SSHorus bloqueado ni en servidores de solo lectura. Cada acción queda en **Actividad del asistente** marcada como «automático», y las peligrosas muestran un aviso.
 
 ## Terminal local, Claude Code y Codex
 
-**Para qué sirve:** tener en TerView una terminal de **tu propio PC** y abrir **Claude Code** o **Codex** que ya saben qué servidores tienes.
+**Para qué sirve:** tener en SSHorus una terminal de **tu propio PC** y abrir **Claude Code** o **Codex** que ya saben qué servidores tienes.
 
 **Cómo se usa:**
 
 1. Pulsa el botón del **portátil** en la barra de pestañas (junto a **+**).
 2. Elige **Terminal local**, **Claude Code** o **Codex**. Se abre una pestaña con el icono del portátil (o del robot).
-3. Para trabajar en otra carpeta, pulsa **Cambiar carpeta…** en el mismo menú. TerView recuerda la última.
-4. Si el asistente no está instalado, TerView te muestra el comando oficial y, si aceptas, lo ejecuta en una pestaña para que veas la instalación. Al terminar, vuelve a pulsar **Claude Code** o **Codex**.
+3. Para trabajar en otra carpeta, pulsa **Cambiar carpeta…** en el mismo menú. SSHorus recuerda la última.
+4. Si el asistente no está instalado, SSHorus te muestra el comando oficial y, si aceptas, lo ejecuta en una pestaña para que veas la instalación. Al terminar, vuelve a pulsar **Claude Code** o **Codex**.
 5. La primera vez, el asistente te pide iniciar sesión (con tu suscripción o una clave de API): `/login` en Claude Code, o lo que indique Codex.
 
 **Qué sabe el asistente:** la lista de tus servidores con su alias de `~/.ssh/config` (puede usar `ssh <alias> '<comando>'`), su usuario, host y proyecto, cuáles están conectados, qué servidor estabas mirando y la fecha. Si el **MCP** está activo, también lo tiene configurado, con tus permisos de siempre. Nunca recibe contraseñas, llaves, tokens ni el PIN.
@@ -535,13 +538,13 @@ claude mcp add --env TERVIEW_MCP_TOKEN=<token> --transport stdio terview -- /rut
 - Cerrar la pestaña termina lo que corre en ella y todo lo que lanzó.
 - En **Ajustes → Terminal local e IA** eliges qué contexto recibe (y lo puedes ver), y si usa ssh directo, el MCP o las dos cosas.
 - Para el ssh directo, exporta los servidores a `~/.ssh/config` (barra lateral → **Nuevo → Exportar**). Los servidores con contraseña solo funcionan por el MCP.
-- TerView no escribe nada en tu carpeta ni lee la configuración de Claude Code o Codex.
+- SSHorus no escribe nada en tu carpeta ni lee la configuración de Claude Code o Codex.
 
 ## Ajustes
 
 ![Ventana de Ajustes en la sección Apariencia](manual/19-ajustes.png)
 
-**Para qué sirve:** adaptar TerView a tu gusto.
+**Para qué sirve:** adaptar SSHorus a tu gusto.
 
 **Cómo se usa:**
 
@@ -566,7 +569,7 @@ claude mcp add --env TERVIEW_MCP_TOKEN=<token> --transport stdio terview -- /rut
 
 Puedes cambiarlos en **Ajustes → Atajos de teclado**: haz clic en un atajo y pulsa la combinación nueva
 (`Esc` cancela; `Retroceso` lo deja sin atajo). Si la combinación ya la usa otra acción, o choca con algo de la
-terminal (como `Ctrl+C`) o del sistema, TerView te avisa antes. Cada fila tiene su botón para volver al de por defecto.
+terminal (como `Ctrl+C`) o del sistema, SSHorus te avisa antes. Cada fila tiene su botón para volver al de por defecto.
 Las tablas muestran los atajos **por defecto**; `Esc`, `Enter`, `Supr` en una pestaña y los del ratón no se cambian.
 
 En macOS, donde la tabla dice ⌘, usa ⌘ en lugar de Ctrl. Los demás atajos usan Ctrl también en macOS.
@@ -583,7 +586,7 @@ En macOS, donde la tabla dice ⌘, usa ⌘ en lugar de Ctrl. Los demás atajos u
 | `` Ctrl+` `` | Mostrar u ocultar la terminal | Ctrl |
 | `Ctrl+Shift+M` | Dividir (vista y editor) o quitar la división | Ctrl |
 | `Ctrl+,` | Ajustes | ⌘, |
-| `Ctrl+Shift+L` | Bloquear TerView (con PIN) | ⌘⇧L |
+| `Ctrl+Shift+L` | Bloquear SSHorus (con PIN) | ⌘⇧L |
 | `Supr` en una pestaña | Cerrar esa pestaña | Supr |
 | Clic central en una pestaña | Cerrarla | Igual |
 
@@ -660,10 +663,10 @@ Pulsa **Escribir el comando en la terminal**, revísalo y pulsa `Enter`. Las ter
 En la pantalla de bloqueo pulsa **Olvidé mi PIN** y escribe `BORRAR`. Ver [PIN y bloqueo](#pin-y-bloqueo).
 
 **«Llavero del sistema no disponible» (Linux)**
-Instala o activa GNOME Keyring o KWallet. Sin llavero, TerView te pedirá la contraseña en cada conexión.
+Instala o activa GNOME Keyring o KWallet. Sin llavero, SSHorus te pedirá la contraseña en cada conexión.
 
-**El asistente dice «Abre TerView para usar tus servidores» o «TerView está bloqueado»**
-TerView tiene que estar abierto y desbloqueado. Si dice «Token incorrecto», copia otra vez la configuración desde **Ajustes → Asistentes de IA (MCP)**.
+**El asistente dice «Abre SSHorus para usar tus servidores» o «SSHorus está bloqueado»**
+SSHorus tiene que estar abierto y desbloqueado. Si dice «Token incorrecto», copia otra vez la configuración desde **Ajustes → Asistentes de IA (MCP)**.
 
 **Lentitud o ventana en blanco en Linux**
-Abre TerView con `WEBKIT_DISABLE_COMPOSITING_MODE=1 terview`.
+Abre SSHorus con `WEBKIT_DISABLE_COMPOSITING_MODE=1 sshorus`.

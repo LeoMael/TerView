@@ -96,7 +96,7 @@
   <path d="M640,580 v120 a160,18 0 0 0 320,0 v-120" fill="#2e2a0e" stroke="#facc15" stroke-width="2.5"/>
   <ellipse cx="800" cy="580" rx="160" ry="18" fill="#3a340f" stroke="#facc15" stroke-width="2.5"/>
   <text x="800" y="626" text-anchor="middle" class="b" style="fill:#facc15">Caché de arrastre</text>
-  <text x="800" y="652" text-anchor="middle" class="mono xs" style="fill:#e2e8f0">&lt;caché&gt;/com.terview.app/</text>
+  <text x="800" y="652" text-anchor="middle" class="mono xs" style="fill:#e2e8f0">&lt;caché&gt;/com.sshorus.app/</text>
   <text x="800" y="672" text-anchor="middle" class="mono xs" style="fill:#e2e8f0">arrastre/&lt;uuid&gt;/</text>
   <text x="800" y="696" text-anchor="middle" class="xs">se limpia al abrir la app</text>
 
@@ -151,7 +151,7 @@
   <line x1="638" y1="664" x2="424" y2="664" stroke="#facc15" stroke-width="3" stroke-dasharray="8 6" marker-end="url(#my)"/>
   <circle cx="446" cy="648" r="11" fill="#facc15"/><text x="446" y="653" text-anchor="middle" class="n" style="fill:#0f172a">6</text>
   <text x="464" y="653" style="font-size:14px;font-weight:700;fill:#facc15">al soltar, copia</text>
-  <!-- 7: el soltar también llega a TerView -->
+  <!-- 7: el soltar también llega a SSHorus -->
   <line x1="250" y1="538" x2="250" y2="506" stroke="#f43f5e" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#mr)"/>
   <circle cx="276" cy="521" r="11" fill="#f43f5e"/><text x="276" y="526" text-anchor="middle" class="n">7</text>
   <text x="294" y="526" class="xs" style="fill:#f43f5e;font-weight:700">«soltar» propio: se ignora</text>
@@ -188,7 +188,7 @@
   <use href="#i-shield" x="1048" y="824" width="26" height="26" style="color:#22c55e"/>
   <text x="1086" y="843" class="s" style="fill:#e2e8f0">Solo se arrastra lo que está en la caché</text>
   <use href="#i-eye" x="1048" y="860" width="26" height="26" style="color:#f43f5e"/>
-  <text x="1086" y="879" class="s" style="fill:#e2e8f0">Lo que suelta TerView no se vuelve a subir</text>
+  <text x="1086" y="879" class="s" style="fill:#e2e8f0">Lo que suelta SSHorus no se vuelve a subir</text>
   <use href="#i-play" x="1048" y="896" width="26" height="26" style="color:#38bdf8"/>
   <text x="1086" y="915" class="s" style="fill:#e2e8f0">Ya preparado y sin cambios: arrastre inmediato</text>
   <use href="#i-history" x="1048" y="932" width="26" height="26" style="color:#facc15"/>

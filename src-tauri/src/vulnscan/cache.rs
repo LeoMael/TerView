@@ -1,4 +1,4 @@
-//! Caché del detalle de cada aviso de OSV: un JSON por id en `<caché>/com.terview.app/osv/`.
+//! Caché del detalle de cada aviso de OSV: un JSON por id en `<caché>/com.sshorus.app/osv/`.
 //!
 //! Se guarda con su fecha `modified`: si OSV dice otra fecha, se vuelve a pedir. Se puede borrar sin
 //! perder nada; los archivos de más de 30 días se limpian al empezar un análisis.
@@ -26,9 +26,9 @@ pub struct OsvCache {
 }
 
 impl OsvCache {
-    /// La caché del sistema (`~/.cache/com.terview.app/osv` en Linux).
+    /// La caché del sistema (`~/.cache/com.sshorus.app/osv` en Linux).
     pub fn system() -> Self {
-        OsvCache { dir: dirs::cache_dir().map(|d| d.join("com.terview.app").join("osv")) }
+        OsvCache { dir: dirs::cache_dir().map(|d| d.join("com.sshorus.app").join("osv")) }
     }
 
     #[cfg(test)]

@@ -142,7 +142,7 @@ pub(crate) fn check_paths(root: &Path, paths: &[String]) -> AppResult<Vec<PathBu
                 .canonicalize()
                 .map_err(|_| AppError::NotFound(format!("«{}» ya no está preparado; vuelve a arrastrar", p.display())))?;
             if !real.starts_with(&root) || real == root {
-                return Err(AppError::Invalid(format!("Solo se arrastra lo preparado por TerView: {s}")));
+                return Err(AppError::Invalid(format!("Solo se arrastra lo preparado por SSHorus: {s}")));
             }
             Ok(p)
         })

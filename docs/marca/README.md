@@ -1,6 +1,6 @@
 # Marca: SSHorus
 
-A partir de la versión que sigue a la 0.5.0, TerView pasa a llamarse **SSHorus** (SSH + Horus, el dios
+Desde la versión que sigue a la 0.5.0, la app (antes TerView) se llama **SSHorus** (SSH + Horus, el dios
 halcón egipcio cuyo ojo todo lo ve y protege). El logo elegido es el **ojo de Horus dentro de un anillo con
 cuatro nodos y la terminal `>_` debajo del ojo**: es el **modelo 6 de
 [`modelos_isotipos_v2.png`](modelos_isotipos_v2.png)** (abajo a la derecha), redibujado en vectores planos,
@@ -8,8 +8,8 @@ sin degradados ni brillos. Todo lo listo para usar está en [`sshorus/final/`](s
 
 ![Logo final a tamaño real](sshorus/final/hoja.png)
 
-`isotipo.svg` e `isotipo-1024.png` en esta carpeta son el **logo viejo** de TerView. Se quitan cuando se
-haga el cambio de nombre en la app.
+El logo viejo de TerView (`isotipo.svg` e `isotipo-1024.png` en esta carpeta) se quitó al cambiar el nombre;
+queda en el historial de git.
 
 ## Qué archivo usar para cada cosa
 
@@ -79,12 +79,25 @@ En `sshorus/ojo/` y `sshorus/halcon/` quedan propuestas anteriores (el ojo con e
 halcón de perfil). El logo final anterior (ojo con `>_` en el iris, en azul y oro) queda en el historial de
 git.
 
-## Siguiente paso
+## Dónde se usa en la app
 
-Cambiar el nombre en la app (migrando los datos, ver `docs/PENDIENTES.md`) y generar los iconos con:
+El cambio de nombre ya está hecho (los datos de TerView no se migran, ver `CHANGELOG.md`). Los iconos
+salieron de:
 
 ```
-npm run tauri icon docs/marca/sshorus/final/icono-app-1024.png
+npx tauri icon docs/marca/sshorus/final/icono-app-1024.png
 ```
 
-Después, cambiar `src-tauri/icons/32x32.png` por `icono-app-32.png`.
+y después, a mano: `icono-app-32.png` en lugar de `src-tauri/icons/32x32.png`, y `icono-app-24.png` y
+`icono-app-32.png` como capas de 24 y 32 px de `src-tauri/icons/icon.ico` (se borran las carpetas
+`android/` e `ios/` que crea `tauri icon`).
+
+| Dónde | Archivo |
+|---|---|
+| Iconos de la app (`src-tauri/icons/`) | `icono-app-1024.png`, con `icono-app-24/32.png` en los tamaños pequeños |
+| Logo de la barra lateral, pestañas, Acerca de, bienvenida y PIN (`src/components/ui/Logo.tsx`) | `src/assets/logo.svg` (= `icono-app.svg` recortado al disco); a 32 px o menos `logo-24.svg` / `logo-32.svg` (= `icono-app-24/32.svg`) |
+| Favicon (`public/favicon.svg`) | `favicon.svg` |
+| Logo del README | `icono-app-1024.png` |
+
+La app no tiene icono en la bandeja del sistema; si se añade, usar los de la tabla de arriba (`monocromo-*`
+en macOS y Linux, `isotipo-pequeno-*` en Windows).

@@ -2,11 +2,11 @@
 //!
 //! - Cada servidor tiene un nivel de acceso: Sin acceso (por defecto), Solo lectura o Completo.
 //! - Cada acción del asistente es de lectura o de cambio. Las lecturas pasan solas; los cambios
-//!   piden permiso en TerView, salvo que el usuario haya dicho «Permitir siempre» a esa misma acción
+//!   piden permiso en SSHorus, salvo que el usuario haya dicho «Permitir siempre» a esa misma acción
 //!   en ese servidor.
 //! - Lo peligroso (`rm -rf`, `prune`, `sudo`, `reboot`… o un comando ⚠️ del catálogo) pide permiso
 //!   SIEMPRE: no se puede recordar.
-//! - «Aceptar automáticamente» (por servidor, solo con acceso Completo y TerView desbloqueado):
+//! - «Aceptar automáticamente» (por servidor, solo con acceso Completo y SSHorus desbloqueado):
 //!   `Changes` acepta los cambios normales; `All` también lo peligroso y sudo. Ver `decide_auto`.
 
 use std::collections::BTreeSet;
@@ -93,7 +93,7 @@ pub enum AutoLevel {
 }
 
 /// Modo automático temporal (solo en memoria). `until` = Unix ms en que se apaga; None = hasta
-/// cerrar TerView.
+/// cerrar SSHorus.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AutoGrant {
@@ -108,7 +108,7 @@ impl AutoGrant {
 }
 
 /// Nivel automático que vale ahora: el temporal (si no caducó) manda sobre el guardado («siempre»).
-/// Nunca con TerView bloqueado ni en servidores que no tengan acceso Completo.
+/// Nunca con SSHorus bloqueado ni en servidores que no tengan acceso Completo.
 pub fn effective_auto(access: Access, locked: bool, saved: Option<AutoLevel>, temp: Option<AutoGrant>, now: u64) -> AutoLevel {
     if locked || access != Access::Full {
         return AutoLevel::Off;
@@ -126,7 +126,7 @@ pub enum Verdict {
     Allow(&'static str),
     /// Pasa sin preguntar por el modo «Aceptar automáticamente». `danger` = era peligrosa (o sudo).
     AutoAllow { danger: bool },
-    /// Hay que preguntar en TerView. `can_remember` = se ofrece «Permitir siempre».
+    /// Hay que preguntar en SSHorus. `can_remember` = se ofrece «Permitir siempre».
     Ask { can_remember: bool },
     /// No se permite. El texto es el motivo, listo para el asistente.
     Deny(String),
@@ -139,7 +139,7 @@ pub const REMEMBERED: &str = "regla guardada («siempre»)";
 
 pub fn no_access_msg(server: &str) -> String {
     format!(
-        "El asistente no tiene acceso a «{server}». Puedes dárselo en TerView → Ajustes → Asistentes de IA (MCP)."
+        "El asistente no tiene acceso a «{server}». Puedes dárselo en SSHorus → Ajustes → Asistentes de IA (MCP)."
     )
 }
 
@@ -147,7 +147,7 @@ pub fn read_only_msg(server: &str) -> String {
     format!(
         "«{server}» es de solo lectura para el asistente: no se permiten cambios. \
          Usa herramientas de lectura (list_dir, read_file, comandos 📊 de run_catalog_command) \
-         o pide al usuario acceso completo en TerView."
+         o pide al usuario acceso completo en SSHorus."
     )
 }
 
@@ -163,7 +163,7 @@ pub fn decide(server: &str, access: Access, action: &Action, remembered: &BTreeS
 }
 
 /// Como `decide`, con el modo automático que vale ahora (ver `effective_auto`, que ya lo apaga con
-/// TerView bloqueado o sin acceso Completo). Sin acceso y solo lectura no cambian.
+/// SSHorus bloqueado o sin acceso Completo). Sin acceso y solo lectura no cambian.
 pub fn decide_auto(server: &str, access: Access, action: &Action, remembered: &BTreeSet<String>, auto: AutoLevel) -> Verdict {
     let auto = if access == Access::Full { auto } else { AutoLevel::Off };
     if access == Access::None {
@@ -277,7 +277,7 @@ pub fn danger_reasons(command: &str) -> Vec<String> {
 }
 
 /// ¿El comando usa sudo? (la misma regla que «usa sudo» de `danger_reasons`, solo para sudo: doas y
-/// pkexec solo aceptan la contraseña desde una terminal). Si lo usa, TerView le da la contraseña.
+/// pkexec solo aceptan la contraseña desde una terminal). Si lo usa, SSHorus le da la contraseña.
 pub fn uses_sudo(command: &str) -> bool {
     static RE: OnceLock<Option<Regex>> = OnceLock::new();
     RE.get_or_init(|| Regex::new(&format!(r"{W}sudo(?:\s|$)")).ok())

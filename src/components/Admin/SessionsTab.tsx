@@ -72,7 +72,7 @@ export function SessionsTab() {
           <div className="adm-empty-text">
             No hay sesiones con terminal registradas.
             <div className="faint">
-              Las conexiones sin terminal (como las que usa TerView para archivos y comandos) no aparecen, y algunos
+              Las conexiones sin terminal (como las que usa SSHorus para archivos y comandos) no aparecen, y algunos
               servidores o contenedores no registran las sesiones.
             </div>
           </div>

@@ -31,7 +31,7 @@ export function SecuritySection() {
   return (
     <>
       <SettingGroup>
-        <Row label="Proteger con PIN" hint={enabled ? undefined : "Cifra las contraseñas guardadas y bloquea TerView."}>
+        <Row label="Proteger con PIN" hint={enabled ? undefined : "Cifra las contraseñas guardadas y bloquea SSHorus."}>
           <button
             role="switch"
             aria-checked={enabled}
@@ -70,7 +70,7 @@ export function SecuritySection() {
           </>
         )}
 
-        <Row label="Bloquear tras" hint="Sin usar TerView.">
+        <Row label="Bloquear tras" hint="Sin usar SSHorus.">
           <div className={enabled ? "st-segmented" : "st-segmented st-disabled"} role="radiogroup" aria-label="Bloquear tras">
             {MINUTES.map((o) => (
               <button

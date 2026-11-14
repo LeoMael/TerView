@@ -3,7 +3,7 @@
 // bloqueo, el motor no da contraseñas guardadas mientras esté bloqueado.
 //
 // initLock() se llama una vez por ventana (principal y editores aparte), ANTES de montar la interfaz:
-// así su filtro de teclado va primero y, con TerView bloqueado, ningún atajo ni la terminal reciben
+// así su filtro de teclado va primero y, con SSHorus bloqueado, ningún atajo ni la terminal reciben
 // teclas.
 import { create } from "zustand";
 import { listen } from "@tauri-apps/api/event";

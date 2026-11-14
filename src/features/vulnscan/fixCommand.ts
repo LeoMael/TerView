@@ -1,5 +1,5 @@
 // Comando sugerido para arreglar un hallazgo. Solo texto para copiar o insertar en la terminal (sin
-// Enter): TerView no lo ejecuta. La única excepción es el botón «Actualizar imagen» de las imágenes
+// Enter): SSHorus no lo ejecuta. La única excepción es el botón «Actualizar imagen» de las imágenes
 // de contenedores (ver imageUpdate.ts), que muestra los comandos exactos y pide confirmación antes.
 // Funciones puras, sin React ni Tauri.
 import type { Finding, Report, Target } from "../../api/vulnscan";

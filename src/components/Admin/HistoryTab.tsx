@@ -28,7 +28,7 @@ export function HistoryTab() {
     <div className="adm-pane">
       <div className="adm-toolbar">
         <span className="muted">
-          Cambios hechos desde TerView en este servidor (se guardan en este equipo, máximo {HISTORY_LIMIT}). Nunca incluyen
+          Cambios hechos desde SSHorus en este servidor (se guardan en este equipo, máximo {HISTORY_LIMIT}). Nunca incluyen
           contraseñas.
         </span>
         <div className="adm-spacer" />
@@ -44,7 +44,7 @@ export function HistoryTab() {
         </button>
       </div>
       {list.length === 0 ? (
-        <div className="empty-state">Todavía no has hecho cambios en este servidor desde TerView.</div>
+        <div className="empty-state">Todavía no has hecho cambios en este servidor desde SSHorus.</div>
       ) : (
         <ul className="adm-history" aria-label="Historial de cambios">
           {list.map((e) => {

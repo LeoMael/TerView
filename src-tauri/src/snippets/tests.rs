@@ -9,7 +9,7 @@ struct TempDir(PathBuf);
 
 impl TempDir {
     fn new() -> Self {
-        let p = std::env::temp_dir().join(format!("terview-snippets-test-{}", uuid::Uuid::new_v4()));
+        let p = std::env::temp_dir().join(format!("sshorus-snippets-test-{}", uuid::Uuid::new_v4()));
         fs::create_dir_all(&p).unwrap();
         TempDir(p)
     }
@@ -190,7 +190,7 @@ fn bootstrap_is_safe_for_any_login_shell() {
 
 #[test]
 fn pid_mark_is_taken_out_of_stderr() {
-    let mut err = b"aviso del .bashrc\n__TERVIEW_PID__=4321\nerror real\n".to_vec();
+    let mut err = b"aviso del .bashrc\n__SSHORUS_PID__=4321\nerror real\n".to_vec();
     let t = exec::take_pid_mark(&mut err).unwrap();
     assert_eq!(t, exec::RemoteTarget { pid: 4321 });
     assert_eq!(err, b"aviso del .bashrc\nerror real\n");
@@ -198,11 +198,11 @@ fn pid_mark_is_taken_out_of_stderr() {
     assert!(exec::take_pid_mark(&mut err).is_none());
 
     // Incompleta (sin salto de línea todavía): no se toca.
-    let mut half = b"__TERVIEW_PID__=12".to_vec();
+    let mut half = b"__SSHORUS_PID__=12".to_vec();
     assert!(exec::take_pid_mark(&mut half).is_none());
-    assert_eq!(half, b"__TERVIEW_PID__=12");
+    assert_eq!(half, b"__SSHORUS_PID__=12");
     // Valores inválidos (o PID 0/1): no se aceptan.
-    for bad in [&b"__TERVIEW_PID__=abc\n"[..], b"__TERVIEW_PID__=1\n", b"__TERVIEW_PID__=55:2\n"] {
+    for bad in [&b"__SSHORUS_PID__=abc\n"[..], b"__SSHORUS_PID__=1\n", b"__SSHORUS_PID__=55:2\n"] {
         let mut v = bad.to_vec();
         assert!(exec::take_pid_mark(&mut v).is_none());
     }
@@ -481,7 +481,7 @@ async fn live_exec_timeout_kills_remote_process() {
         let r = exec::run_inner(&s, &cmd, None, 1, None, channel_signals).await.unwrap();
         assert!(r.timed_out);
         assert_eq!(r.stdout, "antes\n");
-        assert!(!r.stderr.contains("__TERVIEW_PID__"));
+        assert!(!r.stderr.contains("__SSHORUS_PID__"));
         assert_eq!(remote_count(&s, &format!("slee[p] {n}")).await, 0, "señales del canal: {channel_signals}");
     }
 }

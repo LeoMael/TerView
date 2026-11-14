@@ -10,11 +10,11 @@ import { useProfiles } from "../../stores/profiles";
 import { toast } from "../../stores/toasts";
 import { useSnippets } from "./state";
 
-export const EXPORT_FILE_NAME = "terview-comandos.json";
+export const EXPORT_FILE_NAME = "sshorus-comandos.json";
 const JSON_FILTER = [{ name: "JSON", extensions: ["json"] }];
 
 interface ExportFile {
-  app: "TerView";
+  app: "SSHorus";
   version: 1;
   commands: Omit<Snippet, "id">[];
 }
@@ -23,7 +23,7 @@ const plural = (n: number, one: string, many: string) => (n === 1 ? one : many);
 
 export function snippetsToJson(list: Snippet[]): string {
   const file: ExportFile = {
-    app: "TerView",
+    app: "SSHorus",
     version: 1,
     commands: list.map(({ id: _id, ...rest }) => rest),
   };
@@ -157,7 +157,7 @@ export function planImport(text: string): ImportPlan {
   if (!arr) throw new Error('No se encontró una lista de comandos (se espera { "commands": [...] }).');
   const version = data && typeof data === "object" && !Array.isArray(data) ? (data as { version?: unknown }).version : 1;
   if (typeof version === "number" && version > 1) {
-    throw new Error("El archivo es de una versión más nueva de TerView. Actualiza la aplicación para importarlo.");
+    throw new Error("El archivo es de una versión más nueva de SSHorus. Actualiza la aplicación para importarlo.");
   }
 
   const { projects, servers } = useProfiles.getState();

@@ -116,7 +116,7 @@ export function parseSshd(sec: Map<string, string[]>): SshdConfig {
 export function sshdFixCommand(settings: [string, string][], include: boolean): string {
   const reload = "systemctl reload sshd 2>/dev/null || systemctl reload ssh 2>/dev/null || rc-service sshd reload";
   if (include) {
-    const f = "/etc/ssh/sshd_config.d/00-terview.conf";
+    const f = "/etc/ssh/sshd_config.d/00-sshorus.conf";
     return [
       `f=${f}`,
       'touch "$f" && chmod 600 "$f"',
@@ -128,9 +128,9 @@ export function sshdFixCommand(settings: [string, string][], include: boolean): 
   // Sin sshd_config.d: al principio del archivo principal (gana el primer valor), con copia.
   const c = "/etc/ssh/sshd_config";
   return [
-    `cp -p ${c} ${c}.terview.bak`,
+    `cp -p ${c} ${c}.sshorus.bak`,
     ...settings.map(([k, v]) => `sed -i '1i ${k} ${v}' ${c}`),
-    `sshd -t || { cp -p ${c}.terview.bak ${c}; echo 'sshd -t falló: se dejó como estaba' >&2; exit 1; }`,
+    `sshd -t || { cp -p ${c}.sshorus.bak ${c}; echo 'sshd -t falló: se dejó como estaba' >&2; exit 1; }`,
     reload,
   ].join("\n");
 }
@@ -641,7 +641,7 @@ function systemChecks(ctx: AuditCtx): Check[] {
 // ───────── Intentos de entrada ─────────
 
 function fail2banInstall(family: Family): string | null {
-  const jail = "printf '[sshd]\\nenabled = true\\nbackend = systemd\\n' > /etc/fail2ban/jail.d/terview.local";
+  const jail = "printf '[sshd]\\nenabled = true\\nbackend = systemd\\n' > /etc/fail2ban/jail.d/sshorus.local";
   switch (family) {
     case "fedora":
       return ["dnf -y install fail2ban", jail, "systemctl enable --now fail2ban"].join("\n");

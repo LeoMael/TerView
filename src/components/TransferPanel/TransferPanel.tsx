@@ -37,7 +37,7 @@ import {
 import { ConflictDialog } from "./ConflictDialog";
 import "./TransferPanel.css";
 
-const EXPANDED_KEY = "terview.transfers.expanded";
+const EXPANDED_KEY = "sshorus.transfers.expanded";
 
 function loadExpanded(): boolean {
   try {

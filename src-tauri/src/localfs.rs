@@ -124,7 +124,7 @@ mod tests {
     use super::*;
 
     fn tmp() -> PathBuf {
-        let p = std::env::temp_dir().join(format!("terview-localfs-{}", uuid::Uuid::new_v4().simple()));
+        let p = std::env::temp_dir().join(format!("sshorus-localfs-{}", uuid::Uuid::new_v4().simple()));
         fs::create_dir_all(&p).unwrap();
         p
     }

@@ -79,7 +79,7 @@ fn client() -> AppResult<&'static Client> {
         return Ok(c);
     }
     let c = Client::builder()
-        .user_agent("TerView")
+        .user_agent("SSHorus")
         .connect_timeout(Duration::from_secs(10))
         .redirect(reqwest::redirect::Policy::none())
         .build()

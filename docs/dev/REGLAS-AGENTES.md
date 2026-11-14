@@ -1,4 +1,4 @@
-# Reglas para construir TerView en paralelo
+# Reglas para construir SSHorus en paralelo
 
 Proyecto: `/home/mael/LEO/Projects/TERVIEW` — cliente SSH/SFTP de escritorio (estilo Termius/MobaXterm).
 Tauri 2 + Rust (motor, `src-tauri/`) · React 19 + TypeScript + Vite (interfaz, `src/`).
@@ -38,7 +38,7 @@ npx tsc --noEmit 2>&1 | grep 'src/components/TU_CARPETA'                        
   (lo implementa el agente SSH primero; si aún da `unimplemented!`, sigue con otra cosa y reintenta luego).
 - Tests que necesitan red: márcalos `#[ignore]` y `#[tokio::test]`.
 - **Nunca** escribas en el `~/.ssh/known_hosts` real ni en el llavero real desde tests (usa rutas temporales y el
-  servicio `terview-test`).
+  servicio `sshorus-test`).
 
 ## 3. Motor (Rust)
 

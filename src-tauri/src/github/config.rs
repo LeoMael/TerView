@@ -1,4 +1,4 @@
-//! `<config_dir>/terview/github.json`: recetas de despliegue y el gist de sincronización.
+//! `<config_dir>/sshorus/github.json`: recetas de despliegue y el gist de sincronización.
 //! Nunca guarda el token (ese va solo al llavero).
 
 use std::path::{Path, PathBuf};

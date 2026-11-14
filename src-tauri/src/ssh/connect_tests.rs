@@ -13,7 +13,7 @@ use crate::types::HostKeyInfo;
 struct TmpDir(PathBuf);
 impl TmpDir {
     fn new() -> Self {
-        let p = std::env::temp_dir().join(format!("terview-ssh-test-{}", uuid::Uuid::new_v4()));
+        let p = std::env::temp_dir().join(format!("sshorus-ssh-test-{}", uuid::Uuid::new_v4()));
         std::fs::create_dir_all(&p).unwrap();
         TmpDir(p)
     }
@@ -70,7 +70,7 @@ async fn trusted_kh(tmp: &TmpDir) -> PathBuf {
 fn ssh_keygen(path: &Path, passphrase: &str, kind: &[&str]) {
     let st = Command::new("ssh-keygen")
         .args(kind)
-        .args(["-q", "-N", passphrase, "-C", "terview-test-key", "-f"])
+        .args(["-q", "-N", passphrase, "-C", "sshorus-test-key", "-f"])
         .arg(path)
         .status()
         .expect("ssh-keygen");
@@ -109,7 +109,7 @@ fn uninstall_test_keys() {
             "terview-sshd",
             "sh",
             "-c",
-            "f=/config/.ssh/authorized_keys; grep -v terview-test-key \"$f\" > \"$f.tmp\"; cat \"$f.tmp\" > \"$f\"; rm -f \"$f.tmp\"",
+            "f=/config/.ssh/authorized_keys; grep -v sshorus-test-key \"$f\" > \"$f.tmp\"; cat \"$f.tmp\" > \"$f\"; rm -f \"$f.tmp\"",
         ])
         .status();
 }

@@ -37,14 +37,20 @@ cada rato; la contraseña de sudo nunca se pasa a la IA), crear usuario solo con
 sesión: asistente con clave pegada/elegida/generada, AllowGroups, sudo y linger, prueba de acceso y
 guardar el servidor), los tres casos de sudo (punto 3), «Auditar servidor» (punto 4b, con el
 endurecimiento del 4) y limpieza (hecha). No entra: asistente en el servidor (punto 5) ni app móvil.
-El usuario pidió avanzar **por partes, máximo ~50 min por sesión**. Hecho el 13/11 (falta probarlo en la
-app y en un servidor real): limpieza, Ajustes + apariencias + menos texto, MCP aceptar automáticamente,
-**atajos de teclado configurables** (añadido por el usuario), crear usuario solo por clave y los tres casos de
-sudo (el punto 3 queda resuelto). Falta: regenerar `docs/manual/19-ajustes.png`
-(`node docs/dev/vista-previa/capturar.mjs ajustes`), «Auditar servidor» (punto 4b) y al final SSHorus +
-actualizador y elegir el número de versión.
+El usuario pidió avanzar **por partes, máximo ~50 min por sesión** (el 14/11 pidió «con todo»). **Todo el plan
+está hecho** (13–14/11/2026): limpieza, Ajustes + apariencias + menos texto, MCP aceptar automáticamente,
+atajos de teclado configurables, crear usuario solo por clave, los tres casos de sudo, **Auditar servidor**,
+**Mapa de infraestructura** (pedido por el usuario: diagrama tipo arquitectura de nube, con todos los usuarios
+con sudo) y **SSHorus**. Falta para publicar: renombrar el repo en GitHub, crear los secretos de firma
+(usuario), elegir el número de versión (1.0.0 o 0.6.0) y probar en la app y en un servidor real (ver
+«Sin verificar»). Ideas que quedaron fuera: «Auditar proyecto» (varios servidores a la vez) y, en la
+auditoría, los contenedores rootless de otros usuarios.
 
-**1. Cambiar el nombre a SSHorus (lo siguiente).** Decidido por el usuario: nombre **SSHorus**, logo del
+**1. Cambiar el nombre a SSHorus.** ✅ Hecho el 13/11/2026 (commit «SSHorus: la app cambia de nombre»), menos
+**renombrar el repositorio en GitHub** y **crear los secretos de firma**, que hace el usuario (ver abajo). El
+renombrado mecánico está en `docs/dev/renombrar-sshorus.sh` (idempotente; volver a pasarlo sobre las ramas que
+añadan archivos). Quedan con el nombre viejo a propósito: el contenedor de pruebas `terview-sshd`, la llave
+`~/.tauri/terview-updater.key`, el CHANGELOG de las versiones publicadas y `docs/marca/`. Decidido por el usuario: nombre **SSHorus**, logo del
 ojo de Horus en un anillo con `>_`, aprobado el 13/11/2026 (`docs/marca/sshorus/final/`, ver `docs/marca/README.md`). Nadie más usa la app, así
 que **se cambia todo, sin migrar datos ni mantener compatibilidad con la 0.5.0**:
 - Textos de la app, README, manual, web, CHANGELOG (la versión nueva ya como SSHorus) y `docs/`.
@@ -59,6 +65,10 @@ que **se cambia todo, sin migrar datos ni mantener compatibilidad con la 0.5.0**
   app nunca encuentra versiones nuevas. Revisar `createUpdaterArtifacts`, la llave de firma en los secretos
   de GitHub y que el workflow suba `latest.json`. Endpoint nuevo con el repo nuevo.
 - Renombrar el repositorio: `gh repo rename SSHorus` (el usuario lo autorizó) y `git remote set-url`.
+  **Pendiente (lo hace el usuario).**
+- Secretos de firma del actualizador (la causa de que no se subiera `latest.json`): **pendiente (usuario)**:
+  `gh secret set TAURI_SIGNING_PRIVATE_KEY < ~/.tauri/terview-updater.key` y
+  `gh secret set TAURI_SIGNING_PRIVATE_KEY_PASSWORD < ~/.tauri/terview-updater.password`.
 - Versión: proponer **0.6.0** (o 1.0.0) al usuario.
 
 **2. Probar en un servidor real** (todo pasó compilación y pruebas automáticas, pero no se abrió la app):

@@ -71,7 +71,7 @@ function Fix({ sessionId, fix, update }: { sessionId: string; fix: FixSuggestion
       <p className="vs-d-note faint">
         {update
           ? "«Actualizar imagen» muestra los comandos exactos y pide confirmación antes de ejecutar nada."
-          : "TerView no lo ejecuta: revísalo antes de pulsar Enter."}
+          : "SSHorus no lo ejecuta: revísalo antes de pulsar Enter."}
       </p>
     </section>
   );

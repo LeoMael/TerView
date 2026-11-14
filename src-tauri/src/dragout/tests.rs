@@ -5,7 +5,7 @@ use std::time::{Duration, SystemTime};
 use super::*;
 
 fn temp_root() -> PathBuf {
-    let p = std::env::temp_dir().join(format!("terview-arrastre-{}", uuid::Uuid::new_v4().simple()));
+    let p = std::env::temp_dir().join(format!("sshorus-arrastre-{}", uuid::Uuid::new_v4().simple()));
     fs::create_dir_all(&p).unwrap();
     p
 }

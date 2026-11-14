@@ -3,7 +3,7 @@
 // y esta opción solo afecta al dibujado de la interfaz. Módulo pequeño a propósito: lo usan los
 // Ajustes sin arrastrar xterm.js.
 
-const KEY = "terview.terminal.gpu";
+const KEY = "sshorus.terminal.gpu";
 const listeners = new Set<(on: boolean) => void>();
 
 /** true salvo que el usuario la haya desactivado. */

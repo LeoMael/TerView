@@ -28,10 +28,10 @@ async function connect(profileId: string): Promise<{ sessionId: string }> {
   const open = findTab();
   if (open) return { sessionId: open.sessionId };
   const profile = useProfiles.getState().servers.find((s) => s.id === profileId);
-  if (!profile) throw new Error("Ese servidor ya no existe en TerView");
+  if (!profile) throw new Error("Ese servidor ya no existe en SSHorus");
   const ok = await connectToServer(profile, { initialPath: profile.defaultPath });
   const tab = findTab();
-  if (!ok || !tab) throw new Error(`No se pudo conectar a «${profile.name}» (o se canceló en TerView)`);
+  if (!ok || !tab) throw new Error(`No se pudo conectar a «${profile.name}» (o se canceló en SSHorus)`);
   return { sessionId: tab.sessionId };
 }
 

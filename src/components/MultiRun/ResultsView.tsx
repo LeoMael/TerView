@@ -36,7 +36,7 @@ import { isFinal, isProblem, type PrivilegeHint, type TargetState, type TargetSt
 
 type ViewMode = "table" | "side" | "compare";
 
-const VIEW_KEY = "terview.multirun.view";
+const VIEW_KEY = "sshorus.multirun.view";
 
 function readView(): ViewMode {
   try {

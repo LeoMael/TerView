@@ -203,7 +203,7 @@
 
   <use href="#i-history" x="954" y="836" width="32" height="32" style="color:#facc15"/>
   <text x="1002" y="852" class="b">Una reconexión con contraseña espera</text>
-  <text x="1002" y="872" class="xs">«esperando a que desbloquees TerView»; al desbloquear sigue sola</text>
+  <text x="1002" y="872" class="xs">«esperando a que desbloquees SSHorus»; al desbloquear sigue sola</text>
 
   <!-- ============ 4. QUÉ PROTEGE ============ -->
   <text x="60" y="944" class="z" style="fill:#cbd5e1">QUÉ PROTEGE, SEGÚN QUIÉN ATAQUE</text>

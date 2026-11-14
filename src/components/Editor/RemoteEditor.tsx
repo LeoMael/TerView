@@ -198,7 +198,7 @@ export function RemoteEditor({ sessionId, path, active, onDirtyChange, offline =
     const host = hostRef.current;
     if (!host) return;
     applyMonacoTheme();
-    const uri = monaco.Uri.from({ scheme: "terview", authority: `s${++modelSeq}`, path: path.startsWith("/") ? path : `/${path}` });
+    const uri = monaco.Uri.from({ scheme: "sshorus", authority: `s${++modelSeq}`, path: path.startsWith("/") ? path : `/${path}` });
     const model = monaco.editor.createModel("", detectLanguage(path), uri);
     const s = useSettings.getState().settings;
     const editor = monaco.editor.create(host, {
@@ -237,7 +237,7 @@ export function RemoteEditor({ sessionId, path, active, onDirtyChange, offline =
       }),
     ];
     editor.addAction({
-      id: "terview.save",
+      id: "sshorus.save",
       label: "Guardar en el servidor",
       // Sin atajo de Monaco: lo maneja el listener de abajo con el atajo configurable.
       contextMenuGroupId: "navigation",

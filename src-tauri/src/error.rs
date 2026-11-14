@@ -46,7 +46,7 @@ pub enum AppError {
     #[error("Cancelado")]
     Canceled,
     /// La bóveda de contraseñas está bloqueada: hay que escribir el PIN.
-    #[error("TerView está bloqueado: escribe tu PIN para usar las contraseñas guardadas")]
+    #[error("SSHorus está bloqueado: escribe tu PIN para usar las contraseñas guardadas")]
     Locked,
 }
 

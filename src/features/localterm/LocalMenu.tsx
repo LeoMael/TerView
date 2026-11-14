@@ -44,10 +44,10 @@ export function LocalMenu({ x, y, onClose }: { x: number; y: number; onClose: ()
       <button role="menuitem" onClick={run(() => openLocalTerminal())}>
         <SquareTerminal size={14} /> Terminal local
       </button>
-      <button role="menuitem" onClick={run(() => void launchAssistant("claude"))} title="Abre Claude Code con el contexto de TerView">
+      <button role="menuitem" onClick={run(() => void launchAssistant("claude"))} title="Abre Claude Code con el contexto de SSHorus">
         <Bot size={14} /> Claude Code {hint("claude")}
       </button>
-      <button role="menuitem" onClick={run(() => void launchAssistant("codex"))} title="Abre Codex con el contexto de TerView">
+      <button role="menuitem" onClick={run(() => void launchAssistant("codex"))} title="Abre Codex con el contexto de SSHorus">
         <Bot size={14} /> Codex {hint("codex")}
       </button>
       <hr />

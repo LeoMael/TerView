@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "TerView",
+  "productName": "SSHorus",
   "version": "0.5.0",
-  "identifier": "com.terview.app",
+  "identifier": "com.sshorus.app",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "TerView",
+        "title": "SSHorus",
         "width": 1280,
         "height": 800,
         "minWidth": 900,
@@ -33,10 +33,10 @@
     "createUpdaterArtifacts": true,
     "publisher": "LeoMael",
     "copyright": "© 2026 LeoMael",
-    "homepage": "https://github.com/LeoMael/TerView",
+    "homepage": "https://github.com/LeoMael/SSHorus",
     "category": "DeveloperTool",
     "shortDescription": "Cliente SSH/SFTP visual",
-    "longDescription": "TerView es un cliente SSH/SFTP de escritorio: terminal integrada, explorador y editor de archivos remotos, transferencias masivas, biblioteca de comandos y servidores y proyectos guardados, con reconexión automática y contraseñas en el llavero del sistema.",
+    "longDescription": "SSHorus es un cliente SSH/SFTP de escritorio: terminal integrada, explorador y editor de archivos remotos, transferencias masivas, biblioteca de comandos y servidores y proyectos guardados, con reconexión automática y contraseñas en el llavero del sistema.",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -65,7 +65,7 @@
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDY3NTM2QzdDQ0E2RkI3ODYKUldTR3QyL0tmR3hUWjBPRGxxZm1PQjNTM1NDQVFCY2s5bS9ISSs2dVk4eXhWSzRkTGsza2ZvdU8K",
       "endpoints": [
-        "https://github.com/LeoMael/TerView/releases/latest/download/latest.json"
+        "https://github.com/LeoMael/SSHorus/releases/latest/download/latest.json"
       ],
       "windows": {
         "installMode": "passive"

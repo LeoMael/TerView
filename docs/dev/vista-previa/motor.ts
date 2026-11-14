@@ -53,7 +53,7 @@ const handlers: Record<string, (a: Args) => unknown> = {
   // App y plugins
   "plugin:app|version": () => "0.5.0",
   "plugin:app|tauri_version": () => "2.12.0",
-  "plugin:app|name": () => "TerView",
+  "plugin:app|name": () => "SSHorus",
   "plugin:updater|check": () => null,
   "plugin:app|bundle_type": () => "rpm",
   app_diagnostics: () => ({
@@ -119,7 +119,7 @@ const handlers: Record<string, (a: Args) => unknown> = {
         ch.onmessage(bytes.buffer);
       }, 150);
     }
-    return { termId: `term-${termN}`, tmux: `terview-${srv?.name ?? "web-prod"}-${termN}`, tmuxMissing: false, tmuxProblem: null };
+    return { termId: `term-${termN}`, tmux: `sshorus-${srv?.name ?? "web-prod"}-${termN}`, tmuxMissing: false, tmuxProblem: null };
   },
   term_write: () => null,
   term_resize: () => null,

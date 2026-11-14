@@ -100,7 +100,7 @@ const NAV: { group: string; items: SectionInfo[] }[] = [
     group: "Sistema",
     items: [
       { id: "advanced", label: "Avanzado", icon: <SlidersHorizontal size={15} />, desc: "Diagnóstico y datos para informar de fallos.", keys: "diagnóstico registro logs" },
-      { id: "manual", label: "Manual de uso", icon: <BookOpen size={15} />, desc: "Cómo se usa TerView, paso a paso.", keys: "ayuda guía" },
+      { id: "manual", label: "Manual de uso", icon: <BookOpen size={15} />, desc: "Cómo se usa SSHorus, paso a paso.", keys: "ayuda guía" },
       { id: "about", label: "Acerca de", icon: <Info size={15} />, desc: "Versión, actualizaciones y novedades.", keys: "versión actualizaciones novedades changelog" },
     ],
   },

@@ -1,6 +1,6 @@
 // Contraseña de sudo por sesión: en memoria (zustand sin persistencia). Se olvida con el botón
 // «Olvidar contraseña de sudo», al cerrar la pestaña, al perder la conexión (ver initPrivileges) y al
-// bloquear TerView.
+// bloquear SSHorus.
 //
 // Cada servidor elige de dónde sale (editor de servidor → «Contraseña de sudo»): pedirla cada vez, la
 // de la conexión o una guardada aparte (bóveda o llavero). Las dos últimas se leen del motor cuando
@@ -56,7 +56,7 @@ export function forgetSudoByUser(sessionId: string): void {
   useSudo.setState((s) => ({ bySession: without(s.bySession, sessionId), stored: { ...s.stored, [sessionId]: "off" } }));
 }
 
-/** Olvida todas las contraseñas de sudo en memoria (al bloquear TerView). Las guardadas se vuelven a
+/** Olvida todas las contraseñas de sudo en memoria (al bloquear SSHorus). Las guardadas se vuelven a
  * leer al desbloquear. */
 export function forgetAllSudo(): void {
   useSudo.setState({ bySession: {}, stored: {} });
@@ -173,7 +173,7 @@ export function computeElevation(info: PrivilegeInfo | null, password: string | 
       elevation: null,
       label: "doas",
       readOnlyReason:
-        "Este servidor usa doas con contraseña. doas solo acepta la contraseña desde una terminal, así que TerView no " +
+        "Este servidor usa doas con contraseña. doas solo acepta la contraseña desde una terminal, así que SSHorus no " +
         "puede enviársela de forma segura: para hacer cambios conéctate como root, usa sudo o configura doas sin " +
         "contraseña («permit nopass»). Mientras tanto, todo queda en solo lectura.",
       canAskSudo: false,

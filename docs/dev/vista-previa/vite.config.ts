@@ -1,4 +1,4 @@
-// Vista previa de TerView en un navegador normal, con el motor (Rust) SIMULADO y datos falsos.
+// Vista previa de SSHorus en un navegador normal, con el motor (Rust) SIMULADO y datos falsos.
 // Solo sirve para sacar las capturas del manual (docs/manual/*.png). No forma parte de la app:
 // `npm run build` usa el vite.config.ts de la raíz, que solo compila index.html.
 //

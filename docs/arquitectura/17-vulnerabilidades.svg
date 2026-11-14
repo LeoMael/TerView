@@ -92,7 +92,7 @@
   <text x="86" y="588" class="xs mono" style="font-size:12px">vulnscan/&lt;id&gt;.json</text>
   <text x="86" y="612" class="xs">un archivo por servidor,</text>
   <text x="86" y="630" class="xs">últimos 20 análisis</text>
-  <text x="86" y="662" class="xs mono" style="font-size:12px">&lt;config&gt;/terview/</text>
+  <text x="86" y="662" class="xs mono" style="font-size:12px">&lt;config&gt;/sshorus/</text>
 
   <rect x="290" y="490" width="200" height="200" rx="14" class="disk"/>
   <use href="#i-db" x="306" y="504" width="36" height="36" style="color:#facc15"/>
@@ -225,7 +225,7 @@
   <text x="1196" y="986" class="xs">ve también librerías dentro de la</text>
   <text x="1196" y="1004" class="xs">imagen (npm, pip, jar, Go)</text>
   <text x="1196" y="1032" class="xs">su base de datos la baja el servidor;</text>
-  <text x="1196" y="1050" class="xs">TerView no la instala ni la actualiza</text>
+  <text x="1196" y="1050" class="xs">SSHorus no la instala ni la actualiza</text>
   <text x="1196" y="1094" class="xs" style="fill:#e2e8f0">no ve el propio Node.js → OSV</text>
 
   <!-- ================= FUENTES POR DISTRO ================= -->

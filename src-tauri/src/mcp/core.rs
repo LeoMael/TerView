@@ -1,11 +1,11 @@
 //! Lógica de las herramientas del asistente: permisos, aprobación, ejecución, límites y registro.
 //!
 //! Orden de cada llamada:
-//! 1. ¿MCP encendido? ¿TerView desbloqueado? Si no, se rechaza todo con un mensaje claro.
+//! 1. ¿MCP encendido? ¿SSHorus desbloqueado? Si no, se rechaza todo con un mensaje claro.
 //! 2. Se busca el servidor y su nivel de acceso (Sin acceso = rechazado).
-//! 3. `policy::decide_auto`: lectura → pasa; cambio → diálogo en TerView (o regla «siempre», o el modo
+//! 3. `policy::decide_auto`: lectura → pasa; cambio → diálogo en SSHorus (o regla «siempre», o el modo
 //!    «Aceptar automáticamente» del servidor); peligroso → diálogo (salvo modo automático «todo»);
-//!    solo lectura → los cambios se rechazan. El modo automático nunca vale con TerView bloqueado.
+//!    solo lectura → los cambios se rechazan. El modo automático nunca vale con SSHorus bloqueado.
 //! 4. Se ejecuta con los límites de tiempo y de salida, y se anota en el registro.
 //!
 //! Las contraseñas y llaves nunca llegan al asistente: usa conexiones ya abiertas en la app. La única que
@@ -33,9 +33,9 @@ use crate::error::{AppError, AppResult};
 use crate::types::{ExecResult, FileEntry, FileKind, ServerProfile, SessionInfo, SnippetScope, TransferJob};
 use crate::vulnscan::scan::ScanOptions;
 
-pub const LOCKED_MSG: &str = "TerView está bloqueado: desbloquéalo para continuar.";
+pub const LOCKED_MSG: &str = "SSHorus está bloqueado: desbloquéalo para continuar.";
 pub const DISABLED_MSG: &str =
-    "El servidor MCP de TerView está apagado. Actívalo en TerView → Ajustes → Asistentes de IA (MCP).";
+    "El servidor MCP de SSHorus está apagado. Actívalo en SSHorus → Ajustes → Asistentes de IA (MCP).";
 
 /// Salida por defecto de cada flujo de `run_command` (KB) y máximo permitido.
 pub const DEFAULT_OUTPUT_KB: u32 = 64;
@@ -62,11 +62,11 @@ pub const MIN_VULN_SCAN_SECS: u32 = 60;
 pub const MAX_VULN_SCAN_SECS: u32 = 1800;
 /// Margen para que el análisis termine de detenerse en el servidor tras el tiempo límite.
 const VULN_STOP_GRACE: Duration = Duration::from_secs(30);
-/// Tiempo mínimo para escribir la contraseña de sudo en TerView (s) y margen para comprobarla.
+/// Tiempo mínimo para escribir la contraseña de sudo en SSHorus (s) y margen para comprobarla.
 const MIN_SUDO_ASK_SECS: u32 = 60;
 const SUDO_ASK_MARGIN_SECS: u64 = 30;
 pub const SUDO_CANCELED_MSG: &str =
-    "El usuario no dio la contraseña de sudo en TerView: no se ejecutó el comando.";
+    "El usuario no dio la contraseña de sudo en SSHorus: no se ejecutó el comando.";
 
 // ───────────────────────── Parámetros de las herramientas ─────────────────────────
 
@@ -114,7 +114,7 @@ pub struct VulnScanParams {
 
 #[derive(Debug, Deserialize, JsonSchema)]
 pub struct ConnectParams {
-    /// Nombre o id del servidor guardado en TerView.
+    /// Nombre o id del servidor guardado en SSHorus.
     pub server: String,
 }
 
@@ -327,7 +327,7 @@ pub struct McpCore<B: Backend> {
     catalog: Mutex<Option<Vec<CatalogEntry>>>,
     /// Servidores con un `scan_vulnerabilities` en curso (uno a la vez por servidor).
     vuln_scans: Mutex<BTreeSet<String>>,
-    /// «Aceptar automáticamente» temporal (15 min, 1 h, hasta cerrar TerView): solo en memoria.
+    /// «Aceptar automáticamente» temporal (15 min, 1 h, hasta cerrar SSHorus): solo en memoria.
     auto_temp: Mutex<BTreeMap<String, AutoGrant>>,
 }
 
@@ -338,7 +338,7 @@ pub enum AutoDuration {
     Min15,
     #[serde(rename = "1h")]
     Hour,
-    /// Hasta cerrar TerView (en memoria).
+    /// Hasta cerrar SSHorus (en memoria).
     #[serde(rename = "session")]
     Session,
     /// Guardado en `mcp.json`.
@@ -353,7 +353,7 @@ pub struct AutoState {
     pub server_id: String,
     pub server_name: String,
     pub level: AutoLevel,
-    /// Unix ms en que se apaga; None = hasta cerrar TerView o «siempre» (`saved`).
+    /// Unix ms en que se apaga; None = hasta cerrar SSHorus o «siempre» (`saved`).
     pub until: Option<u64>,
     /// Guardado («siempre»).
     pub saved: bool,
@@ -427,7 +427,7 @@ impl<B: Backend> McpCore<B> {
         Ok(())
     }
 
-    /// Servidores con el modo automático activo ahora (aunque TerView esté bloqueado: es lo que se
+    /// Servidores con el modo automático activo ahora (aunque SSHorus esté bloqueado: es lo que se
     /// configuró; mientras esté bloqueado no se acepta nada).
     pub fn auto_list_at(&self, now: u64) -> Vec<AutoState> {
         let cfg = self.config.get();
@@ -590,7 +590,7 @@ impl<B: Backend> McpCore<B> {
         Ok(Target { server: found, access, session })
     }
 
-    /// Aplica las reglas y, si hace falta, pregunta en TerView.
+    /// Aplica las reglas y, si hace falta, pregunta en SSHorus.
     async fn authorize(&self, rec: &mut Rec, t: &Target, action: Action, title: &str, shown: &str, diff: Option<String>) -> Res<()> {
         let cfg = self.config.get();
         let auto = self.auto_level_at(&t.server.id, now_ms());
@@ -623,7 +623,7 @@ impl<B: Backend> McpCore<B> {
                     client: rec.entry.client.clone(),
                 };
                 let id = req.id.clone();
-                rec.entry.message = Some("Esperando tu permiso en TerView".into());
+                rec.entry.message = Some("Esperando tu permiso en SSHorus".into());
                 self.audit.record(rec.entry.clone());
                 let answer = tokio::time::timeout(Duration::from_secs(u64::from(secs)), self.backend.ask_approval(req)).await;
                 self.backend.approval_done(&id);
@@ -654,12 +654,12 @@ impl<B: Backend> McpCore<B> {
                     }
                     Ok(Decision::Deny) => {
                         rec.entry.approved_by = Some("tú: denegado".into());
-                        Err(Fail::Denied("El usuario lo denegó en TerView.".into()))
+                        Err(Fail::Denied("El usuario lo denegó en SSHorus.".into()))
                     }
                     Err(_) => {
                         rec.entry.approved_by = Some("sin respuesta".into());
                         Err(Fail::Denied(format!(
-                            "Nadie respondió en TerView en {secs} s: se denegó. Pide al usuario que mire TerView y vuelve a intentarlo."
+                            "Nadie respondió en SSHorus en {secs} s: se denegó. Pide al usuario que mire SSHorus y vuelve a intentarlo."
                         )))
                     }
                 }
@@ -690,7 +690,7 @@ impl<B: Backend> McpCore<B> {
             })
             .collect();
         if list.is_empty() {
-            return Ok("No tienes acceso a ningún servidor. El usuario puede darlo en TerView → Ajustes → Asistentes de IA (MCP).".into());
+            return Ok("No tienes acceso a ningún servidor. El usuario puede darlo en SSHorus → Ajustes → Asistentes de IA (MCP).".into());
         }
         Ok(pretty(&list))
     }
@@ -814,7 +814,7 @@ impl<B: Backend> McpCore<B> {
             return Ok("No hay comandos con ese filtro.".into());
         }
         Ok(format!(
-            "{} comandos. Los de readOnly=true se ejecutan sin preguntar; el resto pide permiso en TerView.\n{}",
+            "{} comandos. Los de readOnly=true se ejecutan sin preguntar; el resto pide permiso en SSHorus.\n{}",
             list.len(),
             serde_json::to_string(&list).unwrap_or_default()
         ))
@@ -882,7 +882,7 @@ impl<B: Backend> McpCore<B> {
         if sid.is_empty() {
             return Err(Fail::Error(format!("No se pudo conectar a «{}».", t.server.name)));
         }
-        Ok(format!("Conectado a «{}» (pestaña abierta en TerView): sessionId {sid}", t.server.name))
+        Ok(format!("Conectado a «{}» (pestaña abierta en SSHorus): sessionId {sid}", t.server.name))
     }
 
     // ───────────── Comandos ─────────────
@@ -942,7 +942,7 @@ impl<B: Backend> McpCore<B> {
         if entry.dangerous && danger.is_empty() {
             danger.push("marcado como peligroso en la Biblioteca".into());
         }
-        // Con sudo TerView pone la contraseña: se pregunta siempre (como `sudo` en run_command).
+        // Con sudo SSHorus pone la contraseña: se pregunta siempre (como `sudo` en run_command).
         let sudo = entry.sudo || policy::uses_sudo(&command);
         if sudo && danger.is_empty() {
             danger.push("usa sudo (permisos de administrador)".into());
@@ -957,7 +957,7 @@ impl<B: Backend> McpCore<B> {
         self.exec(rec, &t, &sid, &command, sudo, p.timeout_secs, p.max_output_kb, cancel).await
     }
 
-    /// Ejecuta un comando ya aprobado. Si usa sudo (`sudo`), TerView pone la contraseña: la consigue la
+    /// Ejecuta un comando ya aprobado. Si usa sudo (`sudo`), SSHorus pone la contraseña: la consigue la
     /// interfaz (igual que en Administración) y va por stdin al envoltorio de `sudo.rs`.
     #[allow(clippy::too_many_arguments)]
     async fn exec(
@@ -1003,7 +1003,7 @@ impl<B: Backend> McpCore<B> {
     /// diálogo, según el ajuste del servidor). None = no hace falta (root o sudo sin contraseña).
     async fn sudo_password(&self, rec: &mut Rec, t: &Target, session_id: &str) -> Res<Option<Zeroizing<String>>> {
         let secs = self.config.get().approval_timeout_secs.max(MIN_SUDO_ASK_SECS);
-        rec.entry.message = Some("Buscando la contraseña de sudo en TerView".into());
+        rec.entry.message = Some("Buscando la contraseña de sudo en SSHorus".into());
         self.audit.record(rec.entry.clone());
         rec.entry.message = None;
         let payload = json!({
@@ -1223,7 +1223,7 @@ impl<B: Backend> McpCore<B> {
             }
             None => Ok(format!(
                 "«{}» no tiene ningún análisis de vulnerabilidades guardado. Usa scan_vulnerabilities \
-                 (o pide al usuario que pulse Analizar en TerView → Administración → Vulnerabilidades).",
+                 (o pide al usuario que pulse Analizar en SSHorus → Administración → Vulnerabilidades).",
                 t.server.name
             )),
         }
@@ -1319,7 +1319,7 @@ impl<B: Backend> McpCore<B> {
             }
             Err(AppError::Canceled) if timed_out => Err(Fail::Error(format!(
                 "El análisis pasó de {timeout} s y se detuvo (también en el servidor). Vuelve a intentarlo con un \
-                 timeout_secs mayor (máximo {MAX_VULN_SCAN_SECS}) o pide al usuario que lo haga desde TerView."
+                 timeout_secs mayor (máximo {MAX_VULN_SCAN_SECS}) o pide al usuario que lo haga desde SSHorus."
             ))),
             Err(AppError::Canceled) => Err(Fail::Error("Se canceló el análisis (y se detuvo en el servidor).".into())),
             Err(e) => Err(e.into()),
@@ -1330,7 +1330,7 @@ impl<B: Backend> McpCore<B> {
 impl<B: Backend> McpCore<B> {
     // ───────────── Auditoría del servidor ─────────────
 
-    /// Última auditoría guardada (de TerView o de `run_audit`), resumida. No hace falta conexión.
+    /// Última auditoría guardada (de SSHorus o de `run_audit`), resumida. No hace falta conexión.
     async fn audit_report(&self, p: AuditReportParams, rec: &mut Rec) -> Res<String> {
         rec.entry.detail = "última auditoría".into();
         let t = self.target(&p.server, None, rec).await?;
@@ -1342,7 +1342,7 @@ impl<B: Backend> McpCore<B> {
             }
             None => Ok(format!(
                 "«{}» no tiene ninguna auditoría guardada. Usa run_audit (o pide al usuario que pulse \
-                 «Auditar servidor» en TerView → Administración → Auditoría).",
+                 «Auditar servidor» en SSHorus → Administración → Auditoría).",
                 t.server.name
             )),
         }
@@ -1359,7 +1359,7 @@ impl<B: Backend> McpCore<B> {
              • lee la configuración de SSH, usuarios, puertos, cortafuegos, actualizaciones, sitios web,\n  \
              contenedores, servicios, intentos de entrada, disco, memoria y permisos\n\
              • usa el último informe de vulnerabilidades guardado (no lanza el escáner)\n\
-             El informe se guarda en el historial de TerView.",
+             El informe se guarda en el historial de SSHorus.",
             t.server.username
         );
         let title = "quiere auditar el servidor (sin sudo; solo lectura)";
@@ -1396,7 +1396,7 @@ impl Drop for RunningScan<'_> {
 /// o `{ canceled: true }`. La contraseña se saca sin copiarla y se borra de memoria al soltarla.
 fn sudo_answer(v: Value) -> Res<Option<Zeroizing<String>>> {
     let Value::Object(mut m) = v else {
-        return Err(Fail::Error("La ventana de TerView respondió algo no válido a la petición de sudo.".into()));
+        return Err(Fail::Error("La ventana de SSHorus respondió algo no válido a la petición de sudo.".into()));
     };
     if m.get("canceled").and_then(Value::as_bool) == Some(true) {
         return Err(Fail::Denied(SUDO_CANCELED_MSG.into()));
@@ -1407,7 +1407,7 @@ fn sudo_answer(v: Value) -> Res<Option<Zeroizing<String>>> {
             drop(Zeroizing::new(pw));
             Err(Fail::Error("La contraseña de sudo está vacía.".into()))
         }
-        Some(_) => Err(Fail::Error("La ventana de TerView respondió algo no válido a la petición de sudo.".into())),
+        Some(_) => Err(Fail::Error("La ventana de SSHorus respondió algo no válido a la petición de sudo.".into())),
         None => Ok(None),
     }
 }

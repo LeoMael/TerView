@@ -261,7 +261,7 @@ export function SetupView({ onCancel }: { onCancel: () => void }) {
                     </>
                   ) : (
                     <>
-                      Usa <strong>sudo</strong>: donde pida contraseña, TerView usa la que ya tiene (en memoria,
+                      Usa <strong>sudo</strong>: donde pida contraseña, SSHorus usa la que ya tiene (en memoria,
                       guardada u otra pestaña) o te la pide, de un servidor en uno, con la opción de saltarlo. Se le da a
                       sudo por la entrada estándar, nunca en la línea de comandos. Como root o con sudo sin contraseña se
                       ejecuta tal cual.

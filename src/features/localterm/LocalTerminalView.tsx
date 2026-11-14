@@ -90,7 +90,7 @@ export const LocalTerminalView = memo(function LocalTerminalView({ tab, active }
           {tab.cwd ?? "~"}
         </span>
         {tab.mcp && (
-          <span className="lt-badge" title="El asistente usa el MCP de TerView (con tus permisos)">
+          <span className="lt-badge" title="El asistente usa el MCP de SSHorus (con tus permisos)">
             <Plug size={11} /> MCP
           </span>
         )}

@@ -20,7 +20,7 @@ export const DEFAULT_ALERTS: AlertConfig = {
   load: { on: true },
 };
 
-const KEY = (profileId: string) => `terview.monitor.alerts.${profileId}`;
+const KEY = (profileId: string) => `sshorus.monitor.alerts.${profileId}`;
 
 const clampPct = (v: unknown, def: number) => {
   const n = Number(v);

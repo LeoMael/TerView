@@ -2,7 +2,7 @@
 //! GitHub) cifradas con una llave que sale del PIN del usuario Y de una llave de este equipo.
 //!
 //! - Archivo: `vault.json` en la carpeta de configuración (escritura atómica, permisos 0600).
-//!   Es un sobre de `storage::cipher` (AES-256-GCM + Argon2id) con formato "terview-vault".
+//!   Es un sobre de `storage::cipher` (AES-256-GCM + Argon2id) con formato "sshorus-vault".
 //!   Dentro, cifrado: `{ "secrets": { "<id>": "<secreto>", … } }`.
 //! - El PIN es de 6 números (`check_new_pin`). El tipo va en la cabecera autenticada del sobre
 //!   (`kind`: "pin6"); las bóvedas creadas antes, con un PIN o contraseña libre, no la llevan y se
@@ -46,7 +46,7 @@ pub const ATTEMPTS_FILE: &str = "vault-attempts.json";
 /// Usuario del llavero donde va la llave de este equipo.
 pub const DEVICE_KEY_USER: &str = "vault-device-key";
 const DEVICE_KEY_LEN: usize = 32;
-pub const FORMAT: &str = "terview-vault";
+pub const FORMAT: &str = "sshorus-vault";
 pub const VERSION: u32 = 1;
 /// Números del PIN.
 pub const PIN_LEN: usize = 6;
@@ -246,7 +246,7 @@ fn env_error(e: EnvError) -> AppError {
                 .into(),
         ),
         EnvError::Unsupported => AppError::Invalid(
-            "la bóveda se creó con una versión de TerView más nueva; actualiza la app".into(),
+            "la bóveda se creó con una versión de SSHorus más nueva; actualiza la app".into(),
         ),
         EnvError::OutOfRange => {
             AppError::Invalid("la bóveda tiene parámetros de cifrado fuera de rango".into())
@@ -269,7 +269,7 @@ fn read_envelope(path: &Path) -> AppResult<Envelope> {
         Ok(b) => b,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
             return Err(AppError::NotFound(
-                "la bóveda (vault.json): se borró mientras TerView estaba abierto".into(),
+                "la bóveda (vault.json): se borró mientras SSHorus estaba abierto".into(),
             ));
         }
         Err(e) => return Err(AppError::Io(format!("no se pudo leer {}: {e}", path.display()))),
@@ -376,7 +376,7 @@ impl Vault {
         }
     }
 
-    /// La bóveda de la app (`~/.config/terview/vault.json`, llave del equipo en el llavero).
+    /// La bóveda de la app (`~/.config/sshorus/vault.json`, llave del equipo en el llavero).
     pub fn global() -> &'static Vault {
         static G: OnceLock<Vault> = OnceLock::new();
         G.get_or_init(|| {

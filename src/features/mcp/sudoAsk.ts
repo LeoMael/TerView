@@ -74,7 +74,7 @@ export function finishSudoAsk(id: string): void {
   resolve?.(!!ask && getSudoPassword(ask.sessionId) !== undefined && !useLock.getState().status?.locked);
 }
 
-/** Al bloquear TerView: se cierran todos (el motor ya lo deniega). */
+/** Al bloquear SSHorus: se cierran todos (el motor ya lo deniega). */
 export function cancelAllSudoAsks(): void {
   for (const a of useSudoAsks.getState().asks) finishSudoAsk(a.id);
 }
@@ -88,8 +88,8 @@ export async function sudoForAssistant(payload: Record<string, unknown>): Promis
   const sessionId = str(payload.sessionId);
   if (!sessionId) throw new Error("Falta la conexión");
   const tab = useTabs.getState().tabs.find((t) => t.sessionId === sessionId && t.status !== "closed");
-  if (!tab) throw new Error("Esa conexión ya no está abierta en TerView");
-  if (useLock.getState().status?.locked) throw new Error("TerView está bloqueado");
+  if (!tab) throw new Error("Esa conexión ya no está abierta en SSHorus");
+  if (useLock.getState().status?.locked) throw new Error("SSHorus está bloqueado");
   const profileId = str(payload.profileId) ?? tab.profileId;
   const info = getPrivilege(sessionId) ?? (await detectPrivilege(sessionId));
   if (!sudoPasswordNeeded(info)) return { elevate: false };
@@ -107,7 +107,7 @@ export async function sudoForAssistant(payload: Record<string, unknown>): Promis
     });
     if (!given) return { canceled: true };
   }
-  if (useLock.getState().status?.locked) throw new Error("TerView está bloqueado");
+  if (useLock.getState().status?.locked) throw new Error("SSHorus está bloqueado");
   const password = getSudoPassword(sessionId);
   return password === undefined ? { canceled: true } : { elevate: true, password };
 }

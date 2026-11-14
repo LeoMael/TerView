@@ -1,4 +1,4 @@
-//! Biblioteca de comandos: "Mis comandos" guardados (~/.config/terview/commands.json)
+//! Biblioteca de comandos: "Mis comandos" guardados (~/.config/sshorus/commands.json)
 //! y ejecución aparte con captura de salida (canal exec). DUEÑO: agente Comandos.
 
 pub(crate) mod exec;

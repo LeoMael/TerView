@@ -47,15 +47,15 @@ fn version_parse() {
 
 #[test]
 fn names() {
-    assert!(valid_name("terview-a1b2c3d4"));
-    assert!(valid_name("terview-x_y-z"));
-    assert!(!valid_name("terview-"));
+    assert!(valid_name("sshorus-a1b2c3d4"));
+    assert!(valid_name("sshorus-x_y-z"));
+    assert!(!valid_name("sshorus-"));
     assert!(!valid_name("otra-a1b2"));
-    assert!(!valid_name("terview-a b"));
-    assert!(!valid_name("terview-a;rm"));
-    assert!(!valid_name("terview-a'b"));
-    assert!(!valid_name("terview-a:b"));
-    assert!(!valid_name(&format!("terview-{}", "a".repeat(60))));
+    assert!(!valid_name("sshorus-a b"));
+    assert!(!valid_name("sshorus-a;rm"));
+    assert!(!valid_name("sshorus-a'b"));
+    assert!(!valid_name("sshorus-a:b"));
+    assert!(!valid_name(&format!("sshorus-{}", "a".repeat(60))));
 }
 
 #[test]
@@ -73,8 +73,8 @@ fn probe_output() {
 
 #[test]
 fn scripts_have_no_forbidden_chars() {
-    let attach = attach_command(&probe_of("tmux 3.4"), "terview-abc", 30, true).unwrap();
-    let kill = kill_command(&["terview-a".into(), "terview-b".into()]).unwrap();
+    let attach = attach_command(&probe_of("tmux 3.4"), "sshorus-abc", 30, true).unwrap();
+    let kill = kill_command(&["sshorus-a".into(), "sshorus-b".into()]).unwrap();
     for cmd in [probe_command(), list_command(), attach, kill] {
         let body = inner(&cmd);
         assert!(!body.contains('\''), "comilla simple en: {body}");
@@ -87,8 +87,8 @@ fn scripts_have_no_forbidden_chars() {
 
 #[test]
 fn attach_command_content() {
-    let cmd = attach_command(&probe_of("tmux 3.4"), "terview-abc", 3, false).unwrap();
-    assert!(cmd.contains("-L terview"));
+    let cmd = attach_command(&probe_of("tmux 3.4"), "sshorus-abc", 3, false).unwrap();
+    assert!(cmd.contains("-L sshorus"));
     assert!(cmd.contains("-f /dev/null start-server"));
     assert!(cmd.contains("new-session -A -s \"$s\""));
     assert!(cmd.contains("set -g status off"));
@@ -97,37 +97,37 @@ fn attach_command_content() {
     assert!(cmd.contains("hyperlinks"));
     assert!(!cmd.contains("capture-pane"), "sin replay no se vuelca historial");
 
-    let replay = attach_command(&probe_of("tmux 3.4"), "terview-abc", 3, true).unwrap();
+    let replay = attach_command(&probe_of("tmux 3.4"), "sshorus-abc", 3, true).unwrap();
     assert!(replay.contains("capture-pane -p -e -J -S -10000 -E -1"));
     assert!(replay.contains("printf \"\\n\\n\\n\""), "{replay}");
 
     // Versiones viejas: sin opciones que no conocen.
-    let old = attach_command(&probe_of("tmux 2.6"), "terview-abc", 3, false).unwrap();
+    let old = attach_command(&probe_of("tmux 2.6"), "sshorus-abc", 3, false).unwrap();
     assert!(!old.contains("window-size"));
     assert!(!old.contains("terminal-features"));
     assert!(old.contains("aggressive-resize on"));
 
-    assert!(attach_command(&probe_of("tmux 3.4"), "terview-a;b", 3, false).is_err());
+    assert!(attach_command(&probe_of("tmux 3.4"), "sshorus-a;b", 3, false).is_err());
     let mut bad = probe_of("tmux 3.4");
     bad.path = "/tmp/x\"y".into();
-    assert!(attach_command(&bad, "terview-abc", 3, false).is_err());
+    assert!(attach_command(&bad, "sshorus-abc", 3, false).is_err());
 }
 
 #[test]
 fn list_output() {
     let out = "tv_tmux=1\n\
                tv_version=tmux 3.4\n\
-               tv_s=terview-aaa|100|150|0|1|bash|/home/u\n\
-               tv_s=terview-bbb|200|300|1|2|vim|/srv/a|b\n\
+               tv_s=sshorus-aaa|100|150|0|1|bash|/home/u\n\
+               tv_s=sshorus-bbb|200|300|1|2|vim|/srv/a|b\n\
                tv_s=otra|1|1|0|1|bash|/\n\
-               tv_s=terview-roto|1\n\
+               tv_s=sshorus-roto|1\n\
                tv_end=1\n";
     let l = parse_list(out);
     assert!(l.installed);
     assert_eq!(l.version.as_deref(), Some("tmux 3.4"));
     assert_eq!(l.sessions.len(), 2);
     // Más recientes primero; la ruta puede tener «|».
-    assert_eq!(l.sessions[0].name, "terview-bbb");
+    assert_eq!(l.sessions[0].name, "sshorus-bbb");
     assert_eq!(l.sessions[0].path, "/srv/a|b");
     assert_eq!(l.sessions[0].attached, 1);
     assert_eq!(l.sessions[0].command, "vim");
@@ -141,8 +141,8 @@ fn list_output() {
 #[test]
 fn kill_validates() {
     assert!(kill_command(&[]).is_err());
-    assert!(kill_command(&["terview-a".into(), "x; reboot".into()]).is_err());
-    let k = kill_command(&["terview-a".into()]).unwrap();
+    assert!(kill_command(&["sshorus-a".into(), "x; reboot".into()]).is_err());
+    let k = kill_command(&["sshorus-a".into()]).unwrap();
     assert!(k.contains("kill-session -t \"$s\""));
 }
 
@@ -199,7 +199,7 @@ async fn found(session: &SshSession) -> TmuxProbe {
 #[ignore]
 async fn survives_disconnect_and_reattaches() {
     use crate::ssh::connect::testutil::connect_test_server;
-    let name = format!("terview-t{}", &uuid::Uuid::new_v4().simple().to_string()[..10]);
+    let name = format!("sshorus-t{}", &uuid::Uuid::new_v4().simple().to_string()[..10]);
 
     let s1 = connect_test_server().await;
     let p = found(&s1).await;
@@ -245,7 +245,7 @@ async fn survives_disconnect_and_reattaches() {
     assert!(read_until(&mut rx2, &mut out2, "valor=marca-42").await, "salida: {out2:?}");
 
     // Configuración propia aplicada (y sin tocar ~/.tmux.conf).
-    let st = exec::run(&s2, &format!("{} -L terview show -g status", p.path), 5).await.unwrap();
+    let st = exec::run(&s2, &format!("{} -L sshorus show -g status", p.path), 5).await.unwrap();
     assert!(st.stdout.contains("status off"), "{}", st.stdout);
 
     // Cerrar a propósito: se mata la sesión.
@@ -261,8 +261,8 @@ async fn survives_disconnect_and_reattaches() {
 async fn two_terminals_two_sessions() {
     use crate::ssh::connect::testutil::connect_test_server;
     let id = uuid::Uuid::new_v4().simple().to_string();
-    let a = format!("terview-a{}", &id[..8]);
-    let b = format!("terview-b{}", &id[..8]);
+    let a = format!("sshorus-a{}", &id[..8]);
+    let b = format!("sshorus-b{}", &id[..8]);
     let s = connect_test_server().await;
     let p = found(&s).await;
     let (ha, mut rxa) = open_tmux(s.clone(), &p, &a, false).await;

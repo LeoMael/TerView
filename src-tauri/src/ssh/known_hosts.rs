@@ -279,7 +279,7 @@ fn write_atomic(path: &Path, content: &str) -> AppResult<()> {
         .parent()
         .ok_or_else(|| AppError::Io("Ruta de known_hosts no válida".into()))?;
     let tmp = dir.join(format!(
-        ".known_hosts.terview-{}.tmp",
+        ".known_hosts.sshorus-{}.tmp",
         uuid::Uuid::new_v4().simple()
     ));
     let result = (|| -> std::io::Result<()> {
@@ -492,7 +492,7 @@ mod tests {
 
     #[test]
     fn trust_creates_and_replaces() {
-        let dir = std::env::temp_dir().join(format!("terview-kh-{}", uuid::Uuid::new_v4()));
+        let dir = std::env::temp_dir().join(format!("sshorus-kh-{}", uuid::Uuid::new_v4()));
         let path = dir.join("sub").join("known_hosts");
         trust(&path, "h", 2222, &format!("{K1} comentario")).unwrap();
         assert_eq!(std::fs::read_to_string(&path).unwrap(), format!("[h]:2222 {K1}\n"));

@@ -2,7 +2,7 @@
 // localStorage puede fallar (modo privado, cuota): todo va con try/catch y valores por defecto.
 import type { Engine } from "./types";
 
-const PREFIX = "terview.containers";
+const PREFIX = "sshorus.containers";
 
 function read<T>(key: string, fallback: T): T {
   try {

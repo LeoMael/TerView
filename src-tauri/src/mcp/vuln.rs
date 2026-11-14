@@ -1,6 +1,6 @@
 //! Resumen de un informe del escáner de vulnerabilidades para el asistente (`get_vuln_report` y
 //! `scan_vulnerabilities`): recuento por gravedad, fuentes, avisos y los hallazgos más graves, con
-//! un límite. El informe entero (miles de filas) no se manda nunca: se ve en TerView.
+//! un límite. El informe entero (miles de filas) no se manda nunca: se ve en SSHorus.
 
 use std::collections::HashMap;
 
@@ -124,11 +124,11 @@ pub fn summarize(server: &str, r: &Report, limit: Option<u32>) -> Value {
         "of": total,
         "more": if total > shown.len() {
             format!(
-                "Se muestran los {} más graves de {total}. La lista completa, el detalle y el comando para actualizar están en TerView → Administración → Vulnerabilidades.",
+                "Se muestran los {} más graves de {total}. La lista completa, el detalle y el comando para actualizar están en SSHorus → Administración → Vulnerabilidades.",
                 shown.len()
             )
         } else {
-            "El detalle y el comando para actualizar están en TerView → Administración → Vulnerabilidades.".to_string()
+            "El detalle y el comando para actualizar están en SSHorus → Administración → Vulnerabilidades.".to_string()
         },
     })
 }

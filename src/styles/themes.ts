@@ -1,4 +1,4 @@
-// Apariencias de TerView: nombres, modo base, miniatura y colores ANSI de la terminal.
+// Apariencias de SSHorus: nombres, modo base, miniatura y colores ANSI de la terminal.
 // Los tokens de la interfaz están en theme.css (bloques :root[data-palette="…"]); aquí solo lo que
 // necesita TypeScript (selector de Ajustes, terminal y editor).
 import type { ITheme } from "@xterm/xterm";

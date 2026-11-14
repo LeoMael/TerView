@@ -2,7 +2,7 @@
 //!
 //! Antes de llegar al SDK, cada petición pasa por aquí:
 //! 1. Con cabecera `Origin` (una página web) → 403. Ningún cliente MCP de escritorio la manda.
-//! 2. Si TerView está bloqueado → error JSON-RPC «TerView está bloqueado: desbloquéalo para
+//! 2. Si SSHorus está bloqueado → error JSON-RPC «SSHorus está bloqueado: desbloquéalo para
 //!    continuar» (sin bóveda abierta tampoco se puede leer el token para comprobarlo).
 //! 3. `Authorization: Bearer <token>` debe coincidir (comparación en tiempo constante) → si no, 401.
 //!
@@ -31,7 +31,7 @@ use zeroize::Zeroizing;
 
 use super::backend::Backend;
 use super::core::{McpCore, LOCKED_MSG};
-use super::server::TerviewMcp;
+use super::server::SshorusMcp;
 
 pub const MCP_PATH: &str = "/mcp";
 /// Tamaño máximo de una petición (el contenido de `write_file` va dentro).
@@ -39,9 +39,9 @@ const MAX_BODY: usize = 4 * 1024 * 1024;
 
 type Body = BoxBody<Bytes, Infallible>;
 
-/// Lo que el transporte necesita saber del estado de TerView.
+/// Lo que el transporte necesita saber del estado de SSHorus.
 pub trait Gate: Send + Sync + 'static {
-    /// TerView está bloqueado.
+    /// SSHorus está bloqueado.
     fn locked(&self) -> bool;
     /// Token esperado (None = no hay token configurado o no se pudo leer).
     fn token(&self) -> Option<Zeroizing<String>>;
@@ -103,7 +103,7 @@ fn bearer(req: &Request<Incoming>) -> Option<&str> {
 pub fn mcp_service<B: Backend>(
     core: Arc<McpCore<B>>,
     ct: CancellationToken,
-) -> StreamableHttpService<TerviewMcp<B>, NeverSessionManager> {
+) -> StreamableHttpService<SshorusMcp<B>, NeverSessionManager> {
     let config = StreamableHttpServerConfig::default()
         .with_legacy_session_mode(false)
         .with_json_response(true)
@@ -111,7 +111,7 @@ pub fn mcp_service<B: Backend>(
         .with_max_request_body_bytes(MAX_BODY)
         .with_cancellation_token(ct);
     StreamableHttpService::new(
-        move || Ok(TerviewMcp::new(core.clone())),
+        move || Ok(SshorusMcp::new(core.clone())),
         Arc::new(NeverSessionManager::default()),
         config,
     )
@@ -119,14 +119,14 @@ pub fn mcp_service<B: Backend>(
 
 async fn handle<B: Backend>(
     req: Request<Incoming>,
-    svc: StreamableHttpService<TerviewMcp<B>, NeverSessionManager>,
+    svc: StreamableHttpService<SshorusMcp<B>, NeverSessionManager>,
     gate: Arc<dyn Gate>,
 ) -> Result<Response<Body>, Infallible> {
     if req.uri().path() != MCP_PATH {
         return Ok(text_response(StatusCode::NOT_FOUND, "Ruta desconocida: usa /mcp"));
     }
     if req.headers().contains_key(http::header::ORIGIN) {
-        return Ok(text_response(StatusCode::FORBIDDEN, "TerView no acepta peticiones de páginas web"));
+        return Ok(text_response(StatusCode::FORBIDDEN, "SSHorus no acepta peticiones de páginas web"));
     }
     if gate.locked() {
         if req.method() != http::Method::POST {
@@ -144,7 +144,7 @@ async fn handle<B: Backend>(
     let Some(expected) = expected else {
         return Ok(text_response(
             StatusCode::UNAUTHORIZED,
-            "TerView aún no tiene token para asistentes: genera uno en Ajustes → Asistentes de IA (MCP)",
+            "SSHorus aún no tiene token para asistentes: genera uno en Ajustes → Asistentes de IA (MCP)",
         ));
     };
     match bearer(&req) {
@@ -152,7 +152,7 @@ async fn handle<B: Backend>(
         _ => {
             return Ok(text_response(
                 StatusCode::UNAUTHORIZED,
-                "Token incorrecto o ausente: copia la configuración de TerView → Ajustes → Asistentes de IA (MCP)",
+                "Token incorrecto o ausente: copia la configuración de SSHorus → Ajustes → Asistentes de IA (MCP)",
             ))
         }
     }

@@ -1,6 +1,6 @@
 //! Colecciones de comandos compartidas por gist o por archivo de un repo de GitHub.
 //!
-//! Formato (JSON): una lista de `Snippet` o `{ "format": "terview-commands", "version": 1, "snippets": [...] }`.
+//! Formato (JSON): una lista de `Snippet` o `{ "format": "sshorus-commands", "version": 1, "snippets": [...] }`.
 //! Al importar se aceptan campos parciales (solo `name` y `command` son obligatorios) y todos quedan
 //! como comandos globales nuevos (id "", sin servidor/proyecto: esos ids no existen en otra PC).
 
@@ -10,7 +10,7 @@ use serde_json::{Value, json};
 use crate::error::{AppError, AppResult};
 use crate::types::{Snippet, SnippetScope};
 
-pub const FORMAT: &str = "terview-commands";
+pub const FORMAT: &str = "sshorus-commands";
 pub const MAX_SNIPPETS: usize = 1000;
 const MAX_FIELD: usize = 64 * 1024;
 

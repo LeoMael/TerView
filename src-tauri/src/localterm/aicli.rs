@@ -1,5 +1,5 @@
 //! Asistentes de IA de línea de comandos (Claude Code y Codex): dónde están, cómo se instalan y
-//! con qué argumentos se abren para darles el contexto de TerView y su MCP.
+//! con qué argumentos se abren para darles el contexto de SSHorus y su MCP.
 //!
 //! Todo es lógica pura (sin tocar el disco salvo por la función `is_file` que se inyecta), así se
 //! prueba igual en Linux, macOS y Windows.
@@ -7,19 +7,19 @@
 //! Cómo se pasa el contexto (sin escribir nada en la carpeta del usuario):
 //! - Claude Code: `--append-system-prompt <texto>` y `--mcp-config <json>` (el JSON va en el propio
 //!   argumento; el token NO va dentro: el puente lo lee de la variable de entorno que hereda).
-//! - Codex: `-c developer_instructions="…"` y `-c mcp_servers.terview.*` con
-//!   `env_vars = ["TERVIEW_MCP_TOKEN", …]` para que Codex le pase el token al puente.
+//! - Codex: `-c developer_instructions="…"` y `-c mcp_servers.sshorus.*` con
+//!   `env_vars = ["SSHORUS_MCP_TOKEN", …]` para que Codex le pase el token al puente.
 
 use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 
-/// Variable con el token del MCP (la lee el puente `terview-mcp`).
-pub const TOKEN_ENV: &str = "TERVIEW_MCP_TOKEN";
+/// Variable con el token del MCP (la lee el puente `sshorus-mcp`).
+pub const TOKEN_ENV: &str = "SSHORUS_MCP_TOKEN";
 /// Variable con el puerto del MCP.
-pub const PORT_ENV: &str = "TERVIEW_MCP_PORT";
+pub const PORT_ENV: &str = "SSHORUS_MCP_PORT";
 /// Nombre del servidor MCP en los asistentes.
-pub const MCP_NAME: &str = "terview";
+pub const MCP_NAME: &str = "sshorus";
 /// Codex corta una herramienta MCP a los 60 s por defecto; una aprobación puede tardar más.
 pub const CODEX_TOOL_TIMEOUT_SECS: u32 = 900;
 /// Límite del contexto (la línea de órdenes de Windows admite ~32 000 caracteres en total).
@@ -222,10 +222,10 @@ pub fn augmented_path(env: &SearchEnv, also: &[PathBuf], is_dir: &dyn Fn(&Path) 
 
 // ───────────────────────── Argumentos ─────────────────────────
 
-/// MCP de TerView para el asistente (el token va aparte, por variable de entorno).
+/// MCP de SSHorus para el asistente (el token va aparte, por variable de entorno).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct McpLaunch {
-    /// Ruta del puente `terview-mcp`.
+    /// Ruta del puente `sshorus-mcp`.
     pub bridge: String,
 }
 
@@ -459,14 +459,14 @@ mod tests {
 
     #[test]
     fn claude_con_contexto_y_mcp() {
-        let m = McpLaunch { bridge: "/opt/TerView/terview-mcp".into() };
+        let m = McpLaunch { bridge: "/opt/SSHorus/sshorus-mcp".into() };
         let a = claude_args(Some("Hola\nmundo"), Some(&m));
         assert_eq!(a[0], "--append-system-prompt");
         assert_eq!(a[1], "Hola\nmundo");
         assert_eq!(a[2], "--mcp-config");
         let v: serde_json::Value = serde_json::from_str(&a[3]).unwrap();
-        assert_eq!(v["mcpServers"]["terview"]["command"], "/opt/TerView/terview-mcp");
-        assert_eq!(v["mcpServers"]["terview"]["type"], "stdio");
+        assert_eq!(v["mcpServers"]["sshorus"]["command"], "/opt/SSHorus/sshorus-mcp");
+        assert_eq!(v["mcpServers"]["sshorus"]["type"], "stdio");
         // El token nunca va en los argumentos.
         assert!(!a[3].contains("TOKEN") && !a[3].contains("env"));
         assert_eq!(a.len(), 4);
@@ -480,7 +480,7 @@ mod tests {
 
     #[test]
     fn codex_con_contexto_y_mcp() {
-        let m = McpLaunch { bridge: r#"C:\Program Files\TerView\terview-mcp.exe"#.into() };
+        let m = McpLaunch { bridge: r#"C:\Program Files\SSHorus\sshorus-mcp.exe"#.into() };
         let a = codex_args(Some("Línea \"uno\"\n\tdos"), Some(&m));
         assert_eq!(
             a,
@@ -488,13 +488,13 @@ mod tests {
                 "-c",
                 r#"developer_instructions="Línea \"uno\"\n\tdos""#,
                 "-c",
-                r#"mcp_servers.terview.command="C:\\Program Files\\TerView\\terview-mcp.exe""#,
+                r#"mcp_servers.sshorus.command="C:\\Program Files\\SSHorus\\sshorus-mcp.exe""#,
                 "-c",
-                "mcp_servers.terview.args=[]",
+                "mcp_servers.sshorus.args=[]",
                 "-c",
-                r#"mcp_servers.terview.env_vars=["TERVIEW_MCP_TOKEN", "TERVIEW_MCP_PORT"]"#,
+                r#"mcp_servers.sshorus.env_vars=["SSHORUS_MCP_TOKEN", "SSHORUS_MCP_PORT"]"#,
                 "-c",
-                "mcp_servers.terview.tool_timeout_sec=900",
+                "mcp_servers.sshorus.tool_timeout_sec=900",
             ]
         );
     }

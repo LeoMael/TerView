@@ -1,11 +1,11 @@
-# Integración continua: en cada push o pull request a main comprueba que TerView compila y
+# Integración continua: en cada push o pull request a main comprueba que SSHorus compila y
 # pasa las pruebas en Linux y en Windows (así una rotura de Windows se ve en el mismo push).
 #
 #   Interfaz: tsc (tipos) + vite build
 #   Motor:    cargo clippy + cargo test --lib (las pruebas que necesitan servidor SSH son
 #             #[ignore] y no se ejecutan aquí)
 #   macOS:    empaqueta la .app universal (Intel + Apple Silicon) en modo debug, como hace el
-#             Release, y comprueba que los dos programas (`terview` y `terview-mcp`) son universales.
+#             Release, y comprueba que los dos programas (`sshorus` y `sshorus-mcp`) son universales.
 
 name: CI
 
@@ -146,7 +146,7 @@ jobs:
         run: |
           app=$(ls -d src-tauri/target/universal-apple-darwin/debug/bundle/macos/*.app)
           ls -l "$app/Contents/MacOS"
-          test -x "$app/Contents/MacOS/terview-mcp" || { echo "::error::Falta terview-mcp en $app"; exit 1; }
+          test -x "$app/Contents/MacOS/sshorus-mcp" || { echo "::error::Falta sshorus-mcp en $app"; exit 1; }
           for b in "$app"/Contents/MacOS/*; do
             archs=$(lipo -archs "$b")
             echo "$b: $archs"

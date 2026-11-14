@@ -36,13 +36,13 @@
   </style>
   <rect width="1600" height="1040" fill="#0f172a"/>
 
-  <text x="60" y="62" class="t">TerView — Vista general</text>
+  <text x="60" y="62" class="t">SSHorus — Vista general</text>
   <text x="60" y="94" class="st">Dos mitades dentro de la misma app. Cada función de la interfaz tiene su pieza en el motor.</text>
 
   <!-- Tu computadora -->
   <rect x="40" y="120" width="1145" height="850" rx="24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-dasharray="10 8"/>
   <use href="#i-pc" x="62" y="130" width="28" height="28" style="color:#94a3b8"/>
-  <text x="100" y="151" class="z" style="fill:#94a3b8">TU PC · APP TERVIEW</text>
+  <text x="100" y="151" class="z" style="fill:#94a3b8">TU PC · APP SSHORUS</text>
 
   <!-- Interfaz -->
   <rect x="80" y="170" width="480" height="775" rx="18" fill="#10243a" stroke="#38bdf8" stroke-width="2.5"/>

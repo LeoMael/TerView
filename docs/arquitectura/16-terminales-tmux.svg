@@ -38,7 +38,7 @@
   <text x="150" y="208" class="h" style="fill:#38bdf8">Sub-pestaña de terminal</text>
   <text x="150" y="232" class="s">xterm.js · indicador ∞ si es persistente</text>
   <text x="90" y="272" class="xs">nombre estable:</text>
-  <text x="200" y="272" class="mono" style="font-size:14px;fill:#7dd3fc">terview-1a2b3c4d</text>
+  <text x="200" y="272" class="mono" style="font-size:14px;fill:#7dd3fc">sshorus-1a2b3c4d</text>
   <text x="352" y="272" class="xs">(4 bytes al azar)</text>
   <text x="90" y="300" class="xs">el modo decide si se pide tmux: Automático, Siempre o Nunca</text>
 
@@ -52,7 +52,7 @@
   <text x="150" y="452" class="s">decide cómo abrir la shell</text>
   <text x="90" y="488" class="xs">1. Busca tmux por exec (PATH y rutas típicas), versión ≥ 1.8</text>
   <text x="90" y="512" class="xs">2. Lo recuerda por conexión (si falta, solo 20 s)</text>
-  <text x="90" y="536" class="xs">3. Abre un canal con PTY: sh -c '… new-session -A -s terview-…'</text>
+  <text x="90" y="536" class="xs">3. Abre un canal con PTY: sh -c '… new-session -A -s sshorus-…'</text>
   <text x="90" y="560" class="xs" style="fill:#fdba74">Sin tmux: shell normal y la respuesta (TermOpened) lo avisa</text>
 
   <!-- SSH -->
@@ -69,18 +69,18 @@
 
   <rect x="910" y="165" width="620" height="410" rx="16" fill="#0f2a1c" stroke="#22c55e" stroke-width="2.5"/>
   <use href="#i-server" x="930" y="183" width="44" height="44" style="color:#22c55e"/>
-  <text x="990" y="208" class="h" style="fill:#22c55e">Servidor tmux de TerView</text>
-  <text x="990" y="234" class="mono" style="font-size:15px">tmux -L terview -f /dev/null</text>
+  <text x="990" y="208" class="h" style="fill:#22c55e">Servidor tmux de SSHorus</text>
+  <text x="990" y="234" class="mono" style="font-size:15px">tmux -L sshorus -f /dev/null</text>
   <text x="935" y="276" class="lb" style="fill:#86efac">UNA SESIÓN POR TERMINAL</text>
 
   <rect x="935" y="288" width="180" height="76" rx="10" fill="#14301f" stroke="#22c55e" stroke-width="1.5"/>
-  <text x="949" y="318" class="mono" style="font-size:14px">terview-1a2b3c4d</text>
+  <text x="949" y="318" class="mono" style="font-size:14px">sshorus-1a2b3c4d</text>
   <text x="949" y="344" class="xs" style="font-size:13px">bash</text>
   <rect x="1127" y="288" width="180" height="76" rx="10" fill="#14301f" stroke="#22c55e" stroke-width="1.5"/>
-  <text x="1141" y="318" class="mono" style="font-size:14px">terview-9f0e7d6c</text>
+  <text x="1141" y="318" class="mono" style="font-size:14px">sshorus-9f0e7d6c</text>
   <text x="1141" y="344" class="xs" style="font-size:13px">npm run build</text>
   <rect x="1319" y="288" width="180" height="76" rx="10" fill="#14301f" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="6 5"/>
-  <text x="1333" y="318" class="mono" style="font-size:14px">terview-55aa01ff</text>
+  <text x="1333" y="318" class="mono" style="font-size:14px">sshorus-55aa01ff</text>
   <text x="1333" y="344" class="xs" style="font-size:13px">suelta: nadie la mira</text>
   <text x="935" y="396" class="lb" style="fill:#86efac">SUS AJUSTES (al arrancarlo, solo una vez)</text>
   <rect x="935" y="408" width="276" height="34" rx="8" fill="#14301f" stroke="#2f6b45" stroke-width="1.2"/>
@@ -122,7 +122,7 @@
   <text x="65" y="964" class="xs">un contador en la barra avisa si hay alguna.</text>
   <text x="65" y="988" class="xs">Reabrir, cerrar o copiar el comando para</text>
   <text x="65" y="1012" class="xs">engancharte desde una shell normal:</text>
-  <text x="65" y="1040" class="mono" style="font-size:13px;fill:#22c55e">tmux -L terview attach -t terview-…</text>
+  <text x="65" y="1040" class="mono" style="font-size:13px;fill:#22c55e">tmux -L sshorus attach -t sshorus-…</text>
   <rect x="555" y="860" width="490" height="200" rx="14" fill="#1e293b" stroke="#a78bfa" stroke-width="2"/>
   <use href="#i-tag" x="575" y="878" width="30" height="30" style="color:#a78bfa"/>
   <text x="617" y="901" class="b" style="font-size:18px;fill:#a78bfa">Modos</text>

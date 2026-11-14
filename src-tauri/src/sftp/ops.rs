@@ -303,7 +303,7 @@ fn remove_tree(s: &SftpSession, dir: String) -> BoxFuture<'_, OpResult<()>> {
 // ───────────────────────── Guardado atómico ─────────────────────────
 
 /// Guarda `content` en `path`:
-/// 1. escribe un temporal `.<nombre>.terview-<rand>` en la misma carpeta con los permisos del original;
+/// 1. escribe un temporal `.<nombre>.sshorus-<rand>` en la misma carpeta con los permisos del original;
 /// 2. lo coloca encima con `posix-rename@openssh.com` (o borrar + renombrar si no existe la extensión).
 ///
 /// Si no se puede crear el temporal (carpeta sin permiso de escritura) o no se puede conservar
@@ -333,7 +333,7 @@ pub async fn write_text(store: &SftpStore, ssh: &Arc<SshSession>, s: &SftpSessio
     let dir = util::parent(&target);
     let name = util::basename(&target);
     let rand = uuid::Uuid::new_v4().simple().to_string();
-    let tmp = util::join(&dir, &format!(".{name}.terview-{}", &rand[..8]));
+    let tmp = util::join(&dir, &format!(".{name}.sshorus-{}", &rand[..8]));
     let perms = orig.as_ref().and_then(|a| a.permissions).map(|m| m & 0o7777);
 
     let open_attrs = FileAttributes { permissions: perms, ..FileAttributes::empty() };

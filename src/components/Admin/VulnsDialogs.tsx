@@ -312,7 +312,7 @@ export function OptionsDialog({ onClose }: { onClose: () => void }) {
       <div className="modal-body">
         {box("useOsv", "Consultar OSV.dev", "Desde tu PC; solo nombres y versiones de paquetes. Desactivado = solo herramientas del servidor.")}
         {box("useDistroTool", "Herramienta de la distro", "dnf, debsecan, pro o zypper en el servidor (bajan sus datos de la distro).")}
-        {box("useTrivy", "Trivy, si está instalado", "Se prefiere para las imágenes. TerView no lo instala.")}
+        {box("useTrivy", "Trivy, si está instalado", "Se prefiere para las imágenes. SSHorus no lo instala.")}
         {box("scanImages", "Imágenes de contenedores", "Se lee su lista de paquetes sin arrancar sus servicios.")}
         <label className="field adm-mt">
           <span>Máximo de imágenes por usuario</span>

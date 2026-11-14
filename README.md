@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="docs/marca/isotipo-1024.png" width="96" alt="Logo de TerView" />
+  <img src="docs/marca/sshorus/final/icono-app-1024.png" width="112" alt="Logo de SSHorus" />
 </p>
 
-<h1 align="center">TerView</h1>
+<h1 align="center">SSHorus</h1>
 
 <p align="center">
   <strong>Cliente SSH y SFTP de escritorio para Linux y Windows.</strong><br/>
@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/LeoMael/TerView/releases/latest"><img alt="Última versión" src="https://img.shields.io/github/v/release/LeoMael/TerView?label=versión&color=38bdf8" /></a>
+  <a href="https://github.com/LeoMael/SSHorus/releases/latest"><img alt="Última versión" src="https://img.shields.io/github/v/release/LeoMael/SSHorus?label=versión&color=38bdf8" /></a>
   <img alt="Linux" src="https://img.shields.io/badge/Linux-rpm%20·%20deb%20·%20AppImage-22c55e" />
   <img alt="Windows" src="https://img.shields.io/badge/Windows-10%20·%2011-0078d4" />
 </p>
@@ -24,19 +24,21 @@
   <a href="#desarrollo">Desarrollo</a>
 </p>
 
-![Ventana de TerView](docs/arquitectura/04-ventana.png)
+![Ventana de SSHorus](docs/arquitectura/04-ventana.png)
 
 **[Manual de uso](docs/MANUAL.md)**: cómo usar cada función, paso a paso.
+
+> Antes se llamaba **TerView**. Si la usabas, instala SSHorus aparte y vuelve a añadir tus servidores (o impórtalos de `~/.ssh/config`): los datos y las contraseñas guardadas no se pasan solos. Detalles en el [CHANGELOG](CHANGELOG.md). <!-- sin-renombrar -->
 
 ## Qué puedes hacer
 
 - **Conectarte por SSH** con contraseña, llave o agente SSH. Comprueba la huella del servidor
   y acepta códigos de verificación (2FA). Las contraseñas se guardan en el llavero del sistema.
-- **Seguir trabajando si se corta la red**: TerView reconecta solo y retoma terminales,
+- **Seguir trabajando si se corta la red**: SSHorus reconecta solo y retoma terminales,
   explorador y transferencias.
 - **Usar la terminal**: varias por conexión, con búsqueda, copiar/pegar y enlaces clicables.
 - **No perder lo que corre en la terminal**: si el servidor tiene tmux, la terminal sigue viva aunque se
-  corte la red o cierres la app, y TerView vuelve a ella.
+  corte la red o cierres la app, y SSHorus vuelve a ella.
 - **Manejar archivos como en un explorador**: crear, renombrar, cambiar permisos, borrar y
   arrastrar archivos desde tu PC.
 - **Transferir miles de archivos**: carpetas completas, varias a la vez, con pausa y reanudación.
@@ -49,7 +51,7 @@
 - **Gestionar contenedores** de Podman o Docker sin escribir comandos: levantar, parar, ver logs,
   Compose, y limpiar imágenes que no se usan.
 - **Ver el servidor en vivo**: CPU, memoria, discos, red y procesos, con alertas.
-- **Administrar usuarios y grupos** si eres root o tienes sudo. TerView lo detecta solo y lo muestra en la pestaña.
+- **Administrar usuarios y grupos** si eres root o tienes sudo. SSHorus lo detecta solo y lo muestra en la pestaña.
 - **Abrir túneles** para usar en tu PC una base de datos o un panel del servidor sin abrir puertos.
 - **Ver puertos y sitios web** del servidor: qué programa usa cada puerto y los sitios de nginx o Caddy
   con sus dominios y certificados.
@@ -59,9 +61,9 @@
   Las imágenes de contenedores se actualizan con un botón («Actualizar imagen»): te muestra los comandos,
   recrea sus contenedores y vuelve a analizarla.
 - **Conectar tu cuenta de GitHub**: llaves SSH, clonar, desplegar y sincronizar tu configuración.
-- **Proteger tus contraseñas con un PIN**: quedan cifradas y TerView se bloquea al abrirlo y tras un rato sin uso.
+- **Proteger tus contraseñas con un PIN**: quedan cifradas y SSHorus se bloquea al abrirlo y tras un rato sin uso.
 - **Dejar que un asistente de IA te ayude** (Claude Code, Claude Desktop…) con tus servidores, sin darle
-  tus contraseñas y con tu permiso para cada cambio. Ver [más abajo](#usar-terview-con-un-asistente-de-ia-mcp).
+  tus contraseñas y con tu permiso para cada cambio. Ver [más abajo](#usar-sshorus-con-un-asistente-de-ia-mcp).
 - **Abrir una terminal de tu propio PC** y lanzar **Claude Code** o **Codex** que ya saben qué servidores
   tienes. Ver [Terminal local y asistentes de IA](#terminal-local-y-asistentes-de-ia).
 - **Actualizarse sola** cuando sale una versión nueva.
@@ -70,7 +72,7 @@
 ## Instalación
 
 Descarga el instalador de tu sistema en la página de
-**[la última versión](https://github.com/LeoMael/TerView/releases/latest)** (sección *Assets*).
+**[la última versión](https://github.com/LeoMael/SSHorus/releases/latest)** (sección *Assets*).
 
 | Sistema | Archivo que debes bajar |
 |---------|-------------------------|
@@ -84,9 +86,9 @@ Descarga el instalador de tu sistema en la página de
 1. Ejecuta el archivo `-setup.exe` y sigue los pasos. No pide permisos de administrador.
 2. Si aparece **"Windows protegió su PC"**, pulsa *Más información* y luego *Ejecutar de todas formas*.
    Esto sale porque el instalador todavía no está firmado digitalmente.
-3. Abre **TerView** desde el menú Inicio.
+3. Abre **SSHorus** desde el menú Inicio.
 
-TerView necesita **Microsoft Edge WebView2**. Ya viene con Windows 10 y 11; si faltara, el
+SSHorus necesita **Microsoft Edge WebView2**. Ya viene con Windows 10 y 11; si faltara, el
 instalador lo descarga solo.
 
 El archivo `.msi` es útil para empresas o instalaciones automáticas (`msiexec /i archivo.msi /quiet`).
@@ -94,29 +96,29 @@ El archivo `.msi` es útil para empresas o instalaciones automáticas (`msiexec 
 ### Fedora / RHEL / openSUSE (`.rpm`)
 
 ```bash
-sudo dnf install ./TerView-*.x86_64.rpm      # Fedora, RHEL, Rocky, Alma
-sudo zypper install ./TerView-*.x86_64.rpm   # openSUSE
+sudo dnf install ./SSHorus-*.x86_64.rpm      # Fedora, RHEL, Rocky, Alma
+sudo zypper install ./SSHorus-*.x86_64.rpm   # openSUSE
 ```
 
-Ábrela desde el menú de aplicaciones o escribiendo `terview` en la terminal.
-Para desinstalar: `sudo dnf remove ter-view`.
+Ábrela desde el menú de aplicaciones o escribiendo `sshorus` en la terminal.
+Para desinstalar: `sudo dnf remove ss-horus` (el paquete se llama así).
 
 ### Debian / Ubuntu / Mint (`.deb`)
 
 ```bash
-sudo apt install ./TerView_*_amd64.deb
+sudo apt install ./SSHorus_*_amd64.deb
 ```
 
 El `./` delante del nombre es importante: así `apt` instala el archivo descargado junto con lo que necesite.
-Para desinstalar: `sudo apt remove ter-view`.
+Para desinstalar: `sudo apt remove ss-horus`.
 
 ### Cualquier Linux (`.AppImage`)
 
 Es un solo archivo que se ejecuta sin instalar nada:
 
 ```bash
-chmod +x TerView_*_amd64.AppImage
-./TerView_*_amd64.AppImage
+chmod +x SSHorus_*_amd64.AppImage
+./SSHorus_*_amd64.AppImage
 ```
 
 Si da un error de **FUSE**, instala `fuse-libs` (Fedora) o `libfuse2` (Ubuntu 22.04) / `libfuse2t64` (Ubuntu 24.04 o más nuevo).
@@ -149,7 +151,7 @@ En Windows ese archivo está en `C:\Users\<tu usuario>\.ssh\config`.
 | `Ctrl+B` | Mostrar u ocultar la barra lateral |
 | ``Ctrl+` `` | Mostrar u ocultar la terminal |
 | `Ctrl+,` | Ajustes |
-| `Ctrl+Shift+L` | Bloquear TerView ahora (si usas PIN) |
+| `Ctrl+Shift+L` | Bloquear SSHorus ahora (si usas PIN) |
 
 **En la terminal:** `Ctrl+Shift+C` / `Ctrl+Shift+V` copiar y pegar · `Ctrl+Shift+F` buscar.
 Con el foco en la terminal, `Ctrl+W` y `Ctrl+B` van a la shell (borrar palabra, prefijo de tmux).
@@ -171,7 +173,7 @@ defecto), dividido o ventana aparte.
 - Las **contraseñas** (de conexión y de sudo) y frases de llaves se guardan cifradas con tu **PIN**
   (si lo activas) o en el llavero del sistema (GNOME Keyring o KWallet en Linux, Administrador de credenciales en Windows).
   Nunca en archivos sin cifrar.
-- Si la **huella** de un servidor cambia, TerView bloquea la conexión y te avisa, igual que `ssh`.
+- Si la **huella** de un servidor cambia, SSHorus bloquea la conexión y te avisa, igual que `ssh`.
 - El editor guarda de forma segura: primero en un archivo temporal y luego lo reemplaza,
   así un corte nunca deja el archivo a medias.
 
@@ -179,21 +181,21 @@ defecto), dividido o ventana aparte.
 
 | Qué | Linux | Windows |
 |-----|-------|---------|
-| Servidores, proyectos, ajustes y comandos | `~/.config/terview/` | `%APPDATA%\terview\` |
+| Servidores, proyectos, ajustes y comandos | `~/.config/sshorus/` | `%APPDATA%\sshorus\` |
 | Contraseñas | Llavero del sistema | Administrador de credenciales |
 | Huellas de servidores | `~/.ssh/known_hosts` | `%USERPROFILE%\.ssh\known_hosts` |
-| Contraseñas con PIN (bóveda cifrada) | `~/.config/terview/vault.json` | `%APPDATA%\terview\vault.json` |
-| Asistentes de IA: ajustes y registro | `~/.config/terview/mcp.json`, `mcp-audit.jsonl` | `%APPDATA%\terview\` |
+| Contraseñas con PIN (bóveda cifrada) | `~/.config/sshorus/vault.json` | `%APPDATA%\sshorus\vault.json` |
+| Asistentes de IA: ajustes y registro | `~/.config/sshorus/mcp.json`, `mcp-audit.jsonl` | `%APPDATA%\sshorus\` |
 
 ### PIN y bloqueo
 
-Al abrir TerView por primera vez te ofrece crear un **PIN de 6 números** («Ahora no» lo deja para
+Al abrir SSHorus por primera vez te ofrece crear un **PIN de 6 números** («Ahora no» lo deja para
 después). Lo cambias o bloqueas desde el **candado** de la barra de pestañas o en Ajustes → Seguridad.
 
 - Las contraseñas guardadas y los tokens (GitHub, asistentes de IA e IA de informes) van **cifrados**
   en `vault.json`, con tu PIN **y** una llave de este equipo (en el llavero). Copiar solo el archivo a
   otro PC no sirve.
-- TerView se **bloquea** al abrirlo, tras un rato sin uso (15 min por defecto) o con `Ctrl+Shift+L`.
+- SSHorus se **bloquea** al abrirlo, tras un rato sin uso (15 min por defecto) o con `Ctrl+Shift+L`.
   Las conexiones siguen abiertas; las contraseñas de sudo en memoria se olvidan.
 - Tras **5 PIN incorrectos** hay que esperar, cada vez más (hasta 15 min). Nunca se borra nada por fallar.
 - No cifra servidores, ajustes ni tus llaves de `~/.ssh`.
@@ -205,21 +207,21 @@ después). Lo cambias o bloqueas desde el **candado** de la barra de pestañas o
 las contraseñas guardadas y los tokens (GitHub, asistentes de IA e IA de informes); conservas todo lo
 demás. El token del MCP se crea de nuevo: vuelve a copiar la configuración en tu asistente.
 
-## Usar TerView con un asistente de IA (MCP)
+## Usar SSHorus con un asistente de IA (MCP)
 
 Un asistente como **Claude Code** o **Claude Desktop** puede revisar y arreglar cosas en tus servidores
-a través de TerView. Usa las conexiones que ya tienes y **nunca ve tus contraseñas ni tus llaves**.
+a través de SSHorus. Usa las conexiones que ya tienes y **nunca ve tus contraseñas ni tus llaves**.
 
-1. En TerView: **Ajustes → Asistentes de IA (MCP)** y activa el servidor MCP (viene apagado).
+1. En SSHorus: **Ajustes → Asistentes de IA (MCP)** y activa el servidor MCP (viene apagado).
 2. En la misma pantalla, elige qué puede tocar en cada servidor: **Sin acceso** (lo normal),
    **Solo lectura** o **Completo**.
-3. Copia la configuración que te muestra TerView y pégala en tu asistente. Para Claude Code es un
-   comando así (TerView pone el token y la ruta por ti):
+3. Copia la configuración que te muestra SSHorus y pégala en tu asistente. Para Claude Code es un
+   comando así (SSHorus pone el token y la ruta por ti):
    ```bash
-   claude mcp add --env TERVIEW_MCP_TOKEN=<token> --transport stdio terview -- /ruta/a/terview-mcp
+   claude mcp add --env SSHORUS_MCP_TOKEN=<token> --transport stdio sshorus -- /ruta/a/sshorus-mcp
    ```
-   Para Claude Desktop, TerView te da el bloque JSON para `claude_desktop_config.json`.
-4. Deja TerView abierto y pide algo al asistente, por ejemplo: «revisa por qué se cayó el contenedor
+   Para Claude Desktop, SSHorus te da el bloque JSON para `claude_desktop_config.json`.
+4. Deja SSHorus abierto y pide algo al asistente, por ejemplo: «revisa por qué se cayó el contenedor
    web en web-prod».
 
 Qué puede hacer el asistente (siempre dentro del acceso que le diste):
@@ -239,12 +241,12 @@ Qué puede hacer el asistente (siempre dentro del acceso que le diste):
 
 Qué esperar:
 - Lo que solo **lee** (listar, leer archivos, ver logs) pasa solo.
-- Lo que **cambia algo** abre un aviso en TerView con el comando exacto: **Permitir una vez**,
+- Lo que **cambia algo** abre un aviso en SSHorus con el comando exacto: **Permitir una vez**,
   **Permitir siempre** o **Denegar**. Si no respondes en 2 minutos, se deniega.
 - Lo **peligroso** (`rm -rf`, `sudo`, `reboot`, `prune`…) se pregunta siempre.
-- Los comandos con **`sudo`** funcionan: tras tu permiso, TerView usa la contraseña de sudo de esa conexión
+- Los comandos con **`sudo`** funcionan: tras tu permiso, SSHorus usa la contraseña de sudo de esa conexión
   (la que ya escribiste, la guardada o, si no hay, te la pide) y se la da a sudo. El asistente no la ve.
-- Si TerView está **bloqueado** con el PIN, el asistente no puede hacer nada.
+- Si SSHorus está **bloqueado** con el PIN, el asistente no puede hacer nada.
 - Todo queda en **Actividad del asistente** (botón del robot en la barra de pestañas) y en
   `mcp-audit.jsonl`, en la carpeta de configuración.
 
@@ -253,26 +255,26 @@ Ajustes. Con la AppImage, usa la opción por HTTP que también muestra Ajustes.
 
 ## Terminal local y asistentes de IA
 
-Además de las terminales de los servidores, TerView abre **terminales de tu propio PC** («Este equipo»).
+Además de las terminales de los servidores, SSHorus abre **terminales de tu propio PC** («Este equipo»).
 Son pestañas como las demás, con la misma terminal, y se distinguen por el icono del portátil.
 
 - **Abrir una**: botón del portátil en la barra de pestañas (o «+» → Este equipo, o «Nuevo» en la barra
-  lateral). Se abre en la carpeta que elijas («Cambiar carpeta…»; TerView recuerda la última) con la shell
+  lateral). Se abre en la carpeta que elijas («Cambiar carpeta…»; SSHorus recuerda la última) con la shell
   del sistema (`$SHELL` en Linux y macOS, PowerShell en Windows).
 - **Cerrar** la pestaña termina lo que corre en ella y todo lo que lanzó. El PIN también tapa estas pestañas.
 
 ### Claude Code y Codex
 
-En el mismo menú están **Claude Code** y **Codex**. TerView los abre en la carpeta elegida y **les da
+En el mismo menú están **Claude Code** y **Codex**. SSHorus los abre en la carpeta elegida y **les da
 contexto** de lo que tienes, para que trabajen como mejor sepan:
 
 - **La lista de tus servidores**: nombre, alias de `~/.ssh/config`, usuario, host, puerto, proyecto, si
   están conectados y qué servidor estabas mirando. Con eso pueden usar directamente
   `ssh <alias> '<comando>'`. Los servidores que entran con **contraseña** no funcionan así (el asistente
   lo sabe): para esos usa el MCP.
-- **El MCP de TerView**, ya configurado, si está activo (Ajustes → Asistentes de IA). Usa tus conexiones
+- **El MCP de SSHorus**, ya configurado, si está activo (Ajustes → Asistentes de IA). Usa tus conexiones
   (también las de contraseña) y te pide permiso antes de cada cambio, como siempre. Si está apagado,
-  TerView te pregunta si activarlo o abrir solo con el contexto.
+  SSHorus te pregunta si activarlo o abrir solo con el contexto.
 
 El contexto **nunca** lleva contraseñas, llaves, tokens ni el PIN. Puedes verlo y elegir qué incluir en
 **Ajustes → Terminal local e IA**. Para que el ssh directo funcione, exporta los servidores a
@@ -282,19 +284,19 @@ El contexto **nunca** lleva contraseñas, llaves, tokens ni el PIN. Puedes verlo
 
 | Asistente | Contexto | MCP |
 |-----------|----------|-----|
-| Claude Code | `--append-system-prompt "<contexto>"` | `--mcp-config '{"mcpServers":{"terview":{…}}}'` |
-| Codex | `-c developer_instructions="<contexto>"` | `-c mcp_servers.terview.command=…` y `env_vars=["TERVIEW_MCP_TOKEN", …]` |
+| Claude Code | `--append-system-prompt "<contexto>"` | `--mcp-config '{"mcpServers":{"sshorus":{…}}}'` |
+| Codex | `-c developer_instructions="<contexto>"` | `-c mcp_servers.sshorus.command=…` y `env_vars=["SSHORUS_MCP_TOKEN", …]` |
 
 El token del MCP va en una variable de entorno del proceso del asistente, no en archivos ni en los argumentos.
 
-**Si no están instalados**, TerView lo dice y te ofrece instalarlos. Antes de nada te muestra el comando
+**Si no están instalados**, SSHorus lo dice y te ofrece instalarlos. Antes de nada te muestra el comando
 exacto, y la instalación corre en una pestaña para que veas lo que hace:
 
 - Claude Code: `curl -fsSL https://claude.ai/install.sh | bash` (en Windows, `irm https://claude.ai/install.ps1 | iex`).
-- Codex: `npm install -g @openai/codex` (hace falta Node.js; TerView avisa si falta).
+- Codex: `npm install -g @openai/codex` (hace falta Node.js; SSHorus avisa si falta).
 
 **Iniciar sesión**: cada programa lo hace a su manera, con tu suscripción o con una clave de API. Si no has
-iniciado sesión, el propio programa te lo pide (`/login` en Claude Code, `codex login` en Codex). TerView
+iniciado sesión, el propio programa te lo pide (`/login` en Claude Code, `codex login` en Codex). SSHorus
 no lee ni copia `~/.claude` ni `~/.codex`.
 
 **Enviar a la IA**: en la terminal de un servidor, selecciona un texto (un error, un log…) y con clic
@@ -305,15 +307,15 @@ añadas tu pregunta. Si no hay ninguno abierto, abre uno.
 
 | Problema | Qué hacer |
 |----------|-----------|
-| Lentitud, parpadeos o ventana en blanco en Linux | Con tarjetas NVIDIA, TerView ya aplica el arreglo solo. Si sigue pasando, ábrela con `WEBKIT_DISABLE_COMPOSITING_MODE=1 terview`. |
-| "Llavero del sistema no disponible" (Linux) | Instala o activa GNOME Keyring o KWallet. Sin llavero, TerView te pedirá la contraseña en cada conexión (el PIN también necesita el llavero para guardar la llave del equipo). |
+| Lentitud, parpadeos o ventana en blanco en Linux | Con tarjetas NVIDIA, SSHorus ya aplica el arreglo solo. Si sigue pasando, ábrela con `WEBKIT_DISABLE_COMPOSITING_MODE=1 sshorus`. |
+| "Llavero del sistema no disponible" (Linux) | Instala o activa GNOME Keyring o KWallet. Sin llavero, SSHorus te pedirá la contraseña en cada conexión (el PIN también necesita el llavero para guardar la llave del equipo). |
 | Olvidé el PIN, o "falta la llave de este equipo" | En la pantalla de bloqueo pulsa «Olvidé mi PIN» (ver [PIN y bloqueo](#pin-y-bloqueo)). Pierdes solo las contraseñas guardadas y los tokens de GitHub, de IA y del MCP (el del MCP se crea de nuevo). |
 | "¡La huella del servidor cambió!" | Si reinstalaste el servidor, es normal: confirma la nueva huella. Si no, **no te conectes**: podría ser un ataque. |
 | No conecta con llave | Elige la llave **privada** (el archivo sin `.pub`) y comprueba que la pública está en `~/.ssh/authorized_keys` del servidor. |
 | El agente SSH no funciona en Windows | Activa el servicio *Agente de autenticación OpenSSH* (`Get-Service ssh-agent \| Set-Service -StartupType Automatic -PassThru \| Start-Service` en PowerShell como administrador) o abre Pageant. |
 | La AppImage no abre | Falta FUSE (ver arriba) o el permiso de ejecución (`chmod +x`). |
-| El asistente dice «Abre TerView para usar tus servidores» | TerView tiene que estar abierto. Ábrelo: las herramientas aparecen solas. |
-| El asistente dice «TerView está bloqueado» | Escribe tu PIN en TerView y vuelve a pedírselo. |
+| El asistente dice «Abre SSHorus para usar tus servidores» | SSHorus tiene que estar abierto. Ábrelo: las herramientas aparecen solas. |
+| El asistente dice «SSHorus está bloqueado» | Escribe tu PIN en SSHorus y vuelve a pedírselo. |
 | El asistente dice «Token incorrecto» | Regeneraste el token: copia otra vez la configuración desde Ajustes → Asistentes de IA. |
 
 ## Desarrollo
@@ -363,14 +365,14 @@ xcode-select --install
 ### Compilar y ejecutar
 
 ```bash
-git clone https://github.com/LeoMael/TerView.git
-cd TerView
+git clone https://github.com/LeoMael/SSHorus.git
+cd SSHorus
 npm install
 npm run tauri dev      # modo desarrollo (más lento, se recarga solo)
 npm run tauri build    # instaladores en src-tauri/target/release/bundle/
 ```
 
-El modo desarrollo es bastante más lento que la versión instalada. Para usar TerView en el día a día,
+El modo desarrollo es bastante más lento que la versión instalada. Para usar SSHorus en el día a día,
 instala un instalador o usa `npm run tauri build`.
 
 ### Publicar una versión
@@ -427,7 +429,7 @@ src-tauri/src/    Motor (Rust)
   mcp/            Servidor MCP para asistentes de IA (permisos, aprobación, registro)
   vulnscan/       Escáner de vulnerabilidades (scripts, OSV.dev, herramientas de la distro, historial)
   ai/             IA opcional que solo explica los informes del escáner
-  bin/            terview-mcp: puente stdio hacia la app abierta
+  bin/            sshorus-mcp: puente stdio hacia la app abierta
 docs/             Arquitectura, diagramas, pendientes y catálogo de comandos
 ```
 

@@ -1,9 +1,9 @@
-// Contexto de TerView para los asistentes de IA (Claude Code, Codex). Función pura, con pruebas.
+// Contexto de SSHorus para los asistentes de IA (Claude Code, Codex). Función pura, con pruebas.
 //
 // «La idea es solo dar contexto»: el asistente sabe qué servidores hay y cómo llegar a ellos, y
 // trabaja como mejor sepa. Dos vías:
-// - Directa: `ssh <alias> '<comando>'` con los alias que TerView escribe en ~/.ssh/config.
-// - MCP de TerView: usa las conexiones de TerView (también las que van con contraseña), con permisos.
+// - Directa: `ssh <alias> '<comando>'` con los alias que SSHorus escribe en ~/.ssh/config.
+// - MCP de SSHorus: usa las conexiones de SSHorus (también las que van con contraseña), con permisos.
 //
 // NUNCA lleva contraseñas, llaves (ni su ruta), tokens ni el PIN: solo nombres, alias, usuario,
 // host, puerto, proyecto y el método de acceso.
@@ -21,7 +21,7 @@ export interface ContextServer {
   alias: string | null;
   /** Nombres de los proyectos en los que está. */
   projects: string[];
-  /** Tiene una pestaña conectada ahora en TerView. */
+  /** Tiene una pestaña conectada ahora en SSHorus. */
   connected: boolean;
   /** Lo que se sabe de la conexión abierta (sin pedir nada al servidor). */
   privilege?: string | null;
@@ -111,7 +111,7 @@ function serverLine(s: ContextServer, input: ContextInput, direct: boolean): str
     const extra = [s.privilege ? (PRIVILEGE_LABEL[s.privilege] ?? null) : null, s.distro ? one(s.distro) : null]
       .filter(Boolean)
       .join(", ");
-    parts.push(`conectado ahora en TerView${extra ? ` (${extra})` : ""}`);
+    parts.push(`conectado ahora en SSHorus${extra ? ` (${extra})` : ""}`);
   }
   if (input.mcp) parts.push(`MCP: ${ACCESS_LABEL[s.mcpAccess]}`);
   return `- ${one(s.name)}: ${parts.join(" · ")}`;
@@ -142,9 +142,9 @@ export function buildAiContext(input: ContextInput): string {
   const max = input.maxServers ?? 60;
   const out: string[] = [];
 
-  out.push("# Contexto de TerView");
+  out.push("# Contexto de SSHorus");
   out.push(
-    "Te abrió TerView, el cliente SSH del usuario, en una terminal de su propio equipo (no en un servidor)." +
+    "Te abrió SSHorus, el cliente SSH del usuario, en una terminal de su propio equipo (no en un servidor)." +
       (input.cwd ? ` Carpeta de trabajo: ${one(input.cwd)}.` : ""),
   );
   if (options.includeDate) {
@@ -155,12 +155,12 @@ export function buildAiContext(input: ContextInput): string {
   out.push("## Cómo llegar a los servidores");
   if (direct) {
     out.push(
-      "- Directo por ssh: `ssh -o BatchMode=yes <alias> '<comando>'` con los alias de abajo (TerView los escribe en ~/.ssh/config). BatchMode hace que falle en vez de quedarse esperando una contraseña.",
+      "- Directo por ssh: `ssh -o BatchMode=yes <alias> '<comando>'` con los alias de abajo (SSHorus los escribe en ~/.ssh/config). BatchMode hace que falle en vez de quedarse esperando una contraseña.",
     );
   }
   if (input.mcp) {
     out.push(
-      "- MCP de TerView (servidor «terview»: list_servers, run_command, read_file, write_file, list_containers, list_sites…): usa las conexiones de TerView, también las que van con contraseña. Cada cambio pide permiso al usuario en TerView; respeta su respuesta.",
+      "- MCP de SSHorus (servidor «sshorus»: list_servers, run_command, read_file, write_file, list_containers, list_sites…): usa las conexiones de SSHorus, también las que van con contraseña. Cada cambio pide permiso al usuario en SSHorus; respeta su respuesta.",
     );
   }
   if (direct && input.mcp) {
@@ -176,9 +176,9 @@ export function buildAiContext(input: ContextInput): string {
     out.push("");
     if (servers.length === 0) {
       out.push("## Servidores");
-      out.push("El usuario aún no tiene servidores guardados en TerView.");
+      out.push("El usuario aún no tiene servidores guardados en SSHorus.");
     } else {
-      out.push(`## Servidores guardados en TerView (${servers.length})`);
+      out.push(`## Servidores guardados en SSHorus (${servers.length})`);
       // Primero los conectados, luego por nombre.
       const sorted = [...servers].sort(
         (a, b) => Number(b.connected) - Number(a.connected) || a.name.localeCompare(b.name, "es"),

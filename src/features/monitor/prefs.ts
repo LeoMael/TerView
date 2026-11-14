@@ -18,7 +18,7 @@ export interface MonitorPrefs {
   procSort: "cpu" | "mem";
 }
 
-const KEY = "terview.monitor.prefs";
+const KEY = "sshorus.monitor.prefs";
 const DEFAULTS: MonitorPrefs = { interval: DEFAULT_INTERVAL, containers: true, view: "server", procSort: "cpu" };
 
 export function loadPrefs(): MonitorPrefs {

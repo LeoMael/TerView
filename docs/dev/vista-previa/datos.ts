@@ -207,10 +207,10 @@ export const MCP_STATUS = {
   url: "http://127.0.0.1:47321/mcp",
   error: null,
   approvalTimeoutSecs: 120,
-  bridgePath: "/usr/bin/terview-mcp",
+  bridgePath: "/usr/bin/sshorus-mcp",
   bridgeFound: true,
   appImage: false,
-  auditPath: "~/.local/share/terview/mcp-audit.jsonl",
+  auditPath: "~/.local/share/sshorus/mcp-audit.jsonl",
 };
 
 export const MCP_CONFIG = {
@@ -224,10 +224,10 @@ export const MCP_CONFIG = {
 const TOKEN = "tv_ejemplo_0000000000000000000000000000";
 
 export const MCP_CLIENT = {
-  claudeCodeStdio: `claude mcp add --env TERVIEW_MCP_TOKEN=${TOKEN} --transport stdio terview -- /usr/bin/terview-mcp`,
-  claudeCodeHttp: `claude mcp add --transport http terview http://127.0.0.1:47321/mcp --header "Authorization: Bearer ${TOKEN}"`,
+  claudeCodeStdio: `claude mcp add --env SSHORUS_MCP_TOKEN=${TOKEN} --transport stdio sshorus -- /usr/bin/sshorus-mcp`,
+  claudeCodeHttp: `claude mcp add --transport http sshorus http://127.0.0.1:47321/mcp --header "Authorization: Bearer ${TOKEN}"`,
   claudeDesktopJson: JSON.stringify(
-    { mcpServers: { terview: { command: "/usr/bin/terview-mcp", args: [], env: { TERVIEW_MCP_TOKEN: TOKEN } } } },
+    { mcpServers: { sshorus: { command: "/usr/bin/sshorus-mcp", args: [], env: { SSHORUS_MCP_TOKEN: TOKEN } } } },
     null,
     2,
   ),

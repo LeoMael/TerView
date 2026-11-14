@@ -29,8 +29,8 @@ export async function buildReport(): Promise<string> {
   const fps = useFps.getState();
   const L: string[] = [];
 
-  L.push("## Diagnóstico de TerView", "");
-  L.push(`- TerView: ${v.app} (formato: ${v.bundle})${sys?.debugBuild ? " — compilación de DESARROLLO" : ""}`);
+  L.push("## Diagnóstico de SSHorus", "");
+  L.push(`- SSHorus: ${v.app} (formato: ${v.bundle})${sys?.debugBuild ? " — compilación de DESARROLLO" : ""}`);
   L.push(`- Tauri: ${v.tauri}`);
   if (sys) {
     L.push(`- Sistema: ${sys.osName ?? sys.os} (${sys.os} ${sys.arch})${sys.kernel ? `, núcleo ${sys.kernel}` : ""}`);

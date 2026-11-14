@@ -1,4 +1,4 @@
-//! Historial de auditorías por servidor: `<config>/terview/audit/<idServidor>.json`.
+//! Historial de auditorías por servidor: `<config>/sshorus/audit/<idServidor>.json`.
 //!
 //! Las 30 últimas, la más nueva primero. Escritura atómica y 0600 (`fsutil`), como el escáner.
 //! Se borra al borrar el servidor.

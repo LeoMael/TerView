@@ -1,4 +1,4 @@
-// Abrir terminales locales y lanzar Claude Code / Codex con el contexto de TerView.
+// Abrir terminales locales y lanzar Claude Code / Codex con el contexto de SSHorus.
 //   openLocalTerminal()             // shell del sistema en la última carpeta elegida
 //   launchAssistant("claude")       // detecta, ofrece instalar, pregunta por el MCP y abre
 //   sendToAi(texto, "web")          // «Enviar a la IA» desde una terminal de servidor
@@ -113,24 +113,24 @@ async function decideMcp(): Promise<boolean | null> {
   if (st?.enabled) {
     // Encendido pero sin poder usarse: se abre solo con el contexto (y se dice por qué).
     if (!st.running) {
-      toast.error("El MCP de TerView no está en marcha: se abre solo con el contexto", st.error ?? undefined);
+      toast.error("El MCP de SSHorus no está en marcha: se abre solo con el contexto", st.error ?? undefined);
       return false;
     }
     if (!st.bridgeFound) {
-      toast.error("No se encontró el puente terview-mcp: se abre solo con el contexto", st.bridgePath);
+      toast.error("No se encontró el puente sshorus-mcp: se abre solo con el contexto", st.bridgePath);
       return false;
     }
     return true;
   }
   const choice = await choiceDialog({
-    title: "El MCP de TerView está apagado",
+    title: "El MCP de SSHorus está apagado",
     message: createElement(
       "div",
       null,
       createElement(
         "p",
         null,
-        "Con el MCP el asistente usa tus conexiones de TerView (también las que van con contraseña) y te pide permiso antes de cada cambio.",
+        "Con el MCP el asistente usa tus conexiones de SSHorus (también las que van con contraseña) y te pide permiso antes de cada cambio.",
       ),
       createElement(
         "p",
@@ -153,7 +153,7 @@ async function decideMcp(): Promise<boolean | null> {
       return false;
     }
     if (!s.bridgeFound) {
-      toast.error("No se encontró el puente terview-mcp: se abre solo con el contexto", s.bridgePath);
+      toast.error("No se encontró el puente sshorus-mcp: se abre solo con el contexto", s.bridgePath);
       return false;
     }
     const cfg = await mcp.config().catch(() => null);
@@ -262,7 +262,7 @@ export async function detectAssistants(): Promise<AiToolInfo[] | null> {
 
 /**
  * Abre Claude Code o Codex en una pestaña local, en la última carpeta elegida, con el contexto de
- * TerView (y su MCP si está activo). Si no está instalado, ofrece instalarlo.
+ * SSHorus (y su MCP si está activo). Si no está instalado, ofrece instalarlo.
  * `paste`: texto para pegar en el asistente cuando esté listo.
  */
 export async function launchAssistant(tool: AiTool, opts: { cwd?: string | null; paste?: string | null } = {}) {
@@ -286,8 +286,8 @@ export async function launchAssistant(tool: AiTool, opts: { cwd?: string | null;
   const intro = [
     `${label} en ${cwd ?? "tu carpeta personal"}.`,
     context.text
-      ? `Contexto de TerView: ${context.servers === 1 ? "1 servidor" : `${context.servers} servidores`}${withMcp ? " y el MCP de TerView" : ""}.`
-      : "Sin contexto de TerView (desactivado en Ajustes).",
+      ? `Contexto de SSHorus: ${context.servers === 1 ? "1 servidor" : `${context.servers} servidores`}${withMcp ? " y el MCP de SSHorus" : ""}.`
+      : "Sin contexto de SSHorus (desactivado en Ajustes).",
     tool === "claude"
       ? "Si no has iniciado sesión, Claude Code te lo pedirá (o escribe /login)."
       : "Si no has iniciado sesión, Codex te lo pedirá (o ejecuta «codex login»).",

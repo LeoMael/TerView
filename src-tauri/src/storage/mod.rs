@@ -1,4 +1,4 @@
-//! Servidores, proyectos, ajustes (JSON en ~/.config/terview/) y secretos (llavero).
+//! Servidores, proyectos, ajustes (JSON en ~/.config/sshorus/) y secretos (llavero).
 //! DUEÑO: agente Almacenamiento.
 //!
 //! API usada por otros módulos (NO cambiar firmas):
@@ -58,7 +58,7 @@ pub struct ProfileStore {
 }
 
 impl ProfileStore {
-    /// Lee ~/.config/terview/profiles.json (o vacío si no existe). Nunca falla: registra el error.
+    /// Lee ~/.config/sshorus/profiles.json (o vacío si no existe). Nunca falla: registra el error.
     pub fn load() -> Self {
         match fsutil::config_dir() {
             Some(dir) => Self::load_from(dir.join("profiles.json")),
@@ -289,7 +289,7 @@ pub struct SettingsStore {
 }
 
 impl SettingsStore {
-    /// Lee ~/.config/terview/settings.json (o valores por defecto).
+    /// Lee ~/.config/sshorus/settings.json (o valores por defecto).
     pub fn load() -> Self {
         match fsutil::config_dir() {
             Some(dir) => Self::load_from(dir.join("settings.json")),
@@ -446,7 +446,7 @@ pub async fn profiles_reveal_secret(id: String, kind: SecretKind, pin: Option<St
 }
 
 /// Contraseña de sudo de un servidor según su ajuste: la de conexión, la guardada aparte o
-/// ninguna («Pedir cada vez»). Solo con TerView desbloqueado; nunca va a disco ni a logs.
+/// ninguna («Pedir cada vez»). Solo con SSHorus desbloqueado; nunca va a disco ni a logs.
 /// Con «La de la conexión» y `session_id`, primero la que se escribió al conectar esa sesión (aunque no
 /// se guardara; ver `ssh::login_secret`) y si no, la guardada.
 #[tauri::command]
@@ -528,7 +528,7 @@ pub async fn profiles_duplicate_server(
     Ok(copy)
 }
 
-/// Escribe/actualiza el bloque marcado de TerView en ~/.ssh/config.
+/// Escribe/actualiza el bloque marcado de SSHorus en ~/.ssh/config.
 #[tauri::command]
 pub async fn profiles_export_ssh_config(app: AppHandle) -> AppResult<SshConfigExport> {
     blocking(move || {

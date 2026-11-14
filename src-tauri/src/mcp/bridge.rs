@@ -1,18 +1,18 @@
-//! Puente stdio → HTTP local (`terview-mcp`).
+//! Puente stdio → HTTP local (`sshorus-mcp`).
 //!
 //! Muchos clientes MCP (Claude Desktop, Claude Code con `--transport stdio`) arrancan el servidor
 //! como un programa y le hablan por stdin/stdout. Este puente no sabe nada de herramientas: reenvía
 //! cada mensaje JSON-RPC a la app abierta (`http://127.0.0.1:<puerto>/mcp` con el token) y escribe
 //! las respuestas. Así hay UNA sola implementación de permisos, aprobación y registro: la de la app.
 //!
-//! - Token: variable `TERVIEW_MCP_TOKEN` (la configuración que copia TerView ya la lleva).
-//! - Puerto: `TERVIEW_MCP_PORT`, o el de `<config>/terview/mcp.json`, o 47821.
+//! - Token: variable `SSHORUS_MCP_TOKEN` (la configuración que copia SSHorus ya la lleva).
+//! - Puerto: `SSHORUS_MCP_PORT`, o el de `<config>/sshorus/mcp.json`, o 47821.
 //! - Si la app está cerrada: responde `initialize` él mismo y ofrece una sola herramienta que
-//!   explica «Abre TerView para usar tus servidores». Cuando la app aparece, avisa al cliente con
+//!   explica «Abre SSHorus para usar tus servidores». Cuando la app aparece, avisa al cliente con
 //!   `notifications/tools/list_changed` para que vuelva a pedir la lista.
 //!
 //! Este archivo se compila dos veces: dentro de la app (para las pruebas) y en el binario
-//! `src/bin/terview-mcp.rs` (con `#[path]`). Por eso solo usa crates externos, nada de `crate::`.
+//! `src/bin/sshorus-mcp.rs` (con `#[path]`). Por eso solo usa crates externos, nada de `crate::`.
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -26,9 +26,9 @@ use tokio::io::{AsyncBufRead, AsyncBufReadExt, AsyncWrite, AsyncWriteExt};
 use tokio::net::TcpStream;
 use tokio::sync::mpsc;
 
-pub const CLOSED_MSG: &str = "Abre TerView para usar tus servidores.";
+pub const CLOSED_MSG: &str = "Abre SSHorus para usar tus servidores.";
 pub const DEFAULT_PORT: u16 = 47821;
-const PLACEHOLDER_TOOL: &str = "terview_abrir";
+const PLACEHOLDER_TOOL: &str = "sshorus_abrir";
 /// Versión de protocolo si el cliente no dice ninguna.
 const FALLBACK_PROTOCOL: &str = "2025-06-18";
 
@@ -44,8 +44,8 @@ pub struct BridgeConfig {
 impl BridgeConfig {
     /// Lee el entorno y `mcp.json`.
     pub fn from_env(version: &str) -> Self {
-        let token = std::env::var("TERVIEW_MCP_TOKEN").ok().map(|t| t.trim().to_string()).filter(|t| !t.is_empty());
-        let port = std::env::var("TERVIEW_MCP_PORT")
+        let token = std::env::var("SSHORUS_MCP_TOKEN").ok().map(|t| t.trim().to_string()).filter(|t| !t.is_empty());
+        let port = std::env::var("SSHORUS_MCP_PORT")
             .ok()
             .and_then(|p| p.trim().parse::<u16>().ok())
             .or_else(port_from_config)
@@ -55,7 +55,7 @@ impl BridgeConfig {
 }
 
 fn port_from_config() -> Option<u16> {
-    let path = dirs::config_dir()?.join("terview").join("mcp.json");
+    let path = dirs::config_dir()?.join("sshorus").join("mcp.json");
     let v: Value = serde_json::from_slice(&std::fs::read(path).ok()?).ok()?;
     v.get("port")?.as_u64().and_then(|p| u16::try_from(p).ok())
 }
@@ -65,7 +65,7 @@ fn port_from_config() -> Option<u16> {
 struct Shared {
     /// Versión acordada en `initialize` (se manda en cada petición).
     protocol: Option<String>,
-    /// Nombre del cliente (va en el User-Agent: queda en el registro de TerView).
+    /// Nombre del cliente (va en el User-Agent: queda en el registro de SSHorus).
     client: Option<String>,
     /// Ya se está vigilando a que abra la app.
     watching: bool,
@@ -166,7 +166,7 @@ async fn handle_message(cfg: &Arc<BridgeConfig>, shared: &Arc<Mutex<Shared>>, tx
         if let Some(id) = &id {
             let open = app_is_open(cfg.port).await;
             let text = if open {
-                "TerView ya está abierto: vuelve a pedir la lista de herramientas (tools/list)."
+                "SSHorus ya está abierto: vuelve a pedir la lista de herramientas (tools/list)."
             } else {
                 CLOSED_MSG
             };
@@ -179,7 +179,7 @@ async fn handle_message(cfg: &Arc<BridgeConfig>, shared: &Arc<Mutex<Shared>>, tx
             let _ = tx.send(error_msg(
                 &id,
                 -32000,
-                "Falta la variable TERVIEW_MCP_TOKEN: copia la configuración desde TerView → Ajustes → Asistentes de IA (MCP).",
+                "Falta la variable SSHORUS_MCP_TOKEN: copia la configuración desde SSHorus → Ajustes → Asistentes de IA (MCP).",
             ));
         }
         return;
@@ -220,8 +220,8 @@ async fn handle_message(cfg: &Arc<BridgeConfig>, shared: &Arc<Mutex<Shared>>, tx
                         json!({
                             "protocolVersion": pv,
                             "capabilities": { "tools": { "listChanged": true } },
-                            "serverInfo": { "name": "terview", "version": cfg.version },
-                            "instructions": format!("TerView está cerrado. {CLOSED_MSG} Las herramientas aparecerán solas cuando se abra."),
+                            "serverInfo": { "name": "sshorus", "version": cfg.version },
+                            "instructions": format!("SSHorus está cerrado. {CLOSED_MSG} Las herramientas aparecerán solas cuando se abra."),
                         }),
                     ));
                 }
@@ -233,7 +233,7 @@ async fn handle_message(cfg: &Arc<BridgeConfig>, shared: &Arc<Mutex<Shared>>, tx
                         &id,
                         json!({ "tools": [{
                             "name": PLACEHOLDER_TOOL,
-                            "description": format!("TerView está cerrado. {CLOSED_MSG} Llama a esta herramienta para comprobarlo de nuevo."),
+                            "description": format!("SSHorus está cerrado. {CLOSED_MSG} Llama a esta herramienta para comprobarlo de nuevo."),
                             "inputSchema": { "type": "object", "properties": {} },
                         }] }),
                     ));
@@ -292,8 +292,8 @@ async fn post(cfg: &BridgeConfig, token: &str, protocol: Option<&str>, client: O
         let _ = conn.await;
     });
     let ua = match client {
-        Some(c) => format!("terview-mcp/{} ({c})", cfg.version),
-        None => format!("terview-mcp/{}", cfg.version),
+        Some(c) => format!("sshorus-mcp/{} ({c})", cfg.version),
+        None => format!("sshorus-mcp/{}", cfg.version),
     };
     let mut req = http::Request::builder()
         .method(http::Method::POST)
@@ -329,7 +329,7 @@ async fn post(cfg: &BridgeConfig, token: &str, protocol: Option<&str>, client: O
         let msg = serde_json::from_slice::<Value>(&bytes)
             .ok()
             .and_then(|v| v.get("error").and_then(Value::as_str).map(str::to_string))
-            .unwrap_or_else(|| format!("TerView respondió {status}"));
+            .unwrap_or_else(|| format!("SSHorus respondió {status}"));
         return Sent::HttpError(msg);
     }
     let mut out = Vec::new();

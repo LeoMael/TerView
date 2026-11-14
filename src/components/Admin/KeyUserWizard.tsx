@@ -1,6 +1,6 @@
 // «Nuevo usuario con clave»: usuario sin contraseña que solo entra con su llave SSH.
 // Formulario → revisión del plan (comandos exactos) → resultado: prueba de conexión con esa llave y
-// opción de guardar el servidor en TerView. No toca sshd_config salvo que se pida aparte (AllowUsers).
+// opción de guardar el servidor en SSHorus. No toca sshd_config salvo que se pida aparte (AllowUsers).
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CheckCircle2, KeyRound, PlugZap, Save, ShieldAlert, Sparkles, XCircle } from "lucide-react";
 import { errorMessage } from "../../api/core";
@@ -274,7 +274,7 @@ export function KeyUserWizard({ onClose, onCreated }: { onClose: () => void; onC
             Cerrar
           </button>
           <button className="btn btn-primary" onClick={saveServer} disabled={!profile}>
-            <Save size={13} /> Guardar servidor en TerView…
+            <Save size={13} /> Guardar servidor en SSHorus…
           </button>
         </div>
         {allowUsersOpen && (

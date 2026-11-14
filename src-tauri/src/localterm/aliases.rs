@@ -1,6 +1,6 @@
 //! Alias de `~/.ssh/config` que de verdad están exportados (para el contexto del asistente).
 //!
-//! Solo cuenta un servidor si el bloque de TerView tiene su `Host <alias>` con el mismo
+//! Solo cuenta un servidor si el bloque de SSHorus tiene su `Host <alias>` con el mismo
 //! `HostName`, `User` y `Port`: así el asistente no recibe un alias que ssh no conoce.
 
 use std::collections::HashMap;
@@ -24,7 +24,7 @@ struct HostEntry {
     port: Option<u16>,
 }
 
-/// Entradas `Host` del bloque de TerView (alias → datos). Vacío si no hay bloque.
+/// Entradas `Host` del bloque de SSHorus (alias → datos). Vacío si no hay bloque.
 fn parse_block(config: &str) -> HashMap<String, HostEntry> {
     let mut out: HashMap<String, HostEntry> = HashMap::new();
     let mut inside = false;
@@ -44,7 +44,7 @@ fn parse_block(config: &str) -> HashMap<String, HostEntry> {
         let Some((key, args)) = split_line(t) else { continue };
         match key.as_str() {
             "host" => {
-                // TerView escribe un solo alias concreto por `Host` (el `Host *` final no cuenta).
+                // SSHorus escribe un solo alias concreto por `Host` (el `Host *` final no cuenta).
                 current = args.first().filter(|a| !a.contains(['*', '?', '!'])).cloned();
                 if let Some(a) = &current {
                     out.entry(a.clone()).or_default();
@@ -69,7 +69,7 @@ fn clean(v: &str) -> String {
     v.chars().filter(|c| !c.is_control() && *c != '"').collect::<String>().trim().to_string()
 }
 
-/// Servidores cuyo alias está en el bloque de TerView con sus mismos datos.
+/// Servidores cuyo alias está en el bloque de SSHorus con sus mismos datos.
 pub fn exported_aliases(config: &str, servers: &[ServerProfile], overrides: &AliasOverrides) -> Vec<ExportedAlias> {
     let block = parse_block(config);
     if block.is_empty() {
@@ -111,7 +111,7 @@ mod tests {
         }
     }
 
-    const CONFIG: &str = "Host viejo\n    HostName 9.9.9.9\n\n# >>> TerView (no editar a mano) >>>\nHost web\n    HostName 10.0.0.1\n    User deploy\n\nHost db\n    HostName db.lan\n    Port 2222\n    User root\n\n# Lo que sigue vuelve a aplicarse a todos los hosts\nHost *\n# <<< TerView <<<\nHost otro\n    HostName 1.1.1.1\n";
+    const CONFIG: &str = "Host viejo\n    HostName 9.9.9.9\n\n# >>> SSHorus (no editar a mano) >>>\nHost web\n    HostName 10.0.0.1\n    User deploy\n\nHost db\n    HostName db.lan\n    Port 2222\n    User root\n\n# Lo que sigue vuelve a aplicarse a todos los hosts\nHost *\n# <<< SSHorus <<<\nHost otro\n    HostName 1.1.1.1\n";
 
     #[test]
     fn solo_los_que_coinciden() {
@@ -145,7 +145,7 @@ mod tests {
 
     #[test]
     fn alias_elegido_a_mano() {
-        let cfg = "# >>> TerView (no editar a mano) >>>\nHost prod-web\n    HostName 10.0.0.1\n    User deploy\n# <<< TerView <<<\n";
+        let cfg = "# >>> SSHorus (no editar a mano) >>>\nHost prod-web\n    HostName 10.0.0.1\n    User deploy\n# <<< SSHorus <<<\n";
         let servers = vec![srv("1", "web", "10.0.0.1", "deploy", 22)];
         let mut o = AliasOverrides::new();
         o.insert("1".into(), "prod-web".into());

@@ -2,7 +2,7 @@
 import type { Project, ServerProfile, Snippet } from "../../api/types";
 import { parseTmuxMode } from "../tmux/logic";
 
-export const SYNC_FORMAT = "terview-config";
+export const SYNC_FORMAT = "sshorus-config";
 
 export interface SyncPayload {
   format: typeof SYNC_FORMAT;
@@ -29,9 +29,9 @@ export function buildPayload(servers: ServerProfile[], projects: Project[], snip
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
 const str = (v: unknown): string | null => (typeof v === "string" ? v : null);
 
-/** Valida lo descifrado. Lanza un error legible si no es una copia de TerView. */
+/** Valida lo descifrado. Lanza un error legible si no es una copia de SSHorus. */
 export function parsePayload(v: unknown): SyncPayload {
-  if (!isObj(v) || v.format !== SYNC_FORMAT) throw new Error("La copia no tiene el formato de TerView");
+  if (!isObj(v) || v.format !== SYNC_FORMAT) throw new Error("La copia no tiene el formato de SSHorus");
   const arr = (k: string) => (Array.isArray(v[k]) ? (v[k] as unknown[]).filter(isObj) : []);
   const servers: ServerProfile[] = arr("servers")
     .filter((s) => str(s.id) && str(s.name) && str(s.host) && str(s.username))

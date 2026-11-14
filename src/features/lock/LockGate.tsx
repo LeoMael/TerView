@@ -1,5 +1,5 @@
 // Pantalla de bloqueo (con «Olvidé mi PIN») y pantalla de primera vez para crear el PIN.
-// LockGate envuelve la interfaz de cada ventana: al abrir con TerView bloqueado no la monta hasta
+// LockGate envuelve la interfaz de cada ventana: al abrir con SSHorus bloqueado no la monta hasta
 // desbloquear; si se bloquea después, la deja montada (las conexiones siguen) pero la tapa entera y
 // la vuelve inerte.
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
@@ -67,7 +67,7 @@ function LockScreen({ status, main }: { status: VaultStatus; main: boolean }) {
       className={LOCK_SCREEN_CLASS}
       role="dialog"
       aria-modal="true"
-      aria-label="TerView está bloqueado"
+      aria-label="SSHorus está bloqueado"
       // Que las teclas no lleguen a la interfaz de debajo (Escape cerraría diálogos, etc.).
       onKeyDown={(e) => e.stopPropagation()}
     >
@@ -167,7 +167,7 @@ function ForgotPin({ onBack }: { onBack: () => void }) {
       await vault.reset();
       useLock.setState({ offerSetup: true });
       applyVaultStatus(await vault.status());
-      toast.info("Bóveda borrada", "TerView te pedirá las contraseñas otra vez.");
+      toast.info("Bóveda borrada", "SSHorus te pedirá las contraseñas otra vez.");
     } catch (err) {
       toast.error("No se pudo borrar la bóveda", err);
       setBusy(false);
@@ -239,7 +239,7 @@ function SetupPrompt() {
         <h2 className="lock-title">
           <ShieldCheck size={20} /> {offer ? "Crea un PIN nuevo" : "Protege tus contraseñas con un PIN"}
         </h2>
-        <p className="lock-text">TerView se bloqueará al abrirlo y tras un rato sin uso.</p>
+        <p className="lock-text">SSHorus se bloqueará al abrirlo y tras un rato sin uso.</p>
         <WhatItProtects />
         <SetupPinForm
           autoFocus

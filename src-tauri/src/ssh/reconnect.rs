@@ -15,7 +15,7 @@
 //! 4. `SessionStore::remove` (p. ej. `ssh_disconnect`) cancela todo sin emitir nada más.
 //!
 //! Contraseña guardada en la bóveda (`Supervised::stored_secret`): no se guarda en memoria con
-//! la sesión; se lee en cada intento. Si TerView está bloqueado, el intento espera al desbloqueo
+//! la sesión; se lee en cada intento. Si SSHorus está bloqueado, el intento espera al desbloqueo
 //! (avisando con `waiting_unlock`) sin gastar intentos.
 
 use std::sync::{Arc, Mutex};
@@ -30,7 +30,7 @@ use crate::ssh::handler::{HostKeyPolicy, SharedState};
 use crate::ssh::{disconnect_session, SessionStore, SshSession};
 use crate::types::{AuthMethod, ServerProfile, SessionClosed, SessionInfo, SessionReconnecting, Settings};
 
-/// Cada cuánto se vuelve a mirar si TerView ya se desbloqueó.
+/// Cada cuánto se vuelve a mirar si SSHorus ya se desbloqueó.
 const UNLOCK_POLL: Duration = Duration::from_millis(500);
 
 /// Lo que el vigilante necesita de la aplicación.
@@ -47,7 +47,7 @@ pub trait ReconnectEnv: Send + Sync + 'static {
     fn release_all(&self, session_id: &str);
     /// Reconectada: reanudar las transferencias que fallaron por la caída.
     fn resume(&self, session_id: &str);
-    /// Contraseña o frase guardada del servidor (bóveda o llavero). `AppError::Locked` si TerView
+    /// Contraseña o frase guardada del servidor (bóveda o llavero). `AppError::Locked` si SSHorus
     /// está bloqueado.
     fn stored_secret(&self, profile_id: &str) -> BoxFuture<'static, Result<Option<String>, AppError>>;
 }
@@ -282,7 +282,7 @@ async fn reconnect_loop<E: ReconnectEnv>(
     ))
 }
 
-/// Credenciales para un intento. Con secreto en la bóveda lo lee ahora; si TerView está bloqueado
+/// Credenciales para un intento. Con secreto en la bóveda lo lee ahora; si SSHorus está bloqueado
 /// avisa una vez y espera al desbloqueo (o a que cancelen).
 #[allow(clippy::too_many_arguments)]
 async fn creds_for_attempt<E: ReconnectEnv>(
@@ -317,7 +317,7 @@ async fn creds_for_attempt<E: ReconnectEnv>(
                         attempt,
                         max_attempts: max,
                         next_retry_secs: 0,
-                        reason: "TerView se desbloqueó: reconectando".to_string(),
+                        reason: "SSHorus se desbloqueó: reconectando".to_string(),
                         waiting_unlock: false,
                     });
                 }
@@ -332,7 +332,7 @@ async fn creds_for_attempt<E: ReconnectEnv>(
                         attempt,
                         max_attempts: max,
                         next_retry_secs: 0,
-                        reason: "esperando a que desbloquees TerView para usar la contraseña guardada"
+                        reason: "esperando a que desbloquees SSHorus para usar la contraseña guardada"
                             .to_string(),
                         waiting_unlock: true,
                     });

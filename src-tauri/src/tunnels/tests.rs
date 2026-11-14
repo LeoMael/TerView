@@ -15,7 +15,7 @@ use crate::ssh::{SessionStore, SshSession, disconnect_session};
 
 fn temp_file() -> std::path::PathBuf {
     std::env::temp_dir()
-        .join(format!("terview-tunnels-{}", uuid::Uuid::new_v4()))
+        .join(format!("sshorus-tunnels-{}", uuid::Uuid::new_v4()))
         .join("tunnels.json")
 }
 
@@ -249,7 +249,7 @@ async fn remoto_y_reconexion() {
     let lport = local.local_addr().expect("addr").port();
     tokio::spawn(async move {
         while let Ok((mut s, _)) = local.accept().await {
-            let _ = s.write_all(b"hola-terview\n").await;
+            let _ = s.write_all(b"hola-sshorus\n").await;
         }
     });
     let mut d = def(TunnelKind::Remote, 0, "127.0.0.1", lport);
@@ -263,7 +263,7 @@ async fn remoto_y_reconexion() {
 
     let cmd = format!("sleep 2 | nc 127.0.0.1 {rport}");
     let out = exec(&c.session, &cmd).await;
-    assert!(out.contains("hola-terview"), "salida: {out:?}");
+    assert!(out.contains("hola-sshorus"), "salida: {out:?}");
 
     // Reconexión simulada: se cae la conexión y el mismo sessionId pasa a una nueva.
     disconnect_session(&c.session).await;
@@ -291,7 +291,7 @@ async fn remoto_y_reconexion() {
     assert!(active, "el túnel remoto no se reabrió tras reconectar");
     let out = exec(&fresh, &cmd).await;
     assert!(
-        out.contains("hola-terview"),
+        out.contains("hola-sshorus"),
         "salida tras reconectar: {out:?}"
     );
 

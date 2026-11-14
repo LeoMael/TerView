@@ -86,7 +86,7 @@ export function applyMonacoTheme() {
         { token: "delimiter", foreground: tokenColor("--text-muted", "94a3b8") },
       ]
     : [];
-  const name = `terview-${palette}`;
+  const name = `sshorus-${palette}`;
   monaco.editor.defineTheme(name, {
     base: dark ? (palette === "contrast" ? "hc-black" : "vs-dark") : "vs",
     inherit: true,

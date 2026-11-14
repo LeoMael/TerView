@@ -41,7 +41,7 @@ enum Answer {
 
 struct Mock {
     locked: AtomicBool,
-    /// Se bloquea TerView justo al preguntar (bloqueo mientras se espera la respuesta).
+    /// Se bloquea SSHorus justo al preguntar (bloqueo mientras se espera la respuesta).
     lock_on_ask: AtomicBool,
     data: ProfilesData,
     sessions: Vec<SessionInfo>,
@@ -68,7 +68,7 @@ struct Mock {
     exec_result: Mutex<Option<ExecResult>>,
     /// Ejecutar de verdad con `sh` en este equipo, con un sudo simulado (ver `FakeSudo`).
     local: Mutex<Option<FakeSudo>>,
-    /// Se bloquea TerView mientras se busca la contraseña de sudo.
+    /// Se bloquea SSHorus mientras se busca la contraseña de sudo.
     lock_on_sudo: AtomicBool,
 }
 
@@ -445,7 +445,7 @@ async fn locked_rejects_everything() {
 
 #[tokio::test]
 async fn locked_while_waiting_for_approval() {
-    // El usuario aprueba, pero TerView se bloqueó mientras esperaba: no se ejecuta.
+    // El usuario aprueba, pero SSHorus se bloqueó mientras esperaba: no se ejecuta.
     let c = core();
     c.backend.lock_on_ask.store(true, Ordering::SeqCst);
     set_answer(&c, Answer::Give(Decision::Once));
@@ -722,7 +722,7 @@ async fn read_file_is_chunked() {
 
 #[tokio::test]
 async fn audit_file_and_rotation() {
-    let dir = std::env::temp_dir().join(format!("terview-mcp-audit-{}", uuid::Uuid::new_v4().simple()));
+    let dir = std::env::temp_dir().join(format!("sshorus-mcp-audit-{}", uuid::Uuid::new_v4().simple()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join(super::audit::FILE_NAME);
     {
@@ -853,7 +853,7 @@ async fn http_token_origin_and_lock() {
     let (s, body) = post(port, INIT, Some(TOKEN), false).await;
     assert_eq!(s, 200, "{body}");
     let v: Value = serde_json::from_str(&body).unwrap();
-    assert_eq!(v["result"]["serverInfo"]["name"], "terview");
+    assert_eq!(v["result"]["serverInfo"]["name"], "sshorus");
     // Bloqueado: error JSON-RPC claro, con el mismo id.
     g.locked.store(true, Ordering::SeqCst);
     let (s, body) = post(port, r#"{"jsonrpc":"2.0","id":7,"method":"tools/list"}"#, Some(TOKEN), false).await;
@@ -907,7 +907,7 @@ async fn bridge_forwards_to_app() {
     let (mut w, mut r) = spawn_bridge(port, Some(TOKEN));
     send(&mut w, INIT).await;
     let v = recv(&mut r).await;
-    assert_eq!(v["result"]["serverInfo"]["name"], "terview");
+    assert_eq!(v["result"]["serverInfo"]["name"], "sshorus");
     send(&mut w, r#"{"jsonrpc":"2.0","method":"notifications/initialized"}"#).await;
     send(&mut w, r#"{"jsonrpc":"2.0","id":2,"method":"tools/list"}"#).await;
     let v = recv(&mut r).await;
@@ -954,7 +954,7 @@ async fn bridge_when_app_is_closed() {
     let tools = v["result"]["tools"].as_array().unwrap();
     assert_eq!(tools.len(), 1);
     assert!(tools[0]["description"].as_str().unwrap().contains(bridge::CLOSED_MSG));
-    send(&mut w, r#"{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"terview_abrir","arguments":{}}}"#).await;
+    send(&mut w, r#"{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"sshorus_abrir","arguments":{}}}"#).await;
     let v = recv(&mut r).await;
     assert_eq!(v["result"]["content"][0]["text"], bridge::CLOSED_MSG);
     send(&mut w, r#"{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"list_servers","arguments":{}}}"#).await;
@@ -1257,7 +1257,7 @@ pub(super) const SUDO_PW: &str = "s3cr3t o'k \"$x\" \\n";
 
 impl FakeSudo {
     fn new(password: &str) -> Self {
-        let dir = std::env::temp_dir().join(format!("terview-fakesudo-{}", uuid::Uuid::new_v4().simple()));
+        let dir = std::env::temp_dir().join(format!("sshorus-fakesudo-{}", uuid::Uuid::new_v4().simple()));
         std::fs::create_dir_all(dir.join("bin")).unwrap();
         std::fs::create_dir_all(dir.join("run")).unwrap();
         std::fs::create_dir_all(dir.join("work")).unwrap();
@@ -1521,7 +1521,7 @@ async fn sudo_not_needed_or_canceled() {
     assert_eq!(ran(&c).len(), 1);
     assert_eq!(c.audit.list()[0].status, AuditStatus::Denied);
 
-    // TerView se bloquea mientras se busca la contraseña: nada.
+    // SSHorus se bloquea mientras se busca la contraseña: nada.
     let c = sudo_core(None);
     c.backend.lock_on_sudo.store(true, Ordering::SeqCst);
     let out = call(&c, "run_command", json!({ "server": "web-prod", "command": "sudo whoami" })).await;
@@ -1580,7 +1580,7 @@ async fn catalog_command_with_sudo_flag() {
 
 #[tokio::test]
 async fn catalog_sudo_flag_always_asks() {
-    // Marcado «sudo» aunque el texto no diga sudo: TerView pone la contraseña, así que se pregunta siempre.
+    // Marcado «sudo» aunque el texto no diga sudo: SSHorus pone la contraseña, así que se pregunta siempre.
     let c = sudo_core(None);
     c.set_catalog(vec![CatalogEntry {
         id: "x.reiniciar".into(),
@@ -1668,7 +1668,7 @@ fn auto_effective_lock_access_and_expiry() {
     assert_eq!(eff(Access::Full, false, Some(AutoLevel::Changes), temp(AutoLevel::All, Some(now + 1)), now), AutoLevel::All);
     assert_eq!(eff(Access::Full, false, None, temp(AutoLevel::All, Some(now)), now), AutoLevel::Off, "caducado");
     assert_eq!(eff(Access::Full, false, Some(AutoLevel::Changes), temp(AutoLevel::All, Some(now)), now), AutoLevel::Changes);
-    // Hasta cerrar TerView: no caduca.
+    // Hasta cerrar SSHorus: no caduca.
     assert_eq!(eff(Access::Full, false, None, temp(AutoLevel::Changes, None), u64::MAX - 1), AutoLevel::Changes);
 }
 

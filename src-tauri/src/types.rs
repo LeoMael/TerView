@@ -144,7 +144,7 @@ pub struct Settings {
     pub transfer_conflict: String,
     /// Terminales persistentes (tmux) por defecto. Cada servidor puede cambiarlo.
     pub terminal_tmux: TmuxMode,
-    /// Bloquear TerView tras estos minutos sin uso (0 = nunca). Solo con bóveda: 5/10/15/30/60.
+    /// Bloquear SSHorus tras estos minutos sin uso (0 = nunca). Solo con bóveda: 5/10/15/30/60.
     pub lock_minutes: u32,
     /// El usuario dijo «Ahora no» a crear el PIN: no se vuelve a preguntar al iniciar.
     pub vault_prompt_dismissed: bool,
@@ -228,7 +228,7 @@ pub struct SessionReconnecting {
     /// Segundos hasta el próximo intento.
     pub next_retry_secs: u32,
     pub reason: String,
-    /// Espera a que se desbloquee TerView para usar la contraseña guardada (no gasta intentos).
+    /// Espera a que se desbloquee SSHorus para usar la contraseña guardada (no gasta intentos).
     #[serde(default)]
     pub waiting_unlock: bool,
 }
@@ -246,7 +246,7 @@ pub struct SessionClosed {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TmuxOpen {
-    /// Nombre estable de la sesión tmux (`terview-…`). Si ya existe, se engancha a ella.
+    /// Nombre estable de la sesión tmux (`sshorus-…`). Si ya existe, se engancha a ella.
     pub name: String,
     /// Antes de engancharse, volcar el historial de la sesión (terminal recién creada en la interfaz).
     #[serde(default)]
@@ -266,7 +266,7 @@ pub struct TermOpened {
     pub tmux_problem: Option<String>,
 }
 
-/// Una sesión tmux de TerView que sigue viva en el servidor.
+/// Una sesión tmux de SSHorus que sigue viva en el servidor.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct TmuxSession {
@@ -391,7 +391,7 @@ pub struct TransferJob {
 #[serde(rename_all = "camelCase")]
 pub struct SshConfigExport {
     pub path: String,
-    /// Servidores escritos en el bloque de TerView.
+    /// Servidores escritos en el bloque de SSHorus.
     pub count: usize,
 }
 

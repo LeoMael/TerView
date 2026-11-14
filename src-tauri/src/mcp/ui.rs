@@ -43,16 +43,16 @@ impl UiBridge {
         let req = UiRequest { id: id.clone(), kind: kind.to_string(), payload };
         if let Err(e) = app.emit(EV_UI_REQUEST, &req) {
             self.forget(&id);
-            return Err(AppError::Invalid(format!("no se pudo hablar con la ventana de TerView: {e}")));
+            return Err(AppError::Invalid(format!("no se pudo hablar con la ventana de SSHorus: {e}")));
         }
         let out = tokio::time::timeout(timeout, rx).await;
         self.forget(&id);
         match out {
             Ok(Ok(Ok(v))) => Ok(v),
             Ok(Ok(Err(msg))) => Err(AppError::Invalid(msg)),
-            Ok(Err(_)) => Err(AppError::Invalid("la ventana de TerView no respondió".into())),
+            Ok(Err(_)) => Err(AppError::Invalid("la ventana de SSHorus no respondió".into())),
             Err(_) => Err(AppError::Invalid(format!(
-                "la ventana de TerView no respondió en {} s",
+                "la ventana de SSHorus no respondió en {} s",
                 timeout.as_secs()
             ))),
         }

@@ -23,7 +23,7 @@ export interface LocalTab {
   /** Texto para pegar en el asistente en cuanto esté listo («Enviar a la IA»). */
   pendingPaste: string | null;
   status: TermStatus;
-  /** Se abrió con el MCP de TerView. */
+  /** Se abrió con el MCP de SSHorus. */
   mcp: boolean;
   /** El asistente sigue abierto (no ha salido a la shell): «Enviar a la IA» pega aquí. */
   aiAlive: boolean;

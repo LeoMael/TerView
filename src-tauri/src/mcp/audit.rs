@@ -1,6 +1,6 @@
 //! Registro de auditoría: todo lo que pide el asistente, con su resultado y quién lo aprobó.
 //!
-//! - Archivo `<config>/terview/mcp-audit.jsonl`: una línea JSON por acción terminada. Al pasar de
+//! - Archivo `<config>/sshorus/mcp-audit.jsonl`: una línea JSON por acción terminada. Al pasar de
 //!   1 MiB se renombra a `mcp-audit.1.jsonl` (se pisa el anterior): como mucho ~2 MiB en disco.
 //! - En memoria, las últimas 300 acciones (también las que siguen en marcha) para el panel
 //!   «Actividad del asistente». Al arrancar se cargan las últimas del archivo.
@@ -36,7 +36,7 @@ pub enum AuditStatus {
     Error,
     /// No se permitió (sin acceso, solo lectura, denegado por ti o sin respuesta).
     Denied,
-    /// TerView estaba bloqueado.
+    /// SSHorus estaba bloqueado.
     Locked,
 }
 
@@ -102,7 +102,7 @@ pub struct AuditLog {
 }
 
 impl AuditLog {
-    /// Registro en `<config>/terview/mcp-audit.jsonl`.
+    /// Registro en `<config>/sshorus/mcp-audit.jsonl`.
     pub fn load() -> Self {
         Self::at(fsutil::config_dir().map(|d| d.join(FILE_NAME)))
     }

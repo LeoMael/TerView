@@ -336,7 +336,7 @@ export function VulnsTab() {
   const aiBlock = !aiSettings.enabled
     ? null
     : locked || aiLocked
-      ? "Desbloquea TerView para usar la IA"
+      ? "Desbloquea SSHorus para usar la IA"
       : !report
         ? "Primero analiza el servidor"
         : !aiSettings.baseUrl || !aiSettings.model

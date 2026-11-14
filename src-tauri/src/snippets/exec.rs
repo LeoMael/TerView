@@ -26,8 +26,8 @@ use crate::types::ExecResult;
 /// Límite por flujo (stdout y stderr por separado).
 pub const MAX_STREAM_BYTES: usize = 2 * 1024 * 1024;
 
-/// Línea que el arranque escribe en stderr: `__TERVIEW_PID__=<pid>`.
-const PID_MARK: &[u8] = b"__TERVIEW_PID__=";
+/// Línea que el arranque escribe en stderr: `__SSHORUS_PID__=<pid>`.
+const PID_MARK: &[u8] = b"__SSHORUS_PID__=";
 /// Si stderr ya tiene esto y aún no apareció la marca, se deja de buscar.
 const MARK_SEARCH_LIMIT: usize = 64 * 1024;
 
@@ -68,9 +68,9 @@ fn push_limited(buf: &mut Vec<u8>, data: &[u8]) -> bool {
 /// - `exec "$SHELL" -c` ejecuta el comando con el shell de login del usuario, con el mismo PID.
 pub fn bootstrap(len: usize) -> String {
     format!(
-        "sh -c 'echo __TERVIEW_PID__=$$ >&2; \
+        "sh -c 'echo __SSHORUS_PID__=$$ >&2; \
          c=$(dd bs=1 count={len} 2>/dev/null); \
-         [ -n \"$c\" ] || {{ echo TerView: no se pudo leer el comando >&2; exit 127; }}; \
+         [ -n \"$c\" ] || {{ echo SSHorus: no se pudo leer el comando >&2; exit 127; }}; \
          exec \"${{SHELL:-/bin/sh}}\" -c \"$c\"'"
     )
 }

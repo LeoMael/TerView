@@ -134,7 +134,7 @@ export function UpdatesBox() {
       {info && (
         <div className="ab-update-card">
           <div className="ab-update-title">
-            <strong>TerView {info.version}</strong>
+            <strong>SSHorus {info.version}</strong>
             {info.date && <span className="ab-muted">{new Date(info.date).toLocaleDateString("es")}</span>}
           </div>
           {info.notes.trim() ? (

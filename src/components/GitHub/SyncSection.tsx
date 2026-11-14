@@ -224,7 +224,7 @@ function Pull({ cfg, onDone }: { cfg: GhConfig | null; onDone: () => void }) {
   return (
     <Card title="Traer configuración de otra PC">
       {found && found.length === 0 && !cfg?.syncGistId && (
-        <p className="gh-hint">No se encontró ninguna copia de TerView en tus gists. Súbela primero desde la otra PC.</p>
+        <p className="gh-hint">No se encontró ninguna copia de SSHorus en tus gists. Súbela primero desde la otra PC.</p>
       )}
       {found && found.length > 1 && (
         <label className="field">

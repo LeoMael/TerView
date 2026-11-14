@@ -15,9 +15,9 @@ use serde::Serialize;
 
 use crate::error::{AppError, AppResult};
 
-/// Carpeta de configuración de la app: `~/.config/terview` (o equivalente del sistema).
+/// Carpeta de configuración de la app: `~/.config/sshorus` (o equivalente del sistema).
 pub fn config_dir() -> Option<PathBuf> {
-    dirs::config_dir().map(|d| d.join("terview"))
+    dirs::config_dir().map(|d| d.join("sshorus"))
 }
 
 fn unix_now() -> u64 {

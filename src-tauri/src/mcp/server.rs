@@ -18,10 +18,10 @@ use super::core::{
     AuditReportParams, VulnReportParams, VulnScanParams, WriteFileParams,
 };
 
-const INSTRUCTIONS: &str = "TerView da acceso a los servidores SSH que el usuario guardó en la app, sin \
+const INSTRUCTIONS: &str = "SSHorus da acceso a los servidores SSH que el usuario guardó en la app, sin \
 mostrar contraseñas ni llaves. Empieza con list_servers. Para trabajar en un servidor hace falta una \
-conexión abierta (connect abre una pestaña en TerView). Las lecturas pasan solas; todo lo que cambia algo \
-(run_command, write_file, upload…) muestra un diálogo en TerView y espera a que el usuario lo permita. \
+conexión abierta (connect abre una pestaña en SSHorus). Las lecturas pasan solas; todo lo que cambia algo \
+(run_command, write_file, upload…) muestra un diálogo en SSHorus y espera a que el usuario lo permita. \
 Prefiere run_catalog_command con comandos de solo lectura (ver list_catalog) para diagnosticar. \
 Para revisar la seguridad en general, mira get_audit_report (o run_audit). \
 Para vulnerabilidades, mira primero get_vuln_report (último informe guardado) y usa scan_vulnerabilities \
@@ -38,42 +38,42 @@ fn tool<T: rmcp::schemars::JsonSchema + 'static>(name: &'static str, description
     Tool::new(name, description, schema_for_type::<T>()).annotate(a)
 }
 
-/// Todas las herramientas que ofrece TerView.
+/// Todas las herramientas que ofrece SSHorus.
 pub fn tools() -> Vec<Tool> {
     vec![
-        tool::<NoParams>("list_servers", "Servidores guardados en TerView a los que tienes acceso (sin contraseñas), con su nivel de acceso y conexiones abiertas.", true),
-        tool::<NoParams>("list_projects", "Proyectos de TerView y sus servidores (solo los que puedes ver).", true),
-        tool::<NoParams>("list_sessions", "Conexiones SSH abiertas ahora en TerView (sessionId).", true),
-        tool::<ConnectParams>("connect", "Abre una conexión a un servidor guardado (aparece como pestaña en TerView). Pide permiso.", false),
-        tool::<RunCommandParams>("run_command", "Ejecuta un comando de shell no interactivo y devuelve código, stdout y stderr (con tiempo y salida limitados). Siempre pide permiso en TerView salvo regla «permitir siempre». Para administrar usa `sudo …` normal (sin -S ni ruta absoluta y sin pedir la contraseña): tras el permiso, TerView le da a sudo la contraseña del usuario sin que la veas.", false),
-        tool::<CatalogListParams>("list_catalog", "Comandos de la Biblioteca de TerView (Podman, Docker, análisis del sistema, Mis comandos…) con sus variables.", true),
-        tool::<CatalogRunParams>("run_catalog_command", "Ejecuta un comando de la Biblioteca con sus variables. Los de solo lectura (📊) no piden permiso; el resto sí. Los que usan sudo funcionan igual que en run_command (TerView pone la contraseña).", false),
+        tool::<NoParams>("list_servers", "Servidores guardados en SSHorus a los que tienes acceso (sin contraseñas), con su nivel de acceso y conexiones abiertas.", true),
+        tool::<NoParams>("list_projects", "Proyectos de SSHorus y sus servidores (solo los que puedes ver).", true),
+        tool::<NoParams>("list_sessions", "Conexiones SSH abiertas ahora en SSHorus (sessionId).", true),
+        tool::<ConnectParams>("connect", "Abre una conexión a un servidor guardado (aparece como pestaña en SSHorus). Pide permiso.", false),
+        tool::<RunCommandParams>("run_command", "Ejecuta un comando de shell no interactivo y devuelve código, stdout y stderr (con tiempo y salida limitados). Siempre pide permiso en SSHorus salvo regla «permitir siempre». Para administrar usa `sudo …` normal (sin -S ni ruta absoluta y sin pedir la contraseña): tras el permiso, SSHorus le da a sudo la contraseña del usuario sin que la veas.", false),
+        tool::<CatalogListParams>("list_catalog", "Comandos de la Biblioteca de SSHorus (Podman, Docker, análisis del sistema, Mis comandos…) con sus variables.", true),
+        tool::<CatalogRunParams>("run_catalog_command", "Ejecuta un comando de la Biblioteca con sus variables. Los de solo lectura (📊) no piden permiso; el resto sí. Los que usan sudo funcionan igual que en run_command (SSHorus pone la contraseña).", false),
         tool::<ListDirParams>("list_dir", "Lista una carpeta del servidor (SFTP).", true),
         tool::<PathParams>("stat", "Datos de un archivo o carpeta del servidor (tamaño, fecha, permisos).", true),
         tool::<ReadFileParams>("read_file", "Lee un archivo de texto del servidor, por trozos (64 KB por defecto, máximo 1 MB por llamada).", true),
         tool::<WriteFileParams>("write_file", "Crea o reemplaza un archivo de texto en el servidor (guardado atómico). Muestra las diferencias y pide permiso.", false),
-        tool::<UploadParams>("upload", "Sube archivos o carpetas de este PC al servidor con la cola de transferencias de TerView. Pide permiso.", false),
-        tool::<DownloadParams>("download", "Descarga archivos o carpetas del servidor a este PC con la cola de transferencias de TerView. Pide permiso.", false),
+        tool::<UploadParams>("upload", "Sube archivos o carpetas de este PC al servidor con la cola de transferencias de SSHorus. Pide permiso.", false),
+        tool::<DownloadParams>("download", "Descarga archivos o carpetas del servidor a este PC con la cola de transferencias de SSHorus. Pide permiso.", false),
         tool::<TransferStatusParams>("transfer_status", "Progreso de las transferencias (de un lote o todas).", true),
         tool::<ServerParams>("list_ports", "Puertos en escucha del servidor (TCP/UDP) con su proceso, servicio o contenedor.", true),
         tool::<ServerParams>("list_sites", "Sitios web de nginx o Caddy del servidor: dominios, puertos, destinos y certificados.", true),
         tool::<ServerParams>("list_containers", "Contenedores de Podman y/o Docker del servidor con su estado, imagen y puertos.", true),
         tool::<ServerParams>("get_infra_map", "Mapa de la infraestructura del servidor como grafo resumido: puertos expuestos, proxy web, sitios, contenedores, servicios y bases de datos, con quién atiende a quién.", true),
-        tool::<VulnReportParams>("get_vuln_report", "Último análisis de vulnerabilidades guardado del servidor (hecho en TerView o con scan_vulnerabilities): recuento por gravedad, fuentes y las vulnerabilidades más graves (limit, por defecto 20). No necesita conexión.", true),
+        tool::<VulnReportParams>("get_vuln_report", "Último análisis de vulnerabilidades guardado del servidor (hecho en SSHorus o con scan_vulnerabilities): recuento por gravedad, fuentes y las vulnerabilidades más graves (limit, por defecto 20). No necesita conexión.", true),
         tool::<VulnScanParams>("scan_vulnerabilities", "Analiza ahora las vulnerabilidades del servidor sin sudo (paquetes, programas e imágenes de contenedores; OSV.dev, la herramienta de la distro y Trivy). No cambia el servidor, pero tarda minutos: pide permiso la primera vez. Devuelve el mismo resumen que get_vuln_report y guarda el informe.", true),
-        tool::<AuditReportParams>("get_audit_report", "Última auditoría guardada del servidor (hecha en TerView o con run_audit): nota general (0-100 y A-F), nota por categoría (SSH, usuarios, red, actualizaciones, certificados, contenedores, sistema, entradas, endurecimiento) y los problemas con el comando para arreglarlos. No necesita conexión.", true),
+        tool::<AuditReportParams>("get_audit_report", "Última auditoría guardada del servidor (hecha en SSHorus o con run_audit): nota general (0-100 y A-F), nota por categoría (SSH, usuarios, red, actualizaciones, certificados, contenedores, sistema, entradas, endurecimiento) y los problemas con el comando para arreglarlos. No necesita conexión.", true),
         tool::<ServerParams>("run_audit", "Audita ahora el servidor sin sudo y sin instalar nada (SSH, usuarios, puertos y cortafuegos, actualizaciones, certificados, contenedores, servicios caídos, intentos de entrada, disco, memoria, permisos). Solo lee; pide permiso la primera vez. Devuelve el mismo resumen que get_audit_report y lo guarda. Lo que necesita sudo sale como «sin comprobar».", true),
     ]
 }
 
 /// Manejador MCP. Se crea uno por petición (servidor sin sesiones); el estado vive en `McpCore`.
-pub struct TerviewMcp<B: Backend> {
+pub struct SshorusMcp<B: Backend> {
     core: Arc<McpCore<B>>,
 }
 
-impl<B: Backend> TerviewMcp<B> {
+impl<B: Backend> SshorusMcp<B> {
     pub fn new(core: Arc<McpCore<B>>) -> Self {
-        TerviewMcp { core }
+        SshorusMcp { core }
     }
 }
 
@@ -85,10 +85,10 @@ fn client_of(ctx: &RequestContext<RoleServer>) -> Option<String> {
     (!ua.is_empty()).then(|| super::audit::clip(ua, 80))
 }
 
-impl<B: Backend> ServerHandler for TerviewMcp<B> {
+impl<B: Backend> ServerHandler for SshorusMcp<B> {
     fn get_info(&self) -> ServerConfig {
         ServerConfig::new(ServerCapabilities::builder().enable_tools().build())
-            .with_server_info(Implementation::new("terview", env!("CARGO_PKG_VERSION")))
+            .with_server_info(Implementation::new("sshorus", env!("CARGO_PKG_VERSION")))
             .with_instructions(INSTRUCTIONS)
     }
 

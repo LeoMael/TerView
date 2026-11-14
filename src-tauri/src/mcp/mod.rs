@@ -1,4 +1,4 @@
-//! Servidor MCP de TerView: asistentes de IA (Claude Code, Claude Desktop…) trabajan con tus
+//! Servidor MCP de SSHorus: asistentes de IA (Claude Code, Claude Desktop…) trabajan con tus
 //! servidores usando las conexiones guardadas, sin ver nunca contraseñas ni llaves.
 //!
 //! Piezas:
@@ -11,14 +11,14 @@
 //! - `vuln`: resumen de los informes del escáner de vulnerabilidades para el asistente.
 //! - `sudo`: envoltorio que da la contraseña de sudo (la de la interfaz) sin que el asistente la vea
 //!   (vive en `snippets::sudo`: también lo usa «Ejecutar en varios servidores»).
-//! - `bridge`: puente stdio (`terview-mcp`), compartido con `src/bin/terview-mcp.rs`.
+//! - `bridge`: puente stdio (`sshorus-mcp`), compartido con `src/bin/sshorus-mcp.rs`.
 //!
 //! Apagado por defecto. Se activa en Ajustes → Asistentes de IA (MCP).
 
 pub mod approval;
 pub mod audit;
 pub mod backend;
-// El puente se usa en el binario `terview-mcp` (con #[path]) y aquí solo en las pruebas.
+// El puente se usa en el binario `sshorus-mcp` (con #[path]) y aquí solo en las pruebas.
 #[allow(dead_code)] // el binario sí lo usa todo (y allí se avisaría de lo que sobre)
 pub mod bridge;
 pub mod config;
@@ -67,7 +67,7 @@ pub const EV_AUTO: &str = "mcp://auto";
 
 /// Nombre del programa puente.
 pub fn bridge_file_name() -> String {
-    format!("terview-mcp{}", std::env::consts::EXE_SUFFIX)
+    format!("sshorus-mcp{}", std::env::consts::EXE_SUFFIX)
 }
 
 /// Token nuevo: «tv_» + 64 caracteres hexadecimales (32 bytes al azar).
@@ -85,7 +85,7 @@ pub fn new_token() -> AppResult<Zeroizing<String>> {
 // ───────────────────────── Puerta: bloqueo y token ─────────────────────────
 
 /// El token se lee de la bóveda o el llavero la primera vez y se guarda en memoria hasta que
-/// TerView se bloquea (como el resto de secretos).
+/// SSHorus se bloquea (como el resto de secretos).
 #[derive(Default)]
 pub struct AppGate {
     cache: Mutex<Option<Zeroizing<String>>>,
@@ -267,7 +267,7 @@ impl McpState {
     }
 }
 
-/// Ruta esperada del puente: junto al programa de TerView.
+/// Ruta esperada del puente: junto al programa de SSHorus.
 pub fn bridge_path() -> Option<std::path::PathBuf> {
     let exe = std::env::current_exe().ok()?;
     Some(exe.with_file_name(bridge_file_name()))
@@ -402,7 +402,7 @@ pub async fn mcp_auto_list(state: State<'_, McpState>) -> AppResult<Vec<AutoStat
 }
 
 /// Activa o apaga «Aceptar automáticamente» en un servidor. `duration`: "15m", "1h", "session" (hasta
-/// cerrar TerView, en memoria) o "always" (guardado en mcp.json).
+/// cerrar SSHorus, en memoria) o "always" (guardado en mcp.json).
 #[tauri::command]
 pub async fn mcp_set_auto(
     app: AppHandle,
@@ -442,7 +442,7 @@ pub async fn mcp_forget_rule(state: State<'_, McpState>, server_id: String, key:
     })
 }
 
-/// El token actual (para verlo o copiarlo). TerView tiene que estar desbloqueado.
+/// El token actual (para verlo o copiarlo). SSHorus tiene que estar desbloqueado.
 #[tauri::command]
 pub async fn mcp_get_token(state: State<'_, McpState>) -> AppResult<String> {
     Ok(ensure_token(&state).await?.to_string())
@@ -465,21 +465,21 @@ pub async fn mcp_client_config(state: State<'_, McpState>) -> AppResult<ClientCo
     let bridge = st.bridge_path.clone();
     let desktop = serde_json::json!({
         "mcpServers": {
-            "terview": {
+            "sshorus": {
                 "command": bridge,
                 "args": [],
-                "env": { "TERVIEW_MCP_TOKEN": token.as_str() }
+                "env": { "SSHORUS_MCP_TOKEN": token.as_str() }
             }
         }
     });
     Ok(ClientConfig {
         claude_code_stdio: format!(
-            "claude mcp add --env TERVIEW_MCP_TOKEN={} --transport stdio terview -- {}",
+            "claude mcp add --env SSHORUS_MCP_TOKEN={} --transport stdio sshorus -- {}",
             token.as_str(),
             shell_arg(&bridge)
         ),
         claude_code_http: format!(
-            "claude mcp add --transport http terview {} --header \"Authorization: Bearer {}\"",
+            "claude mcp add --transport http sshorus {} --header \"Authorization: Bearer {}\"",
             st.url,
             token.as_str()
         ),
@@ -512,7 +512,7 @@ pub async fn mcp_ui_reply(
     let result = if ok {
         Ok(value.unwrap_or(Value::Null))
     } else {
-        Err(error.unwrap_or_else(|| "error en la ventana de TerView".into()))
+        Err(error.unwrap_or_else(|| "error en la ventana de SSHorus".into()))
     };
     Ok(state.ui.reply(&id, result))
 }

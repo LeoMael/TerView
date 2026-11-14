@@ -14,9 +14,9 @@ declare global {
 
 try {
   localStorage.clear();
-  localStorage.setItem("terview.recentServers", JSON.stringify(["s-web", "s-db", "s-api"]));
+  localStorage.setItem("sshorus.recentServers", JSON.stringify(["s-web", "s-db", "s-api"]));
   // La vista previa no debe mostrar el aviso de novedades salvo en su propia escena.
-  localStorage.setItem("terview.lastSeenVersion", "0.5.0");
+  localStorage.setItem("sshorus.lastSeenVersion", "0.5.0");
 } catch {
   /* sin almacenamiento */
 }

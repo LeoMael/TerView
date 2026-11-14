@@ -109,7 +109,7 @@ export function AiSection() {
       </Row>
       <Row
         label="Token"
-        hint={locked ? "TerView está bloqueado: desbloquéalo para cambiarlo." : "Se guarda cifrado. Ollama local no lo necesita."}
+        hint={locked ? "SSHorus está bloqueado: desbloquéalo para cambiarlo." : "Se guarda cifrado. Ollama local no lo necesita."}
       >
         <div className="st-ai-token">
           {status?.hasToken && (

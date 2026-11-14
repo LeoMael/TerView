@@ -26,7 +26,7 @@ const EMPTY: DeployRecipe = {
 };
 
 function validateKeyPath(p: string): string | null {
-  return /^(~\/|\/)[A-Za-z0-9._/-]+$/.test(p.trim()) ? null : "Ruta de llave no válida (p. ej. ~/.ssh/terview_deploy_app)";
+  return /^(~\/|\/)[A-Za-z0-9._/-]+$/.test(p.trim()) ? null : "Ruta de llave no válida (p. ej. ~/.ssh/sshorus_deploy_app)";
 }
 
 function RecipeEditor({
@@ -130,7 +130,7 @@ function RecipeEditor({
           <input
             className="input mono"
             value={r.deployKey ?? ""}
-            placeholder="~/.ssh/terview_deploy_dueño-repo"
+            placeholder="~/.ssh/sshorus_deploy_dueño-repo"
             onChange={(e) => set("deployKey", e.target.value || null)}
           />
         </label>

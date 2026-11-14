@@ -1,11 +1,11 @@
 [package]
-name = "terview"
+name = "sshorus"
 version = "0.5.0"
 description = "Cliente SSH/SFTP visual"
 authors = []
 edition = "2024"
-# Hay dos programas: la app (`terview`) y el puente MCP por stdio (`terview-mcp`, en src/bin/).
-default-run = "terview"
+# Hay dos programas: la app (`sshorus`) y el puente MCP por stdio (`sshorus-mcp`, en src/bin/).
+default-run = "sshorus"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -13,7 +13,7 @@ default-run = "terview"
 # The `_lib` suffix may seem redundant but it is necessary
 # to make the lib name unique and wouldn't conflict with the bin name.
 # This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
-name = "terview_lib"
+name = "sshorus_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]

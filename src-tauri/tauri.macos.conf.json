@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "build": {
-    "beforeBundleCommand": "sh src-tauri/scripts/terview-mcp-universal.sh"
+    "beforeBundleCommand": "sh src-tauri/scripts/sshorus-mcp-universal.sh"
   }
 }

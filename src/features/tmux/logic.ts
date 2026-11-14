@@ -1,10 +1,10 @@
 // Terminales persistentes (tmux): funciones puras, sin React ni Tauri, para poder probarlas aparte.
 import type { TmuxMode, TmuxSession } from "../../api/types";
 
-/** Prefijo de las sesiones de TerView (el motor solo acepta `terview-` + letras, números, - y _). */
-export const TMUX_PREFIX = "terview-";
-/** Servidor tmux propio de TerView (`tmux -L terview`). */
-export const TMUX_SOCKET = "terview";
+/** Prefijo de las sesiones de SSHorus (el motor solo acepta `sshorus-` + letras, números, - y _). */
+export const TMUX_PREFIX = "sshorus-";
+/** Servidor tmux propio de SSHorus (`tmux -L sshorus`). */
+export const TMUX_SOCKET = "sshorus";
 
 export const TMUX_MODE_LABELS: Record<TmuxMode, string> = {
   auto: "Automático",
@@ -30,16 +30,16 @@ export function parseTmuxMode(v: unknown): TmuxMode | null {
   return v === "auto" || v === "always" || v === "never" ? v : null;
 }
 
-/** Nombre nuevo y estable para una terminal: `terview-` + 8 caracteres hexadecimales al azar. */
+/** Nombre nuevo y estable para una terminal: `sshorus-` + 8 caracteres hexadecimales al azar. */
 export function newTmuxName(
   randomBytes: (n: number) => ArrayLike<number> = (n) => crypto.getRandomValues(new Uint8Array(n)),
 ): string {
   return TMUX_PREFIX + Array.from(randomBytes(4), (b) => (b & 0xff).toString(16).padStart(2, "0")).join("");
 }
 
-/** true si el nombre es de una sesión de TerView (mismo criterio que el motor). */
-export function isTerviewName(name: string): boolean {
-  return name.length <= 64 && /^terview-[A-Za-z0-9_-]+$/.test(name);
+/** true si el nombre es de una sesión de SSHorus (mismo criterio que el motor). */
+export function isSshorusName(name: string): boolean {
+  return name.length <= 64 && /^sshorus-[A-Za-z0-9_-]+$/.test(name);
 }
 
 /** Comando para engancharse a mano desde una shell normal del servidor. */
@@ -47,9 +47,9 @@ export function manualAttachCommand(name: string): string {
   return `tmux -L ${TMUX_SOCKET} attach -t ${name}`;
 }
 
-/** Sesiones que no están abiertas en ninguna terminal de TerView (las que «quedaron» en el servidor). */
+/** Sesiones que no están abiertas en ninguna terminal de SSHorus (las que «quedaron» en el servidor). */
 export function leftoverSessions(sessions: TmuxSession[], openNames: ReadonlySet<string>): TmuxSession[] {
-  return sessions.filter((s) => isTerviewName(s.name) && !openNames.has(s.name));
+  return sessions.filter((s) => isSshorusName(s.name) && !openNames.has(s.name));
 }
 
 /** Sesiones sueltas que nadie está mirando (para el contador de la barra). */

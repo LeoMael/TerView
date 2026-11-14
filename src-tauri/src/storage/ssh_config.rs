@@ -1,8 +1,8 @@
 //! Exportar / importar servidores a `~/.ssh/config`.
 //!
-//! - **Exportar**: TerView escribe SOLO dentro de un bloque marcado
-//!   (`# >>> TerView (no editar a mano) >>>` … `# <<< TerView <<<`). El resto del archivo se conserva
-//!   byte a byte. La primera vez se guarda una copia en `~/.ssh/config.bak-terview`.
+//! - **Exportar**: SSHorus escribe SOLO dentro de un bloque marcado
+//!   (`# >>> SSHorus (no editar a mano) >>>` … `# <<< SSHorus <<<`). El resto del archivo se conserva
+//!   byte a byte. La primera vez se guarda una copia en `~/.ssh/config.bak-sshorus`.
 //!   Un bloque nuevo se inserta antes del primer `Host`/`Match` del usuario (así un `Host *` posterior
 //!   no pisa nuestros valores y las opciones globales del principio siguen siendo globales).
 //! - **Importar**: lee los `Host` concretos (con `Include`), resuelve sus opciones como OpenSSH
@@ -22,8 +22,8 @@ use super::{fsutil, ProfileStore, SettingsStore};
 use crate::error::{AppError, AppResult};
 use crate::types::{AuthMethod, ServerProfile, SshConfigExport};
 
-pub const BEGIN_MARKER: &str = "# >>> TerView (no editar a mano) >>>";
-pub const END_MARKER: &str = "# <<< TerView <<<";
+pub const BEGIN_MARKER: &str = "# >>> SSHorus (no editar a mano) >>>";
+pub const END_MARKER: &str = "# <<< SSHorus <<<";
 
 /// Igual que OpenSSH (READCONF_MAX_DEPTH).
 const MAX_INCLUDE_DEPTH: usize = 16;
@@ -49,8 +49,8 @@ impl SshEnv {
         let ssh_dir = home.join(".ssh");
         SshEnv {
             config: ssh_dir.join("config"),
-            backup: ssh_dir.join("config.bak-terview"),
-            aliases_file: Some(home.join(".config").join("terview").join("ssh-aliases.json")),
+            backup: ssh_dir.join("config.bak-sshorus"),
+            aliases_file: Some(home.join(".config").join("sshorus").join("ssh-aliases.json")),
             ssh_dir,
             home,
             local_user: local_user.into(),
@@ -76,7 +76,7 @@ impl SshEnv {
 /// Serializa exportaciones simultáneas (p. ej. dos guardados seguidos con sincronización activa).
 static EXPORT_LOCK: Mutex<()> = Mutex::new(());
 
-/// Exporta `servers` al bloque de TerView.
+/// Exporta `servers` al bloque de SSHorus.
 #[cfg(test)]
 pub fn export(env: &SshEnv, servers: &[ServerProfile]) -> AppResult<SshConfigExport> {
     export_with(env, || servers.to_vec())
@@ -121,7 +121,7 @@ fn resolve_symlink(p: &Path) -> PathBuf {
     }
 }
 
-/// Devuelve el contenido nuevo: el original con el bloque de TerView reemplazado/insertado
+/// Devuelve el contenido nuevo: el original con el bloque de SSHorus reemplazado/insertado
 /// (o quitado si no hay servidores). Todo lo de fuera del bloque se conserva byte a byte.
 #[cfg(test)]
 pub fn splice_block(original: &[u8], servers: &[ServerProfile]) -> AppResult<Vec<u8>> {
@@ -140,7 +140,7 @@ fn splice_aliased(original: &[u8], servers: &[ServerProfile], aliases: &[String]
             .map(|i| b + 1 + i)
             .ok_or_else(|| {
                 AppError::Invalid(format!(
-                    "El bloque de TerView en ~/.ssh/config está incompleto (falta «{END_MARKER}»). Corrígelo a mano."
+                    "El bloque de SSHorus en ~/.ssh/config está incompleto (falta «{END_MARKER}»). Corrígelo a mano."
                 ))
             })?;
         let prefix = &original[..lines[b].0];
@@ -451,15 +451,15 @@ impl Parser<'_> {
     fn parse_text(&mut self, text: &str, depth: usize, cond: Cond) {
         self.sections.push(Section { cond: cond.clone(), opts: Vec::new() });
         let mut cur = cond;
-        let mut in_terview = false;
+        let mut in_sshorus = false;
         for raw in text.lines() {
             let trimmed = raw.trim();
             if trimmed == BEGIN_MARKER {
-                in_terview = true;
+                in_sshorus = true;
                 continue;
             }
             if trimmed == END_MARKER {
-                in_terview = false;
+                in_sshorus = false;
                 continue;
             }
             let Some((key, args)) = split_line(trimmed) else { continue };
@@ -467,7 +467,7 @@ impl Parser<'_> {
                 "host" => {
                     cur = Cond::Hosts(args.clone());
                     self.sections.push(Section { cond: cur.clone(), opts: Vec::new() });
-                    if !in_terview {
+                    if !in_sshorus {
                         for a in args {
                             if is_concrete(&a) && !self.aliases.contains(&a) {
                                 self.aliases.push(a);
@@ -481,7 +481,7 @@ impl Parser<'_> {
                     self.sections.push(Section { cond: cur.clone(), opts: Vec::new() });
                 }
                 "include" => {
-                    if in_terview || depth >= MAX_INCLUDE_DEPTH {
+                    if in_sshorus || depth >= MAX_INCLUDE_DEPTH {
                         continue;
                     }
                     for a in &args {
@@ -492,7 +492,7 @@ impl Parser<'_> {
                     // Tras el Include sigue el contexto del archivo actual.
                     self.sections.push(Section { cond: cur.clone(), opts: Vec::new() });
                 }
-                _ if in_terview => {}
+                _ if in_sshorus => {}
                 _ => {
                     if let Some(s) = self.sections.last_mut() {
                         s.opts.push((key, args));
@@ -644,7 +644,7 @@ fn same_key(host: &str, port: u16, user: &str) -> (String, u16, String) {
 }
 
 /// Lee la configuración de ssh y devuelve servidores candidatos (id ""), omitiendo los que ya
-/// existen en `existing` (mismo host + puerto + usuario) y el propio bloque de TerView.
+/// existen en `existing` (mismo host + puerto + usuario) y el propio bloque de SSHorus.
 pub fn import(env: &SshEnv, existing: &[ServerProfile]) -> AppResult<Vec<ServerProfile>> {
     Ok(import_preview(env, existing)?
         .into_iter()
@@ -653,15 +653,15 @@ pub fn import(env: &SshEnv, existing: &[ServerProfile]) -> AppResult<Vec<ServerP
         .collect())
 }
 
-/// Candidato a importar, marcado si ya está en TerView.
+/// Candidato a importar, marcado si ya está en SSHorus.
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SshImportCandidate {
     pub server: ServerProfile,
-    /// Servidor de TerView con el mismo host + puerto + usuario.
+    /// Servidor de SSHorus con el mismo host + puerto + usuario.
     pub existing_id: Option<String>,
     pub existing_name: Option<String>,
-    /// Nombre del servidor de TerView que se exporta con este mismo alias (choque de `Host`).
+    /// Nombre del servidor de SSHorus que se exporta con este mismo alias (choque de `Host`).
     pub alias_used_by: Option<String>,
 }
 
@@ -676,7 +676,7 @@ pub fn import_preview(env: &SshEnv, existing: &[ServerProfile]) -> AppResult<Vec
     parser.parse_text(&String::from_utf8_lossy(&bytes), 0, Cond::All);
 
     let mut seen: HashSet<(String, u16, String)> = HashSet::new();
-    let terview_aliases = assign_aliases_with(existing, &load_overrides(env));
+    let sshorus_aliases = assign_aliases_with(existing, &load_overrides(env));
     let mut out = Vec::new();
 
     for alias in &parser.aliases {
@@ -745,7 +745,7 @@ pub fn import_preview(env: &SshEnv, existing: &[ServerProfile]) -> AppResult<Vec
             continue; // otro Host del archivo ya apunta al mismo sitio
         }
         let same = existing.iter().find(|s| same_key(&s.host, s.port, &s.username) == key);
-        let alias_used_by = terview_aliases
+        let alias_used_by = sshorus_aliases
             .iter()
             .position(|a| a.eq_ignore_ascii_case(alias))
             .map(|i| existing[i].name.clone());
@@ -801,7 +801,7 @@ pub fn update_overrides(
 
 // ───────────────────────── Choques con `Host` escritos a mano ─────────────────────────
 
-/// Sección `Host`/`Match` escrita por el usuario (fuera del bloque de TerView o en un `Include`).
+/// Sección `Host`/`Match` escrita por el usuario (fuera del bloque de SSHorus o en un `Include`).
 #[derive(Debug, Clone)]
 struct UserSection {
     file: PathBuf,
@@ -809,7 +809,7 @@ struct UserSection {
     line: usize,
     text: String,
     kind: UserKind,
-    /// Está antes del bloque de TerView: para esos alias ssh usa SUS valores, no los de TerView.
+    /// Está antes del bloque de SSHorus: para esos alias ssh usa SUS valores, no los de SSHorus.
     before_block: bool,
 }
 
@@ -825,7 +825,7 @@ enum UserKind {
     },
 }
 
-/// Un `Host`/`Match` del usuario que captura un alias de TerView.
+/// Un `Host`/`Match` del usuario que captura un alias de SSHorus.
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct SshHostMatch {
@@ -840,11 +840,11 @@ pub struct SshHostMatch {
     pub kind: String,
     /// `Match` con más condiciones: puede que no aplique siempre.
     pub conditional: bool,
-    /// Está antes del bloque de TerView: ssh usará los valores de esa sección y no los de TerView.
-    pub before_terview: bool,
+    /// Está antes del bloque de SSHorus: ssh usará los valores de esa sección y no los de SSHorus.
+    pub before_sshorus: bool,
 }
 
-/// Servidor de TerView cuyo alias choca con la configuración escrita a mano.
+/// Servidor de SSHorus cuyo alias choca con la configuración escrita a mano.
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SshAliasConflict {
@@ -877,7 +877,7 @@ impl Scanner<'_> {
     /// `before`: None en el archivo principal (se calcula por línea); Some(x) en un `Include`.
     fn scan_text(&mut self, file: &Path, text: &str, depth: usize, before: Option<bool>) {
         let lines: Vec<&str> = text.lines().collect();
-        // Dónde está (o se insertaría) el bloque de TerView en el archivo principal.
+        // Dónde está (o se insertaría) el bloque de SSHorus en el archivo principal.
         let anchor = if before.is_none() {
             lines.iter().position(|l| l.trim() == BEGIN_MARKER).or_else(|| {
                 lines
@@ -887,18 +887,18 @@ impl Scanner<'_> {
         } else {
             None
         };
-        let mut in_terview = false;
+        let mut in_sshorus = false;
         for (i, raw) in lines.iter().enumerate() {
             let trimmed = raw.trim();
             if trimmed == BEGIN_MARKER {
-                in_terview = true;
+                in_sshorus = true;
                 continue;
             }
             if trimmed == END_MARKER {
-                in_terview = false;
+                in_sshorus = false;
                 continue;
             }
-            if in_terview {
+            if in_sshorus {
                 continue;
             }
             let Some((key, args)) = split_line(trimmed) else { continue };
@@ -1028,7 +1028,7 @@ fn find_matches(env: &SshEnv, sections: &[UserSection], alias: &str, hostname: &
             pattern,
             kind: kind.into(),
             conditional,
-            before_terview: s.before_block,
+            before_sshorus: s.before_block,
         });
     }
     out
@@ -1052,7 +1052,7 @@ fn suggest_alias(env: &SshEnv, sections: &[UserSection], alias: &str, used: &Has
     first
 }
 
-/// Servidores de TerView cuyo alias exportado choca con un `Host`/`Match` escrito a mano.
+/// Servidores de SSHorus cuyo alias exportado choca con un `Host`/`Match` escrito a mano.
 pub fn conflicts(env: &SshEnv, servers: &[ServerProfile]) -> AppResult<Vec<SshAliasConflict>> {
     let overrides = load_overrides(env);
     let aliases = assign_aliases_with(servers, &overrides);
@@ -1183,7 +1183,7 @@ pub async fn ssh_config_set_aliases(
     .await
 }
 
-/// Como `profiles_import_ssh_config`, pero incluye (marcados) los que ya están en TerView.
+/// Como `profiles_import_ssh_config`, pero incluye (marcados) los que ya están en SSHorus.
 #[tauri::command]
 pub async fn ssh_config_import_preview(store: State<'_, ProfileStore>) -> AppResult<Vec<SshImportCandidate>> {
     let existing = store.data().servers;
@@ -1197,7 +1197,7 @@ mod tests {
     struct Tmp(PathBuf);
     impl Tmp {
         fn new() -> Self {
-            let p = std::env::temp_dir().join(format!("terview-sshcfg-test-{}", uuid::Uuid::new_v4()));
+            let p = std::env::temp_dir().join(format!("sshorus-sshcfg-test-{}", uuid::Uuid::new_v4()));
             fs::create_dir_all(&p).unwrap();
             Tmp(p)
         }
@@ -1280,8 +1280,8 @@ mod tests {
         export(&env, &[srv("a", "a.lan", 22, "u", None)]).unwrap();
         let first = fs::read_to_string(&env.config).unwrap();
         // Insertado antes del primer Host; lo de fuera, intacto.
-        assert!(first.starts_with("# mis cosas\nServerAliveInterval 30\n\n# >>> TerView"));
-        assert!(first.ends_with("# <<< TerView <<<\n\nHost github.com\n  User git\n\nHost *\n  User nadie\n"));
+        assert!(first.starts_with("# mis cosas\nServerAliveInterval 30\n\n# >>> SSHorus"));
+        assert!(first.ends_with("# <<< SSHorus <<<\n\nHost github.com\n  User git\n\nHost *\n  User nadie\n"));
         assert_eq!(fs::read_to_string(&env.backup).unwrap(), original);
 
         // Reemplaza el bloque en su sitio.
@@ -1309,11 +1309,11 @@ mod tests {
         // Sin Host/Match: va al final.
         let out = splice_block(b"Compression yes", &[srv("x", "x", 22, "u", None)]).unwrap();
         let out = String::from_utf8(out).unwrap();
-        assert!(out.starts_with("Compression yes\n\n# >>> TerView"));
+        assert!(out.starts_with("Compression yes\n\n# >>> SSHorus"));
         // Bloque (movido a mano) seguido de opciones sueltas: cierra con `Host *`.
         let src = format!("{BEGIN_MARKER}\n{END_MARKER}\nForwardAgent no\n");
         let out = String::from_utf8(splice_block(src.as_bytes(), &[srv("x", "x", 22, "u", None)]).unwrap()).unwrap();
-        assert!(out.contains("Host *\n# <<< TerView <<<\nForwardAgent no\n"));
+        assert!(out.contains("Host *\n# <<< SSHorus <<<\nForwardAgent no\n"));
         // Bloque sin cierre: error, no se toca nada.
         let bad = format!("Host a\n{BEGIN_MARKER}\nHost x\n");
         assert!(splice_block(bad.as_bytes(), &[srv("x", "x", 22, "u", None)]).is_err());
@@ -1350,7 +1350,7 @@ mod tests {
                  Include conf.d/*.conf\n\
                  Include ~/otros/extra\n\
                  \n\
-                 {BEGIN_MARKER}\nHost terview-propio\n    HostName propio.lan\n{END_MARKER}\n\
+                 {BEGIN_MARKER}\nHost sshorus-propio\n    HostName propio.lan\n{END_MARKER}\n\
                  Host web web-alias\n\
                  \x20   HostName 10.0.0.5\n\
                  \x20   Port 2200\n\
@@ -1442,7 +1442,7 @@ mod tests {
                     .iter()
                     .map(|m| {
                         let mut s = format!("{}@{}:{}({}", m.pattern, m.file, m.line, m.kind);
-                        if m.before_terview {
+                        if m.before_sshorus {
                             s.push_str(",antes");
                         }
                         if m.conditional {

@@ -183,7 +183,7 @@ mod tests {
     use super::*;
 
     fn tmpdir(tag: &str) -> PathBuf {
-        let d = std::env::temp_dir().join(format!("terview-keys-{tag}-{}", std::process::id()));
+        let d = std::env::temp_dir().join(format!("sshorus-keys-{tag}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&d);
         d
     }
@@ -199,9 +199,9 @@ mod tests {
     #[test]
     fn generate_list_and_no_overwrite() {
         let d = tmpdir("gen");
-        let k = generate_ed25519(&d, "id_prueba", "ana@terview", "").unwrap();
+        let k = generate_ed25519(&d, "id_prueba", "ana@sshorus", "").unwrap();
         assert!(k.public_line.starts_with("ssh-ed25519 AAAAC3NzaC1lZDI1NTE5"), "{}", k.public_line);
-        assert!(k.public_line.ends_with(" ana@terview"));
+        assert!(k.public_line.ends_with(" ana@sshorus"));
         let private = fs::read_to_string(&k.private_path).unwrap();
         assert!(private.starts_with("-----BEGIN OPENSSH PRIVATE KEY-----"));
         // La privada se puede volver a leer y corresponde a la pública.

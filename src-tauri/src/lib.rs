@@ -248,5 +248,5 @@ pub fn run() {
             ai::ai_cancel,
         ])
         .run(tauri::generate_context!())
-        .expect("error al iniciar TerView");
+        .expect("error al iniciar SSHorus");
 }

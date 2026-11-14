@@ -204,7 +204,7 @@ async fn recursive_delete_never_follows_links() {
 #[ignore]
 async fn permission_denied_message() {
     let c = Ctx::new().await;
-    let e = c.store.mkdir(&c.ssh, "/root/terview-nope").await.unwrap_err();
+    let e = c.store.mkdir(&c.ssh, "/root/sshorus-nope").await.unwrap_err();
     assert!(e.to_string().contains("permiso denegado"), "{e}");
     c.cleanup().await;
 }

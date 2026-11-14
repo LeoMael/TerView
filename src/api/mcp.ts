@@ -38,7 +38,7 @@ export interface McpAutoState {
   serverId: string;
   serverName: string;
   level: McpAutoLevel;
-  /** Unix ms en que se apaga; null = hasta cerrar TerView o guardado (`saved`). */
+  /** Unix ms en que se apaga; null = hasta cerrar SSHorus o guardado (`saved`). */
   until: number | null;
   saved: boolean;
 }

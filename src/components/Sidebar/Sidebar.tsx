@@ -51,7 +51,7 @@ import { serversNotInProject } from "../../features/projectServers";
 
 const ImportSshConfigDialog = preloadable(() => import("./ImportSshConfigDialog").then((m) => m.ImportSshConfigDialog));
 
-const COLLAPSED_KEY = "terview.sidebar.collapsedProjects";
+const COLLAPSED_KEY = "sshorus.sidebar.collapsedProjects";
 
 function readCollapsed(): Record<string, boolean> {
   try {

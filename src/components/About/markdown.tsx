@@ -84,7 +84,9 @@ export function parseMarkdown(src: string): Block[] {
   };
 
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].replace(/\s+$/, "");
+    // Un comentario al final de una línea (`texto <!-- … -->`) tampoco se muestra.
+    const raw = lines[i];
+    const line = (/^\s*<!--/.test(raw) ? raw : raw.replace(/\s*<!--.*?-->/g, "")).replace(/\s+$/, "");
     if (!line.trim()) {
       flushPara();
       // Una línea en blanco no corta la lista si sigue otro elemento; se decide en la siguiente línea.

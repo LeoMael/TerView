@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use super::http;
 use crate::error::{AppError, AppResult};
 
-/// client_id de la OAuth App de TerView. Vacío = device flow desactivado.
+/// client_id de la OAuth App de SSHorus. Vacío = device flow desactivado.
 pub const CLIENT_ID: &str = "";
 
 /// Permisos que pide el device flow (equivalentes a los del token clásico recomendado).

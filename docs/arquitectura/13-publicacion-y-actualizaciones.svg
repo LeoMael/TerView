@@ -151,7 +151,7 @@
   <!-- ===== PC del usuario ===== -->
   <rect x="1240" y="175" width="300" height="80" rx="14" class="ap"/>
   <use href="#i-window" x="1256" y="190" width="36" height="36" style="color:#38bdf8"/>
-  <text x="1304" y="208" class="b">TerView instalado</text>
+  <text x="1304" y="208" class="b">SSHorus instalado</text>
   <text x="1304" y="232" class="xs mono">tauri-plugin-updater</text>
 
   <!-- paso 1 -->

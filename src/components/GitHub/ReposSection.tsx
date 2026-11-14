@@ -86,7 +86,7 @@ function CloneForm({ repo }: { repo: GhRepo }) {
         setStep("Registrando la llave en GitHub…");
         const host = tabs.find((t) => t.sessionId === sessionId)?.title ?? "servidor";
         try {
-          await github.addDeployKey(repo.owner, repo.name, `TerView · ${host}`, pub);
+          await github.addDeployKey(repo.owner, repo.name, `SSHorus · ${host}`, pub);
         } catch (e) {
           // Ya registrada (p. ej. un clonado anterior): seguimos.
           if (!(isApiError(e, "Invalid") && /already in use/i.test(e.message))) throw e;

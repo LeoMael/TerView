@@ -25,7 +25,7 @@ fn non_empty(s: Option<String>) -> Option<String> {
     s.filter(|v| !v.is_empty())
 }
 
-/// Secreto guardado (bóveda o llavero). Si TerView está bloqueado devuelve `Locked` (la interfaz
+/// Secreto guardado (bóveda o llavero). Si SSHorus está bloqueado devuelve `Locked` (la interfaz
 /// pide el PIN); otros fallos del llavero solo se registran y se pide la contraseña.
 async fn keyring_get(profile_id: &str) -> AppResult<Option<String>> {
     let id = profile_id.to_string();
@@ -146,7 +146,7 @@ pub async fn ssh_connect(
         saved = keyring_set(&profile.id, secret).await;
     }
     // Con la bóveda activa, el secreto guardado no se queda en memoria con la sesión: al
-    // reconectar se vuelve a leer (y si TerView está bloqueado, se espera al desbloqueo).
+    // reconectar se vuelve a leer (y si SSHorus está bloqueado, se espera al desbloqueo).
     let stored_secret = (from_keyring || saved) && Vault::global().is_enabled();
     // Para sudo «La de la conexión»: la contraseña escrita al conectar (sin guardarla en la bóveda) queda
     // en memoria mientras viva la sesión (ver `login_secret`).

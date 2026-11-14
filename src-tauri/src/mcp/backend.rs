@@ -1,4 +1,4 @@
-//! Lo que el servidor MCP necesita de TerView, detrás de un trait para poder probar la lógica sin
+//! Lo que el servidor MCP necesita de SSHorus, detrás de un trait para poder probar la lógica sin
 //! Tauri (las pruebas usan un motor simulado o el servidor SSH de pruebas).
 
 use std::future::Future;
@@ -30,7 +30,7 @@ pub const EV_APPROVAL: &str = "mcp://approval";
 pub const EV_APPROVAL_DONE: &str = "mcp://approval-done";
 
 pub trait Backend: Send + Sync + 'static {
-    /// TerView está bloqueado (bóveda con PIN sin abrir).
+    /// SSHorus está bloqueado (bóveda con PIN sin abrir).
     fn vault_locked(&self) -> bool;
     /// Servidores y proyectos guardados (sin contraseñas: nunca las hay en este dato).
     fn profiles(&self) -> ProfilesData;
@@ -98,7 +98,7 @@ impl TauriBackend {
         self.app
             .try_state::<SessionStore>()
             .map(|s| s.inner())
-            .ok_or_else(|| AppError::Invalid("TerView aún está arrancando".into()))
+            .ok_or_else(|| AppError::Invalid("SSHorus aún está arrancando".into()))
     }
 
     async fn ssh(&self, session_id: &str) -> AppResult<Arc<crate::ssh::SshSession>> {
@@ -109,7 +109,7 @@ impl TauriBackend {
         self.app
             .try_state::<SftpStore>()
             .map(|s| s.inner())
-            .ok_or_else(|| AppError::Invalid("TerView aún está arrancando".into()))
+            .ok_or_else(|| AppError::Invalid("SSHorus aún está arrancando".into()))
     }
 
     /// Trae la ventana principal al frente para que veas el diálogo.
@@ -150,7 +150,7 @@ impl Backend for TauriBackend {
         let registry = self
             .app
             .try_state::<ExecRegistry>()
-            .ok_or_else(|| AppError::Invalid("TerView aún está arrancando".into()))?;
+            .ok_or_else(|| AppError::Invalid("SSHorus aún está arrancando".into()))?;
         let ticket = registry.register(exec_id)?;
         let session = self.ssh(session_id).await?;
         exec::run_cancellable(&session, command, stdin, timeout_secs, &ticket.token).await
@@ -185,7 +185,7 @@ impl Backend for TauriBackend {
         let x = self
             .app
             .try_state::<TransferManager>()
-            .ok_or_else(|| AppError::Invalid("TerView aún está arrancando".into()))?;
+            .ok_or_else(|| AppError::Invalid("SSHorus aún está arrancando".into()))?;
         Ok(x.engine(&self.app).upload(session_id.to_string(), local_paths, remote_dir))
     }
 
@@ -194,7 +194,7 @@ impl Backend for TauriBackend {
         let x = self
             .app
             .try_state::<TransferManager>()
-            .ok_or_else(|| AppError::Invalid("TerView aún está arrancando".into()))?;
+            .ok_or_else(|| AppError::Invalid("SSHorus aún está arrancando".into()))?;
         Ok(x.engine(&self.app).download(session_id.to_string(), remote_paths, local_dir))
     }
 
@@ -228,7 +228,7 @@ impl Backend for TauriBackend {
         let registry = self
             .app
             .try_state::<ExecRegistry>()
-            .ok_or_else(|| AppError::Invalid("TerView aún está arrancando".into()))?;
+            .ok_or_else(|| AppError::Invalid("SSHorus aún está arrancando".into()))?;
         let ticket = registry.register(exec_id)?;
         let session = self.ssh(session_id).await?;
         scan_with_stop(&session, &opts, cancel, &ticket.token).await

@@ -1,6 +1,6 @@
 // Diálogo de la contraseña de sudo para un comando del asistente que ya aprobaste (ver sudoAsk.ts).
 // Es el mismo SudoDialog de Administración: si la contraseña ya está (en memoria, guardada u otra pestaña)
-// se cierra solo; si no, la pide. Se cierra al bloquear TerView o cuando el motor deja de esperar.
+// se cierra solo; si no, la pide. Se cierra al bloquear SSHorus o cuando el motor deja de esperar.
 import { lazy, Suspense, useEffect } from "react";
 import { useLock } from "../lock/lockStore";
 import { cancelAllSudoAsks, finishSudoAsk, useSudoAsks } from "./sudoAsk";
@@ -32,7 +32,7 @@ export function SudoAskHost() {
           profileId={first.profileId}
           user={first.user}
           cancelLabel={first.cancelLabel}
-          reason={first.reason ?? `El asistente quiere ejecutar un comando con sudo en «${first.serverName}» (${first.auto ? "aceptado automáticamente" : "ya le diste permiso"}). TerView le pasa la contraseña a sudo: el asistente no la ve.`}
+          reason={first.reason ?? `El asistente quiere ejecutar un comando con sudo en «${first.serverName}» (${first.auto ? "aceptado automáticamente" : "ya le diste permiso"}). SSHorus le pasa la contraseña a sudo: el asistente no la ve.`}
           onClose={() => finishSudoAsk(first.id)}
         />
       </Suspense>

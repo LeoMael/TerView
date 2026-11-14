@@ -47,7 +47,7 @@ export function openTmuxNames(sessionId: string): string[] {
   return [...(openBySession.get(sessionId)?.values() ?? [])];
 }
 
-/** Todas las sesiones tmux abiertas en esta ventana de TerView. */
+/** Todas las sesiones tmux abiertas en esta ventana de SSHorus. */
 export function allOpenTmuxNames(): Set<string> {
   const out = new Set<string>();
   for (const m of openBySession.values()) for (const n of m.values()) out.add(n);

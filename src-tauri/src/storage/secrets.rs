@@ -4,7 +4,7 @@
 //! Dónde se guardan:
 //! - Con la bóveda activa (`storage::vault`): en `vault.json`, cifrados con el PIN. Si está
 //!   bloqueada, todas las funciones devuelven `AppError::Locked`.
-//! - Sin bóveda: en el llavero del sistema (servicio "terview"), como siempre.
+//! - Sin bóveda: en el llavero del sistema (servicio "sshorus"), como siempre.
 //!
 //! El llavero usa `keyring` 4 (modo `v1`): el almacén por defecto de la plataforma (Secret
 //! Service en Linux, Keychain en macOS, Credential Manager en Windows) se inicializa una sola
@@ -25,7 +25,7 @@ use super::vault::{DeviceKeyStore, Vault, DEVICE_KEY_USER};
 use crate::error::{AppError, AppResult};
 
 /// Servicio usado en el llavero real.
-pub const SERVICE: &str = "terview";
+pub const SERVICE: &str = "sshorus";
 
 fn check_user(user: &str) -> AppResult<()> {
     if user.trim().is_empty() {
@@ -180,7 +180,7 @@ pub(crate) trait Keyring {
     fn delete(&self, user: &str) -> AppResult<()>;
 }
 
-/// El llavero del sistema con un servicio concreto ("terview"; "terview-test" en pruebas).
+/// El llavero del sistema con un servicio concreto ("sshorus"; "sshorus-test" en pruebas).
 pub(crate) struct SystemKeyring(pub &'static str);
 
 impl Keyring for SystemKeyring {
@@ -319,7 +319,7 @@ pub(crate) fn disable_vault(vault: &Vault, kr: &dyn Keyring, pin: &str) -> AppRe
     })
 }
 
-// ───────── Implementación parametrizada por servicio (los tests usan "terview-test") ─────────
+// ───────── Implementación parametrizada por servicio (los tests usan "sshorus-test") ─────────
 
 fn entry(service: &str, user: &str) -> AppResult<Entry> {
     check_user(user)?;
@@ -420,9 +420,9 @@ fn looks_unavailable(detail: &str) -> bool {
 mod tests {
     use super::*;
 
-    const TEST_SERVICE: &str = "terview-test";
+    const TEST_SERVICE: &str = "sshorus-test";
 
-    /// Usa el llavero real del sistema con el servicio "terview-test".
+    /// Usa el llavero real del sistema con el servicio "sshorus-test".
     /// `cargo test --lib storage -- --ignored --test-threads=1`
     #[test]
     #[ignore]

@@ -297,15 +297,15 @@ mod tests {
             let _ = etx.send(c);
         })
         .unwrap();
-        t.write(b"terview\r".to_vec()).unwrap();
+        t.write(b"sshorus\r".to_vec()).unwrap();
         assert_eq!(erx.recv_timeout(Duration::from_secs(10)).unwrap(), Some(0));
         let out: Vec<u8> = drx.try_iter().flatten().collect();
-        assert!(String::from_utf8_lossy(&out).contains("<terview>"));
+        assert!(String::from_utf8_lossy(&out).contains("<sshorus>"));
     }
 
     #[test]
     fn cerrar_termina_tambien_los_hijos() {
-        let dir = std::env::temp_dir().join(format!("terview-pty-{}", uuid::Uuid::new_v4()));
+        let dir = std::env::temp_dir().join(format!("sshorus-pty-{}", uuid::Uuid::new_v4()));
         std::fs::create_dir_all(&dir).unwrap();
         let pidfile = dir.join("hijo.pid");
         // Un hijo en segundo plano que ignora SIGHUP (tiene que caer igual) y otro en primer plano.

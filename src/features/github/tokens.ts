@@ -1,15 +1,15 @@
 // Permisos del token de GitHub: enlaces de creación y qué función necesita qué permiso.
 import type { GhAccount } from "../../api/github";
 
-/** Permisos clásicos mínimos para todo lo que hace TerView. */
+/** Permisos clásicos mínimos para todo lo que hace SSHorus. */
 export const CLASSIC_SCOPES = ["read:public_key", "write:public_key", "repo", "gist"] as const;
 
 /** Página de creación de token clásico con los permisos ya marcados. */
-export const CLASSIC_TOKEN_URL = `https://github.com/settings/tokens/new?description=TerView&scopes=${CLASSIC_SCOPES.join(",")}`;
+export const CLASSIC_TOKEN_URL = `https://github.com/settings/tokens/new?description=SSHorus&scopes=${CLASSIC_SCOPES.join(",")}`;
 
 /** Página de creación de token de grano fino (GitHub rellena nombre y permisos si los reconoce). */
 export const FINE_GRAINED_TOKEN_URL =
-  "https://github.com/settings/personal-access-tokens/new?name=TerView&description=TerView" +
+  "https://github.com/settings/personal-access-tokens/new?name=SSHorus&description=SSHorus" +
   "&contents=read&metadata=read&administration=write&actions=write&gists=write&git_ssh_keys=write";
 
 export const TOKENS_SETTINGS_URL = "https://github.com/settings/tokens";

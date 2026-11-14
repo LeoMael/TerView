@@ -1,4 +1,4 @@
-# Genera los instaladores de TerView y los adjunta a un Release en BORRADOR.
+# Genera los instaladores de SSHorus y los adjunta a un Release en BORRADOR.
 #
 # Se dispara al subir una etiqueta de versión (git tag v0.3.0 && git push origin v0.3.0)
 # o a mano desde la pestaña Actions / `gh workflow run release.yml`.
@@ -14,11 +14,15 @@
 # Actualizaciones automáticas (tauri-plugin-updater):
 #   Con el secreto TAURI_SIGNING_PRIVATE_KEY (y TAURI_SIGNING_PRIVATE_KEY_PASSWORD) cada instalador se
 #   firma (.sig) y tauri-action sube `latest.json` al Release; la app lo consulta en
-#   https://github.com/LeoMael/TerView/releases/latest/download/latest.json
+#   https://github.com/LeoMael/SSHorus/releases/latest/download/latest.json
 #   (solo cuenta el Release PUBLICADO más reciente: los borradores no los ve la app).
-#   Sin el secreto se generan igual los instaladores, pero sin firma ni latest.json (aviso en el log).
+#   Sin el secreto se generan igual los instaladores, pero sin firma ni latest.json: el trabajo lo avisa
+#   (aviso amarillo y en el resumen del trabajo). Por eso la 0.3.0 y la 0.5.0 no subieron latest.json.
+#   La llave tiene que ser la pareja de la `pubkey` de src-tauri/tauri.conf.json (si se cambia una, la
+#   otra también; las apps ya instaladas solo aceptan actualizaciones firmadas con su llave).
 #   Crear los secretos:  gh secret set TAURI_SIGNING_PRIVATE_KEY < ~/.tauri/terview-updater.key
 #                        gh secret set TAURI_SIGNING_PRIVATE_KEY_PASSWORD < ~/.tauri/terview-updater.password
+#   (si la llave no tiene contraseña, el segundo secreto puede faltar).
 
 name: Publicar versión
 
@@ -48,8 +52,8 @@ jobs:
           - nombre: Windows
             platform: windows-latest
             args: ""
-          # tauri-cli solo une con lipo el binario principal; el puente `terview-mcp` lo une
-          # src-tauri/scripts/terview-mcp-universal.sh (beforeBundleCommand de tauri.macos.conf.json).
+          # tauri-cli solo une con lipo el binario principal; el puente `sshorus-mcp` lo une
+          # src-tauri/scripts/sshorus-mcp-universal.sh (beforeBundleCommand de tauri.macos.conf.json).
           - nombre: macOS
             platform: macos-latest
             args: "--target universal-apple-darwin"
@@ -112,12 +116,31 @@ jobs:
         shell: bash
         env:
           LLAVE: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          CLAVE: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: |
           if [ -n "$LLAVE" ]; then
             echo "Llave de firma presente: se generan .sig y latest.json."
+            if [ -z "$CLAVE" ]; then
+              echo "::notice title=Llave sin contraseña::No está el secreto TAURI_SIGNING_PRIVATE_KEY_PASSWORD. Si la llave tiene contraseña, la firma fallará: créalo con gh secret set TAURI_SIGNING_PRIVATE_KEY_PASSWORD < ~/.tauri/terview-updater.password"
+            fi
+            echo "activa=1" >> "$GITHUB_OUTPUT"
             echo "args=" >> "$GITHUB_OUTPUT"
           else
-            echo "::warning title=Sin llave de firma::Falta el secreto TAURI_SIGNING_PRIVATE_KEY. Se generan los instaladores, pero sin actualizaciones automáticas (sin .sig ni latest.json)."
+            echo "::warning title=SIN ACTUALIZACIONES AUTOMÁTICAS::Falta el secreto TAURI_SIGNING_PRIVATE_KEY en el repositorio. Los instaladores salen, pero sin firmas .sig ni latest.json: las apps instaladas NO verán esta versión. Créalo con: gh secret set TAURI_SIGNING_PRIVATE_KEY < ~/.tauri/terview-updater.key (y TAURI_SIGNING_PRIVATE_KEY_PASSWORD) y vuelve a lanzar este workflow."
+            {
+              echo "## Sin actualizaciones automáticas (${RUNNER_OS})"
+              echo
+              echo "Falta el secreto \`TAURI_SIGNING_PRIVATE_KEY\`: este Release no tendrá \`latest.json\` ni las firmas \`.sig\`,"
+              echo "así que la app instalada no lo encontrará al buscar actualizaciones."
+              echo
+              echo '```bash'
+              echo 'gh secret set TAURI_SIGNING_PRIVATE_KEY < ~/.tauri/terview-updater.key'
+              echo 'gh secret set TAURI_SIGNING_PRIVATE_KEY_PASSWORD < ~/.tauri/terview-updater.password'
+              echo '```'
+              echo
+              echo "Después borra el Release en borrador y vuelve a lanzar el workflow."
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "activa=" >> "$GITHUB_OUTPUT"
             echo "args=--config '{\"bundle\":{\"createUpdaterArtifacts\":false}}'" >> "$GITHUB_OUTPUT"
           fi
 
@@ -136,9 +159,9 @@ jobs:
             NOTAS="Novedades: ver [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)."
           fi
           {
-            echo "cuerpo<<FIN_NOTAS_TERVIEW"
+            echo "cuerpo<<FIN_NOTAS_SSHORUS"
             echo "$NOTAS"
-            echo "FIN_NOTAS_TERVIEW"
+            echo "FIN_NOTAS_SSHORUS"
           } >> "$GITHUB_OUTPUT"
 
       - name: Compilar y publicar instaladores
@@ -149,7 +172,7 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tagName: v__VERSION__
-          releaseName: TerView v__VERSION__
+          releaseName: SSHorus v__VERSION__
           releaseBody: |
             ${{ steps.notas.outputs.cuerpo }}
 
@@ -176,3 +199,18 @@ jobs:
           uploadUpdaterJson: true
           updaterJsonPreferNsis: true
           args: ${{ matrix.args }} ${{ steps.firma.outputs.args }}
+
+      # Comprueba que el Release (borrador) tiene latest.json cuando se firmó. Sin él, las apps instaladas
+      # no ven la versión nueva; antes pasaba sin que nadie se enterara.
+      - name: Comprobar latest.json
+        if: steps.firma.outputs.activa == '1'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=$(node -p "require('./src-tauri/tauri.conf.json').version")
+          if gh release view "v$VERSION" --json assets --jq '.assets[].name' | grep -qx 'latest.json'; then
+            echo "latest.json subido al Release v$VERSION."
+          else
+            echo "::warning title=Falta latest.json::El Release v$VERSION no tiene latest.json aunque había llave de firma. Revisa el paso «Compilar y publicar instaladores»."
+          fi

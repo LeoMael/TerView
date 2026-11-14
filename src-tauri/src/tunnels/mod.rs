@@ -1,7 +1,7 @@
 //! Túneles (port forwarding) por servidor: local (-L), remoto (-R) y SOCKS5 (-D).
 //! DUEÑO: agente Túneles.
 //!
-//! - Definiciones guardadas por servidor en `<config_dir>/terview/tunnels.json` (`store`).
+//! - Definiciones guardadas por servidor en `<config_dir>/sshorus/tunnels.json` (`store`).
 //! - En marcha por sesión (`manager`), con estado y contadores → evento `tunnel://status`.
 //! - Los canales `forwarded-tcpip` del servidor llegan por `ssh::handler` → `remote`.
 

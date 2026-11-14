@@ -49,7 +49,7 @@ export function toMarkdown(r: AuditReport, serverName: string | null, cmp: Compa
       out.push("    ```", "");
     }
   }
-  out.push("", "_Generado por TerView. Comprobaciones fijas, sin IA._");
+  out.push("", "_Generado por SSHorus. Comprobaciones fijas, sin IA._");
   if (r.ai) out.push("", "## Explicación de la IA", "", `_Texto generado por IA (${r.ai.model}): revísalo._`, "", r.ai.text);
   return `${out.join("\n")}\n`;
 }
@@ -103,7 +103,7 @@ td{border-bottom:1px solid #eee;padding:4px 8px}.n{white-space:nowrap}ul{padding
 <table>${rows}</table>
 ${body.join("\n")}
 ${r.ai ? `<h2>Explicación de la IA</h2><p class="meta">Texto generado por IA (${esc(r.ai.model)}): revísalo.</p><pre>${esc(r.ai.text)}</pre>` : ""}
-<p class="meta">Generado por TerView. Comprobaciones fijas, sin IA.</p>
+<p class="meta">Generado por SSHorus. Comprobaciones fijas, sin IA.</p>
 </body></html>
 `;
 }

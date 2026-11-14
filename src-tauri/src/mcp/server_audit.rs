@@ -1,6 +1,6 @@
 //! Resumen de una auditoría del servidor para el asistente (`get_audit_report` y `run_audit`): nota
 //! general y por categoría, y los problemas con su comando para arreglarlos. Lo afectado (usuarios,
-//! puertos, archivos) va recortado; el informe entero se ve en TerView.
+//! puertos, archivos) va recortado; el informe entero se ve en SSHorus.
 
 use serde_json::{json, Value};
 
@@ -57,6 +57,6 @@ pub fn summarize(server: &str, r: &AuditReport) -> Value {
         "problems": problems,
         "ok": r.count(CheckStatus::Ok),
         "unchecked": unchecked,
-        "note": "Los arreglos se aplican desde TerView (Administración → Auditoría → Arreglar), con confirmación.",
+        "note": "Los arreglos se aplican desde SSHorus (Administración → Auditoría → Arreglar), con confirmación.",
     })
 }

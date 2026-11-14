@@ -151,7 +151,7 @@
   <!-- stdin -->
   <text x="60" y="580" class="z" style="fill:#94a3b8">QUÉ VIAJA POR STDIN · NUNCA EN LA LÍNEA DE COMANDOS</text>
   <text x="60" y="614" class="s">Comando que ve el servidor:</text>
-  <text x="270" y="614" class="mono" style="font-size:15px;fill:#e2e8f0">sh -c 'echo __TERVIEW_PID__=$$ &gt;&amp;2; c=$(dd bs=1 count=N); exec "$SHELL" -c "$c"'</text>
+  <text x="270" y="614" class="mono" style="font-size:15px;fill:#e2e8f0">sh -c 'echo __SSHORUS_PID__=$$ &gt;&amp;2; c=$(dd bs=1 count=N); exec "$SHELL" -c "$c"'</text>
   <rect x="60" y="630" width="340" height="56" rx="10" fill="#2a1a10" stroke="#f97316" stroke-width="2"/>
   <text x="230" y="665" text-anchor="middle" class="b16">1 · Comando real</text>
   <rect x="404" y="630" width="512" height="56" rx="10" fill="#10243a" stroke="#38bdf8" stroke-width="2"/>
@@ -204,7 +204,7 @@
   <circle cx="862" cy="964" r="12" fill="#f43f5e"/><text x="862" y="969" text-anchor="middle" style="font-size:14px;font-weight:700;fill:#ffffff">4</text>
   <text x="886" y="970" class="b16">KILL</text>
   <text x="1200" y="970" class="s">si aún sigue vivo</text>
-  <text x="842" y="1016" class="s">El PID llega por stderr (<tspan class="mono" style="font-size:14px">__TERVIEW_PID__</tspan>) y se quita de la salida.</text>
+  <text x="842" y="1016" class="s">El PID llega por stderr (<tspan class="mono" style="font-size:14px">__SSHORUS_PID__</tspan>) y se quita de la salida.</text>
 
   <text x="60" y="1072" style="font-size:17px;fill:#94a3b8">Cerrar el canal no basta: sin terminal, el proceso seguiría vivo en el servidor. Por eso se marca el PID y se detiene el grupo.</text>
 </svg>

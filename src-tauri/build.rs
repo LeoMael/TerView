@@ -5,7 +5,7 @@ fn main() {
     if target_os == "windows" && target_env == "msvc" {
         // Windows (MSVC): el manifiesto de la app (Common Controls v6, que piden los diálogos de
         // tauri-plugin-dialog / rfd) se enlaza en TODOS los ejecutables, también en los de pruebas.
-        // tauri-build solo lo pone en los binarios (`terview`, `terview-mcp`), y sin él el ejecutable
+        // tauri-build solo lo pone en los binarios (`sshorus`, `sshorus-mcp`), y sin él el ejecutable
         // de `cargo test --lib` no arranca: STATUS_ENTRYPOINT_NOT_FOUND (0xc0000139) al no encontrar
         // `TaskDialogIndirect` en el comctl32 antiguo. Es el mismo arreglo que usa Tauri en sus
         // ejemplos (examples/api/src-tauri/build.rs). Por eso aquí se le quita a tauri-build, para no

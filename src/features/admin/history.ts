@@ -18,7 +18,7 @@ export interface HistoryEntry {
 
 export const HISTORY_LIMIT = 300;
 const RESULT_MAX = 2000;
-const KEY = (profileId: string) => `terview.admin.history.v1.${profileId}`;
+const KEY = (profileId: string) => `sshorus.admin.history.v1.${profileId}`;
 
 function readStorage(profileId: string): HistoryEntry[] {
   try {

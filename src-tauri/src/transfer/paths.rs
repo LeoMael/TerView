@@ -359,7 +359,7 @@ mod tests {
 
     #[test]
     fn walker_lists_tree() {
-        let root = std::env::temp_dir().join(format!("terview-walk-{}", uuid::Uuid::new_v4()));
+        let root = std::env::temp_dir().join(format!("sshorus-walk-{}", uuid::Uuid::new_v4()));
         let fotos = root.join("fotos");
         std::fs::create_dir_all(fotos.join("viaje")).unwrap();
         std::fs::create_dir_all(fotos.join("vacia")).unwrap();

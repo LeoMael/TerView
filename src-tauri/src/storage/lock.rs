@@ -1,4 +1,4 @@
-//! Bloqueo de TerView: comandos de la bóveda, bloqueo por inactividad y aviso a las ventanas.
+//! Bloqueo de SSHorus: comandos de la bóveda, bloqueo por inactividad y aviso a las ventanas.
 //!
 //! El estado vive aquí (en Rust), no en la interfaz: mientras está bloqueado, `secrets::*`
 //! devuelve `AppError::Locked` aunque una ventana siga dibujada. Cada cambio se emite como
@@ -73,7 +73,7 @@ pub fn lock_now(app: &AppHandle, why: &str) {
     if vault().lock() {
         // Las contraseñas de conexión que se recordaban para sudo («La de la conexión») se olvidan.
         crate::ssh::login_secret::forget_all();
-        log::info!("TerView bloqueado ({why})");
+        log::info!("SSHorus bloqueado ({why})");
         notify(app);
     }
 }
@@ -184,7 +184,7 @@ pub async fn vault_change_pin(old_pin: String, new_pin: String) -> AppResult<()>
 
 /// «Olvidé mi PIN»: borra la bóveda (se pierden las contraseñas guardadas y los tokens de GitHub,
 /// del servidor MCP —se crea uno nuevo— y de la IA que explica informes)
-/// y deja TerView sin bloqueo. Servidores, ajustes y llaves de ~/.ssh no se tocan.
+/// y deja SSHorus sin bloqueo. Servidores, ajustes y llaves de ~/.ssh no se tocan.
 #[tauri::command]
 pub async fn vault_reset(app: AppHandle) -> AppResult<()> {
     blocking(move || vault().remove()).await?;

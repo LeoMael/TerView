@@ -40,7 +40,7 @@
   </style>
   <rect width="1600" height="1080" fill="#0f172a"/>
 
-  <text x="60" y="62" class="t">TerView — Mapa general</text>
+  <text x="60" y="62" class="t">SSHorus — Mapa general</text>
   <text x="60" y="94" class="st">Dónde está cada pieza, cómo se comunican y dónde se guarda cada dato.</text>
 
   <!-- ===================== TU PC ===================== -->
@@ -112,7 +112,7 @@
   <text x="501" y="598" class="b">Configuración</text>
   <text x="501" y="620" class="xs">servidores, comandos</text>
   <text x="501" y="639" class="xs">túneles, ajustes</text>
-  <text x="501" y="658" class="xs mono" style="font-size:13px">terview/*.json</text>
+  <text x="501" y="658" class="xs mono" style="font-size:13px">sshorus/*.json</text>
   <rect x="709" y="526" width="212" height="146" rx="14" class="disk"/>
   <use href="#i-db" x="725" y="538" width="38" height="38" style="color:#facc15"/>
   <text x="725" y="598" class="b mono" style="font-weight:600">~/.ssh/</text>

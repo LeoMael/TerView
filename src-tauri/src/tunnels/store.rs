@@ -1,4 +1,4 @@
-//! Túneles guardados: `<config_dir>/terview/tunnels.json`.
+//! Túneles guardados: `<config_dir>/sshorus/tunnels.json`.
 //!
 //! Escritura atómica (`storage::fsutil`), primero disco y después memoria.
 

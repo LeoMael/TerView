@@ -193,14 +193,14 @@ pub async fn term_open(
     Ok(opened)
 }
 
-/// Sesiones tmux de TerView que siguen vivas en el servidor.
+/// Sesiones tmux de SSHorus que siguen vivas en el servidor.
 #[tauri::command]
 pub async fn term_tmux_list(sessions: State<'_, SessionStore>, session_id: String) -> AppResult<TmuxList> {
     let session = sessions.get(&session_id).await?;
     tmux::list(session).await
 }
 
-/// Termina sesiones tmux de TerView (cerrar la terminal a propósito o limpiar las que quedaron).
+/// Termina sesiones tmux de SSHorus (cerrar la terminal a propósito o limpiar las que quedaron).
 #[tauri::command]
 pub async fn term_tmux_kill(
     sessions: State<'_, SessionStore>,

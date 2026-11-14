@@ -304,7 +304,7 @@ export function ImageUpdateDialog({ report, target, onClose }: { report: Report;
     owner.kind === "root" && el ? displayCmds(shownCmds, el) : shownCmds.map((c) => renderCmd(c));
   const howText =
     owner.kind === "user"
-      ? `Se ejecutará como «${who}» (TerView entra como ese usuario con sudo, igual que al analizar):`
+      ? `Se ejecutará como «${who}» (SSHorus entra como ese usuario con sudo, igual que al analizar):`
       : owner.kind === "root"
         ? "Se ejecutará como root:"
         : "Se ejecutará con tu usuario:";

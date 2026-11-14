@@ -151,12 +151,12 @@ export function DiagnosticsPanel() {
 function dmabufLabel(sys: AppDiagnostics): string {
   const get = (n: string) => sys.env.find((e) => e.name === n)?.value ?? null;
   const dmabuf = get("WEBKIT_DISABLE_DMABUF_RENDERER");
-  const optOut = get("TERVIEW_WEBKIT_DEFAULTS") !== null;
+  const optOut = get("SSHORUS_WEBKIT_DEFAULTS") !== null;
   if (dmabuf !== null) {
     if (sys.nvidiaDriver && !optOut) return "Aplicado (WEBKIT_DISABLE_DMABUF_RENDERER): driver NVIDIA detectado";
     return `Aplicado (WEBKIT_DISABLE_DMABUF_RENDERER=${dmabuf}), definido en el entorno`;
   }
-  if (optOut) return "Desactivado a mano (TERVIEW_WEBKIT_DEFAULTS)";
+  if (optOut) return "Desactivado a mano (SSHORUS_WEBKIT_DEFAULTS)";
   return sys.nvidiaDriver ? "No aplicado" : "No hace falta (sin driver NVIDIA)";
 }
 

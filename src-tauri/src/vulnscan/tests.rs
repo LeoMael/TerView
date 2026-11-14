@@ -31,7 +31,7 @@ struct TempDir(std::path::PathBuf);
 
 impl TempDir {
     fn new() -> Self {
-        let p = std::env::temp_dir().join(format!("terview-vulnscan-test-{}", uuid::Uuid::new_v4()));
+        let p = std::env::temp_dir().join(format!("sshorus-vulnscan-test-{}", uuid::Uuid::new_v4()));
         std::fs::create_dir_all(&p).unwrap();
         TempDir(p)
     }
@@ -297,7 +297,7 @@ fn trivy_template_rocky() {
 // ───────────── Scripts propios ─────────────
 
 #[test]
-fn inventory_prototype_terview_sshd() {
+fn inventory_prototype_sshorus_sshd() {
     // Salida del prototipo del script de inventario contra el servidor de pruebas (4 columnas en @@tools).
     let inv = inventory::parse_inventory(fx!("inventario-terview-sshd.txt"));
     assert!(inv.complete);

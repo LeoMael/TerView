@@ -60,7 +60,7 @@ interface MultiRunState {
   nonce: number;
 }
 
-const PREFS_KEY = "terview.multirun.prefs";
+const PREFS_KEY = "sshorus.multirun.prefs";
 export const DEFAULT_TIMEOUT_SECS = 30;
 export const DEFAULT_CONCURRENCY = 4;
 
@@ -137,7 +137,7 @@ const realDeps: EngineDeps = {
     // Solo lectura: en pestañas se usa lo ya detectado; si no, se consulta sin guardarlo en la pestaña.
     return (await privilegeOf(sessionId, reused)).level;
   },
-  // Igual que el resto de TerView (obtainSudoPassword); si hay que preguntar, el diálogo va a la cola de
+  // Igual que el resto de SSHorus (obtainSudoPassword); si hay que preguntar, el diálogo va a la cola de
   // SudoAskHost: uno cada vez, con «Saltar este servidor».
   sudoPassword: async (sessionId, profileId, serverName, signal) => {
     const reused = useTabs.getState().tabs.some((t) => t.sessionId === sessionId);

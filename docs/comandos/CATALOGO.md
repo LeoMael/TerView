@@ -1,6 +1,6 @@
 # Catálogo de comandos (base de la Biblioteca de comandos)
 
-Todos los comandos que vendrán incluidos en TerView, por categoría.
+Todos los comandos que vendrán incluidos en SSHorus, por categoría.
 Al construir la función, este archivo se convierte en `src/features/commands/catalog.ts`.
 
 **Leyenda:**

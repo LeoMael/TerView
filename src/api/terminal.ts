@@ -18,8 +18,8 @@ export const terminal = {
   write: (termId: string, data: string) => call<void>("term_write", { termId, data }),
   resize: (termId: string, cols: number, rows: number) => call<void>("term_resize", { termId, cols, rows }),
   close: (termId: string) => call<void>("term_close", { termId }),
-  /** Sesiones tmux de TerView que siguen vivas en el servidor. */
+  /** Sesiones tmux de SSHorus que siguen vivas en el servidor. */
   tmuxList: (sessionId: string) => call<TmuxList>("term_tmux_list", { sessionId }),
-  /** Termina sesiones tmux de TerView. */
+  /** Termina sesiones tmux de SSHorus. */
   tmuxKill: (sessionId: string, names: string[]) => call<void>("term_tmux_kill", { sessionId, names }),
 };

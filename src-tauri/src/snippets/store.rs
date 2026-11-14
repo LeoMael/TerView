@@ -1,4 +1,4 @@
-//! "Mis comandos": lectura/escritura de `~/.config/terview/commands.json`.
+//! "Mis comandos": lectura/escritura de `~/.config/sshorus/commands.json`.
 //!
 //! - Escritura atómica (temporal en la misma carpeta + `rename`), archivo 0600 y carpeta 0700.
 //! - Archivo dañado → se aparta como `commands.json.bak-<unix>` y se empieza vacío.
@@ -56,10 +56,10 @@ fn clean_opt(v: Option<String>) -> Option<String> {
 }
 
 impl SnippetStore {
-    /// Lee ~/.config/terview/commands.json (o vacío). Nunca falla: registra el error.
+    /// Lee ~/.config/sshorus/commands.json (o vacío). Nunca falla: registra el error.
     pub fn load() -> Self {
         match dirs::config_dir() {
-            Some(dir) => Self::load_from(dir.join("terview").join("commands.json")),
+            Some(dir) => Self::load_from(dir.join("sshorus").join("commands.json")),
             None => {
                 log::error!("No hay carpeta de configuración: \"Mis comandos\" no se guardarán");
                 SnippetStore { path: None, data: RwLock::new(Vec::new()) }

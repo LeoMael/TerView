@@ -1,4 +1,4 @@
-// «Sesiones en el servidor»: terminales persistentes (tmux) de TerView que siguen vivas en el servidor,
+// «Sesiones en el servidor»: terminales persistentes (tmux) de SSHorus que siguen vivas en el servidor,
 // por ejemplo tras cerrar la app. Se pueden reabrir en una terminal nueva o cerrar.
 import { useCallback, useEffect, useState } from "react";
 import { Copy, ExternalLink, RefreshCw, Trash2 } from "lucide-react";
@@ -95,7 +95,7 @@ export function TmuxSessionsDialog({ sessionId, onOpen, onClose }: Props) {
     >
       <p className="term-tmux-intro">
         Cada terminal persistente vive en una sesión tmux del servidor y sigue corriendo aunque se corte la conexión o
-        cierres TerView. Aquí ves las de este usuario: reábrelas o ciérralas para que no se acumulen.
+        cierres SSHorus. Aquí ves las de este usuario: reábrelas o ciérralas para que no se acumulen.
       </p>
       {loading && !list && (
         <div className="term-tmux-empty">
@@ -110,7 +110,7 @@ export function TmuxSessionsDialog({ sessionId, onOpen, onClose }: Props) {
         </div>
       )}
       {list && list.installed && sessions.length === 0 && (
-        <div className="term-tmux-empty">No hay terminales persistentes de TerView en este servidor.</div>
+        <div className="term-tmux-empty">No hay terminales persistentes de SSHorus en este servidor.</div>
       )}
       {sessions.length > 0 && (
         <ul className="term-tmux-list" aria-busy={loading}>
@@ -152,7 +152,7 @@ export function TmuxSessionsDialog({ sessionId, onOpen, onClose }: Props) {
                 <button
                   className="btn btn-sm"
                   disabled={here}
-                  title={here ? "Ya está abierta en una terminal de TerView" : "Abrir en una terminal nueva"}
+                  title={here ? "Ya está abierta en una terminal de SSHorus" : "Abrir en una terminal nueva"}
                   onClick={() => {
                     onOpen(s.name);
                     onClose();

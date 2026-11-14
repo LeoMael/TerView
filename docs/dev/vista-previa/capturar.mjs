@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Saca las capturas del manual (docs/manual/*.png) con la interfaz REAL de TerView y el motor simulado.
+// Saca las capturas del manual (docs/manual/*.png) con la interfaz REAL de SSHorus y el motor simulado.
 //
 //   node docs/dev/vista-previa/capturar.mjs            # todas
 //   node docs/dev/vista-previa/capturar.mjs terminal   # solo las escenas que se nombren
@@ -39,6 +39,7 @@ const CAPTURAS = [
   { file: "13c-sitios.png", escena: "sitios", query: { sesion: "84,16" } },
   { file: "14-vulnerabilidades.png", escena: "vulnerabilidades", query: { sesion: "84,16" } },
   { file: "14b-auditoria.png", escena: "auditoria", query: { sesion: "88,12" }, size: [1280, 1000] },
+  { file: "13d-mapa.png", escena: "mapa", size: [1440, 900] },
   { file: "15-ia.png", escena: "ia" },
   { file: "16-github.png", escena: "github" },
   { file: "17-pin.png", escena: "pin", query: { bloqueado: "1" }, pad: 48 },
@@ -90,7 +91,7 @@ if (!(await up(BASE))) {
 const chromePath =
   process.env.CHROME ?? ["/usr/bin/google-chrome", "/usr/bin/chromium", "/usr/bin/chromium-browser"].find((p) => existsSync(p));
 if (!chromePath) throw new Error("No encuentro Chrome/Chromium (usa CHROME=/ruta)");
-const profile = mkdtempSync(join(tmpdir(), "terview-capturas-"));
+const profile = mkdtempSync(join(tmpdir(), "sshorus-capturas-"));
 const chrome = spawn(
   chromePath,
   [

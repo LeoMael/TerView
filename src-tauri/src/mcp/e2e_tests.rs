@@ -189,7 +189,7 @@ async fn rmcp_client_end_to_end() {
     let transport = StreamableHttpClientTransport::from_config(StreamableHttpClientTransportConfig::with_uri(url).auth_header(TOKEN));
     let client = ClientConfig::default().serve(transport).await.expect("initialize");
     let info = client.peer_info().expect("info del servidor");
-    assert_eq!(info.server_info.as_ref().map(|s| s.name.as_str()), Some("terview"));
+    assert_eq!(info.server_info.as_ref().map(|s| s.name.as_str()), Some("sshorus"));
 
     let tools = client.list_all_tools().await.unwrap();
     assert!(tools.len() >= 19, "{}", tools.len());
@@ -276,7 +276,7 @@ async fn raw_jsonrpc_end_to_end() {
     .json()
     .await
     .unwrap();
-    assert_eq!(v["result"]["serverInfo"]["name"], "terview");
+    assert_eq!(v["result"]["serverInfo"]["name"], "sshorus");
     let r = post(json!({ "jsonrpc": "2.0", "method": "notifications/initialized" })).await.unwrap();
     assert_eq!(r.status().as_u16(), 202);
     let v: Value = post(json!({ "jsonrpc": "2.0", "id": 2, "method": "tools/list" })).await.unwrap().json().await.unwrap();
@@ -427,7 +427,7 @@ async fn sudo_wrapper_on_real_server() {
     assert_eq!(r.stdout.matches("ok S").count(), 1, "{}", r.stdout);
     assert_eq!(r.stdout.matches("ok A").count(), 4, "{}", r.stdout);
     assert!(!r.stdout.contains("bad"), "{}", r.stdout);
-    assert!(!r.stdout.contains(".terview-sudo."), "quedaron archivos temporales:\n{}", r.stdout);
+    assert!(!r.stdout.contains(".sshorus-sudo."), "quedaron archivos temporales:\n{}", r.stdout);
 
     // Varios sudo a la vez (tubería).
     let w = wrap("sudo whoami | sudo cat | sudo cat | sudo cat", SUDO_PW).unwrap();
@@ -441,7 +441,7 @@ async fn sudo_wrapper_on_real_server() {
     let r = exec::run_with_stdin(&s, &full, &w.stdin, 2).await.unwrap();
     assert!(r.timed_out, "{r:?}");
     let r = exec::run(&s, "sleep 1; ls -a /tmp /dev/shm; ps -o args 2>/dev/null || ps -ef", 10).await.unwrap();
-    assert!(!r.stdout.contains(".terview-sudo."), "quedaron archivos temporales:\n{}", r.stdout);
+    assert!(!r.stdout.contains(".sshorus-sudo."), "quedaron archivos temporales:\n{}", r.stdout);
     assert!(!r.stdout.contains("sleep 30"), "{}", r.stdout);
 
     // Contraseña incorrecta (sudo simulado): rechazo rápido, con un solo intento y sin ejecutar nada.

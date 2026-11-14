@@ -1,7 +1,7 @@
-//! Ajustes del servidor MCP: `<config>/terview/mcp.json`.
+//! Ajustes del servidor MCP: `<config>/sshorus/mcp.json`.
 //!
 //! Sin secretos: el token va aparte, con la API de secretos (bóveda o llavero, id `mcp-token`).
-//! El puente `terview-mcp` lee de aquí el puerto.
+//! El puente `sshorus-mcp` lee de aquí el puerto.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
@@ -36,7 +36,7 @@ pub struct McpConfig {
     /// «Permitir siempre»: por servidor, las acciones exactas ya permitidas.
     pub remembered: BTreeMap<String, BTreeSet<String>>,
     /// «Aceptar automáticamente» guardado («siempre»): id → nivel. Lo temporal (15 min, 1 h, hasta
-    /// cerrar TerView) vive solo en memoria (`McpCore`).
+    /// cerrar SSHorus) vive solo en memoria (`McpCore`).
     pub auto_accept: BTreeMap<String, AutoLevel>,
 }
 
@@ -89,7 +89,7 @@ fn guard(m: &Mutex<McpConfig>) -> MutexGuard<'_, McpConfig> {
 }
 
 impl McpConfigStore {
-    /// Lee `<config>/terview/mcp.json` (o valores por defecto).
+    /// Lee `<config>/sshorus/mcp.json` (o valores por defecto).
     pub fn load() -> Self {
         match fsutil::config_dir() {
             Some(dir) => Self::load_from(dir.join(FILE_NAME)),

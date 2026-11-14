@@ -1,10 +1,33 @@
 # Historial de cambios
 
-Todos los cambios importantes de TerView se anotan aquí.
+Todos los cambios importantes de SSHorus se anotan aquí.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y las versiones
 siguen [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Sin publicar]
+
+### Importante
+- **La app se llama ahora SSHorus** (antes TerView), con logo nuevo: el ojo de Horus dentro de un anillo,
+  con la terminal `>_`. Para el sistema es otra app, así que **no se traen los datos de TerView** y esta vez
+  hay que instalarla a mano (la TerView instalada no la ve como actualización):
+  - **Servidores, proyectos, ajustes, comandos propios, túneles y PIN empiezan vacíos.** Vuelve a añadir los
+    servidores o impórtalos con **Importar `~/.ssh/config`** (los que exportaste desde TerView están en su
+    bloque `# >>> TerView … >>>`; después de importarlos puedes borrar ese bloque).
+  - **Las contraseñas guardadas no se pasan**: vuelve a escribirlas. Las de TerView siguen en el llavero del
+    sistema (servicio `terview`) y se pueden borrar desde su gestor de contraseñas.
+  - Carpetas nuevas: `~/.config/sshorus/` y `com.sshorus.app` (antes `~/.config/terview/` y
+    `com.terview.app`). Las de TerView se pueden borrar a mano.
+  - **Asistentes de IA (MCP)**: el servidor se llama `sshorus`, el puente `sshorus-mcp` y las variables
+    `SSHORUS_MCP_TOKEN` / `SSHORUS_MCP_PORT`. Vuelve a añadirlo desde Ajustes → Asistentes de IA y quita el
+    `terview` viejo de Claude Code, Claude Desktop o Codex.
+  - Las terminales tmux que dejó TerView en los servidores (`terview-…`) ya no se recuperan solas, la copia
+    sincronizada de GitHub empieza de cero (`sshorus-sync.json`) y los comandos exportados con TerView no se
+    importan.
+  - En Linux, desinstala el paquete viejo con `sudo dnf remove ter-view` o `sudo apt remove ter-view` (el
+    nuevo se llama `ss-horus`); en Windows, desde Configuración → Aplicaciones.
+  - El repositorio pasa a [github.com/LeoMael/SSHorus](https://github.com/LeoMael/SSHorus) y de ahí salen las
+    actualizaciones automáticas. Las versiones de TerView no publicaban `latest.json` (faltaba la llave de
+    firma en GitHub), por eso la app nunca encontraba versiones nuevas.
 
 ### Añadido
 - **Escáner → «Actualizar imagen»**: en las vulnerabilidades de una imagen de Podman o Docker, un botón
@@ -18,22 +41,22 @@ siguen [Versionado Semántico](https://semver.org/lang/es/).
 - **Terminal local** («Este equipo»): pestañas con una terminal **de tu propio PC**, junto a las de los
   servidores. Misma terminal que las de SSH (tema, búsqueda, copiar/pegar, tamaño). Se abren con el botón
   del portátil en la barra de pestañas, desde «+» o desde «Nuevo» en la barra lateral, en la carpeta que
-  elijas (TerView recuerda la última). Usa la shell del sistema (`$SHELL`; PowerShell en Windows). Al
+  elijas (SSHorus recuerda la última). Usa la shell del sistema (`$SHELL`; PowerShell en Windows). Al
   cerrar la pestaña se termina lo que corre en ella **y sus procesos hijos**. El PIN también las tapa.
-- **Claude Code y Codex con el contexto de TerView**: botones rápidos que los abren en una pestaña local.
-  - Si no están instalados, TerView lo dice y ofrece instalarlos **mostrando antes el comando exacto**
+- **Claude Code y Codex con el contexto de SSHorus**: botones rápidos que los abren en una pestaña local.
+  - Si no están instalados, SSHorus lo dice y ofrece instalarlos **mostrando antes el comando exacto**
     (el instalador oficial de Claude Code; `npm install -g @openai/codex` para Codex, avisando si falta
     Node.js). La instalación corre en la pestaña, a la vista.
-  - Cada programa inicia sesión a su manera (suscripción o clave de API). TerView **no lee ni copia**
+  - Cada programa inicia sesión a su manera (suscripción o clave de API). SSHorus **no lee ni copia**
     `~/.claude` ni `~/.codex`.
   - El asistente recibe un **contexto**: tus servidores con su alias de `~/.ssh/config`, usuario, host,
     puerto, proyecto, si están conectados, qué servidor estabas mirando y la fecha. Sabe que puede usar
     `ssh <alias> '<comando>'` y qué servidores van con contraseña (para esos, el MCP). Nunca lleva
     contraseñas, llaves, tokens ni el PIN.
-  - Y, si está activo, el **MCP de TerView** ya configurado (con tus permisos y aprobaciones). Si está
-    apagado, TerView pregunta si activarlo o abrir solo con el contexto.
+  - Y, si está activo, el **MCP de SSHorus** ya configurado (con tus permisos y aprobaciones). Si está
+    apagado, SSHorus pregunta si activarlo o abrir solo con el contexto.
   - Nada se escribe en la carpeta del proyecto: a Claude Code se le pasa con `--append-system-prompt` y
-    `--mcp-config`; a Codex con `-c developer_instructions=…` y `-c mcp_servers.terview.…`. El token del
+    `--mcp-config`; a Codex con `-c developer_instructions=…` y `-c mcp_servers.sshorus.…`. El token del
     MCP va por una variable de entorno del proceso, no en archivos ni en los argumentos.
   - Ajustes → **Terminal local e IA**: vía (ssh directo, MCP o las dos), qué contexto se incluye, la
     carpeta de trabajo, ver el contexto exacto y si cada asistente está instalado.
@@ -49,9 +72,9 @@ siguen [Versionado Semántico](https://semver.org/lang/es/).
 
 - **Asistentes de IA (MCP): «Aceptar automáticamente».** Por servidor (solo con acceso Completo), para no
   aprobar cada rato: **cambios normales** o **todo** (también lo peligroso y sudo, con advertencia en rojo y
-  confirmación), durante 15 min, 1 h, hasta cerrar TerView o siempre. Se activa en Ajustes → Asistentes de
+  confirmación), durante 15 min, 1 h, hasta cerrar SSHorus o siempre. Se activa en Ajustes → Asistentes de
   IA o desde el propio diálogo de permiso. Con sudo usa la contraseña en memoria o guardada sin preguntar
-  (la IA nunca la ve). Nunca con TerView bloqueado ni en solo lectura. Indicador «Automático» en la barra de
+  (la IA nunca la ve). Nunca con SSHorus bloqueado ni en solo lectura. Indicador «Automático» en la barra de
   pestañas (un clic lo apaga), etiqueta «automático» en la actividad y aviso en lo peligroso.
 
 - **Ajustes con diseño nuevo y apariencias.** Menú lateral con iconos por grupos, buscador de ajustes,
@@ -90,7 +113,7 @@ siguen [Versionado Semántico](https://semver.org/lang/es/).
   la mitad en Linux por el aspecto nativo de GTK). Ahora tiene su propio estilo y la barra un poco más alta.
 - **Asistentes de IA (MCP): los comandos con sudo funcionan.** `run_command` (p. ej. `sudo whoami`) y
   `run_catalog_command` (p. ej. «Crear usuario») fallaban con «sudo: a terminal is required to read the
-  password». Ahora, tras aprobarlo en TerView, se usa la contraseña de sudo de esa conexión igual que en
+  password». Ahora, tras aprobarlo en SSHorus, se usa la contraseña de sudo de esa conexión igual que en
   Administración: la que ya está en memoria, la guardada (o la de la conexión) o la de otra pestaña del
   mismo servidor; si no hay ninguna, se pide con el diálogo de siempre. Es la misma memoria que la de la
   interfaz: se pide como mucho una vez por conexión, también con varios `sudo` en un comando.
@@ -99,7 +122,7 @@ siguen [Versionado Semántico](https://semver.org/lang/es/).
     de comandos ni en el registro; si un comando la mostrara, se tapa en la respuesta.
   - Contraseña incorrecta: error claro en unos segundos («Contraseña de sudo incorrecta»), con un solo
     intento fallido; se olvida y la guardada queda marcada como rechazada, igual que en la interfaz.
-  - Los comandos con sudo siguen pidiendo permiso siempre; con TerView bloqueado no se hace nada.
+  - Los comandos con sudo siguen pidiendo permiso siempre; con SSHorus bloqueado no se hace nada.
 - **Añadir un servidor desde un proyecto**: cada proyecto de la barra lateral tiene ahora un botón **+**
   (y, con clic derecho, **Añadir servidor nuevo…** y **Añadir servidor existente**). El editor se abre
   indicando «Se añadirá al proyecto X», con un selector para cambiarlo o dejarlo sin proyecto. Al guardar,
@@ -318,8 +341,8 @@ Primera versión pública de TerView, cliente SSH/SFTP de escritorio.
 - Instalador `.rpm` para Linux.
 - Documentación con diagramas en `docs/`.
 
-[Sin publicar]: https://github.com/LeoMael/TerView/compare/v0.5.0...HEAD
-[0.5.0]: https://github.com/LeoMael/TerView/releases/tag/v0.5.0
-[0.3.0]: https://github.com/LeoMael/TerView/releases/tag/v0.3.0
-[0.2.1]: https://github.com/LeoMael/TerView/releases/tag/v0.2.1
-[0.2.0]: https://github.com/LeoMael/TerView/commit/6dfd50a
+[Sin publicar]: https://github.com/LeoMael/SSHorus/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/LeoMael/SSHorus/releases/tag/v0.5.0
+[0.3.0]: https://github.com/LeoMael/SSHorus/releases/tag/v0.3.0
+[0.2.1]: https://github.com/LeoMael/SSHorus/releases/tag/v0.2.1
+[0.2.0]: https://github.com/LeoMael/SSHorus/commit/6dfd50a

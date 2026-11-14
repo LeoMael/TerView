@@ -1630,7 +1630,7 @@ async fn create_local_link(chan: &Chan, remote: &str, target: &str, local: &Path
         .is_ok_and(|a| remote_kind(a.attrs.permissions) == RemoteKind::Dir);
     let tmp = if replace {
         let name = local.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
-        local.with_file_name(format!(".{name}.terview-{}", uuid::Uuid::new_v4().simple()))
+        local.with_file_name(format!(".{name}.sshorus-{}", uuid::Uuid::new_v4().simple()))
     } else {
         local.to_path_buf()
     };

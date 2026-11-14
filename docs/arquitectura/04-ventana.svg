@@ -27,7 +27,7 @@
   <!-- ===== Ventana principal ===== -->
   <rect x="60" y="130" width="1180" height="760" rx="12" fill="#111827" stroke="#475569" stroke-width="2"/>
   <path d="M60,142 a12,12 0 0 1 12,-12 h1156 a12,12 0 0 1 12,12 v28 h-1180 z" fill="#1e293b"/>
-  <text x="80" y="157" class="b" style="font-size:15px">TerView</text>
+  <text x="80" y="157" class="b" style="font-size:15px">SSHorus</text>
   <text x="1140" y="158" class="s">—</text><rect x="1170" y="146" width="12" height="12" fill="none" stroke="#94a3b8" stroke-width="1.5"/><text x="1205" y="158" class="s">✕</text>
 
   <!-- barra lateral -->
@@ -35,7 +35,7 @@
   <rect x="190" y="182" width="22" height="22" rx="5" fill="#1e293b" stroke="#334155"/><text x="201" y="198" text-anchor="middle" class="s" style="fill:#e2e8f0">+</text>
   <rect x="218" y="182" width="22" height="22" rx="5" fill="#1e293b" stroke="#334155"/><text x="229" y="197" text-anchor="middle" class="tb" style="fill:#e2e8f0">≡</text>
   <rect x="246" y="182" width="22" height="22" rx="5" fill="#1e293b" stroke="#334155"/><circle cx="257" cy="193" r="5" fill="none" stroke="#e2e8f0" stroke-width="1.5"/>
-  <text x="80" y="198" class="s" style="font-weight:700;fill:#e2e8f0">TerView</text>
+  <text x="80" y="198" class="s" style="font-weight:700;fill:#e2e8f0">SSHorus</text>
   <rect x="74" y="216" width="212" height="28" rx="6" fill="#111827" stroke="#334155"/>
   <text x="86" y="235" class="tb mono">usuario@host:puerto</text>
   <rect x="74" y="252" width="212" height="28" rx="6" fill="#111827" stroke="#334155"/>

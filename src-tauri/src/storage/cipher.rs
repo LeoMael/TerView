@@ -1,7 +1,7 @@
 //! Cifrado común: AES-256-GCM con llave derivada por Argon2id, en un sobre JSON.
 //!
-//! Lo usan la copia sincronizada (`github::crypto`, formato "terview-sync") y la bóveda de
-//! contraseñas (`storage::vault`, formato "terview-vault").
+//! Lo usan la copia sincronizada (`github::crypto`, formato "sshorus-sync") y la bóveda de
+//! contraseñas (`storage::vault`, formato "sshorus-vault").
 //!
 //! El sobre (`Envelope`) lleva todo lo necesario para descifrar salvo la frase o el PIN:
 //! parámetros de Argon2id, sal, nonce y el texto cifrado (base64). La cabecera va autenticada

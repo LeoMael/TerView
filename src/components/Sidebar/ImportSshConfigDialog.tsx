@@ -94,7 +94,7 @@ export function ImportSshConfigDialog({ onClose }: { onClose: () => void }) {
           <div>No hay servidores nuevos en {SSH_CONFIG_LABEL}</div>
           {existingCount > 0 && (
             <div className="faint">
-              {existingCount === 1 ? "El que hay ya está en TerView." : `Los ${existingCount} que hay ya están en TerView.`}
+              {existingCount === 1 ? "El que hay ya está en SSHorus." : `Los ${existingCount} que hay ya están en SSHorus.`}
             </div>
           )}
         </div>
@@ -103,7 +103,7 @@ export function ImportSshConfigDialog({ onClose }: { onClose: () => void }) {
         <>
           <div className="dialog-message">
             Se encontraron {fresh.length === 1 ? "1 servidor" : `${fresh.length} servidores`} que aún no están en
-            TerView
+            SSHorus
             {existingCount > 0 && ` (y ${existingCount === 1 ? "1 que ya está" : `${existingCount} que ya están`}, marcados abajo)`}.
             Las contraseñas se pedirán al conectar.
           </div>
@@ -123,9 +123,9 @@ export function ImportSshConfigDialog({ onClose }: { onClose: () => void }) {
               const s = c.server;
               const exists = !isNew(c);
               const title = exists
-                ? `Ya está en TerView como «${c.existingName ?? s.name}»`
+                ? `Ya está en SSHorus como «${c.existingName ?? s.name}»`
                 : c.aliasUsedBy
-                  ? `TerView ya exporta «${c.aliasUsedBy}» con el alias «${s.name}»: al exportar se te propondrá otro alias`
+                  ? `SSHorus ya exporta «${c.aliasUsedBy}» con el alias «${s.name}»: al exportar se te propondrá otro alias`
                   : (s.keyPath ?? undefined);
               return (
                 <label key={`${s.name}-${i}`} className={`sb-imp-row${exists ? " ssh-imp-exists" : ""}`} title={title}>
@@ -134,7 +134,7 @@ export function ImportSshConfigDialog({ onClose }: { onClose: () => void }) {
                   <span className="sb-imp-sub mono">{userHostPort(s)}</span>
                   {s.auth === "key" && <KeyRound size={13} className="sb-imp-key" aria-label="Con llave" />}
                   {exists ? (
-                    <span className="ssh-imp-badge">Ya en TerView</span>
+                    <span className="ssh-imp-badge">Ya en SSHorus</span>
                   ) : (
                     c.aliasUsedBy && <span className="ssh-imp-badge warn">Alias en uso</span>
                   )}
