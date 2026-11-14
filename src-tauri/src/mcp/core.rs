@@ -523,6 +523,7 @@ impl<B: Backend> McpCore<B> {
             "list_ports" => self.scan("ports", parse(args)?, rec).await,
             "list_sites" => self.scan("sites", parse(args)?, rec).await,
             "list_containers" => self.scan("containers", parse(args)?, rec).await,
+            "get_infra_map" => self.scan("infra", parse(args)?, rec).await,
             "get_vuln_report" => self.vuln_report(parse(args)?, rec).await,
             "scan_vulnerabilities" => self.vuln_scan(parse(args)?, rec, cancel).await,
             "get_audit_report" => self.audit_report(parse(args)?, rec).await,

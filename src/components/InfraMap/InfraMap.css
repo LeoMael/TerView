@@ -1,0 +1,444 @@
+/* Mapa de infraestructura. Colores solo con los tokens del tema (src/styles/theme.css). */
+.im-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: var(--bg);
+}
+.im-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.im-filters,
+.im-tools,
+.im-owners {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.im-owners {
+  gap: 4px;
+}
+.im-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.im-chip {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  border-radius: 999px;
+  padding: 1px 9px;
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
+.im-chip.on {
+  background: var(--accent-bg);
+  border-color: var(--mix-accent-45);
+  color: var(--text);
+}
+.im-zoom {
+  min-width: 38px;
+  text-align: center;
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.im-tools .icon-btn.active {
+  color: var(--accent);
+}
+.im-export {
+  position: relative;
+}
+.im-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  min-width: 150px;
+  padding: 4px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.im-menu button {
+  text-align: left;
+  background: transparent;
+  border: 0;
+  color: var(--text);
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
+.im-menu button:hover {
+  background: var(--mix-accent-12);
+}
+.im-notes {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 4px 12px;
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  background: var(--mix-yellow-12-surface);
+  border-bottom: 1px solid var(--border);
+}
+.im-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+.im-canvas {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  cursor: grab;
+  outline: none;
+  touch-action: none;
+  user-select: none;
+  background: var(--bg);
+  background-image: radial-gradient(var(--border) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+.im-canvas:active {
+  cursor: grabbing;
+}
+.im-empty {
+  height: 100%;
+}
+.im-svg {
+  display: block;
+  font-family: var(--font);
+}
+
+/* Columnas, servidor, bandas por usuario, grupos */
+.im-col {
+  fill: var(--text-faint);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.im-server {
+  fill: var(--surface);
+  stroke: var(--border-strong);
+  stroke-width: 1.2;
+}
+.im-server-name {
+  fill: var(--text);
+  font-size: 14px;
+  font-weight: 700;
+}
+.im-server-sub {
+  fill: var(--text-muted);
+  font-size: 11px;
+}
+.im-band {
+  fill: var(--mix-surface-2-60);
+  stroke: var(--border);
+  stroke-dasharray: 4 3;
+}
+.im-band-name {
+  fill: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+.im-group {
+  fill: var(--mix-accent-7-surface-2);
+  stroke: var(--mix-accent-35);
+  stroke-dasharray: 3 3;
+}
+.im-group-name {
+  fill: var(--accent);
+  font-size: 9.5px;
+  font-weight: 600;
+}
+
+/* Nodos */
+.im-node {
+  cursor: pointer;
+}
+.im-card {
+  fill: var(--surface-2);
+  stroke: var(--border-strong);
+  stroke-width: 1;
+}
+.im-node:hover .im-card {
+  stroke: var(--accent);
+}
+.im-node.sel .im-card {
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+.im-node.dim,
+.im-edge.dim {
+  opacity: 0.28;
+}
+.im-label {
+  fill: var(--text);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.im-sub {
+  fill: var(--text-muted);
+  font-size: 10.5px;
+}
+.im-icon {
+  fill: none;
+  stroke: var(--text-muted);
+  color: var(--text-muted);
+}
+.im-k-internet .im-icon,
+.im-k-site .im-icon {
+  stroke: var(--accent);
+  color: var(--accent);
+}
+.im-k-firewall .im-icon {
+  stroke: var(--orange);
+  color: var(--orange);
+}
+.im-k-proxy .im-icon {
+  stroke: var(--purple);
+  color: var(--purple);
+}
+.im-k-container .im-icon {
+  stroke: var(--accent-strong);
+  color: var(--accent-strong);
+}
+.im-k-db .im-icon {
+  stroke: var(--yellow);
+  color: var(--yellow);
+}
+.im-k-service .im-icon {
+  stroke: var(--green);
+  color: var(--green);
+}
+.im-k-internet .im-card {
+  fill: var(--accent-bg);
+  stroke: var(--mix-accent-45);
+}
+.im-k-external .im-card {
+  fill: var(--surface);
+  stroke-dasharray: 4 3;
+}
+.im-k-port .im-card {
+  fill: var(--surface-3);
+}
+
+/* Estado */
+.im-h-ok {
+  fill: var(--green);
+  background: var(--green);
+}
+.im-h-warn {
+  fill: var(--yellow);
+  background: var(--yellow);
+}
+.im-h-bad {
+  fill: var(--red);
+  background: var(--red);
+}
+.im-h-off {
+  fill: var(--text-faint);
+  background: var(--text-faint);
+}
+
+/* Aristas */
+.im-edge path {
+  fill: none;
+  stroke: var(--text-faint);
+  stroke-width: 1.4;
+}
+.im-e-proxy path {
+  stroke: var(--purple);
+}
+.im-e-publish path {
+  stroke: var(--accent);
+}
+.im-e-cross path {
+  stroke: var(--orange);
+  stroke-width: 2;
+  stroke-dasharray: 6 4;
+}
+.im-arrow {
+  fill: var(--text-faint);
+}
+.im-arrow-x {
+  fill: var(--orange);
+}
+.im-edge-label {
+  fill: var(--text-muted);
+  font-size: 10.5px;
+  font-family: var(--font-mono);
+  paint-order: stroke;
+  stroke: var(--bg);
+  stroke-width: 3px;
+}
+
+/* Leyenda y minimapa */
+.im-legend {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  max-width: calc(100% - 210px);
+  padding: 5px 10px;
+  font-size: 11px;
+  color: var(--text-muted);
+  background: var(--mix-surface-70);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  pointer-events: none;
+}
+.im-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.im-legend .im-icon {
+  fill: none;
+}
+.im-dot-html {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex: none;
+}
+.im-line-x {
+  display: inline-block;
+  width: 18px;
+  border-top: 2px dashed var(--orange);
+}
+.im-mini {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  background: var(--mix-surface-70);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.im-mini-server {
+  fill: var(--surface-2);
+  stroke: var(--border);
+}
+.im-mini-node {
+  opacity: 0.8;
+}
+.im-mini-view {
+  fill: var(--mix-accent-10);
+  stroke: var(--accent);
+  stroke-width: 1;
+}
+
+/* Detalles */
+.im-details {
+  width: 290px;
+  flex: none;
+  overflow: auto;
+  padding: 12px;
+  border-left: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.im-details-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.im-details-head .im-dot-html {
+  margin-top: 5px;
+}
+.im-details-title {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-wrap: anywhere;
+}
+.im-details-title .faint {
+  font-size: var(--fs-sm);
+}
+.im-dl {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: var(--fs-sm);
+}
+.im-dl-row dt {
+  color: var(--text-faint);
+  font-size: 11px;
+}
+.im-dl-row dd {
+  margin: 0;
+  color: var(--text);
+  overflow-wrap: anywhere;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+}
+.im-details .btn {
+  align-self: flex-start;
+}
+
+/* Mapa de proyecto (ventana) */
+.im-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(2, 6, 23, 0.55);
+}
+.im-panel {
+  width: calc(100vw - 32px);
+  height: calc(100vh - 32px);
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  outline: none;
+}
+.im-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.im-panel-head h2 {
+  margin: 0;
+  font-size: var(--fs-lg);
+  flex: 1;
+}
+.im-panel-body {
+  flex: 1;
+  min-height: 0;
+}

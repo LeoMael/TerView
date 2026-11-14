@@ -62,6 +62,7 @@ import {
 import { cancelReconnect, reconnectTab, requestCloseTab, setSessionPath, useEditorDirty } from "./sessionState";
 import "./SessionView.css";
 import { useVulnNav } from "../../features/vulnscan/nav";
+import { useInfraNav } from "../../features/infra/store";
 import { matchesShortcut, useShortcutText, withShortcut } from "../../features/shortcuts/shortcuts";
 
 const RemoteEditor = lazy(() => import("../Editor/RemoteEditor"));
@@ -323,6 +324,16 @@ export const SessionView = memo(function SessionView({ tab, active }: SessionVie
   useEffect(() => {
     if (vulnNav?.sessionId === sessionId) showFixed("admin");
   }, [vulnNav, sessionId, showFixed]);
+
+  // «Ver en…» desde el mapa: Contenedores o Administración (que abre su sub-pestaña).
+  const infraNav = useInfraNav((s) => s.request);
+  useEffect(() => {
+    if (infraNav?.sessionId !== sessionId) return;
+    if (infraNav.target.kind === "containers") {
+      showFixed("containers");
+      useInfraNav.getState().done(infraNav.seq);
+    } else showFixed("admin");
+  }, [infraNav, sessionId, showFixed]);
 
   // Un archivo vuelve de su ventana con «Volver a la pestaña principal»: mostrarlo.
   const reveal = useDetachedEditors((s) => s.reveal);

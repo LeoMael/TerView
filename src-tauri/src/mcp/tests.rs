@@ -1135,11 +1135,11 @@ async fn vuln_scan_cancel_and_one_at_a_time() {
 #[test]
 fn vuln_tools_are_announced_as_reads() {
     let tools = super::server::tools();
-    for name in ["get_vuln_report", "scan_vulnerabilities"] {
+    for name in ["get_vuln_report", "scan_vulnerabilities", "get_infra_map"] {
         let t = tools.iter().find(|t| t.name == name).unwrap_or_else(|| panic!("falta {name}"));
         assert_eq!(t.annotations.as_ref().and_then(|a| a.read_only_hint), Some(true), "{name}");
     }
-    assert_eq!(tools.len(), 21);
+    assert_eq!(tools.len(), 22);
 }
 
 // ───────────────────────── Auditoría del servidor ─────────────────────────

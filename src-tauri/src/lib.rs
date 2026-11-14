@@ -150,6 +150,7 @@ pub fn run() {
             storage::lock::vault_reset,
             // archivos locales (exportar/importar)
             localfs::local_write_text,
+            localfs::local_write_bytes,
             localfs::local_read_text,
             // llaves SSH locales (asistente «Nuevo usuario con clave»)
             localkeys::local_ssh_public_keys,

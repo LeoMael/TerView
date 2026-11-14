@@ -340,6 +340,23 @@ Este manual también está dentro de TerView: pulsa el botón **?** de la barra 
 - Si tienes sudo, pulsa **Tengo sudo: introducir contraseña** (o **Cambiar contraseña de sudo…**).
 - En **Puertos**, **Ver todos con sudo** muestra también los procesos de otros usuarios.
 
+**Mapa (diagrama de la infraestructura):**
+
+- **Administración → Mapa** dibuja el servidor como un diagrama de arquitectura: Internet → cortafuegos →
+  puertos abiertos → proxy web (nginx, Caddy…) → sitios (con su certificado) → apps, contenedores y
+  servicios → bases de datos. Se genera solo; no instala nada en el servidor.
+- Para un **proyecto**: clic derecho en el proyecto → **Mapa**. Pone todos sus servidores conectados en el
+  mismo lienzo y une con una línea naranja discontinua las conexiones entre ellos (por ejemplo, la app de
+  `web-prod` → PostgreSQL de `db-01`). **Conectar** abre los que falten.
+- Dentro de cada servidor hay una caja por usuario (**sistema**, el tuyo y los demás). Con **sudo** se ven
+  los de **todos los usuarios**: sus contenedores rootless, sus servicios `systemctl --user` y sus
+  procesos. Sin sudo solo ves lo tuyo (aparece un aviso).
+- Color de cada nodo: verde bien, amarillo aviso (p. ej. certificado que caduca pronto), rojo caído.
+- Arrastra para moverte, rueda para acercar, **Ajustar** para verlo entero. Filtros: **Ocultar locales**,
+  **Ocultar sistema** y los usuarios que quieras ver (o **Todos**).
+- Clic en un nodo: sus detalles y un botón para ir a **Puertos**, **Sitios web** o **Contenedores**.
+- **Exportar**: imagen PNG, SVG o texto Mermaid (archivo o copiado).
+
 ## Vulnerabilidades
 
 ![Pestaña Vulnerabilidades con el resumen por gravedad y la tabla](manual/14-vulnerabilidades.png)

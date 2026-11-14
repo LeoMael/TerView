@@ -377,6 +377,20 @@ y ver resultado"), la detección de privilegios y GitHub (clonar y desplegar).
   (`adduser`, `deluser`); grupo de administración `sudo` (Debian/Ubuntu) o `wheel`.
 - **Atajos:** Puertos → "Abrir túnel" (sección 10); Sitios web → ir a su puerto, abrir la
   configuración en el editor, comprobar (`nginx -t` / `caddy validate`) y recargar (también como Plan).
+- **Mapa de infraestructura** (`features/infra/`, lienzo en `components/InfraMap/`, cargado aparte):
+  - `collect.ts` lee un servidor solo con lecturas: `PORTS_SCRIPT` y `WEB_SCRIPT` (con `readElevated`),
+    `INFRA_SCRIPT` (SO, IPs, cortafuegos ufw/firewalld/nftables, usuarios uid ≥ 1000, `ss -tnp state
+    established`) y los contenedores como en Contenedores. Con sudo (contraseña de `obtainSudoPassword`,
+    sin preguntar) entra como cada usuario (`readOwners` + `as_owner_script`) para sus contenedores
+    rootless y sus `systemctl --user`.
+  - `graph.ts` (puro) arma nodos y aristas: puerto expuesto → quien escucha (contenedor por cgroup o por
+    puerto publicado, servicio, proceso), proxy → sitio → upstream (`proxy_pass`/`reverse_proxy` a un
+    puerto local, a un contenedor por nombre o a otro servidor del proyecto) y conexiones TCP salientes
+    cuyo destino es una IP de otro servidor del proyecto. Cada nodo tiene dueño (`sistema` o el usuario).
+  - `layout.ts` (puro): columnas por capa, una caja por servidor y una banda por usuario; filas por
+    baricentro y regresión isotónica (`spreadRows`). SVG propio sin dependencias: exportar a SVG/PNG es
+    serializar el mismo dibujo con los colores del tema ya resueltos (`local_write_bytes` para el PNG).
+  - Pruebas: `src/features/infra/infra.test.ts` (rolldown + node); escena `mapa` en la vista previa.
 
 ---
 
@@ -640,7 +654,7 @@ después de que lo apruebes (se pregunta siempre, salvo con «Aceptar automátic
 | Herramientas | Permiso |
 |--------------|---------|
 | `list_servers`, `list_projects`, `list_sessions`, `list_catalog`, `transfer_status` | Lectura (pasa sola) |
-| `list_dir`, `stat`, `read_file`, `list_ports`, `list_sites`, `list_containers` | Lectura (pasa sola) |
+| `list_dir`, `stat`, `read_file`, `list_ports`, `list_sites`, `list_containers`, `get_infra_map` | Lectura (pasa sola) |
 | `get_vuln_report` (último informe del escáner, resumido), `get_audit_report` (última auditoría) | Lectura (pasa sola, también en Solo lectura) |
 | `connect`, `download`, `scan_vulnerabilities` (análisis sin sudo, 600 s por defecto, cancelable), `run_audit` (auditoría sin sudo) | Pregunta, con «Permitir siempre»; también en Solo lectura |
 | `run_command`, `run_catalog_command` (los 📊 pasan solos; con sudo, TerView pone la contraseña), `write_file`, `upload` | Pregunta; en Solo lectura, rechazado |

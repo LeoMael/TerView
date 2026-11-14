@@ -87,6 +87,31 @@ pub async fn local_write_text(path: String, content: String) -> AppResult<()> {
     blocking(move || write_text(&p, &content)).await
 }
 
+/// Guarda bytes (p. ej. una imagen PNG exportada) en un archivo local elegido con el diálogo «Guardar».
+#[tauri::command]
+pub async fn local_write_bytes(path: String, data: Vec<u8>) -> AppResult<()> {
+    let p = check_path(&path)?;
+    blocking(move || write_bytes(&p, &data)).await
+}
+
+/// Como [`write_text`], pero con bytes cualesquiera (mismo límite de tamaño).
+pub fn write_bytes(path: &Path, data: &[u8]) -> AppResult<()> {
+    if data.len() as u64 > MAX_TEXT_BYTES * 4 {
+        return Err(too_big(data.len() as u64));
+    }
+    if path.is_dir() {
+        return Err(AppError::Invalid(format!("{} es una carpeta", path.display())));
+    }
+    let dir = path
+        .parent()
+        .filter(|d| !d.as_os_str().is_empty())
+        .ok_or_else(|| AppError::Invalid(format!("Ruta inválida: {}", path.display())))?;
+    if !dir.is_dir() {
+        return Err(AppError::NotFound(format!("la carpeta {}", dir.display())));
+    }
+    fsutil::write_atomic(path, data)
+}
+
 /// Lee un archivo de texto local (ruta completa, normalmente elegida con el diálogo «Abrir»).
 #[tauri::command]
 pub async fn local_read_text(path: String) -> AppResult<String> {
@@ -128,6 +153,11 @@ mod tests {
         assert!(read_text(&dir).is_err());
         assert!(matches!(read_text(&dir.join("nada")), Err(AppError::NotFound(_))));
         assert!(write_text(&dir.join("no/existe.json"), "x").is_err());
+        // Bytes (PNG exportado).
+        let png = dir.join("mapa.png");
+        write_bytes(&png, &[0x89, b'P', b'N', b'G']).unwrap();
+        assert_eq!(fs::read(&png).unwrap(), vec![0x89, b'P', b'N', b'G']);
+        assert!(write_bytes(&dir, &[1]).is_err());
         assert!(check_path("relativa.json").is_err());
         assert!(check_path("  ").is_err());
         let _ = fs::remove_dir_all(&dir);

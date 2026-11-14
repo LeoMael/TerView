@@ -2,6 +2,7 @@
 // DUEÑO: agente Almacenamiento/Sidebar. El ancho lo controla el padre.
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent } from "react";
 import {
+  Waypoints,
   ChevronDown,
   ChevronRight,
   Copy,
@@ -39,6 +40,7 @@ import { profiles as profilesApi } from "../../api/profiles";
 import { connectToMany, connectToServer, openOrFocusServer } from "../../features/connect";
 import { SbContextMenu, type MenuItem } from "./SbContextMenu";
 import { openMultiRun } from "../../features/multirun/store";
+import { openProjectMap } from "../../features/infra/store";
 import { openGitHub } from "../GitHub";
 import { parseQuickConnect } from "./quickConnect";
 import { preloadable } from "../../lib/lazy";
@@ -371,6 +373,12 @@ export function Sidebar() {
         icon: <SquareTerminal size={14} />,
         disabled: projServers.length === 0,
         onClick: () => openMultiRun({ projectId: p.id }),
+      },
+      {
+        label: "Mapa",
+        icon: <Waypoints size={14} />,
+        disabled: projServers.length === 0,
+        onClick: () => openProjectMap(p.id),
       },
       "separator",
       { label: "Eliminar", icon: <Trash2 size={14} />, danger: true, onClick: () => void deleteProject(p) },

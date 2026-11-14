@@ -2,8 +2,8 @@
 // historial de cambios.
 // Lee como usuario normal; los cambios se ejecutan como root (directo, sudo -n/doas -n o sudo -S con la
 // contraseña por stdin, guardada solo en memoria). Antes de cada cambio se muestra el comando exacto.
-import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
-import { Bug, ClipboardCheck, Globe, History, KeyRound, LogOut, MonitorDot, Network, RefreshCw, ShieldAlert, ShieldCheck, Unplug, Users, UsersRound } from "lucide-react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { Bug, ClipboardCheck, Globe, History, KeyRound, LogOut, MonitorDot, Network, RefreshCw, ShieldAlert, ShieldCheck, Unplug, Users, UsersRound, Waypoints } from "lucide-react";
 import { errorMessage } from "../../api/core";
 import { toast } from "../../stores/toasts";
 import { useTabs } from "../../stores/tabs";
@@ -50,9 +50,13 @@ import { WebTab } from "./WebTab";
 import { VulnsTab } from "./VulnsTab";
 import { AuditTab } from "./AuditTab";
 import { useVulnNav } from "../../features/vulnscan/nav";
+import { useInfraNav } from "../../features/infra/store";
+import { preloadable } from "../../lib/lazy";
 import "./Admin.css";
 
-type SubTab = "users" | "groups" | "sessions" | "ports" | "web" | "vulns" | "audit" | "history";
+const ServerMap = preloadable(() => import("../InfraMap/ServerMap").then((m) => m.ServerMap));
+
+type SubTab = "users" | "groups" | "sessions" | "ports" | "web" | "map" | "vulns" | "audit" | "history";
 
 const TABS: { id: SubTab; label: string; icon: ReactNode }[] = [
   { id: "users", label: "Usuarios", icon: <Users size={14} /> },
@@ -60,6 +64,7 @@ const TABS: { id: SubTab; label: string; icon: ReactNode }[] = [
   { id: "sessions", label: "Conectados ahora", icon: <MonitorDot size={14} /> },
   { id: "ports", label: "Puertos", icon: <Network size={14} /> },
   { id: "web", label: "Sitios web", icon: <Globe size={14} /> },
+  { id: "map", label: "Mapa", icon: <Waypoints size={14} /> },
   { id: "vulns", label: "Vulnerabilidades", icon: <Bug size={14} /> },
   { id: "audit", label: "Auditoría", icon: <ClipboardCheck size={14} /> },
   { id: "history", label: "Historial", icon: <History size={14} /> },
@@ -288,8 +293,18 @@ export function AdminPanel({
   }, []);
   const openFile = onOpenFile ?? null;
 
+  // «Ver en Puertos / Sitios web» desde un nodo del mapa.
+  const infraNav = useInfraNav((s) => s.request);
+  useEffect(() => {
+    if (!infraNav || infraNav.sessionId !== sessionId || infraNav.target.kind === "containers") return;
+    if (infraNav.target.kind === "ports") goToPort(infraNav.target.port);
+    else setTab("web");
+    useInfraNav.getState().done(infraNav.seq);
+  }, [infraNav, sessionId, goToPort]);
+
   /** El botón de recargar de la cabecera relee lo que muestra la sub-pestaña actual. */
   const refreshCurrent = () => {
+    if (tab === "map") return;
     if (tab === "ports") reloadPorts();
     else if (tab === "web") {
       reloadPorts();
@@ -466,7 +481,11 @@ export function AdminPanel({
         )}
 
         <div className="adm-body" id={`adm-panel-${sessionId}`} role="tabpanel" aria-labelledby={`adm-tab-${sessionId}-${tab}`}>
-          {tab === "vulns" ? (
+          {tab === "map" ? (
+            <Suspense fallback={<div className="empty-state"><span className="spinner" /></div>}>
+              <ServerMap sessionId={sessionId} profileId={profileId} active={active} disabled={disabled} />
+            </Suspense>
+          ) : tab === "vulns" ? (
             <VulnsTab />
           ) : tab === "audit" ? (
             <AuditTab onOpenVulns={() => setTab("vulns")} />

@@ -74,6 +74,12 @@ siguen [Versionado Semántico](https://semver.org/lang/es/).
   nada. Nota por categoría y general (A–F), comparación con la auditoría anterior, historial, exportar a
   Markdown o HTML y «Explicar con IA». Cada problema trae su comando para arreglarlo, que se muestra antes y
   se confirma (lo peligroso, escribiendo «ARREGLAR»). Para el asistente: `get_audit_report` y `run_audit`.
+- **Mapa de infraestructura** (Administración → Mapa, o clic derecho en un proyecto → Mapa): diagrama de
+  arquitectura que se arma solo: Internet → cortafuegos → puertos → proxy web → sitios (con su certificado)
+  → contenedores y servicios → bases de datos, con una caja por usuario (con sudo, los de todos los
+  usuarios). En un proyecto une los servidores y dibuja las conexiones entre ellos (p. ej. la app de un
+  servidor → la base de datos de otro). Zoom, filtros, detalles al hacer clic y exportar a PNG, SVG o
+  Mermaid. Para el asistente: `get_infra_map`.
 
 ### Corregido
 - **sudo con contraseña en más sitios.** «Ejecutar en varios servidores» usa la contraseña de sudo de cada

@@ -6,6 +6,7 @@
 // - ports / sites: los scripts y analizadores de Administración (features/admin/ports.ts y web.ts).
 // - audit: «Auditar servidor» (features/audit), sin sudo; se guarda en el historial como desde el botón.
 // - containers: la detección de Podman/Docker y la lista de contenedores (features/containers).
+// - infra: el mapa de infraestructura (features/infra) resumido como grafo.
 // - sudo / sudo-rejected: la contraseña de sudo de un comando del asistente ya aprobado (sudoAsk.ts) y el
 //   aviso de que sudo la rechazó. La contraseña va al motor (que la pasa por stdin), nunca al asistente.
 // Las lecturas se hacen como el usuario conectado (sin sudo).
@@ -104,6 +105,20 @@ async function auditServer(payload: Record<string, unknown>) {
   return runAudit({ sessionId, profileId, elevation: null });
 }
 
+async function infra(sessionId: string) {
+  const { collectServer } = await import("../infra/collect");
+  const { buildGraph } = await import("../infra/graph");
+  const { graphSummary } = await import("../infra/text");
+  const tab = useTabs.getState().tabs.find((t) => t.sessionId === sessionId);
+  const profile = useProfiles.getState().servers.find((s) => s.id === tab?.profileId);
+  const snap = await collectServer(
+    { profileId: tab?.profileId ?? "", name: profile?.name ?? tab?.title ?? "servidor", host: profile?.host ?? "", sessionId },
+    { elevate: false },
+  );
+  if (snap.error) throw new Error(snap.error);
+  return graphSummary(buildGraph([snap]));
+}
+
 async function run(req: McpUiRequest): Promise<unknown> {
   switch (req.kind) {
     case "connect": {
@@ -121,6 +136,8 @@ async function run(req: McpUiRequest): Promise<unknown> {
       return containers(sessionOf(req.payload));
     case "audit":
       return auditServer(req.payload);
+    case "infra":
+      return infra(sessionOf(req.payload));
     case "sudo":
       return sudoForAssistant(req.payload);
     case "sudo-rejected": {

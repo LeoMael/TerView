@@ -9,6 +9,7 @@ import { TransferPanel } from "./components/TransferPanel/TransferPanel";
 import { ConnectDialogHost, ProjectEditorHost, ServerEditorHost } from "./features/ConnectDialogs";
 import { PaletteHost, PaletteView } from "./components/Commands/PaletteHost";
 import { MultiRunHost } from "./components/MultiRun/MultiRunHost";
+import { ProjectMapHost } from "./components/InfraMap/ProjectMapHost";
 import { GitHubHost } from "./components/GitHub";
 import { initThemeSync } from "./components/Settings/theme";
 import { requestCloseTab } from "./components/Session/sessionState";
@@ -290,6 +291,7 @@ export default function App() {
       <SettingsHost />
       <PaletteHost />
       <MultiRunHost />
+      <ProjectMapHost />
       <GitHubHost />
       <PinDialogHost />
       <McpActivity />
